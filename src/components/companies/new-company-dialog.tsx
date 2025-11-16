@@ -12,6 +12,8 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { companyCreateSchema } from '@/lib/validators/company';
+import { createCompanyWithSectors } from '@/services/companies';
 
 type NewCompanyDialogProps = {
   children: React.ReactNode;
@@ -67,27 +69,13 @@ export function NewCompanyDialog({ children }: NewCompanyDialogProps) {
     setSaving(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { data: company, error: insertErr } = await supabase
-        .from('companies')
-        .insert({ name, country_id: countryId || null, focal_user_id: focalUserId || null })
-        .select('id')
-        .single();
-      if (insertErr || !company) {
-        setError(insertErr?.message ?? 'Insertion échouée');
-        return;
-      }
-      if (selectedSectorIds.length) {
-        const rows = selectedSectorIds.map((sectorId) => ({
-          company_id: company.id,
-          sector_id: sectorId
-        }));
-        const { error: linkErr } = await supabase.from('company_sector_link').insert(rows);
-        if (linkErr) {
-          setError(linkErr.message);
-          return;
-        }
-      }
+      const payload = companyCreateSchema.parse({
+        name,
+        countryId,
+        focalUserId,
+        sectorIds: selectedSectorIds
+      });
+      await createCompanyWithSectors(payload);
       setOpen(false);
       setName('');
       setCountryId('');
