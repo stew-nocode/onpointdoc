@@ -207,3 +207,6 @@ export default async function TicketDetailPage({
   );
 }
 
+export { default } from '@/app/gestion/tickets/[id]/page';
+
+
