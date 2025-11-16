@@ -1,6 +1,6 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
-import type { CompanyCreateInput, CompanyUpdateInput } from '@/lib\validators\company';
-import { companyCreateSchema, companyUpdateSchema } from '@/lib\validators\company';
+import type { CompanyCreateInput, CompanyUpdateInput } from '@/lib/validators/company';
+import { companyCreateSchema, companyUpdateSchema } from '@/lib/validators/company';
 
 /**
  * Crée une compagnie et ses liaisons de secteurs côté client (Supabase Browser).
