@@ -131,6 +131,45 @@ export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
                   Compagnies
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/config/users"
+                  className={cn(
+                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition',
+                    pathname.startsWith('/config/users')
+                      ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                  )}
+                >
+                  Utilisateurs
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/config/modules"
+                  className={cn(
+                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition',
+                    pathname.startsWith('/config/modules')
+                      ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                  )}
+                >
+                  Modules
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/config/submodules"
+                  className={cn(
+                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition',
+                    pathname.startsWith('/config/submodules')
+                      ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                  )}
+                >
+                  Sous-modules
+                </Link>
+              </li>
             </ul>
           </div>
         )}
