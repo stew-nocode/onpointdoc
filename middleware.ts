@@ -42,7 +42,8 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|auth).*)']
+  // Forcer l'exécution sur toutes les routes, on gère les exceptions dans le code
+  matcher: ['/:path*']
 };
 
 
