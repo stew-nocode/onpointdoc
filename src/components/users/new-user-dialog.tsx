@@ -15,6 +15,7 @@ import {
 import { Toggle } from '@/ui/toggle';
 import { userCreateInternalSchema } from '@/lib/validators/user';
 import { createInternalUser } from '@/services/users';
+import { toast } from 'sonner';
 
 type Props = { children: React.ReactNode };
 
@@ -62,6 +63,7 @@ export function NewUserDialog({ children }: Props) {
         moduleIds: selectedModuleIds
       });
       await createInternalUser(payload);
+      toast.success('Utilisateur créé avec succès');
       setOpen(false);
       setFullName('');
       setEmail('');
@@ -72,7 +74,9 @@ export function NewUserDialog({ children }: Props) {
       setSelectedModuleIds([]);
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

@@ -14,6 +14,7 @@ import {
 } from '@/ui/dialog';
 import { submoduleCreateSchema } from '@/lib/validators/product';
 import { createSubmodule } from '@/services/products/client';
+import { toast } from 'sonner';
 
 type Props = { children: React.ReactNode };
 
@@ -41,12 +42,15 @@ export function NewSubmoduleDialog({ children }: Props) {
     try {
       const payload = submoduleCreateSchema.parse({ name, moduleId });
       await createSubmodule(payload);
+      toast.success('Sous-module créé');
       setOpen(false);
       setName('');
       setModuleId('');
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

@@ -7,6 +7,7 @@ import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
 import { moduleUpdateSchema } from '@/lib/validators/product';
 import { updateModule } from '@/services/products/client';
+import { toast } from 'sonner';
 
 type Props = { moduleId: string; trigger: React.ReactNode };
 
@@ -44,10 +45,13 @@ export function EditModuleDialog({ moduleId, trigger }: Props) {
     try {
       const payload = moduleUpdateSchema.parse({ id: moduleId, name, productId });
       await updateModule(payload);
+      toast.success('Module mis à jour');
       setOpen(false);
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

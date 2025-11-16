@@ -14,6 +14,7 @@ import {
 } from '@/ui/dialog';
 import { companyCreateSchema } from '@/lib/validators/company';
 import { createCompanyWithSectors } from '@/services/companies';
+import { toast } from 'sonner';
 
 type NewCompanyDialogProps = {
   children: React.ReactNode;
@@ -76,6 +77,7 @@ export function NewCompanyDialog({ children }: NewCompanyDialogProps) {
         sectorIds: selectedSectorIds
       });
       await createCompanyWithSectors(payload);
+      toast.success('Compagnie créée avec succès');
       setOpen(false);
       setName('');
       setCountryId('');
@@ -83,7 +85,9 @@ export function NewCompanyDialog({ children }: NewCompanyDialogProps) {
       setFocalUserId('');
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

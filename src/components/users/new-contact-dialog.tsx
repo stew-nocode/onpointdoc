@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Toggle } from '@/ui/toggle';
 import { contactCreateSchema } from '@/lib/validators/user';
 import { createContact } from '@/services/contacts';
+import { toast } from 'sonner';
 
 type Props = { children: React.ReactNode };
 
@@ -45,6 +46,7 @@ export function NewContactDialog({ children }: Props) {
         isActive
       });
       await createContact(payload);
+      toast.success('Contact créé avec succès');
       setOpen(false);
       setFullName('');
       setEmail('');
@@ -53,7 +55,9 @@ export function NewContactDialog({ children }: Props) {
       setIsActive(true);
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

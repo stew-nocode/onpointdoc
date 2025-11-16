@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/providers/theme-provider';
 import { cn } from '@/lib/utils';
 
 import './globals.css';
+import { Toaster } from '@/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -17,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={cn('bg-slate-50 text-slate-900 antialiased', inter.variable)}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

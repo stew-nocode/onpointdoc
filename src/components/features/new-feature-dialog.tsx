@@ -7,6 +7,7 @@ import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
 import { featureCreateSchema } from '@/lib/validators/product';
 import { createFeature } from '@/services/products/client';
+import { toast } from 'sonner';
 
 type Props = { children: React.ReactNode };
 
@@ -34,12 +35,15 @@ export function NewFeatureDialog({ children }: Props) {
     try {
       const payload = featureCreateSchema.parse({ name, submoduleId });
       await createFeature(payload);
+      toast.success('Fonctionnalité créée');
       setOpen(false);
       setName('');
       setSubmoduleId('');
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

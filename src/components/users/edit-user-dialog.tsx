@@ -15,6 +15,7 @@ import {
 import { Toggle } from '@/ui/toggle';
 import { userUpdateSchema } from '@/lib/validators/user';
 import { updateUser } from '@/services/users';
+import { toast } from 'sonner';
 
 type Props = {
   userId: string;
@@ -86,10 +87,13 @@ export function EditUserDialog({ userId, trigger }: Props) {
         moduleIds: selectedModuleIds
       });
       await updateUser(payload);
+      toast.success('Utilisateur mis à jour');
       setOpen(false);
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      const msg = err?.message ?? 'Erreur inattendue';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
