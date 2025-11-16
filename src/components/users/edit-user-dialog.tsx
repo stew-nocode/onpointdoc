@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { Toggle } from '@/ui/toggle';
 
 type Props = {
   userId: string;
@@ -210,12 +211,7 @@ export function EditUserDialog({ userId, trigger }: Props) {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <input id="isActiveEdit" type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-              <label htmlFor="isActiveEdit" className="text-sm text-slate-700">
-                Actif
-              </label>
-            </div>
+            <Toggle checked={isActive} onChange={setIsActive} label="Actif" />
             {error && <p className="text-sm text-status-danger">{error}</p>}
             <Button className="w-full" type="submit" disabled={saving}>
               {saving ? 'Enregistrement…' : 'Enregistrer'}

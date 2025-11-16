@@ -24,6 +24,7 @@ async function loadUsers(): Promise<Row[]> {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, role, department, is_active, company_id')
+    .neq('role', 'client')
     .order('full_name', { ascending: true })
     .limit(200);
   if (error) throw new Error(error.message);
