@@ -17,7 +17,9 @@ export function middleware(req: NextRequest) {
 
   // Laisser passer les chemins publics
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set('x-mw', 'public');
+    return res;
   }
 
   // Détection large des cookies Supabase d'authentification
@@ -35,10 +37,14 @@ export function middleware(req: NextRequest) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/auth/login';
     loginUrl.search = `?next=${encodeURIComponent(pathname + (search || ''))}`;
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    res.headers.set('x-mw', 'redirect-login');
+    return res;
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set('x-mw', 'auth-ok');
+  return res;
 }
 
 export const config = {
