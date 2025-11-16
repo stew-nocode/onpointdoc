@@ -8,33 +8,35 @@ import {
   ticketChannels,
   ticketTypes
 } from '@/lib/validators/ticket';
-import { products, modules } from '@/lib/constants/products';
+import type { Product, Module } from '@/services/products';
 import { Button } from '@/ui/button';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput) => Promise<void>;
   isSubmitting?: boolean;
+  products: Product[];
+  modules: Module[];
 };
 
-export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
+export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: TicketFormProps) => {
   const form = useForm<CreateTicketInput>({
     resolver: zodResolver(createTicketSchema),
     defaultValues: {
       title: '',
       description: '',
       type: 'ASSISTANCE',
-      channel: 'whatsapp',
+      channel: 'Whatsapp',
       productId: products[0]?.id ?? '',
       moduleId: modules[0]?.id ?? '',
       customerContext: '',
-      priority: 'medium'
+      priority: 'Medium'
     }
   });
   const { errors } = form.formState;
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
   const filteredModules = useMemo(
-    () => modules.filter((module) => module.productId === selectedProductId),
-    [selectedProductId]
+    () => modules.filter((module) => module.product_id === selectedProductId),
+    [selectedProductId, modules]
   );
   const inputClass =
     'rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500';
@@ -42,6 +44,8 @@ export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
   useEffect(() => {
     if (filteredModules.length > 0) {
       form.setValue('moduleId', filteredModules[0].id);
+    } else {
+      form.setValue('moduleId', '');
     }
   }, [filteredModules, form]);
 
@@ -49,7 +53,16 @@ export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values);
-    form.reset();
+    form.reset({
+      title: '',
+      description: '',
+      type: 'ASSISTANCE',
+      channel: 'Whatsapp',
+      productId: products[0]?.id ?? '',
+      moduleId: modules[0]?.id ?? '',
+      customerContext: '',
+      priority: 'Medium'
+    });
     setSelectedProductId(products[0]?.id ?? '');
   });
 
@@ -101,9 +114,10 @@ export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
               setSelectedProductId(event.target.value);
             }}
           >
+            {products.length === 0 && <option value="">Aucun produit disponible</option>}
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.label}
+                {product.name}
               </option>
             ))}
           </select>
@@ -118,9 +132,10 @@ export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
             {...form.register('moduleId')}
             disabled={!filteredModules.length}
           >
+            {filteredModules.length === 0 && <option value="">Aucun module disponible</option>}
             {filteredModules.map((module) => (
               <option key={module.id} value={module.id}>
-                {module.label}
+                {module.name}
               </option>
             ))}
           </select>
@@ -133,7 +148,7 @@ export const TicketForm = ({ onSubmit, isSubmitting }: TicketFormProps) => {
         <div className="grid gap-2">
           <label className="text-sm font-medium text-slate-700">Priorité</label>
           <select className={inputClass} {...form.register('priority')}>
-            {['low', 'medium', 'high'].map((priority) => (
+            {['Low', 'Medium', 'High', 'Critical'].map((priority) => (
               <option key={priority} value={priority}>
                 {priority}
               </option>

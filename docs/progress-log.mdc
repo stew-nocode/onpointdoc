@@ -1,0 +1,22 @@
+# Journal OnpointDoc
+
+Ce journal liste les jalons validés et les prochaines étapes à suivre pour OnpointDoc.
+
+## 2025-11-15
+- ✅ Initialisation du projet Next.js 15 + TypeScript + Tailwind + ShadCN UI.
+- ✅ Mise en place de l’architecture `src/app`, `src/components`, `src/services`, `src/lib`, `src/ui`.
+- ✅ Formulaire de création de ticket (React Hook Form + Zod) connecté à Supabase (server actions).
+- ✅ Pages Dashboard, Tickets, Activités, Tâches avec layout AppShell, sidebar fixe, top bar sticky.
+- ✅ Mode clair/sombre (next-themes), toggle Sun/Moon, prise en charge du thème dans tous les composants.
+- ✅ Règles Cursor : PRD, structure, UX flows, base de données, workflows N8N, tech stack, style guide, architecture frontend, code qualité.
+- ✅ Fichier orchestrateur `master.mdc` pour gouvernance globale des règles.
+- ✅ Configuration Git locale + `.gitignore`, premier commit, remote GitHub `stew-nocode/onpointdoc` (branche `main`).
+- ✅ Résolution warning d’hydratation (balise `<html suppressHydrationWarning>`).
+- ✅ **Branchement produits/modules Supabase** : Création service `src/services/products/index.ts` pour récupérer produits et modules depuis Supabase. Modification `TicketForm` pour accepter données en props. Alignement des enums (canaux, priorités, statuts) avec les types Supabase. Migration DB ajoutant `duration_minutes` et `customer_context` à la table `tickets`.
+- ✅ **Automatisations N8N/JIRA** : Service `transferTicketToJira()` pour transférer Assistance → JIRA via webhook N8N. Page détail ticket (`/gestion/tickets/[id]`) avec bouton "Transférer". Route API `/api/webhooks/jira` pour synchronisation retour. Documentation complète dans `docs/workflows/` avec diagrammes Mermaid et guide de configuration N8N.
+
+## À faire
+- ⏳ Configurer les workflows N8N dans l'instance N8N selon `docs/workflows/n8n-setup-guide.md`.
+- ⏳ Configurer les webhooks JIRA pour la synchronisation retour.
+- ⏳ Renseigner les règles RLS et les policies Supabase (tables tickets, activities, tasks, linking tables).
+- ⏳ Ajouter des tests (unitaires/e2e) pour les services critiques.

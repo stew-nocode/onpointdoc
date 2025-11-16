@@ -1,10 +1,12 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import Link from 'next/link';
 
 import { createTicket, listTickets } from '@/services/tickets';
+import { listProducts, listModules } from '@/services/products';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
-import { TicketForm } from '@/components/forms/ticket-form';
 import { Badge } from '@/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
+import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 
 async function loadTickets() {
   noStore();
@@ -15,8 +17,19 @@ async function loadTickets() {
   }
 }
 
+async function loadProductsAndModules() {
+  noStore();
+  try {
+    const [products, modules] = await Promise.all([listProducts(), listModules()]);
+    return { products, modules };
+  } catch {
+    return { products: [], modules: [] };
+  }
+}
+
 export default async function TicketsPage() {
   const tickets = await loadTickets();
+  const { products, modules } = await loadProductsAndModules();
 
   async function handleTicketSubmit(values: CreateTicketInput) {
     'use server';
@@ -24,8 +37,27 @@ export default async function TicketsPage() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-      <Card className="lg:col-span-2">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Tickets
+          </p>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            Gestion des tickets Support
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Cycle de vie : Nouveau → En cours → Transféré → Résolu
+          </p>
+        </div>
+        <CreateTicketDialog
+          products={products}
+          modules={modules}
+          onSubmit={handleTicketSubmit}
+        />
+      </div>
+
+      <Card>
         <CardHeader>
           <CardTitle>Tickets récents</CardTitle>
         </CardHeader>
@@ -42,27 +74,34 @@ export default async function TicketsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {tickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td className="py-3 font-medium">{ticket.title}</td>
+                <tr key={ticket.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 font-medium">
+                    <Link
+                      href={`/gestion/tickets/${ticket.id}`}
+                      className="text-brand hover:underline"
+                    >
+                      {ticket.title}
+                    </Link>
+                  </td>
                   <td className="py-3 text-slate-600 dark:text-slate-300">{ticket.ticket_type}</td>
                   <td className="py-3">
                     <Badge
                       variant={
-                        ticket.status === 'RESOLU'
+                        ticket.status === 'Resolue'
                           ? 'success'
-                          : ticket.status === 'TRANSFERE'
+                          : ticket.status === 'Transfere'
                             ? 'danger'
                             : 'warning'
                       }
                     >
-                      {ticket.status.toLowerCase()}
+                      {ticket.status.replace('_', ' ')}
                     </Badge>
                   </td>
                   <td className="py-3 capitalize text-slate-600 dark:text-slate-300">
                     {ticket.priority}
                   </td>
                   <td className="py-3 text-slate-600 dark:text-slate-300">
-                    {ticket.assigned_to_id ?? '-'}
+                    {ticket.assigned_to ?? '-'}
                   </td>
                 </tr>
               ))}
@@ -73,14 +112,6 @@ export default async function TicketsPage() {
               Aucun ticket enregistré pour le moment.
             </p>
           )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Nouveau ticket</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TicketForm onSubmit={handleTicketSubmit} />
         </CardContent>
       </Card>
     </div>

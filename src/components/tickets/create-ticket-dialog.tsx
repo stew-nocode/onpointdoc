@@ -1,0 +1,68 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { TicketForm } from '@/components/forms/ticket-form';
+import { Button } from '@/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/ui/dialog';
+import type { CreateTicketInput } from '@/lib/validators/ticket';
+import type { Product, Module } from '@/services/products';
+
+type CreateTicketDialogProps = {
+  products: Product[];
+  modules: Module[];
+  onSubmit: (values: CreateTicketInput) => Promise<void>;
+};
+
+export const CreateTicketDialog = ({
+  products,
+  modules,
+  onSubmit
+}: CreateTicketDialogProps) => {
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (values: CreateTicketInput) => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(values);
+      setOpen(false);
+      router.refresh();
+    } catch (error) {
+      console.error('Erreur lors de la création du ticket:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Créer un ticket</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Créer un nouveau ticket</DialogTitle>
+          <DialogDescription>
+            Remplissez le formulaire pour créer un ticket Assistance, BUG ou REQUÊTE.
+          </DialogDescription>
+        </DialogHeader>
+        <TicketForm
+          onSubmit={handleSubmit}
+          products={products}
+          modules={modules}
+          isSubmitting={isSubmitting}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
+

@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
-export const ticketChannels = ['whatsapp', 'email', 'appel', 'autre'] as const;
+// Valeurs alignées avec les enums Supabase
+export const ticketChannels = ['Whatsapp', 'Email', 'Appel', 'Autre'] as const;
 export const ticketTypes = ['BUG', 'REQ', 'ASSISTANCE'] as const;
+export const ticketPriorities = ['Low', 'Medium', 'High', 'Critical'] as const;
 
 export const createTicketSchema = z.object({
   title: z.string().min(4).max(180),
@@ -10,7 +12,7 @@ export const createTicketSchema = z.object({
   channel: z.enum(ticketChannels),
   productId: z.string().uuid({ message: 'Produit requis' }),
   moduleId: z.string().uuid({ message: 'Module requis' }),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  priority: z.enum(ticketPriorities).default('Medium'),
   durationMinutes: z.number().int().min(0).optional(),
   customerContext: z.string().optional()
 });
