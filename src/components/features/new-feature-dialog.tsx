@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
+import { featureCreateSchema } from '@/lib/validators/product';
+import { createFeature } from '@/services/products/client';
 
 type Props = { children: React.ReactNode };
 
@@ -30,12 +32,8 @@ export function NewFeatureDialog({ children }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: insErr } = await supabase.from('features').insert({ name, submodule_id: submoduleId });
-      if (insErr) {
-        setError(insErr.message);
-        return;
-      }
+      const payload = featureCreateSchema.parse({ name, submoduleId });
+      await createFeature(payload);
       setOpen(false);
       setName('');
       setSubmoduleId('');

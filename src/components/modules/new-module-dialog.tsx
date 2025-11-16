@@ -12,6 +12,8 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { moduleCreateSchema } from '@/lib/validators/product';
+import { createModule } from '@/services/products/client';
 
 type Props = { children: React.ReactNode };
 
@@ -37,12 +39,8 @@ export function NewModuleDialog({ children }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: insErr } = await supabase.from('modules').insert({ name, product_id: productId });
-      if (insErr) {
-        setError(insErr.message);
-        return;
-      }
+      const payload = moduleCreateSchema.parse({ name, productId });
+      await createModule(payload);
       setOpen(false);
       setName('');
       setProductId('');

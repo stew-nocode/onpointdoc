@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
+import { submoduleUpdateSchema } from '@/lib/validators/product';
+import { updateSubmodule } from '@/services/products/client';
 
 type Props = { submoduleId: string; trigger: React.ReactNode };
 
@@ -39,12 +41,8 @@ export function EditSubmoduleDialog({ submoduleId, trigger }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: updErr } = await supabase.from('submodules').update({ name, module_id: moduleId }).eq('id', submoduleId);
-      if (updErr) {
-        setError(updErr.message);
-        return;
-      }
+      const payload = submoduleUpdateSchema.parse({ id: submoduleId, name, moduleId });
+      await updateSubmodule(payload);
       setOpen(false);
       router.refresh();
     } catch (err: any) {
