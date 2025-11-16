@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react';
 
 import { Button } from '@/ui/button';
 import { ThemeToggle } from '@/components/navigation/theme-toggle';
+import { SignOutButton } from '@/components/navigation/sign-out-button';
 
 export const TopBar = () => (
   <header className="flex h-16 items-center justify-between bg-white px-6 text-slate-900 dark:bg-slate-900/80 dark:text-slate-100">
@@ -17,6 +18,7 @@ export const TopBar = () => (
         <Bell className="mr-2 h-4 w-4" />
         Notifications
       </Button>
+      <SignOutButton />
       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
         AS
       </div>
