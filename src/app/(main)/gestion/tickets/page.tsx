@@ -10,7 +10,7 @@ import {
   listFeatures,
   listModulesForCurrentUser
 } from '@/services/products';
-import { listBasicProfiles } from '@/services/users';
+import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { Badge } from '@/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
