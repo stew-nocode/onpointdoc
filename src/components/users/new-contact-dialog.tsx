@@ -6,6 +6,8 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
 import { Toggle } from '@/ui/toggle';
+import { contactCreateSchema } from '@/lib/validators/user';
+import { createContact } from '@/services/contacts';
 
 type Props = { children: React.ReactNode };
 
@@ -35,23 +37,14 @@ export function NewContactDialog({ children }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const resp = await fetch('/api/admin/users/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-          role: 'client',
-          companyId: companyId || null,
-          isActive
-        })
+      const payload = contactCreateSchema.parse({
+        fullName,
+        email,
+        password,
+        companyId,
+        isActive
       });
-      if (!resp.ok) {
-        const msg = await resp.text();
-        setError(msg || 'Erreur lors de la création');
-        return;
-      }
+      await createContact(payload);
       setOpen(false);
       setFullName('');
       setEmail('');
