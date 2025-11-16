@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
 import { Toggle } from '@/ui/toggle';
@@ -24,6 +25,7 @@ export function NewContactDialog({ children }: Props) {
   const [password, setPassword] = useState('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -93,13 +95,23 @@ export function NewContactDialog({ children }: Props) {
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Mot de passe (temporaire)</label>
-            <input
-              type="password"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Entreprise</label>

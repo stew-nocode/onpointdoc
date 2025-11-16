@@ -9,7 +9,9 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json('Unauthorized', { status: 401 });
     const { data: profile } = await supabase.from('profiles').select('role').eq('auth_uid', user.id).single();
-    if (!profile || !['admin', 'manager', 'director'].includes((profile as any).role)) {
+    const profileRole = (profile as any)?.role as string | undefined;
+    // Autoriser la création de contacts aux profils Admin / Manager / Director / Agent Support
+    if (!profileRole || !['admin', 'manager', 'director', 'agent'].includes(profileRole)) {
       return NextResponse.json('Forbidden', { status: 403 });
     }
 
@@ -46,7 +48,8 @@ export async function POST(req: Request) {
       await admin.from('user_module_assignments').upsert(rows);
     }
 
-    return NextResponse.json({ ok: true });
+    // On renvoie l'identifiant du profil pour cohérence avec le service createContact
+    return NextResponse.json({ profileId });
   } catch (e: any) {
     return NextResponse.json(e?.message ?? 'Server error', { status: 500 });
   }
