@@ -13,6 +13,8 @@ import {
   DialogTrigger
 } from '@/ui/dialog';
 import { Toggle } from '@/ui/toggle';
+import { userCreateInternalSchema } from '@/lib/validators/user';
+import { createInternalUser } from '@/services/users';
 
 type Props = { children: React.ReactNode };
 
@@ -50,25 +52,16 @@ export function NewUserDialog({ children }: Props) {
     setSaving(true);
     setError(null);
     try {
-      // Appel API server pour créer compte Auth + profil
-      const resp = await fetch('/api/admin/users/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-          role,
-          companyId: companyId || null,
-          isActive,
-          moduleIds: selectedModuleIds
-        })
+      const payload = userCreateInternalSchema.parse({
+        fullName,
+        email,
+        password,
+        role,
+        companyId,
+        isActive,
+        moduleIds: selectedModuleIds
       });
-      if (!resp.ok) {
-        const msg = await resp.text();
-        setError(msg || 'Erreur lors de la création');
-        return;
-      }
+      await createInternalUser(payload);
       setOpen(false);
       setFullName('');
       setEmail('');

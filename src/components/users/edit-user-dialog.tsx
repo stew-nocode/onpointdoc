@@ -13,6 +13,8 @@ import {
   DialogTrigger
 } from '@/ui/dialog';
 import { Toggle } from '@/ui/toggle';
+import { userUpdateSchema } from '@/lib/validators/user';
+import { updateUser } from '@/services/users';
 
 type Props = {
   userId: string;
@@ -74,24 +76,16 @@ export function EditUserDialog({ userId, trigger }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: updErr } = await supabase
-        .from('profiles')
-        .update({ full_name: fullName, email, role, company_id: companyId || null, is_active: isActive })
-        .eq('id', userId);
-      if (updErr) {
-        setError(updErr.message);
-        return;
-      }
-      await supabase.from('user_module_assignments').delete().eq('user_id', userId);
-      if (selectedModuleIds.length) {
-        const rows = selectedModuleIds.map((m) => ({ user_id: userId, module_id: m }));
-        const { error: linkErr } = await supabase.from('user_module_assignments').insert(rows);
-        if (linkErr) {
-          setError(linkErr.message);
-          return;
-        }
-      }
+      const payload = userUpdateSchema.parse({
+        id: userId,
+        fullName,
+        email,
+        role,
+        companyId: companyId || undefined,
+        isActive,
+        moduleIds: selectedModuleIds
+      });
+      await updateUser(payload);
       setOpen(false);
       router.refresh();
     } catch (err: any) {
