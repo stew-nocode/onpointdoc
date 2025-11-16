@@ -20,11 +20,18 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Cookies Supabase (set par @supabase/ssr)
-  const hasAccess = req.cookies.has('sb-access-token');
-  const hasRefresh = req.cookies.has('sb-refresh-token');
+  // Détection large des cookies Supabase d'authentification
+  // - sb-access-token / sb-refresh-token (helpers SSR)
+  // - sb-<project-ref>-auth-token (GoTrue v2)
+  const cookieNames = req.cookies.getAll().map((c) => c.name);
+  const hasSupabaseAuthCookie = cookieNames.some(
+    (name) =>
+      name === 'sb-access-token' ||
+      name === 'sb-refresh-token' ||
+      (name.startsWith('sb-') && name.endsWith('-auth-token'))
+  );
 
-  if (!hasAccess || !hasRefresh) {
+  if (!hasSupabaseAuthCookie) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/auth/login';
     loginUrl.search = `?next=${encodeURIComponent(pathname + (search || ''))}`;
