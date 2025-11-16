@@ -12,9 +12,12 @@ export const createTicketSchema = z.object({
   channel: z.enum(ticketChannels),
   productId: z.string().uuid({ message: 'Produit requis' }),
   moduleId: z.string().uuid({ message: 'Module requis' }),
+  submoduleId: z.string().uuid().optional(),
+  featureId: z.string().uuid().optional(),
   priority: z.enum(ticketPriorities).default('Medium'),
   durationMinutes: z.number().int().min(0).optional(),
-  customerContext: z.string().optional()
+  customerContext: z.string().optional(),
+  contactUserId: z.string().uuid({ message: 'Contact requis' })
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;

@@ -12,9 +12,12 @@ export const createTicket = async (payload: CreateTicketInput) => {
       canal: payload.channel, // Colonne DB = 'canal' (pas 'channel')
       product_id: payload.productId ?? null,
       module_id: payload.moduleId ?? null,
+      submodule_id: payload.submoduleId ?? null,
+      feature_id: payload.featureId ?? null,
       priority: payload.priority,
       duration_minutes: payload.durationMinutes,
       customer_context: payload.customerContext,
+      contact_user_id: payload.contactUserId,
       status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
       origin: 'supabase'
     })
@@ -30,6 +33,8 @@ export const createTicket = async (payload: CreateTicketInput) => {
 
 export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
 export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
+
+export const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
 
 export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatusFilter) => {
   const supabase = createSupabaseServerClient();
@@ -54,4 +59,29 @@ export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatus
 
   return data;
 };
+
+export async function countTicketsByStatus(type: TicketTypeFilter) {
+  const supabase = createSupabaseServerClient();
+  const result: Record<(typeof TICKET_STATUSES)[number], number> = {
+    Nouveau: 0,
+    En_cours: 0,
+    Transfere: 0,
+    Resolue: 0
+  };
+  const { data, error } = await supabase
+    .from('tickets')
+    .select('status')
+    .eq('ticket_type', type)
+    .limit(1000);
+  if (error) {
+    throw new Error(error.message);
+  }
+  for (const row of data ?? []) {
+    const status = (row as any).status as (typeof TICKET_STATUSES)[number] | null;
+    if (status && status in result) {
+      result[status] += 1;
+    }
+  }
+  return result;
+}
 

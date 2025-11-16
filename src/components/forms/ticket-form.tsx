@@ -8,17 +8,29 @@ import {
   ticketChannels,
   ticketTypes
 } from '@/lib/validators/ticket';
-import type { Product, Module } from '@/services/products';
+import type { Product, Module, Submodule, Feature } from '@/services/products';
 import { Button } from '@/ui/button';
+import type { BasicProfile } from '@/services/users';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
   isSubmitting?: boolean;
   products: Product[];
   modules: Module[];
+  submodules: Submodule[];
+  features: Feature[];
+  contacts: BasicProfile[];
 };
 
-export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: TicketFormProps) => {
+export const TicketForm = ({
+  onSubmit,
+  isSubmitting,
+  products,
+  modules,
+  submodules,
+  features,
+  contacts
+}: TicketFormProps) => {
   const form = useForm<CreateTicketInput>({
     resolver: zodResolver(createTicketSchema),
     defaultValues: {
@@ -28,18 +40,31 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
       channel: 'Whatsapp',
       productId: products[0]?.id ?? '',
       moduleId: modules[0]?.id ?? '',
+      submoduleId: '',
+      featureId: '',
       customerContext: '',
-      priority: 'Medium'
+      priority: 'Medium',
+      contactUserId: contacts[0]?.id ?? ''
     }
   });
   const { errors } = form.formState;
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
+  const [selectedModuleId, setSelectedModuleId] = useState(modules[0]?.id ?? '');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const filteredModules = useMemo(
     () => modules.filter((module) => module.product_id === selectedProductId),
     [selectedProductId, modules]
+  );
+  const filteredSubmodules = useMemo(
+    () => submodules.filter((sm) => sm.module_id === selectedModuleId),
+    [selectedModuleId, submodules]
+  );
+  const filteredFeatures = useMemo(
+    () => features.filter((f) => filteredSubmodules.some((sm) => sm.id === f.submodule_id) && f.submodule_id === form.getValues('submoduleId')),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [features, filteredSubmodules, form.watch('submoduleId')]
   );
   const inputClass =
     'rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500';
@@ -53,6 +78,7 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
   }, [filteredModules, form]);
 
   const productField = form.register('productId');
+  const moduleField = form.register('moduleId');
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values, selectedFiles);
@@ -63,10 +89,14 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
       channel: 'Whatsapp',
       productId: products[0]?.id ?? '',
       moduleId: modules[0]?.id ?? '',
+      submoduleId: '',
+      featureId: '',
       customerContext: '',
-      priority: 'Medium'
+      priority: 'Medium',
+      contactUserId: contacts[0]?.id ?? ''
     });
     setSelectedProductId(products[0]?.id ?? '');
+    setSelectedModuleId(modules[0]?.id ?? '');
     setSelectedFiles([]);
   });
 
@@ -104,6 +134,20 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Titre</label>
         <input className={inputClass} placeholder="Résumé du besoin" {...form.register('title')} />
+      </div>
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-slate-700">Contact</label>
+        <select className={inputClass} {...form.register('contactUserId')} disabled={!contacts.length}>
+          {contacts.length === 0 && <option value="">Aucun contact disponible</option>}
+          {contacts.map((c) => (
+            <option key={c.id} value={c.id}>
+              {(c.full_name ?? c.email ?? 'Utilisateur')}
+            </option>
+          ))}
+        </select>
+        {errors.contactUserId && (
+          <p className="text-xs text-status-danger">{errors.contactUserId.message}</p>
+        )}
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Description</label>
@@ -162,7 +206,13 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
           <label className="text-sm font-medium text-slate-700">Module impacté</label>
           <select
             className={inputClass}
-            {...form.register('moduleId')}
+            {...moduleField}
+            onChange={(event) => {
+              moduleField.onChange(event);
+              setSelectedModuleId(event.target.value);
+              form.setValue('submoduleId', '');
+              form.setValue('featureId', '');
+            }}
             disabled={!filteredModules.length}
           >
             {filteredModules.length === 0 && <option value="">Aucun module disponible</option>}
@@ -175,6 +225,43 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
           {errors.moduleId && (
             <p className="text-xs text-status-danger">{errors.moduleId.message}</p>
           )}
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <label className="text-sm font-medium text-slate-700">Sous-module</label>
+          <select
+            className={inputClass}
+            {...form.register('submoduleId')}
+            onChange={() => {
+              form.setValue('featureId', '');
+            }}
+            disabled={!filteredSubmodules.length}
+          >
+            {filteredSubmodules.length === 0 && <option value="">Aucun sous-module disponible</option>}
+            {filteredSubmodules.map((sm) => (
+              <option key={sm.id} value={sm.id}>
+                {sm.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid gap-2">
+          <label className="text-sm font-medium text-slate-700">Fonctionnalité</label>
+          <select
+            className={inputClass}
+            {...form.register('featureId')}
+            disabled={!form.getValues('submoduleId') || !filteredFeatures.length}
+          >
+            {(!form.getValues('submoduleId') || filteredFeatures.length === 0) && (
+              <option value="">Aucune fonctionnalité disponible</option>
+            )}
+            {filteredFeatures.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">

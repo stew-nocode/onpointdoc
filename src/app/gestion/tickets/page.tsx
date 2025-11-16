@@ -3,7 +3,14 @@ import Link from 'next/link';
 
 import { createTicket, listTickets } from '@/services/tickets';
 import { TICKET_STATUSES, countTicketsByStatus } from '@/services/tickets';
-import { listProducts, listModules } from '@/services/products';
+import {
+  listProducts,
+  listModules,
+  listSubmodules,
+  listFeatures,
+  listModulesForCurrentUser
+} from '@/services/products';
+import { listBasicProfiles } from '@/services/users';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { Badge } from '@/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
@@ -37,16 +44,30 @@ async function loadTickets(typeParam?: string, statusParam?: string) {
 async function loadProductsAndModules() {
   noStore();
   try {
-    const [products, modules] = await Promise.all([listProducts(), listModules()]);
-    return { products, modules };
+    const [products, allModules, submodules, features, contacts, allowedModules] = await Promise.all([
+      listProducts(),
+      listModules(),
+      listSubmodules(),
+      listFeatures(),
+      listBasicProfiles(),
+      listModulesForCurrentUser()
+    ]);
+
+    // Si l'utilisateur a des modules affectés, filtrer la liste
+    const modules =
+      allowedModules && allowedModules.length
+        ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
+        : allModules;
+
+    return { products, modules, submodules, features, contacts };
   } catch {
-    return { products: [], modules: [] };
+    return { products: [], modules: [], submodules: [], features: [], contacts: [] };
   }
 }
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const tickets = await loadTickets(searchParams?.type, searchParams?.status);
-  const { products, modules } = await loadProductsAndModules();
+  const { products, modules, submodules, features, contacts } = await loadProductsAndModules();
 
   let counters:
     | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
@@ -78,6 +99,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         <CreateTicketDialog
           products={products}
           modules={modules}
+          submodules={submodules}
+          features={features}
+          contacts={contacts}
           onSubmit={handleTicketSubmit}
         />
       </div>
@@ -107,7 +131,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                   </span>
                   {statusOption && counters && (
                     <span className="ml-2 rounded-full bg-slate-900/30 px-2 py-0.5 text-[10px] dark:bg-slate-200/20">
-                      {counters[statusOption as any] ?? 0}
+                      {counters[statusOption as (typeof TICKET_STATUSES)[number]] ?? 0}
                     </span>
                   )}
                 </Link>
