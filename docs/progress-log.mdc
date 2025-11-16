@@ -15,6 +15,13 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
 - ✅ **Branchement produits/modules Supabase** : Création service `src/services/products/index.ts` pour récupérer produits et modules depuis Supabase. Modification `TicketForm` pour accepter données en props. Alignement des enums (canaux, priorités, statuts) avec les types Supabase. Migration DB ajoutant `duration_minutes` et `customer_context` à la table `tickets`.
 - ✅ **Automatisations N8N/JIRA** : Service `transferTicketToJira()` pour transférer Assistance → JIRA via webhook N8N. Page détail ticket (`/gestion/tickets/[id]`) avec bouton "Transférer". Route API `/api/webhooks/jira` pour synchronisation retour. Documentation complète dans `docs/workflows/` avec diagrammes Mermaid et guide de configuration N8N.
 
+## 2025-11-16
+- ✅ Tickets: formulaire déplacé dans un modal (`CreateTicketDialog`) + composants `Dialog`/`Alert`.
+- ✅ Sidebar: ajout de sous‑menus sous `Tickets` → `BUG`, `Requêtes`, `Assistance`.
+- ✅ Filtrage: `listTickets(type?, status?)` pour filtrer par type et statut.
+- ✅ UI Tickets: onglets cliquables par statut (Nouveau, En_cours, Transfere, Resolue) pour `BUG`, `REQ`, `ASSISTANCE`.
+- ✅ Git: routine de sauvegarde et commits poussés sur `main`.
+
 ## À faire
 - ⏳ Configurer les workflows N8N dans l'instance N8N selon `docs/workflows/n8n-setup-guide.md`.
 - ⏳ Configurer les webhooks JIRA pour la synchronisation retour.
