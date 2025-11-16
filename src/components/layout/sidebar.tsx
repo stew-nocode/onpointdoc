@@ -23,6 +23,8 @@ export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
         <ul className="mt-4 space-y-2">
           {items.map((item) => {
             const isActive = pathname.startsWith(item.href);
+            const isTickets = item.segment === 'tickets';
+
             return (
               <li key={item.href}>
                 <Link
@@ -36,6 +38,41 @@ export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
                 >
                   {item.label}
                 </Link>
+
+                {isTickets && (
+                  <ul className="mt-1 space-y-1 pl-5 text-xs font-normal text-slate-600 dark:text-slate-300">
+                    <li>
+                      <Link
+                        href="/gestion/tickets?type=BUG"
+                        className={cn(
+                          'block rounded-md px-3 py-1 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white'
+                        )}
+                      >
+                        BUG
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/gestion/tickets?type=REQ"
+                        className={cn(
+                          'block rounded-md px-3 py-1 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white'
+                        )}
+                      >
+                        Requêtes
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/gestion/tickets?type=ASSISTANCE"
+                        className={cn(
+                          'block rounded-md px-3 py-1 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white'
+                        )}
+                      >
+                        Assistance
+                      </Link>
+                    </li>
+                  </ul>
+                )}
               </li>
             );
           })}

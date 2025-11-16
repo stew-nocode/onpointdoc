@@ -8,10 +8,28 @@ import { Badge } from '@/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 
-async function loadTickets() {
+type TicketsPageProps = {
+  searchParams?: {
+    type?: string;
+    status?: string;
+  };
+};
+
+const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
+
+async function loadTickets(typeParam?: string, statusParam?: string) {
   noStore();
   try {
-    return await listTickets();
+    const normalizedType =
+      typeParam === 'BUG' || typeParam === 'REQ' || typeParam === 'ASSISTANCE'
+        ? typeParam
+        : undefined;
+
+    const normalizedStatus = TICKET_STATUSES.includes(statusParam as any)
+      ? (statusParam as (typeof TICKET_STATUSES)[number])
+      : undefined;
+
+    return await listTickets(normalizedType as any, normalizedStatus);
   } catch {
     return [];
   }
@@ -27,8 +45,8 @@ async function loadProductsAndModules() {
   }
 }
 
-export default async function TicketsPage() {
-  const tickets = await loadTickets();
+export default async function TicketsPage({ searchParams }: TicketsPageProps) {
+  const tickets = await loadTickets(searchParams?.type, searchParams?.status);
   const { products, modules } = await loadProductsAndModules();
 
   async function handleTicketSubmit(values: CreateTicketInput) {
@@ -56,6 +74,34 @@ export default async function TicketsPage() {
           onSubmit={handleTicketSubmit}
         />
       </div>
+
+      {['BUG', 'REQ', 'ASSISTANCE'].includes(searchParams?.type ?? '') && (
+        <div className="overflow-x-auto">
+          <div className="flex gap-2">
+            {[undefined, ...TICKET_STATUSES].map((statusOption) => {
+              const isActive =
+                searchParams?.status === statusOption ||
+                (!searchParams?.status && statusOption === undefined);
+              const href = statusOption
+                ? `/gestion/tickets?type=${searchParams?.type}&status=${statusOption}`
+                : `/gestion/tickets?type=${searchParams?.type}`;
+              return (
+                <Link
+                  key={(statusOption ?? 'ALL') + (searchParams?.type ?? '')}
+                  href={href}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    isActive
+                      ? 'bg-brand/20 text-brand dark:bg-brand/30 dark:text-brand-foreground'
+                      : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60'
+                  }`}
+                >
+                  {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
