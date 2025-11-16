@@ -18,7 +18,7 @@ import type { Product, Module } from '@/services/products';
 type CreateTicketDialogProps = {
   products: Product[];
   modules: Module[];
-  onSubmit: (values: CreateTicketInput) => Promise<void>;
+  onSubmit: (values: CreateTicketInput) => Promise<string | void>;
 };
 
 export const CreateTicketDialog = ({
@@ -30,10 +30,15 @@ export const CreateTicketDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (values: CreateTicketInput) => {
+  const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values);
+      const id = await onSubmit(values);
+      // Upload attachments si présents
+      if (id && files && files.length) {
+        const { uploadTicketAttachments } = await import('@/services/tickets/attachments.client');
+        await uploadTicketAttachments(id, files);
+      }
       setOpen(false);
       router.refresh();
     } catch (error) {

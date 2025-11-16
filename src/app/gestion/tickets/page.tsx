@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
 
 import { createTicket, listTickets } from '@/services/tickets';
+import { TICKET_STATUSES, countTicketsByStatus } from '@/services/tickets';
 import { listProducts, listModules } from '@/services/products';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { Badge } from '@/ui/badge';
@@ -15,8 +16,6 @@ type TicketsPageProps = {
   };
 };
 
-const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
-
 async function loadTickets(typeParam?: string, statusParam?: string) {
   noStore();
   try {
@@ -25,7 +24,7 @@ async function loadTickets(typeParam?: string, statusParam?: string) {
         ? typeParam
         : undefined;
 
-    const normalizedStatus = TICKET_STATUSES.includes(statusParam as any)
+    const normalizedStatus = (TICKET_STATUSES as readonly string[]).includes(statusParam as any)
       ? (statusParam as (typeof TICKET_STATUSES)[number])
       : undefined;
 
@@ -49,9 +48,17 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const tickets = await loadTickets(searchParams?.type, searchParams?.status);
   const { products, modules } = await loadProductsAndModules();
 
+  let counters:
+    | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
+    | undefined;
+  if (searchParams?.type === 'BUG' || searchParams?.type === 'REQ' || searchParams?.type === 'ASSISTANCE') {
+    counters = await countTicketsByStatus(searchParams.type as any);
+  }
+
   async function handleTicketSubmit(values: CreateTicketInput) {
     'use server';
-    await createTicket(values);
+    const created = await createTicket(values);
+    return created?.id as string;
   }
 
   return (
@@ -95,7 +102,14 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                       : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60'
                   }`}
                 >
-                  {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
+                  <span>
+                    {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
+                  </span>
+                  {statusOption && counters && (
+                    <span className="ml-2 rounded-full bg-slate-900/30 px-2 py-0.5 text-[10px] dark:bg-slate-200/20">
+                      {counters[statusOption as any] ?? 0}
+                    </span>
+                  )}
                 </Link>
               );
             })}

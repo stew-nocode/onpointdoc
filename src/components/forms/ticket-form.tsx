@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -12,7 +12,7 @@ import type { Product, Module } from '@/services/products';
 import { Button } from '@/ui/button';
 
 type TicketFormProps = {
-  onSubmit: (values: CreateTicketInput) => Promise<void>;
+  onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
   isSubmitting?: boolean;
   products: Product[];
   modules: Module[];
@@ -34,6 +34,9 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
   });
   const { errors } = form.formState;
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const filteredModules = useMemo(
     () => modules.filter((module) => module.product_id === selectedProductId),
     [selectedProductId, modules]
@@ -52,7 +55,7 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
   const productField = form.register('productId');
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    await onSubmit(values, selectedFiles);
     form.reset({
       title: '',
       description: '',
@@ -64,7 +67,37 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
       priority: 'Medium'
     });
     setSelectedProductId(products[0]?.id ?? '');
+    setSelectedFiles([]);
   });
+
+  function handleFilesAdded(filesList: FileList | File[]) {
+    const incoming = Array.from(filesList);
+    const sanitized = incoming.filter((f) => {
+      const isOkType = f.type.startsWith('image/') || f.type === 'application/pdf';
+      // 20MB max file size (ajustable)
+      const isOkSize = f.size <= 20 * 1024 * 1024;
+      return isOkType && isOkSize;
+    });
+    // éviter doublons par nom+taille
+    const currentKeys = new Set(selectedFiles.map((f) => `${f.name}:${f.size}`));
+    const merged = [...selectedFiles];
+    for (const f of sanitized) {
+      const key = `${f.name}:${f.size}`;
+      if (!currentKeys.has(key)) {
+        merged.push(f);
+        currentKeys.add(key);
+      }
+    }
+    setSelectedFiles(merged);
+  }
+
+  function removeFile(fileKey: string) {
+    setSelectedFiles((prev) => prev.filter((f) => `${f.name}:${f.size}` !== fileKey));
+  }
+
+  function openFileDialog() {
+    fileInputRef.current?.click();
+  }
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
@@ -179,6 +212,126 @@ export const TicketForm = ({ onSubmit, isSubmitting, products, modules }: Ticket
           placeholder="Entreprise, point focal, environnement, relance..."
           {...form.register('customerContext')}
         />
+      </div>
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-slate-700">Pièces jointes</label>
+        <div
+          className={`group relative rounded-xl border-2 border-dashed p-4 transition
+            ${isDragging ? 'border-brand bg-brand/5' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'}
+          `}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleFilesAdded(e.dataTransfer.files);
+              e.dataTransfer.clearData();
+            }
+          }}
+          onClick={openFileDialog}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openFileDialog();
+            }
+          }}
+        >
+          <div className="flex flex-col items-center justify-center gap-2 text-center text-slate-600 dark:text-slate-300">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition group-hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
+              {/* simple upload icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 118 0v1h1a3 3 0 110 6H6a3 3 0 110-6h1v-1z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 12V3m0 0l-3 3m3-3l3 3" />
+              </svg>
+            </div>
+            <div className="text-sm">
+              Glissez-déposez vos fichiers ici, ou
+              <button
+                type="button"
+                className="ml-1 underline decoration-dotted underline-offset-4 hover:text-slate-800 dark:hover:text-slate-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFileDialog();
+                }}
+              >
+                cliquez pour sélectionner
+              </button>
+            </div>
+            <div className="text-xs text-slate-500">Formats acceptés: images et PDF. 20 Mo max par fichier.</div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="sr-only"
+            accept="image/*,application/pdf"
+            onChange={(event) => {
+              if (event.target.files) handleFilesAdded(event.target.files);
+              // ne pas nettoyer la value pour permettre re-sélection des mêmes fichiers si besoin
+            }}
+          />
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {selectedFiles.map((file) => {
+              const key = `${file.name}:${file.size}`;
+              const isImage = file.type.startsWith('image/');
+              return (
+                <div
+                  key={key}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-2 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                      {isImage ? (
+                        // preview image
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="h-full w-full object-cover"
+                          onLoad={(e) => {
+                            // libère l'URL après chargement pour éviter fuites mémoire
+                            try {
+                              URL.revokeObjectURL((e.target as HTMLImageElement).src);
+                            } catch {}
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs">PDF</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-slate-700 dark:text-slate-200">
+                        {file.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        {(file.size / 1024 / 1024).toFixed(2)} Mo
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="ml-2 rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                    onClick={() => removeFile(key)}
+                    aria-label="Retirer le fichier"
+                    title="Retirer le fichier"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-4 w-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <Button className="w-full" disabled={isSubmitting} type="submit">
         Enregistrer le ticket

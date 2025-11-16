@@ -3,19 +3,23 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.from('tickets').insert({
-    title: payload.title,
-    description: payload.description,
-    ticket_type: payload.type,
-    canal: payload.channel, // Colonne DB = 'canal' (pas 'channel')
-    product_id: payload.productId ?? null,
-    module_id: payload.moduleId ?? null,
-    priority: payload.priority,
-    duration_minutes: payload.durationMinutes,
-    customer_context: payload.customerContext,
-    status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
-    origin: 'supabase'
-  });
+  const { data, error } = await supabase
+    .from('tickets')
+    .insert({
+      title: payload.title,
+      description: payload.description,
+      ticket_type: payload.type,
+      canal: payload.channel, // Colonne DB = 'canal' (pas 'channel')
+      product_id: payload.productId ?? null,
+      module_id: payload.moduleId ?? null,
+      priority: payload.priority,
+      duration_minutes: payload.durationMinutes,
+      customer_context: payload.customerContext,
+      status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
+      origin: 'supabase'
+    })
+    .select('id')
+    .single();
 
   if (error) {
     throw new Error(error.message);
