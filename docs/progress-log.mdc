@@ -16,14 +16,32 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
 - ✅ **Automatisations N8N/JIRA** : Service `transferTicketToJira()` pour transférer Assistance → JIRA via webhook N8N. Page détail ticket (`/gestion/tickets/[id]`) avec bouton "Transférer". Route API `/api/webhooks/jira` pour synchronisation retour. Documentation complète dans `docs/workflows/` avec diagrammes Mermaid et guide de configuration N8N.
 
 ## 2025-11-16
-- ✅ Tickets: formulaire déplacé dans un modal (`CreateTicketDialog`) + composants `Dialog`/`Alert`.
-- ✅ Sidebar: ajout de sous‑menus sous `Tickets` → `BUG`, `Requêtes`, `Assistance`.
-- ✅ Filtrage: `listTickets(type?, status?)` pour filtrer par type et statut.
-- ✅ UI Tickets: onglets cliquables par statut (Nouveau, En_cours, Transfere, Resolue) pour `BUG`, `REQ`, `ASSISTANCE`.
-- ✅ Git: routine de sauvegarde et commits poussés sur `main`.
+- ✅ Auth & Sécurité
+  - Page `/auth/login` (Supabase Email+Password), middleware global (`middleware.ts`) + garde client dans `AppShell`.
+  - Bouton “Se déconnecter” (TopBar).
+  - Sidebar avec icônes (Lucide) et correction des clés React.
+- ✅ Tickets & Flux
+  - Formulaire de création en modal (`CreateTicketDialog`) avec upload de pièces jointes (bucket `ticket-attachments`, table `ticket_attachments` + RLS).
+  - Champs additionnels: contact (profil client), produit → module → sous‑module → fonctionnalité, durée.
+  - Filtrage par type/statut et par affectations modules (table `user_module_assignments`, RLS ajustée).
+  - Lien “Contacts” sous “Tickets” listant tous les utilisateurs (internes + externes) + modal “Nouveau contact” (rôle `client`).
+- ✅ Configuration (B2B)
+  - Compagnies: index + “Nouvelle compagnie” (modal), édition/visualisation/suppression, point focal (profil), pays (`countries`) et secteurs (`sectors` + `company_sector_link`).
+  - Modules: index + créer/éditer/voir/supprimer (modals).
+  - Sous‑modules: index + créer/éditer/voir/supprimer (modals).
+  - Fonctionnalités: index + créer/éditer/voir/supprimer (modals).
+  - Utilisateurs (internes uniquement): index, création (Auth+profil+affectations), édition (profil+affectations), suppression.
+  - UI : remplacement des cases “Actif” par un toggle moderne (`ui/toggle`).
+- ✅ Base de données & RLS
+  - `countries` + `companies.country_id`, `companies.focal_user_id`.
+  - `sectors` + `company_sector_link` (RLS: lecture tout le monde / insert‑delete admin).
+  - `user_module_assigments` RLS corrigée (admin/manager peuvent insérer/supprimer; visibilité pour l’utilisateur et les managers/admins).
+- ✅ Intégrations & Outils
+  - API `/api/admin/users/create` (service_role) pour créer user Auth + profil + affectations.
+  - Routines Git régulières (branche `feat/ticket-attachments-upload`).
 
 ## À faire
-- ⏳ Configurer les workflows N8N dans l'instance N8N selon `docs/workflows/n8n-setup-guide.md`.
-- ⏳ Configurer les webhooks JIRA pour la synchronisation retour.
-- ⏳ Renseigner les règles RLS et les policies Supabase (tables tickets, activities, tasks, linking tables).
-- ⏳ Ajouter des tests (unitaires/e2e) pour les services critiques.
+- ⏳ Workflows N8N/JIRA selon `docs/workflows/n8n-setup-guide.md` et webhooks de synchro retour.
+- ⏳ Édition/Suppression côté “Contacts” (si souhaité).
+- ⏳ Recherche/filtrage/pagination avancée sur listes (Users/Companies/Modules/…).
+- ⏳ Tests unitaires/e2e sur services sensibles (auth, RLS, creation flows).
