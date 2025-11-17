@@ -47,6 +47,7 @@ Synchroniser **TOUS** les tickets JIRA (existants et futurs) vers Supabase pour 
 
 ## 📚 Documentation Complète
 
+- **`MAPPING-JIRA-SUPABASE.md`** ⭐ **Référence complète** : Mapping détaillé de tous les champs JIRA ↔ Supabase
 - **`n8n-jira-integration.md`** : Intégration générale JIRA ↔ Supabase
 - **`n8n-setup-guide.md`** : Guide de configuration N8N
 
