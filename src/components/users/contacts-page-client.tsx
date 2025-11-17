@@ -29,12 +29,17 @@ export function ContactsPageClient({ rows, companies }: Props) {
           className={cn(
             'rounded-full px-3 py-1 text-xs font-medium transition',
             activeTab === 'all'
-              ? 'bg-brand/20 text-brand dark:bg-brand/30 dark:text-brand-foreground'
-              : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60'
+              ? 'bg-brand text-white dark:bg-brand dark:text-white'
+              : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
           )}
         >
           <span>Tous</span>
-          <span className="ml-2 rounded-full bg-slate-900/30 px-2 py-0.5 text-[10px] dark:bg-slate-200/20">
+          <span className={cn(
+            "ml-2 rounded-full px-2 py-0.5 text-[10px]",
+            activeTab === 'all' 
+              ? "bg-white/20 text-white" 
+              : "bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400"
+          )}>
             {totalCount}
           </span>
         </button>
@@ -44,12 +49,17 @@ export function ContactsPageClient({ rows, companies }: Props) {
           className={cn(
             'rounded-full px-3 py-1 text-xs font-medium transition',
             activeTab === 'active'
-              ? 'bg-brand/20 text-brand dark:bg-brand/30 dark:text-brand-foreground'
-              : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60'
+              ? 'bg-brand text-white dark:bg-brand dark:text-white'
+              : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
           )}
         >
           <span>Actifs</span>
-          <span className="ml-2 rounded-full bg-slate-900/30 px-2 py-0.5 text-[10px] dark:bg-slate-200/20">
+          <span className={cn(
+            "ml-2 rounded-full px-2 py-0.5 text-[10px]",
+            activeTab === 'active' 
+              ? "bg-white/20 text-white" 
+              : "bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400"
+          )}>
             {activeCount}
           </span>
         </button>

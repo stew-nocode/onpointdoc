@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
 
 import { createTicket, listTickets } from '@/services/tickets';
 import { TICKET_STATUSES, countTicketsByStatus } from '@/services/tickets';
@@ -122,15 +123,19 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                   href={href}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                     isActive
-                      ? 'bg-brand/20 text-brand dark:bg-brand/30 dark:text-brand-foreground'
-                      : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60'
+                      ? 'bg-brand text-white dark:bg-brand dark:text-white'
+                      : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
                   }`}
                 >
                   <span>
                     {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
                   </span>
                   {statusOption && counters && (
-                    <span className="ml-2 rounded-full bg-slate-900/30 px-2 py-0.5 text-[10px] dark:bg-slate-200/20">
+                    <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
+                      isActive 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400'
+                    }`}>
                       {counters[statusOption as (typeof TICKET_STATUSES)[number]] ?? 0}
                     </span>
                   )}
@@ -154,6 +159,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 <th className="pb-2">Statut</th>
                 <th className="pb-2">Priorité</th>
                 <th className="pb-2">Assigné</th>
+                <th className="pb-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -162,7 +168,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                   <td className="py-3 font-medium">
                     <Link
                       href={`/gestion/tickets/${ticket.id}`}
-                      className="text-brand hover:underline"
+                      className="text-brand hover:underline dark:text-status-info dark:hover:text-status-info/80"
                     >
                       {ticket.title}
                     </Link>
@@ -186,6 +192,17 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                   </td>
                   <td className="py-3 text-slate-600 dark:text-slate-300">
                     {ticket.assigned_to ?? '-'}
+                  </td>
+                  <td className="py-3 text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Link
+                        href={`/gestion/tickets/${ticket.id}`}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
+                        aria-label="Voir le ticket"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

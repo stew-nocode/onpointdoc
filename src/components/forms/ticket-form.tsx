@@ -10,7 +10,10 @@ import {
 } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import { Button } from '@/ui/button';
+import { RadioGroup, RadioCard } from '@/ui/radio-group';
+import { Combobox } from '@/ui/combobox';
 import type { BasicProfile } from '@/services/users';
+import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal, AlertCircle, AlertTriangle, Zap, Shield } from 'lucide-react';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
@@ -130,21 +133,27 @@ export const TicketForm = ({
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-4 w-full" onSubmit={handleSubmit}>
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Titre</label>
         <input className={inputClass} placeholder="Résumé du besoin" {...form.register('title')} />
+        {errors.title && <p className="text-xs text-status-danger">{errors.title.message}</p>}
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Contact</label>
-        <select className={inputClass} {...form.register('contactUserId')} disabled={!contacts.length}>
-          {contacts.length === 0 && <option value="">Aucun contact disponible</option>}
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {(c.full_name ?? c.email ?? 'Utilisateur')}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          options={contacts.map((c) => ({
+            value: c.id,
+            label: c.full_name ?? c.email ?? 'Utilisateur',
+            searchable: `${c.full_name ?? ''} ${c.email ?? ''}`.trim()
+          }))}
+          value={form.watch('contactUserId')}
+          onValueChange={(v) => form.setValue('contactUserId', v)}
+          placeholder="Sélectionner un contact"
+          searchPlaceholder="Rechercher un contact..."
+          emptyText="Aucun contact disponible"
+          disabled={!contacts.length}
+        />
         {errors.contactUserId && (
           <p className="text-xs text-status-danger">{errors.contactUserId.message}</p>
         )}
@@ -157,127 +166,164 @@ export const TicketForm = ({
           placeholder="Détails fournis par le client"
           {...form.register('description')}
         />
+        {errors.description && (
+          <p className="text-xs text-status-danger">{errors.description.message}</p>
+        )}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Type</label>
-          <select className={inputClass} {...form.register('type')}>
-            {ticketTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Canal</label>
-          <select className={inputClass} {...form.register('channel')}>
-            {ticketChannels.map((channel) => (
-              <option key={channel} value={channel}>
-                {channel}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Produit concerné</label>
-          <select
-            className={inputClass}
-            {...productField}
-            onChange={(event) => {
-              productField.onChange(event);
-              setSelectedProductId(event.target.value);
-            }}
+        <div className="grid gap-3 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Type de ticket</label>
+          <RadioGroup 
+            value={form.watch('type')} 
+            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])} 
+            className="grid grid-cols-radio-3 gap-2 w-full"
           >
-            {products.length === 0 && <option value="">Aucun produit disponible</option>}
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-              </option>
-            ))}
-          </select>
-          {errors.productId && (
-            <p className="text-xs text-status-danger">{errors.productId.message}</p>
-          )}
+            <RadioCard
+              value="BUG"
+              label="BUG"
+              icon={<Bug className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="REQ"
+              label="Requête"
+              icon={<FileText className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="ASSISTANCE"
+              label="Assistance"
+              icon={<HelpCircle className="h-4 w-4" />}
+            />
+          </RadioGroup>
         </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Module impacté</label>
-          <select
-            className={inputClass}
-            {...moduleField}
-            onChange={(event) => {
-              moduleField.onChange(event);
-              setSelectedModuleId(event.target.value);
+        <div className="grid gap-3 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Canal de contact</label>
+          <RadioGroup 
+            value={form.watch('channel')} 
+            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])} 
+            className="grid grid-cols-radio-4 gap-2 w-full"
+          >
+            <RadioCard
+              value="Whatsapp"
+              label="WhatsApp"
+              icon={<MessageSquare className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="Email"
+              label="Email"
+              icon={<Mail className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="Appel"
+              label="Appel"
+              icon={<Phone className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="Autre"
+              label="Autre"
+              icon={<MoreHorizontal className="h-4 w-4" />}
+            />
+          </RadioGroup>
+        </div>
+      </div>
+      <div className="grid gap-3 min-w-0">
+        <label className="text-sm font-medium text-slate-700">Produit concerné</label>
+        <RadioGroup
+          value={form.watch('productId')}
+          onValueChange={(v) => {
+            form.setValue('productId', v);
+            setSelectedProductId(v);
+          }}
+          className="grid grid-cols-3 gap-2 w-full"
+        >
+          {products.map((product) => (
+            <RadioCard
+              key={product.id}
+              value={product.id}
+              label={product.name}
+              icon={<Shield className="h-4 w-4" />}
+            />
+          ))}
+        </RadioGroup>
+        {errors.productId && (
+          <p className="text-xs text-status-danger">{errors.productId.message}</p>
+        )}
+      </div>
+      <div className="grid gap-2 min-w-0">
+        <label className="text-sm font-medium text-slate-700">Module / Sous-module / Fonctionnalité</label>
+        <div className="grid gap-2 md:grid-cols-3 w-full">
+          <Combobox
+            options={filteredModules.map((m) => ({ value: m.id, label: m.name }))}
+            value={form.watch('moduleId')}
+            onValueChange={(v) => {
+              form.setValue('moduleId', v);
+              setSelectedModuleId(v);
               form.setValue('submoduleId', '');
               form.setValue('featureId', '');
             }}
+            placeholder="Module"
+            searchPlaceholder="Rechercher un module..."
+            emptyText="Aucun module disponible"
             disabled={!filteredModules.length}
-          >
-            {filteredModules.length === 0 && <option value="">Aucun module disponible</option>}
-            {filteredModules.map((module) => (
-              <option key={module.id} value={module.id}>
-                {module.name}
-              </option>
-            ))}
-          </select>
-          {errors.moduleId && (
-            <p className="text-xs text-status-danger">{errors.moduleId.message}</p>
-          )}
-        </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Sous-module</label>
-          <select
-            className={inputClass}
-            {...form.register('submoduleId')}
-            onChange={() => {
+          />
+          <Combobox
+            options={filteredSubmodules.map((sm) => ({ value: sm.id, label: sm.name }))}
+            value={form.watch('submoduleId') || ''}
+            onValueChange={(v) => {
+              form.setValue('submoduleId', v);
               form.setValue('featureId', '');
             }}
+            placeholder="Sous-module"
+            searchPlaceholder="Rechercher un sous-module..."
+            emptyText="Aucun sous-module disponible"
             disabled={!filteredSubmodules.length}
-          >
-            {filteredSubmodules.length === 0 && <option value="">Aucun sous-module disponible</option>}
-            {filteredSubmodules.map((sm) => (
-              <option key={sm.id} value={sm.id}>
-                {sm.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="grid gap-2">
-          <label className="text-sm font-medium text-slate-700">Fonctionnalité</label>
-          <select
-            className={inputClass}
-            {...form.register('featureId')}
+          />
+          <Combobox
+            options={filteredFeatures.map((f) => ({ value: f.id, label: f.name }))}
+            value={form.watch('featureId') || ''}
+            onValueChange={(v) => form.setValue('featureId', v)}
+            placeholder="Fonctionnalité"
+            searchPlaceholder="Rechercher une fonctionnalité..."
+            emptyText="Aucune fonctionnalité disponible"
             disabled={!form.getValues('submoduleId') || !filteredFeatures.length}
-          >
-            {(!form.getValues('submoduleId') || filteredFeatures.length === 0) && (
-              <option value="">Aucune fonctionnalité disponible</option>
-            )}
-            {filteredFeatures.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
+        {errors.moduleId && (
+          <p className="text-xs text-status-danger">{errors.moduleId.message}</p>
+        )}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-2">
+        <div className="grid gap-3 min-w-0">
           <label className="text-sm font-medium text-slate-700">Priorité</label>
-          <select className={inputClass} {...form.register('priority')}>
-            {['Low', 'Medium', 'High', 'Critical'].map((priority) => (
-              <option key={priority} value={priority}>
-                {priority}
-              </option>
-            ))}
-          </select>
+          <RadioGroup 
+            value={form.watch('priority')} 
+            onValueChange={(v) => form.setValue('priority', v as CreateTicketInput['priority'])} 
+            className="grid grid-cols-radio-4 gap-2 w-full"
+          >
+            <RadioCard
+              value="Low"
+              label="Faible"
+              icon={<Zap className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="Medium"
+              label="Moyenne"
+              icon={<AlertCircle className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="High"
+              label="Élevée"
+              icon={<AlertTriangle className="h-4 w-4" />}
+            />
+            <RadioCard
+              value="Critical"
+              label="Critique"
+              icon={<Shield className="h-4 w-4" />}
+            />
+          </RadioGroup>
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium text-slate-700">
-            Durée de l’assistance (minutes)
+            Durée de l'assistance (minutes)
           </label>
           <input
             type="number"
@@ -286,8 +332,11 @@ export const TicketForm = ({
             placeholder="Ex: 45"
             {...form.register('durationMinutes', { valueAsNumber: true })}
           />
+          {errors.durationMinutes && (
+            <p className="text-xs text-status-danger">{errors.durationMinutes.message}</p>
+          )}
           <p className="text-xs text-slate-500">
-            Obligatoire pour les tickets Assistance afin d’alimenter les KPIs Support.
+            Obligatoire pour les tickets Assistance afin d'alimenter les KPIs Support.
           </p>
         </div>
       </div>

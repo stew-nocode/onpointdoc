@@ -23,6 +23,7 @@ export function ViewUserDialog({ userId, trigger }: Props) {
     full_name: string | null;
     email: string | null;
     role: string;
+    department: string | null;
     is_active: boolean | null;
     company_id: string | null;
     companyName?: string;
@@ -36,7 +37,7 @@ export function ViewUserDialog({ userId, trigger }: Props) {
       const supabase = createSupabaseBrowserClient();
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, email, role, is_active, company_id')
+        .select('full_name, email, role, department, is_active, company_id')
         .eq('id', userId)
         .single();
       const [{ data: companies }, { data: links }, { data: modules }] = await Promise.all([
@@ -84,6 +85,12 @@ export function ViewUserDialog({ userId, trigger }: Props) {
                 <p className="font-medium text-slate-700">Rôle</p>
                 <p className="text-slate-600 dark:text-slate-300 capitalize">{row.role}</p>
               </div>
+              <div>
+                <p className="font-medium text-slate-700">Département</p>
+                <p className="text-slate-600 dark:text-slate-300">{row.department ?? '-'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="font-medium text-slate-700">Actif</p>
                 <p className="text-slate-600 dark:text-slate-300">{row.is_active ? 'Oui' : 'Non'}</p>

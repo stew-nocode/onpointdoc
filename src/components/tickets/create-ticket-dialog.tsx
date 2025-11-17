@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { TicketForm } from '@/components/forms/ticket-form';
 import { Button } from '@/ui/button';
 import {
@@ -35,21 +36,36 @@ export const CreateTicketDialog = ({
 }: CreateTicketDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
     setIsSubmitting(true);
+    setError(null);
     try {
       const id = await onSubmit(values);
-      // Upload attachments si présents
-      if (id && files && files.length) {
-        const { uploadTicketAttachments } = await import('@/services/tickets/attachments.client');
-        await uploadTicketAttachments(id, files);
+      if (!id) {
+        throw new Error('Aucun ID de ticket retourné');
       }
+      // Upload attachments si présents
+      if (files && files.length) {
+        try {
+          const { uploadTicketAttachments } = await import('@/services/tickets/attachments.client');
+          await uploadTicketAttachments(id, files);
+        } catch (uploadError: any) {
+          console.error('Erreur lors de l\'upload des pièces jointes:', uploadError);
+          // Ne pas bloquer la création du ticket si l'upload échoue
+          toast.warning('Ticket créé mais erreur lors de l\'upload des pièces jointes');
+        }
+      }
+      toast.success('Ticket créé avec succès');
       setOpen(false);
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
+      const errorMessage = error?.message ?? 'Erreur lors de la création du ticket';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -60,13 +76,18 @@ export const CreateTicketDialog = ({
       <DialogTrigger asChild>
         <Button>Créer un ticket</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau ticket</DialogTitle>
           <DialogDescription>
             Remplissez le formulaire pour créer un ticket Assistance, BUG ou REQUÊTE.
           </DialogDescription>
         </DialogHeader>
+        {error && (
+          <div className="rounded-lg border border-status-danger/50 bg-status-danger/10 p-3 text-sm text-status-danger">
+            {error}
+          </div>
+        )}
         <TicketForm
           onSubmit={handleSubmit}
           products={products}

@@ -13,9 +13,12 @@ import {
   DialogTrigger
 } from '@/ui/dialog';
 import { Toggle } from '@/ui/toggle';
-import { userCreateInternalSchema } from '@/lib/validators/user';
+import { RadioGroup, RadioCard } from '@/ui/radio-group';
+import { Combobox } from '@/ui/combobox';
+import { userCreateInternalSchema, departments, type Department } from '@/lib/validators/user';
 import { createInternalUser } from '@/services/users';
 import { toast } from 'sonner';
+import { User, Shield, Crown, Users, Headphones, Code, Megaphone } from 'lucide-react';
 
 type Props = { children: React.ReactNode };
 
@@ -31,7 +34,8 @@ export function NewUserDialog({ children }: Props) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'agent' | 'manager' | 'admin' | 'director' | 'client'>('agent');
+  const [role, setRole] = useState<'agent' | 'manager' | 'admin' | 'director'>('agent');
+  const [department, setDepartment] = useState<Department | ''>('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [moduleToAdd, setModuleToAdd] = useState<string>('');
@@ -58,6 +62,7 @@ export function NewUserDialog({ children }: Props) {
         email,
         password,
         role,
+        department: department || undefined,
         companyId,
         isActive,
         moduleIds: selectedModuleIds
@@ -69,6 +74,7 @@ export function NewUserDialog({ children }: Props) {
       setEmail('');
       setPassword('');
       setRole('agent');
+      setDepartment('');
       setCompanyId('');
       setIsActive(true);
       setSelectedModuleIds([]);
@@ -85,30 +91,32 @@ export function NewUserDialog({ children }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Créer un utilisateur</DialogTitle>
           <DialogDescription>Compte Auth + profil + affectations modules.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Nom complet</label>
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Email</label>
-            <input
-              type="email"
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Nom complet</label>
+              <input
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Email</label>
+              <input
+                type="email"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Mot de passe (temporaire)</label>
@@ -120,50 +128,86 @@ export function NewUserDialog({ children }: Props) {
               required
             />
           </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Rôle</label>
-            <select
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-3">
+              <label className="text-sm font-medium text-slate-700">Rôle</label>
+              <RadioGroup 
+              value={role} 
+              onValueChange={(v) => setRole(v as 'agent' | 'manager' | 'admin' | 'director')} 
+              className="grid grid-cols-2 gap-2"
             >
-              {['agent', 'manager', 'admin', 'director'].map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+                <RadioCard
+                  value="agent"
+                  label="Agent"
+                  icon={<User className="h-4 w-4" />}
+                />
+                <RadioCard
+                  value="manager"
+                  label="Manager"
+                  icon={<Users className="h-4 w-4" />}
+                />
+                <RadioCard
+                  value="admin"
+                  label="Admin"
+                  icon={<Shield className="h-4 w-4" />}
+                />
+                <RadioCard
+                  value="director"
+                  label="Directeur"
+                  icon={<Crown className="h-4 w-4" />}
+                />
+              </RadioGroup>
+            </div>
+            <div className="grid gap-3">
+              <label className="text-sm font-medium text-slate-700">Département</label>
+              <RadioGroup
+                value={department || ''}
+                onValueChange={(v) => setDepartment(v as Department | '')}
+                className="grid grid-cols-3 gap-2"
+              >
+                <RadioCard
+                  value="Support"
+                  label="Support"
+                  icon={<Headphones className="h-4 w-4" />}
+                />
+                <RadioCard
+                  value="IT"
+                  label="IT"
+                  icon={<Code className="h-4 w-4" />}
+                />
+                <RadioCard
+                  value="Marketing"
+                  label="Marketing"
+                  icon={<Megaphone className="h-4 w-4" />}
+                />
+              </RadioGroup>
+            </div>
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Entreprise</label>
-            <select
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            <Combobox
+              options={companies.map((c) => ({ value: c.id, label: c.name }))}
               value={companyId}
-              onChange={(e) => setCompanyId(e.target.value)}
-            >
-              <option value="">-- Aucune --</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={setCompanyId}
+              placeholder="Sélectionner une entreprise"
+              searchPlaceholder="Rechercher une entreprise..."
+              emptyText="Aucune entreprise trouvée"
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Affectations modules</label>
             <div className="flex gap-2">
-              <select
+              <Combobox
+                options={modules
+                  .filter((m) => !selectedModuleIds.includes(m.id))
+                  .map((m) => ({ value: m.id, label: m.name }))}
                 value={moduleToAdd}
-                onChange={(e) => setModuleToAdd(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              >
-                <option value="">-- Sélectionner un module --</option>
-                {modules.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={setModuleToAdd}
+                placeholder="Sélectionner un module"
+                searchPlaceholder="Rechercher un module..."
+                emptyText="Aucun module disponible"
+                className="flex-1"
+              />
               <Button
                 type="button"
                 variant="secondary"

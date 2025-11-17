@@ -40,8 +40,37 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - API `/api/admin/users/create` (service_role) pour créer user Auth + profil + affectations.
   - Routines Git régulières (branche `feat/ticket-attachments-upload`).
 
+## 2025-11-17
+- ✅ **Amélioration UX formulaires**
+  - Ajout de `Combobox` (recherche dans listes longues) et `RadioGroup` avec icônes (choix courts 3-4 options).
+  - Optimisation layout formulaires : large plutôt que haut (champs côte à côte, module/sous-module/fonctionnalité sur une ligne).
+  - Tous les formulaires (tickets, utilisateurs, contacts, compagnies, modules, etc.) utilisent désormais ces composants modernes.
+- ✅ **Gestion des contacts**
+  - Page contacts avec filtres de recherche (nom, email, entreprise).
+  - Onglets filtres "Tous" et "Actifs" avec compteurs.
+  - Sélection multiple et actions bulk (désactiver/réactiver) pour clients externes uniquement.
+  - Actions bulk visibles uniquement quand une sélection est faite.
+  - Icônes d'action (voir, éditer, supprimer) dans les tableaux utilisateurs et contacts.
+- ✅ **Icônes d'action tickets**
+  - Ajout icône "Voir" dans la table des tickets (redirection vers page détail).
+- ✅ **Gestion des départements**
+  - Migration RLS pour filtrage par département et produit (`user_can_access_product`).
+  - DG/DAF et Admin voient tout (tous départements, tous produits).
+  - Agents/Managers voient uniquement leur département et produits assignés.
+  - Champ `department` ajouté aux formulaires utilisateurs (Support, IT, Marketing).
+- ✅ **Amélioration visibilité dark mode**
+  - Éléments sélectionnés plus visibles : `bg-brand text-white` au lieu de `bg-brand/20`.
+  - Onglets actifs, navigation sidebar, RadioCards sélectionnés : meilleur contraste.
+  - Liens tickets dans tableaux : `dark:text-status-info` pour meilleure lisibilité.
+- ✅ **Gestion d'erreurs**
+  - Amélioration gestion erreurs "Failed to fetch" avec messages clairs.
+  - Toast notifications (sonner) pour feedback utilisateur.
+  - Gestion séparée erreurs upload fichiers (ne bloque pas création ticket).
+  - Messages d'erreur détaillés dans services (users, contacts, tickets).
+
 ## À faire
+- ⏳ **Intégration JIRA automatique BUG/REQ** : Transfert automatique des tickets BUG/REQUÊTE vers JIRA via N8N après création.
 - ⏳ Workflows N8N/JIRA selon `docs/workflows/n8n-setup-guide.md` et webhooks de synchro retour.
-- ⏳ Édition/Suppression côté “Contacts” (si souhaité).
+- ⏳ Édition/Suppression côté "Contacts" (si souhaité).
 - ⏳ Recherche/filtrage/pagination avancée sur listes (Users/Companies/Modules/…).
 - ⏳ Tests unitaires/e2e sur services sensibles (auth, RLS, creation flows).

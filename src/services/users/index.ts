@@ -7,26 +7,33 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
  */
 export async function createInternalUser(input: UserCreateInternalInput): Promise<string> {
   const payload = userCreateInternalSchema.parse(input);
-  const res = await fetch('/api/admin/users/create', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fullName: payload.fullName,
-      email: payload.email,
-      password: payload.password,
-      role: payload.role,
-      companyId: payload.companyId,
-      isActive: payload.isActive,
-      department: payload.department ?? null,
-      moduleIds: payload.moduleIds
-    })
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'Création utilisateur échouée');
+  try {
+    const res = await fetch('/api/admin/users/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: payload.fullName,
+        email: payload.email,
+        password: payload.password,
+        role: payload.role,
+        companyId: payload.companyId,
+        isActive: payload.isActive,
+        department: payload.department ?? null,
+        moduleIds: payload.moduleIds
+      })
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Création utilisateur échouée (${res.status})`);
+    }
+    const data = (await res.json()) as { profileId: string };
+    return data.profileId;
+  } catch (error: any) {
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion réseau.');
+    }
+    throw error;
   }
-  const data = (await res.json()) as { profileId: string };
-  return data.profileId;
 }
 
 /**

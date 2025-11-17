@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { Combobox } from '@/ui/combobox';
 import { companyCreateSchema } from '@/lib/validators/company';
 import { createCompanyWithSectors } from '@/services/companies';
 import { toast } from 'sonner';
@@ -96,51 +97,45 @@ export function NewCompanyDialog({ children }: NewCompanyDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Créer une compagnie</DialogTitle>
           <DialogDescription>Renseignez les informations de la compagnie.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Nom</label>
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              placeholder="Ex: Onpoint SA"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Pays</label>
-            <select
-              value={countryId}
-              onChange={(e) => setCountryId(e.target.value)}
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="">-- Sélectionner un pays --</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Nom</label>
+              <input
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                placeholder="Ex: Onpoint SA"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Pays</label>
+              <Combobox
+                options={countries.map((c) => ({ value: c.id, label: c.name }))}
+                value={countryId}
+                onValueChange={setCountryId}
+                placeholder="Sélectionner un pays"
+                searchPlaceholder="Rechercher un pays..."
+                emptyText="Aucun pays trouvé"
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Point focal</label>
-            <select
+            <Combobox
+              options={contacts.map((c) => ({ value: c.id, label: c.label }))}
               value={focalUserId}
-              onChange={(e) => setFocalUserId(e.target.value)}
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="">-- Sélectionner un contact --</option>
-              {contacts.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={setFocalUserId}
+              placeholder="Sélectionner un contact"
+              searchPlaceholder="Rechercher un contact..."
+              emptyText="Aucun contact trouvé"
+            />
             <p className="text-xs text-slate-500">Optionnel: personne de contact principale côté client.</p>
           </div>
           <div className="grid gap-2">

@@ -3,6 +3,16 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = createSupabaseServerClient();
+  // Récupérer le profil de l'utilisateur connecté pour created_by
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Non authentifié');
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('auth_uid', user.id)
+    .single();
+  if (!profile) throw new Error('Profil utilisateur introuvable');
+
   const { data, error } = await supabase
     .from('tickets')
     .insert({
@@ -18,6 +28,7 @@ export const createTicket = async (payload: CreateTicketInput) => {
       duration_minutes: payload.durationMinutes,
       customer_context: payload.customerContext,
       contact_user_id: payload.contactUserId,
+      created_by: profile.id, // ID du profil (pas auth.uid())
       status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
       origin: 'supabase'
     })

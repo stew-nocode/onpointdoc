@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { Combobox } from '@/ui/combobox';
 import { moduleCreateSchema } from '@/lib/validators/product';
 import { createModule } from '@/services/products/client';
 import { toast } from 'sonner';
@@ -59,36 +60,33 @@ export function NewModuleDialog({ children }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Créer un module</DialogTitle>
           <DialogDescription>Associez le module à un produit.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Nom</label>
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Produit</label>
-            <select
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={productId}
-              onChange={(e) => setProductId(e.target.value)}
-              required
-            >
-              <option value="">-- Sélectionner un produit --</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Nom</label>
+              <input
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Produit</label>
+              <Combobox
+                options={products.map((p) => ({ value: p.id, label: p.name }))}
+                value={productId}
+                onValueChange={setProductId}
+                placeholder="Sélectionner un produit"
+                searchPlaceholder="Rechercher un produit..."
+                emptyText="Aucun produit trouvé"
+              />
+            </div>
           </div>
           {error && <p className="text-sm text-status-danger">{error}</p>}
           <Button className="w-full" type="submit" disabled={saving}>

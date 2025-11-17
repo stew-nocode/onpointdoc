@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/ui/dialog';
+import { Combobox } from '@/ui/combobox';
 import { submoduleCreateSchema } from '@/lib/validators/product';
 import { createSubmodule } from '@/services/products/client';
 import { toast } from 'sonner';
@@ -59,36 +60,33 @@ export function NewSubmoduleDialog({ children }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Créer un sous-module</DialogTitle>
           <DialogDescription>Associez-le à un module parent.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Nom</label>
-            <input
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700">Module parent</label>
-            <select
-              className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-              value={moduleId}
-              onChange={(e) => setModuleId(e.target.value)}
-              required
-            >
-              <option value="">-- Sélectionner un module --</option>
-              {modules.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Nom</label>
+              <input
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Module parent</label>
+              <Combobox
+                options={modules.map((m) => ({ value: m.id, label: m.name }))}
+                value={moduleId}
+                onValueChange={setModuleId}
+                placeholder="Sélectionner un module"
+                searchPlaceholder="Rechercher un module..."
+                emptyText="Aucun module trouvé"
+              />
+            </div>
           </div>
           {error && <p className="text-sm text-status-danger">{error}</p>}
           <Button className="w-full" type="submit" disabled={saving}>

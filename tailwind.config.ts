@@ -26,6 +26,10 @@ const config: Config = {
           danger: '#EF4444',
           neutral: '#9CA3AF'
         }
+      },
+      gridTemplateColumns: {
+        'radio-3': 'repeat(3, minmax(min-content, 1fr))',
+        'radio-4': 'repeat(4, minmax(min-content, 1fr))'
       }
     }
   },
