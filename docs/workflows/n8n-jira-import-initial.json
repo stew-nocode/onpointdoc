@@ -1,0 +1,145 @@
+{
+  "name": "Import Initial JIRA Tickets to Supabase",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "jql": "project = {{ $env.JIRA_PROJECT_KEY }} AND issuetype IN (Bug, Task, Story) ORDER BY created DESC",
+        "returnAll": false,
+        "limit": 1000,
+        "options": {
+          "fields": ["summary", "description", "status", "priority", "assignee", "reporter", "created", "updated", "labels", "issuetype"]
+        }
+      },
+      "id": "jira-search",
+      "name": "JIRA Search Issues",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "jiraApi": {
+          "id": "jira-credentials",
+          "name": "JIRA API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map JIRA Issue to Supabase Ticket Format\nconst issues = $input.all();\nconst results = [];\n\nfor (const issue of issues) {\n  const jiraIssue = issue.json;\n  \n  // Mapping des types\n  const typeMap = {\n    'Bug': 'BUG',\n    'Task': 'REQ',\n    'Story': 'REQ',\n    'Sub-task': 'REQ'\n  };\n  \n  // Mapping des statuts\n  const statusMap = {\n    'To Do': 'Nouveau',\n    'In Progress': 'En_cours',\n    'Done': 'Resolue',\n    'Closed': 'Resolue',\n    'Resolved': 'Resolue',\n    'Reopened': 'En_cours'\n  };\n  \n  // Mapping des priorités\n  const priorityMap = {\n    'Lowest': 'Low',\n    'Low': 'Low',\n    'Medium': 'Medium',\n    'High': 'High',\n    'Highest': 'High',\n    'Critical': 'High'\n  };\n  \n  // Extraire les labels\n  const labels = jiraIssue.fields.labels || [];\n  const productLabel = labels.find(l => l.startsWith('product:'));\n  const moduleLabel = labels.find(l => l.startsWith('module:'));\n  const canalLabel = labels.find(l => l.startsWith('canal:'));\n  \n  const productName = productLabel ? productLabel.replace('product:', '') : null;\n  const moduleName = moduleLabel ? moduleLabel.replace('module:', '') : null;\n  const canal = canalLabel ? canalLabel.replace('canal:', '') : 'Email';\n  \n  // Dates\n  const createdAt = new Date(jiraIssue.fields.created).toISOString();\n  const updatedAt = new Date(jiraIssue.fields.updated || jiraIssue.fields.created).toISOString();\n  \n  results.push({\n    json: {\n      jira_issue_key: jiraIssue.key,\n      jira_issue_id: jiraIssue.id,\n      title: jiraIssue.fields.summary || 'Sans titre',\n      description: jiraIssue.fields.description || '',\n      ticket_type: typeMap[jiraIssue.fields.issuetype.name] || 'BUG',\n      status: statusMap[jiraIssue.fields.status.name] || 'En_cours',\n      priority: priorityMap[jiraIssue.fields.priority?.name] || 'Medium',\n      canal: canal,\n      product_name: productName,\n      module_name: moduleName,\n      assignee_email: jiraIssue.fields.assignee?.emailAddress || null,\n      reporter_email: jiraIssue.fields.reporter?.emailAddress || null,\n      created_at_jira: createdAt,\n      updated_at_jira: updatedAt,\n      jira_self: jiraIssue.self,\n      needs_product_lookup: !!productName,\n      needs_module_lookup: !!moduleName\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "map-jira",
+      "name": "Map JIRA to Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "tickets",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "jira_issue_key",
+              "condition": "equal",
+              "keyValue": "={{ $json.jira_issue_key }}"
+            }
+          ]
+        },
+        "options": {
+          "returnSingle": true
+        }
+      },
+      "id": "check-exists",
+      "name": "Check if Ticket Exists",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "exists",
+                    "leftValue": "={{ $json.id }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "exists"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-exists",
+      "name": "Switch - Exists or Not",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "JIRA Search Issues", "type": "main", "index": 0 }]]
+    },
+    "JIRA Search Issues": {
+      "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]]
+    },
+    "Split In Batches": {
+      "main": [[{ "node": "Map JIRA to Supabase", "type": "main", "index": 0 }]]
+    },
+    "Map JIRA to Supabase": {
+      "main": [[{ "node": "Check if Ticket Exists", "type": "main", "index": 0 }]]
+    },
+    "Check if Ticket Exists": {
+      "main": [[{ "node": "Switch - Exists or Not", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-17T00:00:00.000Z",
+  "versionId": "1"
+}
+

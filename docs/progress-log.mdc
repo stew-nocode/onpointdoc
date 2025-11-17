@@ -68,9 +68,26 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Gestion séparée erreurs upload fichiers (ne bloque pas création ticket).
   - Messages d'erreur détaillés dans services (users, contacts, tickets).
 
+## 2025-01-17
+- ✅ **Synchronisation complète JIRA ↔ Supabase**
+  - Documentation complète des workflows N8N pour synchroniser TOUS les tickets JIRA (existants et futurs).
+  - Workflow "Import Initial" pour importer tous les tickets JIRA existants vers Supabase.
+  - Workflow "Synchronisation Continue" avec création automatique des tickets manquants.
+  - Mapping complet JIRA → Supabase (types, statuts, priorités, labels).
+  - Résolution automatique product_id/module_id depuis les labels JIRA.
+  - Guide de mise en place étape par étape.
+  - Fichiers JSON prêts à importer dans N8N.
+- ✅ **Analyse et optimisation base de données**
+  - Analyse complète de la structure pour la synchronisation JIRA.
+  - Identification des index manquants pour optimiser les performances.
+  - Migration SQL d'optimisation prête à appliquer (6 index + 1 contrainte).
+  - Documentation d'analyse avec recommandations prioritaires.
+
 ## À faire
-- ⏳ **Intégration JIRA automatique BUG/REQ** : Transfert automatique des tickets BUG/REQUÊTE vers JIRA via N8N après création.
-- ⏳ Workflows N8N/JIRA selon `docs/workflows/n8n-setup-guide.md` et webhooks de synchro retour.
+- ⏳ **Configuration N8N** : Importer et configurer les workflows N8N pour la synchronisation complète.
+- ⏳ **Import initial** : Exécuter l'import initial des tickets JIRA existants.
+- ⏳ **Webhooks JIRA** : Configurer les webhooks JIRA pour la synchronisation continue.
+- ⏳ **Tests** : Valider que tous les tickets JIRA sont synchronisés et que les changements remontent en temps réel.
 - ⏳ Édition/Suppression côté "Contacts" (si souhaité).
 - ⏳ Recherche/filtrage/pagination avancée sur listes (Users/Companies/Modules/…).
 - ⏳ Tests unitaires/e2e sur services sensibles (auth, RLS, creation flows).

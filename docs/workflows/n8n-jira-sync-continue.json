@@ -1,0 +1,112 @@
+{
+  "name": "Sync JIRA to Supabase (Full Sync)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jira-full-sync",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "jira-full-sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire et valider les données du webhook JIRA\nconst webhook = $input.item.json;\nconst issue = webhook.issue;\n\nif (!issue || !issue.key) {\n  throw new Error('Issue key manquant dans le webhook');\n}\n\nconst jiraKey = issue.key;\nconst webhookEvent = webhook.webhookEvent;\n\n// Mapping des statuts\nconst statusMap = {\n  'To Do': 'Nouveau',\n  'In Progress': 'En_cours',\n  'Done': 'Resolue',\n  'Closed': 'Resolue',\n  'Resolved': 'Resolue',\n  'Reopened': 'En_cours'\n};\n\nconst typeMap = {\n  'Bug': 'BUG',\n  'Task': 'REQ',\n  'Story': 'REQ',\n  'Sub-task': 'REQ'\n};\n\nconst priorityMap = {\n  'Lowest': 'Low',\n  'Low': 'Low',\n  'Medium': 'Medium',\n  'High': 'High',\n  'Highest': 'High',\n  'Critical': 'High'\n};\n\n// Extraire les labels\nconst labels = issue.fields.labels || [];\nconst productLabel = labels.find(l => l.startsWith('product:'));\nconst moduleLabel = labels.find(l => l.startsWith('module:'));\nconst canalLabel = labels.find(l => l.startsWith('canal:'));\n\nreturn {\n  json: {\n    jira_issue_key: jiraKey,\n    jira_issue_id: issue.id,\n    webhook_event: webhookEvent,\n    issue: issue,\n    changelog: webhook.changelog || {},\n    title: issue.fields.summary || 'Sans titre',\n    description: issue.fields.description || '',\n    ticket_type: typeMap[issue.fields.issuetype.name] || 'BUG',\n    status: statusMap[issue.fields.status.name] || 'En_cours',\n    priority: priorityMap[issue.fields.priority?.name] || 'Medium',\n    canal: canalLabel ? canalLabel.replace('canal:', '') : 'Email',\n    product_name: productLabel ? productLabel.replace('product:', '') : null,\n    module_name: moduleLabel ? moduleLabel.replace('module:', '') : null,\n    assignee_email: issue.fields.assignee?.emailAddress || null,\n    reporter_email: issue.fields.reporter?.emailAddress || null,\n    created_at_jira: new Date(issue.fields.created).toISOString(),\n    updated_at_jira: new Date(issue.fields.updated || issue.fields.created).toISOString()\n  }\n};"
+      },
+      "id": "extract-validate",
+      "name": "Extract and Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "tickets",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "jira_issue_key",
+              "condition": "equal",
+              "keyValue": "={{ $json.jira_issue_key }}"
+            }
+          ]
+        },
+        "options": {
+          "returnSingle": true
+        }
+      },
+      "id": "check-exists",
+      "name": "Check if Ticket Exists",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "exists",
+                    "leftValue": "={{ $json.id }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "exists"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-create-update",
+      "name": "Switch - Create or Update",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Extract and Validate", "type": "main", "index": 0 }]]
+    },
+    "Extract and Validate": {
+      "main": [[{ "node": "Check if Ticket Exists", "type": "main", "index": 0 }]]
+    },
+    "Check if Ticket Exists": {
+      "main": [[{ "node": "Switch - Create or Update", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-17T00:00:00.000Z",
+  "versionId": "1"
+}
+
