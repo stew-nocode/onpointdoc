@@ -283,6 +283,54 @@ export async function syncJiraToSupabase(
     ticketUpdate.resolved_at = jiraData.customfield_10115;
   }
 
+  // Phase 5: Mapper les champs spécifiques produits dans custom_fields
+  const productSpecificFields = [
+    'customfield_10297', // OBC - Opérations
+    'customfield_10298', // OBC - Finance
+    'customfield_10300', // OBC - RH
+    'customfield_10299', // OBC - Projets
+    'customfield_10301', // OBC - CRM
+    'customfield_10313', // Finance
+    'customfield_10324', // RH
+    'customfield_10364'  // Paramétrage admin
+  ];
+
+  const customFields: Record<string, any> = {
+    product_specific: {},
+    metadata: {
+      jira_custom_field_ids: [],
+      last_updated: new Date().toISOString()
+    }
+  };
+
+  for (const fieldId of productSpecificFields) {
+    const fieldValue = (jiraData as any)[fieldId];
+    if (fieldValue) {
+      // Extraire la valeur (peut être string, object avec value/name, ou array)
+      let value: string | null = null;
+      
+      if (typeof fieldValue === 'string') {
+        value = fieldValue;
+      } else if (Array.isArray(fieldValue)) {
+        value = fieldValue.map((v: any) => 
+          typeof v === 'string' ? v : v?.value || v?.name || null
+        ).filter(Boolean).join(', ');
+      } else if (fieldValue && typeof fieldValue === 'object') {
+        value = fieldValue.value || fieldValue.name || null;
+      }
+      
+      if (value) {
+        customFields.product_specific[fieldId] = value;
+        customFields.metadata.jira_custom_field_ids.push(fieldId);
+      }
+    }
+  }
+
+  // Ajouter custom_fields au ticketUpdate si non vide
+  if (Object.keys(customFields.product_specific).length > 0) {
+    ticketUpdate.custom_fields = customFields;
+  }
+
   // 6. Mettre à jour le ticket
   const { error: ticketError } = await supabase
     .from('tickets')
@@ -321,6 +369,22 @@ export async function syncJiraToSupabase(
     syncMetadata.jira_feature = jiraData.customfield_10052.value;
     if (jiraData.customfield_10052.id) {
       syncMetadata.jira_feature_id = jiraData.customfield_10052.id;
+    }
+  }
+
+  // Phase 5: Ajouter les métadonnées des champs spécifiques produits
+  const productSpecificFields = [
+    'customfield_10297', 'customfield_10298', 'customfield_10300',
+    'customfield_10299', 'customfield_10301', 'customfield_10313',
+    'customfield_10324', 'customfield_10364'
+  ];
+
+  for (const fieldId of productSpecificFields) {
+    const fieldValue = (jiraData as any)[fieldId];
+    if (fieldValue) {
+      syncMetadata[fieldId] = typeof fieldValue === 'string' 
+        ? fieldValue 
+        : fieldValue?.value || fieldValue?.name || null;
     }
   }
 

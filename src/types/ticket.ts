@@ -32,6 +32,24 @@ export type Ticket = {
   related_ticket_key?: string | null;
   target_date?: string | null;
   resolved_at?: string | null;
+  // Phase 5: Champs spécifiques produits (JSONB)
+  custom_fields?: {
+    product_specific?: {
+      customfield_10297?: string; // OBC - Opérations
+      customfield_10298?: string; // OBC - Finance
+      customfield_10300?: string; // OBC - RH
+      customfield_10299?: string; // OBC - Projets
+      customfield_10301?: string; // OBC - CRM
+      customfield_10313?: string; // Finance
+      customfield_10324?: string; // RH
+      customfield_10364?: string; // Paramétrage admin
+      [key: string]: string | undefined; // Pour extensibilité
+    };
+    metadata?: {
+      jira_custom_field_ids?: string[];
+      last_updated?: string;
+    };
+  } | null;
   created_at: string;
   updated_at?: string;
   duration_minutes?: number | null;
