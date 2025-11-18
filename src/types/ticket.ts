@@ -23,6 +23,15 @@ export type Ticket = {
   jira_metadata?: Record<string, any> | null;
   resolution?: string | null;
   fix_version?: string | null;
+  // Phase 4: Champs workflow et suivi
+  workflow_status?: string | null;
+  test_status?: string | null;
+  issue_type?: string | null;
+  sprint_id?: string | null;
+  related_ticket_id?: string | null;
+  related_ticket_key?: string | null;
+  target_date?: string | null;
+  resolved_at?: string | null;
   created_at: string;
   updated_at?: string;
   duration_minutes?: number | null;

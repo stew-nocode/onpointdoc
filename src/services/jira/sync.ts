@@ -48,7 +48,24 @@ export interface JiraIssueData {
   customfield_10020?: {
     id: string;
     name?: string;
-  }; // Sprint
+    value?: string;
+  } | string; // Sprint
+  // Phase 4: Champs workflow et suivi
+  customfield_10083?: {
+    value: string;
+    id: string;
+  } | string; // Workflow status
+  customfield_10084?: {
+    value: string;
+    id: string;
+  } | string; // Test status
+  customfield_10021?: {
+    value: string;
+    id: string;
+  } | string; // Issue type (Bug, Impediment, etc.)
+  customfield_10057?: string; // Related ticket key
+  customfield_10111?: string; // Target date
+  customfield_10115?: string; // Resolved at
   // Phase 2: Champs client/contact
   customfield_10053?: string; // Nom du client
   customfield_10054?: {
@@ -204,6 +221,68 @@ export async function syncJiraToSupabase(
     ticketUpdate.submodule_id = submoduleId;
   }
 
+  // Phase 4: Ajouter les champs workflow et suivi
+  if (jiraData.customfield_10083) {
+    // Workflow status
+    const workflowStatus = typeof jiraData.customfield_10083 === 'string'
+      ? jiraData.customfield_10083
+      : jiraData.customfield_10083?.value || null;
+    if (workflowStatus) {
+      ticketUpdate.workflow_status = workflowStatus;
+    }
+  }
+
+  if (jiraData.customfield_10084) {
+    // Test status
+    const testStatus = typeof jiraData.customfield_10084 === 'string'
+      ? jiraData.customfield_10084
+      : jiraData.customfield_10084?.value || null;
+    if (testStatus) {
+      ticketUpdate.test_status = testStatus;
+    }
+  }
+
+  if (jiraData.customfield_10021) {
+    // Issue type (Bug, Impediment, etc.)
+    const issueType = typeof jiraData.customfield_10021 === 'string'
+      ? jiraData.customfield_10021
+      : jiraData.customfield_10021?.value || null;
+    if (issueType) {
+      ticketUpdate.issue_type = issueType;
+    }
+  }
+
+  if (jiraData.customfield_10020) {
+    // Sprint
+    const sprint = typeof jiraData.customfield_10020 === 'string'
+      ? jiraData.customfield_10020
+      : jiraData.customfield_10020?.name || jiraData.customfield_10020?.value || null;
+    if (sprint) {
+      ticketUpdate.sprint_id = sprint;
+    }
+  }
+
+  if (jiraData.customfield_10057) {
+    // Related ticket key
+    ticketUpdate.related_ticket_key = jiraData.customfield_10057;
+    
+    // Tenter de trouver le ticket lié dans Supabase
+    const relatedTicket = await findTicketByJiraKey(jiraData.customfield_10057);
+    if (relatedTicket) {
+      ticketUpdate.related_ticket_id = relatedTicket.id;
+    }
+  }
+
+  if (jiraData.customfield_10111) {
+    // Target date
+    ticketUpdate.target_date = jiraData.customfield_10111;
+  }
+
+  if (jiraData.customfield_10115) {
+    // Resolved at
+    ticketUpdate.resolved_at = jiraData.customfield_10115;
+  }
+
   // 6. Mettre à jour le ticket
   const { error: ticketError } = await supabase
     .from('tickets')
@@ -245,6 +324,23 @@ export async function syncJiraToSupabase(
     }
   }
 
+  // Phase 4: Extraire les valeurs workflow pour jira_sync
+  const jiraSprintId = typeof jiraData.customfield_10020 === 'string'
+    ? jiraData.customfield_10020
+    : jiraData.customfield_10020?.id || jiraData.customfield_10020?.name || null;
+  
+  const jiraWorkflowStatus = typeof jiraData.customfield_10083 === 'string'
+    ? jiraData.customfield_10083
+    : jiraData.customfield_10083?.value || null;
+  
+  const jiraTestStatus = typeof jiraData.customfield_10084 === 'string'
+    ? jiraData.customfield_10084
+    : jiraData.customfield_10084?.value || null;
+  
+  const jiraIssueType = typeof jiraData.customfield_10021 === 'string'
+    ? jiraData.customfield_10021
+    : jiraData.customfield_10021?.value || null;
+
   const jiraSyncUpdate = {
     jira_issue_key: jiraData.key,
     jira_status: jiraData.status.name,
@@ -253,7 +349,13 @@ export async function syncJiraToSupabase(
     jira_reporter_account_id: jiraData.reporter?.accountId || null,
     jira_resolution: jiraData.resolution?.name || null,
     jira_fix_version: jiraData.fixVersions?.[0]?.name || null,
-    jira_sprint_id: jiraData.customfield_10020?.id || null,
+    jira_sprint_id: jiraSprintId,
+    jira_workflow_status: jiraWorkflowStatus,
+    jira_test_status: jiraTestStatus,
+    jira_issue_type: jiraIssueType,
+    jira_related_ticket_key: jiraData.customfield_10057 || null,
+    jira_target_date: jiraData.customfield_10111 || null,
+    jira_resolved_at: jiraData.customfield_10115 || null,
     last_status_sync: supabaseStatus ? new Date().toISOString() : null,
     last_priority_sync: supabasePriority ? new Date().toISOString() : null,
     sync_metadata: Object.keys(syncMetadata).length > 0 ? syncMetadata : null,
@@ -330,5 +432,27 @@ async function mapJiraAccountIdToProfileId(jiraAccountId: string): Promise<strin
   }
 
   return data.id;
+}
+
+/**
+ * Trouve un ticket Supabase par sa clé Jira
+ * 
+ * @param jiraKey - Clé Jira (ex: "B-OD-029")
+ * @returns Le ticket trouvé ou null
+ */
+async function findTicketByJiraKey(jiraKey: string): Promise<{ id: string } | null> {
+  const supabase = createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from('jira_sync')
+    .select('ticket_id')
+    .eq('jira_issue_key', jiraKey)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return { id: data.ticket_id };
 }
 
