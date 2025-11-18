@@ -106,6 +106,54 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Structure standardisée pour tous les scripts : gestion erreurs, détection doublons, rapports détaillés.
 
 ## 2025-01-18
+
+### Mapping Jira → Supabase (Phases 1-5) ✅
+
+- ✅ **Phase 1 : Champs Standards**
+  - Migration SQL : Ajout de `resolution`, `fix_version` dans `tickets` et 10 colonnes dans `jira_sync`
+  - Tables de mapping : `jira_status_mapping`, `jira_priority_mapping` avec fonctions SQL
+  - Service : `syncJiraToSupabase` avec mapping statut/priorité
+  - Tests : 6/6 tests passés ✅
+
+- ✅ **Phase 2 : Informations Client/Contact**
+  - Migration SQL : Table `jira_channel_mapping` pour mapping canaux
+  - Service : `contact-mapping.ts` pour mapper client/entreprise/canal
+  - Extension `sync.ts` : Synchronisation client/contact/entreprise
+  - Tests : 5/5 tests passés ✅
+
+- ✅ **Phase 3 : Structure Produit/Module/Fonctionnalité**
+  - Migration SQL : Table `jira_feature_mapping` avec fonction `get_feature_id_from_jira`
+  - Service : `feature-mapping.ts` avec recherche flexible (exact, keywords, module)
+  - Scripts : `init-jira-feature-mappings.js`, `create-missing-features.js`, `create-jira-feature-mappings.js`
+  - Résolution cas "OBC" : Feature générique créée (124 tickets mappés)
+  - **43 features créées**, **57 mappings créés** (100% couverture)
+  - Tests : 5/5 tests passés ✅
+
+- ✅ **Phase 4 : Workflow et Suivi**
+  - Migration SQL : 7 colonnes dans `tickets` (workflow_status, test_status, issue_type, sprint_id, related_ticket_id, target_date, resolved_at)
+  - Extension `jira_sync` : 7 colonnes pour traçabilité
+  - Service : Mapping des champs workflow avec gestion des tickets liés
+  - Tests : 17/17 tests passés ✅
+
+- ✅ **Phase 5 : Champs Spécifiques Produits (JSONB)**
+  - Migration SQL : Colonne `custom_fields` (JSONB) avec index GIN
+  - Service : Mapping de 8 champs conditionnels par produit dans JSONB
+  - Structure : `{product_specific: {...}, metadata: {...}}`
+  - Tests : 9/9 tests passés ✅
+
+- ✅ **Tests End-to-End**
+  - Script : `test-end-to-end-jira-sync.js` avec tickets Jira réels
+  - Résultats : **100% de réussite** (13/13 champs mappés)
+  - Validation : Toutes les phases fonctionnelles ✅
+
+**Statistiques finales** :
+- ✅ 5 phases complétées
+- ✅ 42 tests unitaires passés
+- ✅ 13 tests end-to-end passés
+- ✅ 57 mappings fonctionnalités créés
+- ✅ 100% de couverture des fonctionnalités Jira
+
+## 2025-01-18 (ancien)
 - ✅ **Phase 1 : Mapping champs standards Jira ↔ Supabase**
   - Analyse complète de 813 bugs du projet Jira OD (OD10006) pour identifier tous les champs utilisés.
   - Migration SQL appliquée : ajout de `resolution` et `fix_version` dans `tickets`.
