@@ -7,28 +7,31 @@
 
 - **Tickets Jira analysés** : 1808 tickets avec `customfield_10052`
 - **Fonctionnalités uniques identifiées** : 57
-- **Mappings créés automatiquement** : 8 (via `init-jira-feature-mappings.js` + `create-jira-feature-mappings.js`)
-- **Mappings créés manuellement** : 4 (via `create-jira-feature-mappings.js` avec recherche améliorée)
-- **Total mappings créés** : 12
+- **Total mappings créés** : **15** ✅
 - **Fonctionnalités sans mapping** : 42
 
-## Mappings Créés Automatiquement (8)
+## Mappings Créés (15)
 
-1. ✅ `Opérations - Vente` → `Cycle de vente`
-2. ✅ `Opérations - Immobilisations` → `Analyser mes immobilisations`
-3. ✅ `Finance - Paramétrage` → `Paramétrage`
-4. ✅ `Opérations - Débours` → `Gestion des débours`
-5. ✅ `RH - Salaire` → `Calcul de salaire`
-6. ✅ `Opérations - Achat` → `Achat`
-7. ✅ `RH - Paramétrage` → `Paramétrage société`
-8. ✅ `Finance - Caisse` → `Caisse`
+1. ✅ `Opérations - Vente` → Feature mappée
+2. ✅ `Opérations - Immobilisations` → Feature mappée
+3. ✅ `Finance - Paramétrage` → Feature mappée
+4. ✅ `Opérations - Débours` → Feature mappée
+5. ✅ `RH - Salaire` → Feature mappée
+6. ✅ `Opérations - Achat` → Feature mappée
+7. ✅ `RH - Paramétrage` → Feature mappée
+8. ✅ `Finance - Caisse` → Feature mappée
+9. ✅ `Finance - Comptabilité Générale` → Feature mappée
+10. ✅ `RH - Gestion employé` → Feature mappée
+11. ✅ `Opérations - Gestion de stock` → Feature mappée
+12. ✅ `Finance - Comptabilité analytique` → Feature mappée
+13. ✅ `RH - Feuille de temps (Pointage)` → Feature mappée
+14. ✅ `RH - Avance sur mission` → Feature mappée
+15. ✅ `RH - Gestion de carrière` → Feature mappée
 
-## Mappings Créés avec Recherche Améliorée (4)
-
-9. ✅ `Finance - Comptabilité analytique` → `Comptabilité`
-10. ✅ `RH - Feuille de temps (Pointage)` → `Gestion de temps`
-11. ✅ `RH - Avance sur mission` → `Mission`
-12. ✅ `RH - Gestion de carrière` → `Gestion de prêts`
+**Note** : Pour voir les détails complets des mappings (feature_id, noms), utiliser :
+```bash
+node scripts/count-jira-feature-mappings.js
+```
 
 ## Fonctionnalités Sans Mapping (42)
 
@@ -88,13 +91,15 @@ Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessite
 
 ### Actions Immédiates
 
-1. **Créer les features manquantes prioritaires** dans Supabase pour les 6 fonctionnalités avec le plus de tickets :
-   - Finance - Comptabilité Générale (186 tickets)
-   - RH - Gestion employé (172 tickets)
-   - OBC (124 tickets)
-   - RH - Documents (107 tickets)
-   - Opérations - Gestion de stock (106 tickets)
-   - CRM - Activités commerciales (101 tickets)
+1. ✅ **Mappings prioritaires créés** :
+   - ✅ Finance - Comptabilité Générale (186 tickets) - **MAPPÉ**
+   - ✅ RH - Gestion employé (172 tickets) - **MAPPÉ**
+   - ✅ Opérations - Gestion de stock (106 tickets) - **MAPPÉ**
+
+2. **Créer les features manquantes prioritaires** dans Supabase pour :
+   - OBC (124 tickets) - ⚠️ **PRIORITÉ HAUTE**
+   - RH - Documents (107 tickets) - ⚠️ **PRIORITÉ HAUTE**
+   - CRM - Activités commerciales (101 tickets) - ⚠️ **PRIORITÉ HAUTE**
 
 2. **Vérifier les noms** : Certaines fonctionnalités peuvent exister sous des noms différents dans Supabase. Effectuer une recherche manuelle pour :
    - "Finance - Comptabilité Générale" → Chercher "Comptabilité Générale", "Comptabilité", etc.
@@ -104,10 +109,11 @@ Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessite
 
 ### Prochaines Étapes
 
-1. ✅ Mappings automatiques créés (12)
-2. ⏳ Créer les features manquantes prioritaires dans Supabase
+1. ✅ Mappings automatiques créés (15)
+2. ⏳ Créer les features manquantes prioritaires dans Supabase (OBC, RH - Documents, CRM - Activités commerciales)
 3. ⏳ Créer les mappings pour les features nouvellement créées
 4. ⏳ Valider les mappings avec un échantillon de tickets Jira
+5. ⏳ Créer les features restantes (42 fonctionnalités)
 
 ## Utilisation
 
