@@ -14,6 +14,7 @@ export const userCreateInternalSchema = z.object({
   companyId: z.string().uuid('Entreprise invalide'),
   isActive: z.boolean().default(true),
   department: z.enum(departments).optional().nullable(),
+  jobTitle: z.string().min(2).optional().nullable(),
   moduleIds: z.array(z.string().uuid()).default([])
 });
 export type UserCreateInternalInput = z.infer<typeof userCreateInternalSchema>;
@@ -26,6 +27,7 @@ export const userUpdateSchema = z.object({
   companyId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   department: z.enum(departments).optional().nullable(),
+  jobTitle: z.string().min(2).optional().nullable(),
   moduleIds: z.array(z.string().uuid()).optional()
 });
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
@@ -35,8 +37,19 @@ export const contactCreateSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   companyId: z.string().uuid(),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  jobTitle: z.string().min(2).optional().nullable()
 });
 export type ContactCreateInput = z.infer<typeof contactCreateSchema>;
+
+export const contactUpdateSchema = z.object({
+  id: z.string().uuid(),
+  fullName: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  companyId: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  jobTitle: z.string().min(2).optional().nullable()
+});
+export type ContactUpdateInput = z.infer<typeof contactUpdateSchema>;
 
 

@@ -24,6 +24,7 @@ export function NewContactDialog({ children }: Props) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -45,6 +46,7 @@ export function NewContactDialog({ children }: Props) {
         fullName,
         email,
         password,
+        jobTitle: jobTitle || undefined,
         companyId,
         isActive
       });
@@ -54,6 +56,7 @@ export function NewContactDialog({ children }: Props) {
       setFullName('');
       setEmail('');
       setPassword('');
+      setJobTitle('');
       setCompanyId('');
       setIsActive(true);
       router.refresh();
@@ -116,6 +119,15 @@ export function NewContactDialog({ children }: Props) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">Fonction</label>
+              <input
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+                placeholder="Ex: Chef comptable, Comptable, Standard..."
+              />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-700">Entreprise</label>

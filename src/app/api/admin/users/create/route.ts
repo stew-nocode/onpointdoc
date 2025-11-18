@@ -16,10 +16,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { fullName, email, password, role, companyId, isActive, moduleIds } = body as {
+    const { fullName, email, password, role, companyId, isActive, moduleIds, department, jobTitle } = body as {
       fullName: string; email: string; password: string;
       role: 'agent' | 'manager' | 'admin' | 'director' | 'client';
       companyId?: string | null; isActive?: boolean; moduleIds?: string[];
+      department?: string | null; jobTitle?: string | null;
     };
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -36,7 +37,14 @@ export async function POST(req: Request) {
     const authUid = created.user.id;
     // upsert profile
     const { error: upErr } = await admin.from('profiles').upsert({
-      auth_uid: authUid, email, full_name: fullName, role, company_id: companyId || null, is_active: isActive ?? true
+      auth_uid: authUid, 
+      email, 
+      full_name: fullName, 
+      role, 
+      company_id: companyId || null, 
+      is_active: isActive ?? true,
+      department: department || null,
+      job_title: jobTitle || null
     }, { onConflict: 'auth_uid' });
     if (upErr) return NextResponse.json(upErr.message, { status: 400 });
 

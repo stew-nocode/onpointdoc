@@ -67,23 +67,36 @@ async function loadProductsAndModules() {
 }
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  const tickets = await loadTickets(searchParams?.type, searchParams?.status);
-  const { products, modules, submodules, features, contacts } = await loadProductsAndModules();
+  noStore(); // S'assurer que la page n'est pas mise en cache
+  
+  try {
+    // Charger les données en parallèle
+    const [tickets, productsData] = await Promise.all([
+      loadTickets(searchParams?.type, searchParams?.status),
+      loadProductsAndModules()
+    ]);
+    const { products, modules, submodules, features, contacts } = productsData;
 
-  let counters:
-    | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
-    | undefined;
-  if (searchParams?.type === 'BUG' || searchParams?.type === 'REQ' || searchParams?.type === 'ASSISTANCE') {
-    counters = await countTicketsByStatus(searchParams.type as any);
-  }
+    let counters:
+      | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
+      | undefined;
+    
+    if (searchParams?.type === 'BUG' || searchParams?.type === 'REQ' || searchParams?.type === 'ASSISTANCE') {
+      try {
+        counters = await countTicketsByStatus(searchParams.type as any);
+      } catch (error) {
+        console.error('Erreur lors du calcul des compteurs:', error);
+        counters = undefined;
+      }
+    }
 
-  async function handleTicketSubmit(values: CreateTicketInput) {
-    'use server';
-    const created = await createTicket(values);
-    return created?.id as string;
-  }
+    async function handleTicketSubmit(values: CreateTicketInput) {
+      'use server';
+      const created = await createTicket(values);
+      return created?.id as string;
+    }
 
-  return (
+    return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -107,51 +120,59 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         />
       </div>
 
-      {['BUG', 'REQ', 'ASSISTANCE'].includes(searchParams?.type ?? '') && (
-        <div className="overflow-x-auto">
-          <div className="flex gap-2">
-            {[undefined, ...TICKET_STATUSES].map((statusOption) => {
-              const isActive =
-                searchParams?.status === statusOption ||
-                (!searchParams?.status && statusOption === undefined);
-              const href = statusOption
-                ? `/gestion/tickets?type=${searchParams?.type}&status=${statusOption}`
-                : `/gestion/tickets?type=${searchParams?.type}`;
-              return (
-                <Link
-                  key={(statusOption ?? 'ALL') + (searchParams?.type ?? '')}
-                  href={href}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    isActive
-                      ? 'bg-brand text-white dark:bg-brand dark:text-white'
-                      : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
-                  }`}
-                >
-                  <span>
-                    {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
+      <div className="overflow-x-auto">
+        <div className="flex gap-2">
+          {[undefined, ...TICKET_STATUSES].map((statusOption) => {
+            const isActive =
+              searchParams?.status === statusOption ||
+              (!searchParams?.status && statusOption === undefined);
+            
+            // Construire l'URL en préservant le type s'il existe
+            const params = new URLSearchParams();
+            if (searchParams?.type) {
+              params.set('type', searchParams.type);
+            }
+            if (statusOption) {
+              params.set('status', statusOption);
+            }
+            const href = params.toString() 
+              ? `/gestion/tickets?${params.toString()}`
+              : '/gestion/tickets';
+            
+            return (
+              <Link
+                key={(statusOption ?? 'ALL') + (searchParams?.type ?? 'ALL')}
+                href={href}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                  isActive
+                    ? 'bg-brand text-white dark:bg-brand dark:text-white'
+                    : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
+                }`}
+              >
+                <span>
+                  {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
+                </span>
+                {statusOption && counters && (
+                  <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
+                    isActive 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400'
+                  }`}>
+                    {counters[statusOption as (typeof TICKET_STATUSES)[number]] ?? 0}
                   </span>
-                  {statusOption && counters && (
-                    <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
-                      isActive 
-                        ? 'bg-white/20 text-white' 
-                        : 'bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400'
-                    }`}>
-                      {counters[statusOption as (typeof TICKET_STATUSES)[number]] ?? 0}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+                )}
+              </Link>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Tickets récents</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-full text-left">
             <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="pb-2">Titre</th>
@@ -165,7 +186,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {tickets.map((ticket) => (
                 <tr key={ticket.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="py-3 font-medium">
+                  <td className="py-3 text-xs font-medium">
                     <Link
                       href={`/gestion/tickets/${ticket.id}`}
                       className="text-brand hover:underline dark:text-status-info dark:hover:text-status-info/80"
@@ -173,8 +194,8 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                       {ticket.title}
                     </Link>
                   </td>
-                  <td className="py-3 text-slate-600 dark:text-slate-300">{ticket.ticket_type}</td>
-                  <td className="py-3">
+                  <td className="py-3 text-xs text-slate-600 dark:text-slate-300">{ticket.ticket_type}</td>
+                  <td className="py-3 text-xs">
                     <Badge
                       variant={
                         ticket.status === 'Resolue'
@@ -187,13 +208,13 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                       {ticket.status.replace('_', ' ')}
                     </Badge>
                   </td>
-                  <td className="py-3 capitalize text-slate-600 dark:text-slate-300">
+                  <td className="py-3 text-xs capitalize text-slate-600 dark:text-slate-300">
                     {ticket.priority}
                   </td>
-                  <td className="py-3 text-slate-600 dark:text-slate-300">
+                  <td className="py-3 text-xs text-slate-600 dark:text-slate-300">
                     {ticket.assigned_to ?? '-'}
                   </td>
-                  <td className="py-3 text-right">
+                  <td className="py-3 text-right text-xs">
                     <div className="flex justify-end gap-1.5">
                       <Link
                         href={`/gestion/tickets/${ticket.id}`}
@@ -216,6 +237,19 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         </CardContent>
       </Card>
     </div>
-  );
+    );
+  } catch (error: any) {
+    console.error('Erreur lors du chargement de la page des tickets:', error);
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border border-status-danger bg-status-danger/10 p-4 text-status-danger">
+          <p className="font-semibold">Erreur lors du chargement</p>
+          <p className="text-sm">
+            {error?.message || 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 }
 

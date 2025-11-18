@@ -36,6 +36,7 @@ export function NewUserDialog({ children }: Props) {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'agent' | 'manager' | 'admin' | 'director'>('agent');
   const [department, setDepartment] = useState<Department | ''>('');
+  const [jobTitle, setJobTitle] = useState('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [moduleToAdd, setModuleToAdd] = useState<string>('');
@@ -63,6 +64,7 @@ export function NewUserDialog({ children }: Props) {
         password,
         role,
         department: department || undefined,
+        jobTitle: jobTitle || undefined,
         companyId,
         isActive,
         moduleIds: selectedModuleIds
@@ -75,6 +77,7 @@ export function NewUserDialog({ children }: Props) {
       setPassword('');
       setRole('agent');
       setDepartment('');
+      setJobTitle('');
       setCompanyId('');
       setIsActive(true);
       setSelectedModuleIds([]);
@@ -182,6 +185,15 @@ export function NewUserDialog({ children }: Props) {
                 />
               </RadioGroup>
             </div>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-medium text-slate-700">Fonction</label>
+            <input
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Ex: Chef comptable, Directeur Technique..."
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-sm font-medium text-slate-700">Entreprise</label>

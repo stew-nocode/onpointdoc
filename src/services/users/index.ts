@@ -19,6 +19,7 @@ export async function createInternalUser(input: UserCreateInternalInput): Promis
         companyId: payload.companyId,
         isActive: payload.isActive,
         department: payload.department ?? null,
+        jobTitle: payload.jobTitle ?? null,
         moduleIds: payload.moduleIds
       })
     });
@@ -51,6 +52,7 @@ export async function updateUser(input: UserUpdateInput): Promise<void> {
   if (fields.companyId !== undefined) updatePayload.company_id = fields.companyId;
   if (fields.isActive !== undefined) updatePayload.is_active = fields.isActive;
   if (fields.department !== undefined) updatePayload.department = fields.department ?? null;
+  if (fields.jobTitle !== undefined) updatePayload.job_title = fields.jobTitle ?? null;
 
   if (Object.keys(updatePayload).length > 0) {
     const { error } = await supabase.from('profiles').update(updatePayload).eq('id', id);

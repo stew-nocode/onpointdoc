@@ -39,6 +39,7 @@ export function EditUserDialog({ userId, trigger }: Props) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'agent' | 'manager' | 'admin' | 'director'>('agent');
   const [department, setDepartment] = useState<Department | ''>('');
+  const [jobTitle, setJobTitle] = useState('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
   const [moduleToAdd, setModuleToAdd] = useState<string>('');
@@ -58,13 +59,14 @@ export function EditUserDialog({ userId, trigger }: Props) {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, email, role, department, is_active, company_id')
+        .select('full_name, email, role, department, job_title, is_active, company_id')
         .eq('id', userId)
         .single();
       setFullName((profile?.full_name as string) ?? '');
       setEmail((profile?.email as string) ?? '');
       setRole((profile?.role ?? 'agent') as 'agent' | 'manager' | 'admin' | 'director');
       setDepartment((profile?.department as Department) ?? '');
+      setJobTitle((profile?.job_title as string) ?? '');
       setCompanyId((profile?.company_id as string) ?? '');
       setIsActive((profile?.is_active as boolean) ?? true);
 
@@ -88,6 +90,7 @@ export function EditUserDialog({ userId, trigger }: Props) {
         email,
         role,
         department: department || undefined,
+        jobTitle: jobTitle || undefined,
         companyId: companyId || undefined,
         isActive,
         moduleIds: selectedModuleIds
@@ -191,10 +194,19 @@ export function EditUserDialog({ userId, trigger }: Props) {
                     icon={<Megaphone className="h-4 w-4" />}
                   />
                 </RadioGroup>
-              </div>
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-slate-700">Entreprise</label>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-medium text-slate-700">Fonction</label>
+            <input
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              placeholder="Ex: Chef comptable, Directeur Technique..."
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-sm font-medium text-slate-700">Entreprise</label>
               <Combobox
                 options={companies.map((c) => ({ value: c.id, label: c.name }))}
                 value={companyId}

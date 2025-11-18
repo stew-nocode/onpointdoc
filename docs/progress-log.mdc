@@ -82,6 +82,28 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Identification des index manquants pour optimiser les performances.
   - Migration SQL d'optimisation prête à appliquer (6 index + 1 contrainte).
   - Documentation d'analyse avec recommandations prioritaires.
+- ✅ **Import massif des contacts clients**
+  - Création de 25+ scripts d'import par entreprise (`import-contacts-{company}.js`).
+  - Import réussi pour : ARIC, 2AAZ, AFRIC URBA, CIP, CSCTICAO, CILAGRI, ECORIGINE, EDIPRESSE, EGBV, EJARA, ENVAL, ETRAKOM, ETS MAB, FALCON, FIRST CAPITAL, IVOIRE DEVELOPPEMENT, JOEL K PROPERTIES, KOFFI & DIABATE, KORI TRANSPORT, LABOGEM, OTOMASYS, ROCFED, S-TEL, SIE-TRAVAUX, SIS, SIT BTP, VENUS DISTRIBUTION.
+  - Support du champ `job_title` (fonction) pour tous les contacts.
+  - Script de mise à jour des fonctions CILAGRI (`update-cilagri-job-titles.js`).
+- ✅ **Gestion des fonctions utilisateurs**
+  - Ajout du champ `job_title` (TEXT, nullable) dans la table `profiles`.
+  - Migration SQL créée et appliquée.
+  - Intégration dans tous les formulaires (création/édition utilisateurs et contacts).
+  - Affichage conditionnel dans les vues détaillées.
+  - Documentation complète dans `docs/import/GESTION-FONCTIONS-UTILISATEURS.md`.
+- ✅ **Script d'import ONPOINT AFRICA GROUP**
+  - Création du script `import-onpoint-africa-group-users.js`.
+  - Support des utilisateurs internes (éditeur) : rôles agent/manager/admin/director avec département et modules.
+  - Support des utilisateurs clients (externe) : rôle client associé à l'entreprise.
+  - Génération automatique de mots de passe temporaires si non fournis.
+  - Gestion des affectations modules pour les utilisateurs internes.
+- ✅ **Documentation professionnelle des scripts d'import**
+  - Guide complet d'utilisation (`scripts/README-IMPORT.md`) : prérequis, structure, exemples, dépannage.
+  - Guide de maintenance (`docs/import/GUIDE-MAINTENANCE-SCRIPTS.md`) : patterns réutilisables, bonnes pratiques, évolutivité, tests.
+  - Mise à jour du plan d'import (`docs/import/PLAN-IMPORT-DONNEES.md`) avec état d'avancement détaillé.
+  - Structure standardisée pour tous les scripts : gestion erreurs, détection doublons, rapports détaillés.
 
 ## À faire
 - ⏳ **Configuration N8N** : Importer et configurer les workflows N8N pour la synchronisation complète.

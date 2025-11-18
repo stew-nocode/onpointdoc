@@ -5,7 +5,9 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 import { ViewUserDialog } from '@/components/users/view-user-dialog';
 import { EditUserDialog } from '@/components/users/edit-user-dialog';
+import { EditContactDialog } from '@/components/users/edit-contact-dialog';
 import { DeleteUserButton } from '@/components/users/delete-user-button';
+import { DeleteContactButton } from '@/components/users/delete-contact-button';
 import { Button } from '@/ui/button';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
@@ -186,7 +188,7 @@ export function ContactsTable({ rows, companies, statusPreset = 'all' }: Props) 
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+        <table className="min-w-full text-left">
           <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <tr>
               <th className="pb-2">
@@ -208,7 +210,7 @@ export function ContactsTable({ rows, companies, statusPreset = 'all' }: Props) 
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredRows.map((u) => (
               <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td className="py-3">
+                <td className="py-3 text-xs">
                   <input
                     type="checkbox"
                     aria-label="Sélectionner le contact"
@@ -218,11 +220,11 @@ export function ContactsTable({ rows, companies, statusPreset = 'all' }: Props) 
                     className="h-4 w-4 rounded border-slate-300 text-brand focus-visible:outline-brand dark:border-slate-600 disabled:opacity-40"
                   />
                 </td>
-                <td className="py-3 font-medium">{u.full_name ?? '-'}</td>
-                <td className="py-3">{u.email ?? '-'}</td>
-                <td className="py-3">{(u.company_id && companies[u.company_id]) ?? '-'}</td>
-                <td className="py-3">{u.is_active ? 'Oui' : 'Non'}</td>
-                <td className="py-3 text-right">
+                <td className="py-3 text-xs font-medium">{u.full_name ?? '-'}</td>
+                <td className="py-3 text-xs">{u.email ?? '-'}</td>
+                <td className="py-3 text-xs">{(u.company_id && companies[u.company_id]) ?? '-'}</td>
+                <td className="py-3 text-xs">{u.is_active ? 'Oui' : 'Non'}</td>
+                <td className="py-3 text-right text-xs">
                   <div className="flex justify-end gap-1.5">
                     <ViewUserDialog
                       userId={u.id}
@@ -235,31 +237,56 @@ export function ContactsTable({ rows, companies, statusPreset = 'all' }: Props) 
                         </button>
                       }
                     />
-                    <EditUserDialog
-                      userId={u.id}
-                      trigger={
-                        <button
+                    {(u.role ?? 'client') === 'client' ? (
+                      <>
+                        <EditContactDialog
+                          contactId={u.id}
+                          trigger={
+                            <button
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
+                              aria-label="Modifier le contact"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          }
+                        />
+                        <DeleteContactButton
+                          contactId={u.id}
+                          contactName={u.full_name ?? u.email ?? 'Contact'}
                           className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
-                          aria-label="Modifier le contact"
                         >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                      }
-                    />
-                    <DeleteUserButton
-                      userId={u.id}
-                      userName={u.full_name ?? u.email ?? 'Contact'}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </DeleteUserButton>
+                          <Trash2 className="h-3 w-3" />
+                        </DeleteContactButton>
+                      </>
+                    ) : (
+                      <>
+                        <EditUserDialog
+                          userId={u.id}
+                          trigger={
+                            <button
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
+                              aria-label="Modifier l'utilisateur"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                          }
+                        />
+                        <DeleteUserButton
+                          userId={u.id}
+                          userName={u.full_name ?? u.email ?? 'Utilisateur'}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </DeleteUserButton>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
             ))}
             {!filteredRows.length && (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                <td colSpan={6} className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
                   Aucun contact ne correspond aux filtres.
                 </td>
               </tr>
