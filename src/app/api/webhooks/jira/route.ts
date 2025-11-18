@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { syncJiraToSupabase, JiraIssueData } from '@/services/jira';
 
 /**
  * Route API pour recevoir les webhooks JIRA via N8N
@@ -7,16 +8,20 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
  * Cette route est appelée par N8N après traitement des événements JIRA
  * pour mettre à jour Supabase avec les statuts, commentaires et assignations.
  * 
+ * Supporte deux formats :
+ * 1. Format simplifié (legacy) : { event_type, ticket_id, jira_issue_key, updates }
+ * 2. Format complet (Phase 1) : { ticket_id, jira_data: JiraIssueData }
+ * 
  * Note: En production, cette route devrait être sécurisée (authentification, validation)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { event_type, ticket_id, jira_issue_key, updates } = body;
+    const { event_type, ticket_id, jira_issue_key, updates, jira_data } = body;
 
-    if (!ticket_id || !jira_issue_key) {
+    if (!ticket_id) {
       return NextResponse.json(
-        { error: 'ticket_id et jira_issue_key requis' },
+        { error: 'ticket_id requis' },
         { status: 400 }
       );
     }
@@ -26,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Vérifier que le ticket existe
     const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
-      .select('id, jira_issue_key')
+      .select('id, jira_issue_key, ticket_type')
       .eq('id', ticket_id)
       .single();
 
@@ -34,6 +39,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Ticket non trouvé' },
         { status: 404 }
+      );
+    }
+
+    // Format complet avec jira_data (Phase 1)
+    if (jira_data) {
+      try {
+        await syncJiraToSupabase(ticket_id, jira_data as JiraIssueData);
+        return NextResponse.json({ success: true, message: 'Synchronisation complète réussie' });
+      } catch (syncError) {
+        console.error('Erreur lors de la synchronisation complète:', syncError);
+        return NextResponse.json(
+          { error: 'Erreur de synchronisation', message: syncError instanceof Error ? syncError.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Format simplifié (legacy) - Compatibilité avec l'ancien workflow
+    if (!jira_issue_key) {
+      return NextResponse.json(
+        { error: 'jira_issue_key requis pour le format simplifié' },
+        { status: 400 }
       );
     }
 
@@ -85,7 +112,7 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    // Mettre à jour jira_sync
+    // Mettre à jour jira_sync (format simplifié)
     await supabase
       .from('jira_sync')
       .upsert({
