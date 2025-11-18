@@ -47,26 +47,33 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 // DONNÉES À MODIFIER ICI
 // ============================================
 const usersData = [
-  // Exemple utilisateurs INTERNES (éditeur)
-  // {
-  //   "Nom Complet": "John Doe",
-  //   "Email": "john.doe@onpoint.africa",
-  //   "Rôle": "agent",
-  //   "Département": "Support",
-  //   "Fonction": "Agent Support",
-  //   "Modules": "Finance, RH",
-  //   "Mot de passe": "TempPass123!"
-  // },
-  // Exemple utilisateurs CLIENTS (externe)
-  // {
-  //   "Nom Complet": "Jane Client",
-  //   "Email": "jane.client@onpoint.africa",
-  //   "Rôle": "client",
-  //   "Département": "",
-  //   "Fonction": "Chef de projet",
-  //   "Modules": "",
-  //   "Mot de passe": "TempPass123!"
-  // }
+  { "Nom Complet": "Edwige KOUASSI", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "DORIS N'GBRA", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "KOKONBO PHILOMENE", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Joël SIE", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "GNAHORE AMOS", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "MONSIEUR VATI", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "M. Martial", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Vivien DAKPOGAN", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "EVA BASSE", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "DELPHIN", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "FABIEN VATI", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Olivier Kacou", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "CEDRIC EMMANUELLA", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "M.SANANKOUA", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Ursula YANGANGOUSSOU", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "OLIVIA NGO", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Gaelle TOURE", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "MADAME ALAO", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "DORIANE", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "M. SIE KONAN", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Charley KOUAME", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "Mme EBEQUOI", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "ESTHER ALIDJA", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "MYRIAM", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "FABIEN", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "MONSIEUR KOFFI MARIUS", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" },
+  { "Nom Complet": "SUPPORT JOEL", "Email": "", "Rôle": "client", "Département": "", "Fonction": "", "Modules": "", "Mot de passe": "" }
 ];
 
 // ============================================
@@ -166,64 +173,126 @@ async function assignModules(profileId, moduleIds) {
  */
 async function importUser(userData, onpointCompanyId) {
   const fullName = userData['Nom Complet']?.trim();
-  const email = userData['Email']?.trim();
+  const email = userData['Email']?.trim() || null;
   const role = userData['Rôle']?.trim().toLowerCase();
   const department = userData['Département']?.trim() || null;
   const jobTitle = userData['Fonction']?.trim() || null;
   const moduleNames = userData['Modules']?.trim() || '';
   const password = userData['Mot de passe']?.trim() || generateTempPassword();
 
-  if (!fullName || !email) {
-    throw new Error('Nom complet et email requis');
+  if (!fullName) {
+    throw new Error('Nom complet requis');
+  }
+
+  // Pour les utilisateurs internes, l'email est requis pour créer un compte Auth
+  const validInternalRoles = ['agent', 'manager', 'admin', 'director'];
+  const isInternalUser = validInternalRoles.includes(role);
+  if (isInternalUser && !email) {
+    throw new Error(`Email requis pour les utilisateurs internes (${role})`);
   }
 
   // Validation du rôle
-  const validInternalRoles = ['agent', 'manager', 'admin', 'director'];
   const isValidRole = role === 'client' || validInternalRoles.includes(role);
   if (!isValidRole) {
     throw new Error(`Rôle invalide: ${role}. Attendu: agent, manager, admin, director, ou client`);
   }
 
   // Validation du département (requis pour internes, optionnel pour clients)
-  if (role !== 'client' && !department) {
-    console.warn(`   ⚠️  Département manquant pour utilisateur interne ${email}, utilisation de "Support" par défaut`);
+  if (isInternalUser && !department) {
+    console.warn(`   ⚠️  Département manquant pour utilisateur interne ${email || fullName}, utilisation de "Support" par défaut`);
   }
 
   // Vérifie si le profil existe déjà
-  const { data: existingProfile } = await supabase
-    .from('profiles')
-    .select('id, auth_uid, email, full_name, role, department, job_title, company_id')
-    .eq('email', email)
-    .maybeSingle();
+  let existingProfile = null;
+  if (email) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, auth_uid, email, full_name, role, department, job_title, company_id, jira_user_id')
+      .eq('email', email)
+      .maybeSingle();
+    existingProfile = data;
+  } else {
+    // Pour les contacts sans email, recherche par nom + entreprise
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, auth_uid, email, full_name, role, department, job_title, company_id, jira_user_id')
+      .eq('full_name', fullName)
+      .eq('company_id', onpointCompanyId)
+      .maybeSingle();
+    existingProfile = data;
+  }
 
   let authUid;
   let profileId;
+  let finalRole = role;
+  let finalDepartment = role === 'client' ? null : (department || 'Support');
+  let finalCompanyId = role === 'client' ? onpointCompanyId : null;
 
   if (existingProfile) {
-    console.log(`   🔄 Profil existant trouvé pour ${email}`);
+    const existingRole = existingProfile.role;
+    const isExistingInternal = validInternalRoles.includes(existingRole);
+    
+    const hasJiraId = existingProfile.jira_user_id ? `, JIRA ID: ${existingProfile.jira_user_id}` : '';
+    console.log(`   🔄 Profil existant trouvé (Rôle actuel: ${existingRole}${hasJiraId})`);
     profileId = existingProfile.id;
     authUid = existingProfile.auth_uid;
 
-    // Met à jour le profil
+    // Préserver le rôle interne existant, ne pas le remplacer par "client"
+    finalRole = isExistingInternal ? existingRole : role;
+    
+    // Si c'est un utilisateur interne existant, préserver le département et company_id
+    // Sinon, utiliser les nouvelles valeurs
+    finalDepartment = isExistingInternal 
+      ? (existingProfile.department || department || 'Support')
+      : (role === 'client' ? null : (department || 'Support'));
+    
+    finalCompanyId = isExistingInternal
+      ? existingProfile.company_id
+      : (role === 'client' ? onpointCompanyId : null);
+
+    // Met à jour le profil en préservant les données importantes
+    // IMPORTANT: Ne jamais écraser jira_user_id car il est utilisé pour mapper les tickets JIRA
     const updatePayload = {
       full_name: fullName,
-      role,
-      department: role === 'client' ? null : (department || 'Support'),
-      job_title: jobTitle,
-      company_id: role === 'client' ? onpointCompanyId : null
+      role: finalRole,
+      department: finalDepartment,
+      job_title: jobTitle || existingProfile.job_title || null,
+      company_id: finalCompanyId
+      // jira_user_id est préservé automatiquement car non inclus dans updatePayload
     };
 
-    const { error: updateErr } = await supabase
-      .from('profiles')
-      .update(updatePayload)
-      .eq('id', profileId);
+    // Ne mettre à jour que si les valeurs ont changé
+    const hasChanges = 
+      existingProfile.full_name !== fullName ||
+      existingProfile.role !== finalRole ||
+      existingProfile.department !== finalDepartment ||
+      (jobTitle && existingProfile.job_title !== jobTitle) ||
+      existingProfile.company_id !== finalCompanyId;
 
-    if (updateErr) {
-      throw new Error(`Erreur mise à jour profil: ${updateErr.message}`);
+    if (hasChanges) {
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update(updatePayload)
+        .eq('id', profileId);
+
+      if (updateErr) {
+        throw new Error(`Erreur mise à jour profil: ${updateErr.message}`);
+      }
+      
+      if (isExistingInternal) {
+        console.log(`   ✅ Rôle interne préservé: ${finalRole}`);
+      }
+      
+      // Confirmer la préservation du jira_user_id
+      if (existingProfile.jira_user_id) {
+        console.log(`   ✅ JIRA User ID préservé: ${existingProfile.jira_user_id} (utilisé pour mapper les tickets)`);
+      }
+    } else {
+      console.log(`   ⏭️  Aucune modification nécessaire`);
     }
 
-    // Si pas de compte Auth, on en crée un
-    if (!authUid) {
+    // Si pas de compte Auth et email disponible, on en crée un
+    if (!authUid && email) {
       authUid = await ensureAuthUser(email, password);
       await supabase
         .from('profiles')
@@ -231,8 +300,10 @@ async function importUser(userData, onpointCompanyId) {
         .eq('id', profileId);
     }
   } else {
-    // Crée le compte Auth
-    authUid = await ensureAuthUser(email, password);
+    // Crée le compte Auth uniquement si email disponible
+    if (email) {
+      authUid = await ensureAuthUser(email, password);
+    }
 
     // Crée le profil
     const profilePayload = {
@@ -272,8 +343,8 @@ async function importUser(userData, onpointCompanyId) {
     authUid,
     email,
     fullName,
-    role,
-    department,
+    role: finalRole,
+    department: finalDepartment,
     jobTitle,
     password: existingProfile ? '(compte existant)' : password
   };
@@ -293,16 +364,47 @@ async function main() {
   const { data: companies, error: companyErr } = await supabase
     .from('companies')
     .select('id, name, jira_company_id')
-    .ilike('name', '%onpoint%africa%');
+    .ilike('name', '%onpoint%');
 
-  if (companyErr || !companies || companies.length === 0) {
-    console.error(`❌ Entreprise ONPOINT AFRICA GROUP non trouvée`);
-    console.error(`   Erreur: ${companyErr?.message || 'Entreprise introuvable'}`);
+  if (companyErr) {
+    console.error(`❌ Erreur lors de la recherche: ${companyErr.message}`);
     process.exit(1);
   }
 
-  const onpointCompany = companies[0];
-  console.log(`✅ Entreprise trouvée (ID: ${onpointCompany.id}, Nom: ${onpointCompany.name})\n`);
+  if (!companies || companies.length === 0) {
+    console.error(`❌ Aucune entreprise ONPOINT trouvée`);
+    process.exit(1);
+  }
+
+  // Priorité : ONPOINT AFRICA GROUP > ONPOINT AFRICA > ONPOINT
+  let onpointCompany = companies.find((c) => 
+    c.name.toLowerCase().includes('onpoint africa group')
+  );
+  
+  if (!onpointCompany) {
+    onpointCompany = companies.find((c) => 
+      c.name.toLowerCase().includes('onpoint africa')
+    );
+  }
+  
+  if (!onpointCompany) {
+    onpointCompany = companies[0];
+  }
+
+  if (companies.length > 1) {
+    console.log(`⚠️  ${companies.length} entreprise(s) ONPOINT trouvée(s):`);
+    companies.forEach((c) => {
+      const marker = c.id === onpointCompany.id ? '👉' : '  ';
+      console.log(`${marker} - ${c.name} (ID: ${c.id})`);
+    });
+    console.log('');
+  }
+
+  console.log(`✅ Entreprise sélectionnée: ${onpointCompany.name} (ID: ${onpointCompany.id})`);
+  if (onpointCompany.jira_company_id) {
+    console.log(`   JIRA ID: ${onpointCompany.jira_company_id}`);
+  }
+  console.log('');
 
   console.log(`🚀 Import de ${usersData.length} utilisateurs...\n`);
 
@@ -315,14 +417,15 @@ async function main() {
       const result = await importUser(userData, onpointCompany.id);
       results.push(result);
 
-      const roleDisplay = result.role === 'client' ? 'CLIENT' : `INTERNE (${result.role.toUpperCase()})`;
-      const deptDisplay = result.department ? `, Département: ${result.department}` : '';
-      const jobDisplay = result.jobTitle ? `, Fonction: ${result.jobTitle}` : '';
-      const passwordDisplay = result.password !== '(compte existant)' ? `, Mot de passe: ${result.password}` : '';
+    const roleDisplay = result.role === 'client' ? 'CLIENT' : `INTERNE (${result.role.toUpperCase()})`;
+    const emailDisplay = result.email ? `, Email: ${result.email}` : '';
+    const deptDisplay = result.department ? `, Département: ${result.department}` : '';
+    const jobDisplay = result.jobTitle ? `, Fonction: ${result.jobTitle}` : '';
+    const passwordDisplay = result.password !== '(compte existant)' && result.email ? `, Mot de passe: ${result.password}` : '';
 
-      console.log(
-        `✅ "${result.fullName}" importé (${roleDisplay}${deptDisplay}${jobDisplay}${passwordDisplay})`
-      );
+    console.log(
+      `✅ "${result.fullName}" importé (${roleDisplay}${emailDisplay}${deptDisplay}${jobDisplay}${passwordDisplay})`
+    );
       successCount++;
     } catch (err) {
       console.error(`❌ Erreur pour "${userData['Nom Complet']}":`, err.message);
