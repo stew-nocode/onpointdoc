@@ -1,5 +1,11 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSupabaseStatusFromJira, getSupabasePriorityFromJira, TicketType } from './mapping';
+import {
+  mapJiraClientNameToProfile,
+  mapJiraCompanyToCompanyId,
+  getSupabaseChannelFromJira,
+  updateProfileJobTitle
+} from './contact-mapping';
 
 /**
  * Interface pour les données Jira issues d'un webhook ou de l'API
@@ -42,6 +48,20 @@ export interface JiraIssueData {
     id: string;
     name?: string;
   }; // Sprint
+  // Phase 2: Champs client/contact
+  customfield_10053?: string; // Nom du client
+  customfield_10054?: {
+    value: string;
+    id: string;
+  }; // Fonction/Poste
+  customfield_10045?: {
+    value: string;
+    id: string | number;
+  }; // Entreprise
+  customfield_10055?: {
+    value: string;
+    id: string;
+  }; // Canal de contact
 }
 
 /**
@@ -75,6 +95,44 @@ export async function syncJiraToSupabase(
     ? await mapJiraAccountIdToProfileId(jiraData.assignee.accountId)
     : null;
 
+  // Phase 2: Mapper le client/contact et l'entreprise
+  let contactUserId: string | null = null;
+  let companyId: string | null = null;
+
+  if (jiraData.customfield_10045) {
+    // Mapper l'entreprise d'abord
+    const jiraCompanyId = typeof jiraData.customfield_10045.id === 'string'
+      ? parseInt(jiraData.customfield_10045.id, 10)
+      : jiraData.customfield_10045.id;
+    
+    companyId = await mapJiraCompanyToCompanyId(
+      jiraData.customfield_10045.value,
+      jiraCompanyId
+    );
+  }
+
+  if (jiraData.customfield_10053) {
+    // Mapper le client (avec companyId pour éviter doublons)
+    contactUserId = await mapJiraClientNameToProfile(
+      jiraData.customfield_10053,
+      companyId || undefined
+    );
+
+    // Mettre à jour le job_title si fourni
+    if (contactUserId && jiraData.customfield_10054?.value) {
+      await updateProfileJobTitle(contactUserId, jiraData.customfield_10054.value);
+    }
+  }
+
+  // Phase 2: Mapper le canal de contact
+  let supabaseChannel: string | null = null;
+  if (jiraData.customfield_10055?.value) {
+    const channel = await getSupabaseChannelFromJira(jiraData.customfield_10055.value);
+    if (channel) {
+      supabaseChannel = channel;
+    }
+  }
+
   // 5. Préparer les données de mise à jour
   const ticketUpdate: Record<string, any> = {
     title: jiraData.summary,
@@ -107,6 +165,15 @@ export async function syncJiraToSupabase(
     ticketUpdate.fix_version = jiraData.fixVersions[0].name;
   }
 
+  // Phase 2: Ajouter les champs client/contact
+  if (contactUserId) {
+    ticketUpdate.contact_user_id = contactUserId;
+  }
+
+  if (supabaseChannel) {
+    ticketUpdate.canal = supabaseChannel;
+  }
+
   // 6. Mettre à jour le ticket
   const { error: ticketError } = await supabase
     .from('tickets')
@@ -124,6 +191,20 @@ export async function syncJiraToSupabase(
   }
   if (jiraData.components && jiraData.components.length > 0) {
     syncMetadata.components = jiraData.components.map(c => c.name);
+  }
+
+  // Phase 2: Ajouter les métadonnées client/contact dans sync_metadata
+  if (jiraData.customfield_10053) {
+    syncMetadata.client_name = jiraData.customfield_10053;
+  }
+  if (jiraData.customfield_10054?.value) {
+    syncMetadata.client_job_title = jiraData.customfield_10054.value;
+  }
+  if (jiraData.customfield_10045?.value) {
+    syncMetadata.company_name = jiraData.customfield_10045.value;
+  }
+  if (jiraData.customfield_10055?.value) {
+    syncMetadata.jira_channel = jiraData.customfield_10055.value;
   }
 
   const jiraSyncUpdate = {

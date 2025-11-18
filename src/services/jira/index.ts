@@ -4,4 +4,5 @@
 
 export * from './mapping';
 export * from './sync';
+export * from './contact-mapping';
 

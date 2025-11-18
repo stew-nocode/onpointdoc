@@ -1,0 +1,706 @@
+{
+  "project": {
+    "key": "OD"
+  },
+  "totalBugs": 813,
+  "statuses": [
+    "Sprint Backlog",
+    "Terminé(e)",
+    "Traitement en Cours"
+  ],
+  "priorities": [
+    "Priorité 1",
+    "Priorité 2",
+    "Priorité 3",
+    "Priorité 4"
+  ],
+  "labels": [],
+  "resolutions": [
+    "Terminé"
+  ],
+  "components": [],
+  "fixVersions": [
+    "OBC V T1 2024"
+  ],
+  "customFields": [
+    {
+      "fieldKey": "customfield_10111",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 333,
+      "sampleValues": [
+        "2025-11-17",
+        "2025-11-12",
+        "2025-11-04",
+        "2025-10-31",
+        "2025-10-24"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10102",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10052",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 43,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10088\",\"value\":\"Finance - Comptabilité Générale\",\"id\":\"10088\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10120\",\"value\":\"Projets - Gérer mes projets\",\"id\":\"10120\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10130\",\"value\":\"RH - Paramétrage\",\"id\":\"10130\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10126\",\"value\":\"RH - Documents\",\"id\":\"10126\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10150\",\"value\":\"Finance - Comptabilité analytique\",\"id\":\"10150\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10053",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 224,
+      "sampleValues": [
+        "KONE Mariam",
+        "MONSIEUR KOUADIO",
+        "DORIS N'GBRA",
+        "Edwige KOUASSI",
+        "Michel TETE"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10054",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 46,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10281\",\"value\":\"Assistant(e) / Stagiaire\",\"id\":\"10281\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10306\",\"value\":\"Contrôleur de Gestion\",\"id\":\"10306\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10283\",\"value\":\"Assistant(e) Comptable\",\"id\":\"10283\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10278\",\"value\":\"Activation Specialist\",\"id\":\"10278\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10294\",\"value\":\"Chef Comptable\",\"id\":\"10294\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10330",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10970\",\"value\":\"Offre BTP\",\"id\":\"10970\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10055",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 8,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10370\",\"value\":\"Constat Interne\",\"id\":\"10370\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10372\",\"value\":\"Appel WhatsApp\",\"id\":\"10372\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10139\",\"value\":\"Appel Téléphonique\",\"id\":\"10139\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10143\",\"value\":\"En présentiel\",\"id\":\"10143\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10371\",\"value\":\"Online (Google Meet, Teams...)\",\"id\":\"10371\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10297",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 8,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10834\",\"value\":\"Opérations - Vente\",\"id\":\"10834\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10829\",\"value\":\"Opérations - Immobilisations\",\"id\":\"10829\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10825\",\"value\":\"Opérations - AGRO\",\"id\":\"10825\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10828\",\"value\":\"Opérations - Gestion de stock\",\"id\":\"10828\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10826\",\"value\":\"Opérations - Achat\",\"id\":\"10826\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10298",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 6,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10838\",\"value\":\"Finance - Budget\",\"id\":\"10838\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10839\",\"value\":\"Finance - Comptabilité Générale\",\"id\":\"10839\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10841\",\"value\":\"Finance - Impôts et taxes\",\"id\":\"10841\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10844\",\"value\":\"Finance - Trésorerie\",\"id\":\"10844\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10837\",\"value\":\"Finance - Comptabilité analytique\",\"id\":\"10837\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10056",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 24,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10346\",\"value\":\"Autres\",\"id\":\"10346\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10351\",\"value\":\"Dysfonctionnement sur le Calcul des salaires\",\"id\":\"10351\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10364\",\"value\":\"Mauvais déversement des données\",\"id\":\"10364\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10354\",\"value\":\"Enregistrement impossible\",\"id\":\"10354\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10348\",\"value\":\"Duplication anormale\",\"id\":\"10348\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10331",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10057",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 31,
+      "sampleValues": [
+        "B-OD-029",
+        "B-OD-035",
+        "B-OD-036",
+        "R-OD-024",
+        "B-OD-016"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10332",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10972\",\"value\":\"Général\",\"id\":\"10972\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10299",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 5,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10846\",\"value\":\"Projets - Feuille de temps\",\"id\":\"10846\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10847\",\"value\":\"Projets - Gérer mes projets\",\"id\":\"10847\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10845\",\"value\":\"Projets - Dashboard\",\"id\":\"10845\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10848\",\"value\":\"Projets - Gérer mes tâches\",\"id\":\"10848\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10849\",\"value\":\"Projets - Note de frais\",\"id\":\"10849\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10333",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10324",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 3,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10953\",\"value\":\"Gestion de temps\",\"id\":\"10953\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10952\",\"value\":\"Contrat employé\",\"id\":\"10952\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10956\",\"value\":\"Gestion de prêts\",\"id\":\"10956\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10325",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10957\",\"value\":\"Calcul de salaire\",\"id\":\"10957\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10959\",\"value\":\"Comptabilité\",\"id\":\"10959\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10326",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10962\",\"value\":\"Document/Personnel\",\"id\":\"10962\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10961\",\"value\":\"Document/Admin\",\"id\":\"10961\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10327",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10328",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10966\",\"value\":\"Paramétrage BTP\",\"id\":\"10966\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10329",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10968\",\"value\":\"Paramétrage\",\"id\":\"10968\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10320",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10045",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 38,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/11057\",\"value\":\"ETS MAB\",\"id\":\"11057\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10376\",\"value\":\"SIT BTP\",\"id\":\"10376\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10051\",\"value\":\"FALCON\",\"id\":\"10051\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10461\",\"value\":\"SIE-TRAVAUX\",\"id\":\"10461\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10148\",\"value\":\"ALL\",\"id\":\"10148\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10321",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10046",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 7,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10029\",\"value\":\"Finance\",\"id\":\"10029\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10031\",\"value\":\"RH\",\"id\":\"10031\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10030\",\"value\":\"Opérations\",\"id\":\"10030\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10032\",\"value\":\"Projets\",\"id\":\"10032\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10036\",\"value\":\"Global\",\"id\":\"10036\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10322",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10323",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10949\",\"value\":\"Paramétrage société\",\"id\":\"10949\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10950\",\"value\":\"Paramétrage paie\",\"id\":\"10950\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10313",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 4,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10920\",\"value\":\"Traitements comptables\",\"id\":\"10920\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10919\",\"value\":\"Paramétrage\",\"id\":\"10919\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10921\",\"value\":\"Livres comptables\",\"id\":\"10921\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10918\",\"value\":\"Dettes antérieures\",\"id\":\"10918\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10314",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10923\",\"value\":\"Paramétrage\",\"id\":\"10923\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10315",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10316",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10929\",\"value\":\"Caisse\",\"id\":\"10929\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10317",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10933\",\"value\":\"Déclarations\",\"id\":\"10933\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10318",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10937\",\"value\":\"Décaissement\",\"id\":\"10937\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10319",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10310",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10311",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10312",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10302",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10867\",\"value\":\"Paiement - Analytique\",\"id\":\"10867\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10866\",\"value\":\"Paiement - Centre de paiement\",\"id\":\"10866\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10303",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10871\",\"value\":\"Achat\",\"id\":\"10871\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10304",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10305",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10879\",\"value\":\"Commande\",\"id\":\"10879\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10878\",\"value\":\"Facturation\",\"id\":\"10878\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10306",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10882\",\"value\":\"Gestion des débours\",\"id\":\"10882\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10885\",\"value\":\"Cycle de vente\",\"id\":\"10885\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10307",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10887\",\"value\":\"Mouvement de stock\",\"id\":\"10887\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10890\",\"value\":\"Analyser mon stock\",\"id\":\"10890\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10308",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10309",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10020",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 43,
+      "sampleValues": [
+        "{\"id\":352,\"name\":\"Tableau Sprint 44\",\"state\":\"active\",\"boardId\":5,\"goal\":\"\",\"startDate\":\"2025-10-17T14:06:24.000Z\",\"endDate\":\"2025-10-31T15:09:08.000Z\"}",
+        "{\"id\":319,\"name\":\"Tableau Sprint 43\",\"state\":\"closed\",\"boardId\":5,\"goal\":\"\",\"startDate\":\"2025-08-14T15:52:40.000Z\",\"endDate\":\"2025-08-28T17:07:52.000Z\",\"completeDate\":\"2025-10-17T13:53:55.390Z\"}",
+        "{\"id\":286,\"name\":\"Tableau Sprint 42\",\"state\":\"closed\",\"boardId\":5,\"goal\":\"\",\"startDate\":\"2025-08-01T15:14:54.000Z\",\"endDate\":\"2025-08-15T16:40:00.000Z\",\"completeDate\":\"2025-08-14T15:41:29.378Z\"}",
+        "{\"id\":253,\"name\":\"Tableau Sprint 41\",\"state\":\"closed\",\"boardId\":5,\"goal\":\"\",\"startDate\":\"2025-06-20T16:21:47.000Z\",\"endDate\":\"2025-06-30T17:57:21.000Z\",\"completeDate\":\"2025-08-01T15:03:05.581Z\"}",
+        "{\"id\":220,\"name\":\"Tableau Sprint 40\",\"state\":\"closed\",\"boardId\":5,\"goal\":\"\",\"startDate\":\"2025-06-10T16:02:23.000Z\",\"endDate\":\"2025-06-20T17:47:10.000Z\",\"completeDate\":\"2025-06-20T16:11:40.379Z\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10021",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 1,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10019\",\"value\":\"Impediment\",\"id\":\"10019\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10300",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 5,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10855\",\"value\":\"RH - Salaire\",\"id\":\"10855\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10851\",\"value\":\"RH - Documents\",\"id\":\"10851\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10853\",\"value\":\"RH - Gestion employé\",\"id\":\"10853\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10854\",\"value\":\"RH - Paramétrage\",\"id\":\"10854\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10852\",\"value\":\"RH - Analytique\",\"id\":\"10852\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10301",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 6,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10860\",\"value\":\"CRM - Activités commerciales\",\"id\":\"10860\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10865\",\"value\":\"CRM - Offres\",\"id\":\"10865\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10861\",\"value\":\"CRM - Clients\",\"id\":\"10861\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10862\",\"value\":\"CRM - Analytique\",\"id\":\"10862\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10864\",\"value\":\"CRM - Pilotage commercial\",\"id\":\"10864\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10016",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10019",
+      "type": "string",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 813,
+      "sampleValues": [
+        "1|i02usz:",
+        "1|hzzrbd:p05zwtyuuqvnzxr",
+        "1|i006th:xy0i7m0001uqr",
+        "1|hzzrbd:p0120g7d",
+        "1|hzzrbd:p0120g6m"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10495",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10133",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10496",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10530",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 2,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/12481\",\"value\":\"KONE Mariam\",\"id\":\"12481\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/12039\",\"value\":\"Souleymane CISSE\",\"id\":\"12039\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10083",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 3,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10186\",\"value\":\"Analyse terminée\",\"id\":\"10186\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10187\",\"value\":\"Développement terminé\",\"id\":\"10187\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10188\",\"value\":\"Déploiement en test terminé\",\"id\":\"10188\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10084",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 3,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10189\",\"value\":\"Test Non-concluant\",\"id\":\"10189\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10190\",\"value\":\"Test Concluant\",\"id\":\"10190\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10191\",\"value\":\"Déploiement en production terminé\",\"id\":\"10191\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10364",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 6,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10995\",\"value\":\"Paramétrage admin, système - Workflow\",\"id\":\"10995\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10998\",\"value\":\"OBC\",\"id\":\"10998\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10993\",\"value\":\"Paramétrage admin, système - Gestion des utilisateurs\",\"id\":\"10993\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10990\",\"value\":\"Paramétrage admin, système - Autres admin. \",\"id\":\"10990\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10994\",\"value\":\"Paramétrage sur fonctionnalités\",\"id\":\"10994\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10002",
+      "type": "object",
+      "isArray": true,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    },
+    {
+      "fieldKey": "customfield_10003",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 7,
+      "sampleValues": [
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/user?accountId=712020%3Abb02e93b-c270-4c40-a166-a19a42e5629a\",\"accountId\":\"712020:bb02e93b-c270-4c40-a166-a19a42e5629a\",\"avatarUrls\":{\"48x48\":\"https://secure.gravatar.com/avatar/b4ef11b25812c65dae2c7c67e4130687?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FGA-5.png\",\"24x24\":\"https://secure.gravatar.com/avatar/b4ef11b25812c65dae2c7c67e4130687?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FGA-5.png\",\"16x16\":\"https://secure.gravatar.com/avatar/b4ef11b25812c65dae2c7c67e4130687?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FGA-5.png\",\"32x32\":\"https://secure.gravatar.com/avatar/b4ef11b25812c65dae2c7c67e4130687?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FGA-5.png\"},\"displayName\":\"GNAHORE AMOS\",\"active\":true,\"timeZone\":\"Africa/Abidjan\",\"accountType\":\"atlassian\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/user?accountId=712020%3A5c9548c8-e063-4cc7-b9e3-98eb370e0d9e\",\"accountId\":\"712020:5c9548c8-e063-4cc7-b9e3-98eb370e0d9e\",\"avatarUrls\":{\"48x48\":\"https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png\",\"24x24\":\"https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png\",\"16x16\":\"https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png\",\"32x32\":\"https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png\"},\"displayName\":\"Vivien DAKPOGAN\",\"active\":true,\"timeZone\":\"Africa/Abidjan\",\"accountType\":\"atlassian\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/user?accountId=712020%3Affe79a03-939f-4c9b-b02b-de08425af5b9\",\"accountId\":\"712020:ffe79a03-939f-4c9b-b02b-de08425af5b9\",\"avatarUrls\":{\"48x48\":\"https://secure.gravatar.com/avatar/bb0070575d62adf8b12817190b250d86?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FND-0.png\",\"24x24\":\"https://secure.gravatar.com/avatar/bb0070575d62adf8b12817190b250d86?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FND-0.png\",\"16x16\":\"https://secure.gravatar.com/avatar/bb0070575d62adf8b12817190b250d86?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FND-0.png\",\"32x32\":\"https://secure.gravatar.com/avatar/bb0070575d62adf8b12817190b250d86?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FND-0.png\"},\"displayName\":\"N'GBRA MOYE BERNICE DORIS\",\"active\":true,\"timeZone\":\"Africa/Abidjan\",\"accountType\":\"atlassian\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/user?accountId=5fb4dd9e2730d800765b5774\",\"accountId\":\"5fb4dd9e2730d800765b5774\",\"avatarUrls\":{\"48x48\":\"https://secure.gravatar.com/avatar/eb9ccc7775774aba02880eb87c78a131?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEK-0.png\",\"24x24\":\"https://secure.gravatar.com/avatar/eb9ccc7775774aba02880eb87c78a131?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEK-0.png\",\"16x16\":\"https://secure.gravatar.com/avatar/eb9ccc7775774aba02880eb87c78a131?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEK-0.png\",\"32x32\":\"https://secure.gravatar.com/avatar/eb9ccc7775774aba02880eb87c78a131?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEK-0.png\"},\"displayName\":\"Edwidge Kouassi\",\"active\":true,\"timeZone\":\"Africa/Abidjan\",\"accountType\":\"atlassian\"}",
+        "{\"self\":\"https://onpointdigital.atlassian.net/rest/api/3/user?accountId=712020%3Ad4a5e54b-dc78-41d8-a397-cc5dbd0461f0\",\"accountId\":\"712020:d4a5e54b-dc78-41d8-a397-cc5dbd0461f0\",\"avatarUrls\":{\"48x48\":\"https://secure.gravatar.com/avatar/7bd8b0ce20a59b92ec0fed1a72c3472d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEB-0.png\",\"24x24\":\"https://secure.gravatar.com/avatar/7bd8b0ce20a59b92ec0fed1a72c3472d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEB-0.png\",\"16x16\":\"https://secure.gravatar.com/avatar/7bd8b0ce20a59b92ec0fed1a72c3472d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEB-0.png\",\"32x32\":\"https://secure.gravatar.com/avatar/7bd8b0ce20a59b92ec0fed1a72c3472d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FEB-0.png\"},\"displayName\":\"EVA BASSE\",\"active\":true,\"timeZone\":\"Africa/Abidjan\",\"accountType\":\"atlassian\"}"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10115",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 5,
+      "sampleValues": [
+        "2025-09-02",
+        "2024-11-28",
+        "2024-08-23",
+        "2023-12-08",
+        "2023-12-15"
+      ]
+    },
+    {
+      "fieldKey": "customfield_10116",
+      "type": "object",
+      "isArray": false,
+      "isObject": false,
+      "uniqueValuesCount": 0,
+      "sampleValues": []
+    }
+  ],
+  "stats": {
+    "uniqueAssignees": 8,
+    "uniqueReporters": 7,
+    "dateRange": {
+      "oldest": "2023-11-10T16:38:11.352Z",
+      "newest": "2025-11-18T18:41:12.099Z"
+    }
+  }
+}

@@ -15,7 +15,8 @@ import {
   Users,
   Boxes,
   Puzzle,
-  Sparkles
+  Sparkles,
+  Building
 } from 'lucide-react';
 
 type SidebarProps = {
@@ -229,6 +230,20 @@ export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
                 >
                   <Sparkles className="h-4 w-4 opacity-80" />
                   <span>Fonctionnalités</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/config/departments"
+                  className={cn(
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                    pathname.startsWith('/config/departments')
+                      ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                  )}
+                >
+                  <Building className="h-4 w-4 opacity-80" />
+                  <span>Départements</span>
                 </Link>
               </li>
             </ul>

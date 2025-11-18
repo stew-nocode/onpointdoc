@@ -127,12 +127,19 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Commit corrections TypeScript : `5847099` - "fix(typescript): Correction erreurs TypeScript Phase 1"
   - Commit correction serveur : `9881289` - "fix(server): Retirer export listBasicProfiles depuis index.ts"
   - Tous les commits sauvegardés localement (push GitHub en attente suite à erreur 500 temporaire).
+- ✅ **Phase 2 : Mapping Informations Client/Contact Jira ↔ Supabase**
+  - Migration SQL appliquée : création table `jira_channel_mapping` pour mapping dynamique des canaux de contact.
+  - 5 mappings initiaux : Appel Téléphonique → Appel, Appel WhatsApp → Whatsapp, En présentiel → Autre, Online (Google Meet, Teams...) → Autre, Constat Interne → Autre.
+  - Fonction SQL `get_supabase_channel_from_jira()` pour récupérer le canal Supabase depuis un canal Jira.
+  - Service `src/services/jira/contact-mapping.ts` : fonctions pour mapper client (`mapJiraClientNameToProfile`), entreprise (`mapJiraCompanyToCompanyId`), canal (`getSupabaseChannelFromJira`), et mise à jour `job_title` (`updateProfileJobTitle`).
+  - Création automatique de profils clients (sans Auth) et d'entreprises si non trouvés lors de la synchronisation.
+  - Extension `sync.ts` : intégration mappings client/contact dans la synchronisation complète.
+  - Mise à jour `tickets.contact_user_id` et `tickets.canal` depuis Jira.
+  - Métadonnées Phase 2 dans `jira_sync.sync_metadata` : `client_name`, `client_job_title`, `company_name`, `jira_channel`.
+  - Tests complets : 5/5 tests passés (mappings canaux, fonction SQL, mapping entreprise, mapping client, synchronisation complète).
+  - Documentation : `docs/tests/TEST-PHASE2-RESULTS.md` avec résultats détaillés.
 
 ## À faire
-- ⏳ **Phase 2 : Informations client/contact**
-  - Extension `contacts` avec champ `function` (poste).
-  - Mapping des canaux de contact (Appel Téléphonique → Appel, Appel WhatsApp → Whatsapp, etc.).
-  - Synchronisation client/entreprise depuis Jira.
 - ⏳ **Phase 3 : Structure produit/module**
   - Table `jira_feature_mapping` pour mapper les valeurs Jira vers `features.id`.
   - Script d'initialisation des mappings.

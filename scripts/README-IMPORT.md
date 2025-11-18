@@ -11,8 +11,15 @@ Ce répertoire contient tous les scripts d'import de données pour OnpointDoc. C
 Créez un fichier `.env.local` à la racine du projet avec :
 
 ```env
+# Supabase (requis pour la plupart des scripts)
 NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=votre-service-role-key
+
+# Jira (requis pour scripts/list-jira-projects.js)
+JIRA_URL=https://your-company.atlassian.net
+JIRA_USERNAME=your-email@example.com
+JIRA_TOKEN=your-api-token
+# Alternative: JIRA_EMAIL et JIRA_API_TOKEN peuvent être utilisés
 ```
 
 > **⚠️ Important** : Le `SUPABASE_SERVICE_ROLE_KEY` est nécessaire pour contourner les RLS et créer des comptes Auth. Ne le partagez jamais publiquement.
@@ -54,6 +61,9 @@ Les scripts utilisent :
 
 #### 5. Tickets (templates)
 - `import-tickets-template.js` - Template pour import tickets JIRA
+
+#### 6. Utilitaires Jira
+- `list-jira-projects.js` - Liste les projets Jira disponibles via l'API REST
 
 ## 🔧 Utilisation
 
@@ -140,6 +150,15 @@ node scripts/import-submodules-finance.js
 node scripts/update-cilagri-job-titles.js
 ```
 
+### Utilitaires Jira
+
+```bash
+# Lister les projets Jira disponibles
+node scripts/list-jira-projects.js
+```
+
+> **Note** : Ce script nécessite les variables d'environnement `JIRA_URL`, `JIRA_USERNAME` (ou `JIRA_EMAIL`), et `JIRA_TOKEN` (ou `JIRA_API_TOKEN`) dans `.env.local`.
+
 ## 🔍 Dépannage
 
 ### Erreur "Variables d'environnement manquantes"
@@ -166,6 +185,14 @@ Certains scripts utilisent `upsert` avec `ON CONFLICT`. Vérifiez :
 Les scripts utilisent le `service_role_key` pour contourner RLS. Si vous voyez des erreurs RLS :
 - Vérifiez que vous utilisez bien le service role
 - Vérifiez les policies RLS dans Supabase
+
+### Erreur Jira "401 Unauthorized"
+
+Pour `list-jira-projects.js`, si vous obtenez une erreur 401 :
+- Vérifiez que `JIRA_URL` est correct (sans slash final)
+- Vérifiez que `JIRA_USERNAME` correspond à votre email Jira
+- Vérifiez que `JIRA_TOKEN` est valide (créer un nouveau token sur https://id.atlassian.com/manage-profile/security/api-tokens)
+- Assurez-vous que le token n'a pas expiré
 
 ## 📚 Documentation complémentaire
 

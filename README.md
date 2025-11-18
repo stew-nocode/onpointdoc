@@ -33,6 +33,11 @@ Variables requises :
 - `NEXT_PUBLIC_SUPABASE_URL` : URL de votre projet Supabase
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` : Clé anonyme Supabase
 
+Variables pour scripts Jira (optionnel, pour `scripts/list-jira-projects.js`) :
+- `JIRA_URL` : URL de votre instance Jira (ex: `https://your-company.atlassian.net`)
+- `JIRA_USERNAME` ou `JIRA_EMAIL` : Email ou nom d'utilisateur Jira
+- `JIRA_TOKEN` ou `JIRA_API_TOKEN` : Token API Jira (créé sur https://id.atlassian.com/manage-profile/security/api-tokens)
+
 Variables optionnelles (pour automatisation N8N/JIRA) :
 - `N8N_WEBHOOK_URL` : URL du webhook N8N pour transfert Assistance → JIRA
 - `N8N_API_KEY` : Clé API N8N (pour authentification)
