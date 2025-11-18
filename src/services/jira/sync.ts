@@ -6,6 +6,7 @@ import {
   getSupabaseChannelFromJira,
   updateProfileJobTitle
 } from './contact-mapping';
+import { mapJiraFeatureToSupabase } from './feature-mapping';
 
 /**
  * Interface pour les données Jira issues d'un webhook ou de l'API
@@ -62,6 +63,11 @@ export interface JiraIssueData {
     value: string;
     id: string;
   }; // Canal de contact
+  // Phase 3: Structure produit/module
+  customfield_10052?: {
+    value: string;
+    id: string;
+  }; // Module/Fonctionnalité
 }
 
 /**
@@ -133,6 +139,21 @@ export async function syncJiraToSupabase(
     }
   }
 
+  // Phase 3: Mapper la fonctionnalité/module
+  let featureId: string | null = null;
+  let submoduleId: string | null = null;
+  if (jiraData.customfield_10052?.value) {
+    const featureMapping = await mapJiraFeatureToSupabase(
+      jiraData.customfield_10052.value,
+      'customfield_10052'
+    );
+    
+    if (featureMapping) {
+      featureId = featureMapping.featureId;
+      submoduleId = featureMapping.submoduleId;
+    }
+  }
+
   // 5. Préparer les données de mise à jour
   const ticketUpdate: Record<string, any> = {
     title: jiraData.summary,
@@ -174,6 +195,15 @@ export async function syncJiraToSupabase(
     ticketUpdate.canal = supabaseChannel;
   }
 
+  // Phase 3: Ajouter les champs fonctionnalité/module
+  if (featureId) {
+    ticketUpdate.feature_id = featureId;
+  }
+
+  if (submoduleId) {
+    ticketUpdate.submodule_id = submoduleId;
+  }
+
   // 6. Mettre à jour le ticket
   const { error: ticketError } = await supabase
     .from('tickets')
@@ -205,6 +235,14 @@ export async function syncJiraToSupabase(
   }
   if (jiraData.customfield_10055?.value) {
     syncMetadata.jira_channel = jiraData.customfield_10055.value;
+  }
+
+  // Phase 3: Ajouter les métadonnées fonctionnalité dans sync_metadata
+  if (jiraData.customfield_10052?.value) {
+    syncMetadata.jira_feature = jiraData.customfield_10052.value;
+    if (jiraData.customfield_10052.id) {
+      syncMetadata.jira_feature_id = jiraData.customfield_10052.id;
+    }
   }
 
   const jiraSyncUpdate = {

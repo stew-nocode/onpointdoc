@@ -138,6 +138,16 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Métadonnées Phase 2 dans `jira_sync.sync_metadata` : `client_name`, `client_job_title`, `company_name`, `jira_channel`.
   - Tests complets : 5/5 tests passés (mappings canaux, fonction SQL, mapping entreprise, mapping client, synchronisation complète).
   - Documentation : `docs/tests/TEST-PHASE2-RESULTS.md` avec résultats détaillés.
+- ✅ **Phase 3 : Mapping Structure Produit/Module/Fonctionnalité Jira ↔ Supabase**
+  - Migration SQL appliquée : création table `jira_feature_mapping` pour mapping dynamique des fonctionnalités.
+  - Fonctions SQL : `get_feature_id_from_jira()` et `get_submodule_id_from_feature_id()` pour récupérer les mappings.
+  - Service `src/services/jira/feature-mapping.ts` : fonctions pour mapper fonctionnalités (`getFeatureIdFromJira`), récupérer submodule (`getSubmoduleIdFromFeatureId`), mapping combiné (`mapJiraFeatureToSupabase`), et gestion des mappings (`upsertFeatureMapping`, `getAllFeatureMappings`, `searchFeaturesByName`).
+  - Extension `sync.ts` : intégration mapping fonctionnalité dans la synchronisation complète.
+  - Mise à jour `tickets.feature_id` et `tickets.submodule_id` depuis Jira.
+  - Métadonnées Phase 3 dans `jira_sync.sync_metadata` : `jira_feature`, `jira_feature_id`.
+  - Script d'initialisation : `scripts/init-jira-feature-mappings.js` pour analyser les tickets Jira et créer les mappings automatiquement.
+  - Tests complets : 5/5 tests passés (table, fonctions SQL, service, synchronisation complète).
+  - Documentation : `docs/tests/TEST-PHASE3-RESULTS.md` avec résultats détaillés.
 
 ## À faire
 - ⏳ **Phase 3 : Structure produit/module**
