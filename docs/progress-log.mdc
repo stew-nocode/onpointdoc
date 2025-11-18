@@ -148,6 +148,9 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Script d'initialisation : `scripts/init-jira-feature-mappings.js` pour analyser les tickets Jira et créer les mappings automatiquement.
   - Tests complets : 5/5 tests passés (table, fonctions SQL, service, synchronisation complète).
   - Documentation : `docs/tests/TEST-PHASE3-RESULTS.md` avec résultats détaillés.
+  - **Création features et mappings** : 16 features créées dans Supabase, 30 mappings créés au total (réduction de 42 à 27 fonctionnalités sans mapping).
+  - Scripts : `create-missing-features.js` (création features), `create-jira-feature-mappings.js` (création mappings), `count-jira-feature-mappings.js` (vérification).
+  - Documentation : `docs/import/MAPPINGS-FEATURES-JIRA-RESULTS.md` avec résultats complets.
 
 ## À faire
 - ⏳ **Phase 4 : Workflow et suivi**
