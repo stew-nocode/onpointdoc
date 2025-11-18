@@ -7,11 +7,11 @@
 
 - **Tickets Jira analysés** : 1808 tickets avec `customfield_10052`
 - **Fonctionnalités uniques identifiées** : 57
-- **Features créées** : **16** ✅
-- **Total mappings créés** : **30** ✅
-- **Fonctionnalités sans mapping** : 27 (réduit de 42 à 27)
+- **Features créées** : **17** ✅ (dont 1 feature générique "OBC")
+- **Total mappings créés** : **31** ✅ (dont mapping "OBC" → 124 tickets)
+- **Fonctionnalités sans mapping** : 26 (réduit de 42 à 26)
 
-## Features Créées (16)
+## Features Créées (17)
 
 Les features suivantes ont été créées dans Supabase pour permettre les mappings :
 
@@ -31,8 +31,9 @@ Les features suivantes ont été créées dans Supabase pour permettre les mappi
 14. ✅ `Note de frais` (Projets → Note de frais)
 15. ✅ `Gérer mes tâches` (Projets → Gérer mes tâches)
 16. ✅ `Paramétrage` (RH → Paramétrage) - deuxième instance
+17. ✅ **`OBC`** (Opérations → Général) - **Feature générique pour 124 tickets** ⭐
 
-## Mappings Créés (30)
+## Mappings Créés (31)
 
 ### Mappings initiaux (15)
 1. ✅ `Opérations - Vente` → Feature mappée
@@ -67,13 +68,14 @@ Les features suivantes ont été créées dans Supabase pour permettre les mappi
 28. ✅ `Projets - Gérer mes tâches` → `Gérer mes tâches`
 29. ✅ `Projets - Identification des projets` → `Gérer mes projets`
 30. ✅ `Projets - Comptabilité analytique des projets` → `Analytique`
+31. ✅ **`OBC`** → `OBC` (Opérations → Général) - **124 tickets mappés** ⭐
 
 **Note** : Pour voir les détails complets des mappings (feature_id, noms), utiliser :
 ```bash
 node scripts/count-jira-feature-mappings.js
 ```
 
-## Fonctionnalités Sans Mapping (27)
+## Fonctionnalités Sans Mapping (26)
 
 Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessitent soit :
 - La création de nouvelles features dans Supabase
@@ -81,7 +83,7 @@ Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessite
 
 ### Fonctionnalités Prioritaires Restantes (par nombre de tickets)
 
-1. **OBC** (124 tickets) - ⚠️ **PRIORITÉ HAUTE** - Nécessite un submodule dédié ou approche spéciale
+1. ✅ **OBC** (124 tickets) - **RÉSOLU** - Feature générique créée dans Opérations → Général ⭐
 2. **Paramétrage admin. système - Workflow** (34 tickets)
 3. **CRM - Analytique** (29 tickets) - ⚠️ Feature créée mais mapping non trouvé (vérifier)
 4. **Paramétrage admin. système - Paramétrage sur fonctionnalités** (28 tickets)
@@ -122,8 +124,9 @@ Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessite
 
 2. ✅ **Features créées** : 16 features créées dans Supabase
 
-3. **Créer les features manquantes restantes** dans Supabase pour :
-   - OBC (124 tickets) - ⚠️ **PRIORITÉ HAUTE** - Nécessite approche spéciale (peut être un produit ou un submodule dédié)
+3. ✅ **Cas "OBC" résolu** :
+   - Feature générique "OBC" créée dans Opérations → Général
+   - Mapping créé : "OBC" → Feature "OBC" (124 tickets mappés)
 
 2. **Vérifier les noms** : Certaines fonctionnalités peuvent exister sous des noms différents dans Supabase. Effectuer une recherche manuelle pour :
    - "Finance - Comptabilité Générale" → Chercher "Comptabilité Générale", "Comptabilité", etc.
@@ -133,10 +136,10 @@ Ces fonctionnalités n'ont pas de correspondance dans Supabase. Elles nécessite
 
 ### Prochaines Étapes
 
-1. ✅ Mappings automatiques créés (30)
-2. ✅ Features prioritaires créées (16)
-3. ⏳ Gérer le cas "OBC" (124 tickets) - Peut nécessiter un submodule dédié ou une approche spéciale
-4. ⏳ Créer les features restantes (27 fonctionnalités) - Priorité moyenne/basse
+1. ✅ Mappings automatiques créés (31)
+2. ✅ Features prioritaires créées (17)
+3. ✅ Cas "OBC" résolu (124 tickets mappés) - Feature générique créée
+4. ⏳ Créer les features restantes (26 fonctionnalités) - Priorité moyenne/basse
 5. ⏳ Valider les mappings avec un échantillon de tickets Jira
 6. ⏳ Vérifier pourquoi certaines features créées n'ont pas été mappées (CRM - Analytique, CRM - Paramétrage, Projets - Paramétrage)
 
