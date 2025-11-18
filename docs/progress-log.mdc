@@ -150,10 +150,6 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Documentation : `docs/tests/TEST-PHASE3-RESULTS.md` avec résultats détaillés.
 
 ## À faire
-- ⏳ **Phase 3 : Structure produit/module**
-  - Table `jira_feature_mapping` pour mapper les valeurs Jira vers `features.id`.
-  - Script d'initialisation des mappings.
-  - Synchronisation module/fonctionnalité.
 - ⏳ **Phase 4 : Workflow et suivi**
   - Extension `tickets` avec champs workflow (`workflow_status`, `test_status`, `sprint_id`, `target_date`, `resolved_at`).
   - Synchronisation sprint/workflow/test status.
