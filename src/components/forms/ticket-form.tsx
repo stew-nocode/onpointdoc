@@ -35,7 +35,7 @@ export const TicketForm = ({
   contacts
 }: TicketFormProps) => {
   const form = useForm<CreateTicketInput>({
-    resolver: zodResolver(createTicketSchema),
+    resolver: zodResolver(createTicketSchema) as any,
     defaultValues: {
       title: '',
       description: '',

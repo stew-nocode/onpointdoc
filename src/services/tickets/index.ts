@@ -22,10 +22,10 @@ export const createTicket = async (payload: CreateTicketInput) => {
       canal: payload.channel, // Colonne DB = 'canal' (pas 'channel')
       product_id: payload.productId ?? null,
       module_id: payload.moduleId ?? null,
-      submodule_id: payload.submoduleId ?? null,
-      feature_id: payload.featureId ?? null,
+      submodule_id: (payload.submoduleId && payload.submoduleId !== '') ? payload.submoduleId : null,
+      feature_id: (payload.featureId && payload.featureId !== '') ? payload.featureId : null,
       priority: payload.priority,
-      duration_minutes: payload.durationMinutes,
+      duration_minutes: payload.durationMinutes ?? null,
       customer_context: payload.customerContext,
       contact_user_id: payload.contactUserId,
       created_by: profile.id, // ID du profil (pas auth.uid())

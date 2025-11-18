@@ -12,21 +12,11 @@ export const createTicketSchema = z.object({
   channel: z.enum(ticketChannels),
   productId: z.string().uuid({ message: 'Produit requis' }),
   moduleId: z.string().uuid({ message: 'Module requis' }),
-  // Sous-module et fonctionnalité sont optionnels dans l’UI → on tolère la chaîne vide et on la convertit en undefined
-  submoduleId: z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
-    z.string().uuid().optional()
-  ),
-  featureId: z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
-    z.string().uuid().optional()
-  ),
+  // Sous-module et fonctionnalité sont optionnels dans l'UI (chaîne vide acceptée)
+  submoduleId: z.union([z.string().uuid(), z.literal('')]).optional(),
+  featureId: z.union([z.string().uuid(), z.literal('')]).optional(),
   priority: z.enum(ticketPriorities).default('Medium'),
-  durationMinutes: z
-    .preprocess(
-      (v) => (v === null || v === '' ? undefined : v),
-      z.number().int().min(0).optional()
-    ),
+  durationMinutes: z.union([z.number().int().min(0), z.null()]).optional(),
   customerContext: z.string().optional(),
   contactUserId: z.string().uuid({ message: 'Contact requis' })
 });
