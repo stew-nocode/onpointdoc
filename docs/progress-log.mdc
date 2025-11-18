@@ -105,7 +105,44 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Mise à jour du plan d'import (`docs/import/PLAN-IMPORT-DONNEES.md`) avec état d'avancement détaillé.
   - Structure standardisée pour tous les scripts : gestion erreurs, détection doublons, rapports détaillés.
 
+## 2025-01-18
+- ✅ **Phase 1 : Mapping champs standards Jira ↔ Supabase**
+  - Analyse complète de 813 bugs du projet Jira OD (OD10006) pour identifier tous les champs utilisés.
+  - Migration SQL appliquée : ajout de `resolution` et `fix_version` dans `tickets`.
+  - Extension `jira_sync` : 10 nouveaux champs pour stocker les métadonnées Jira complètes (statut, priorité, assigné, reporter, résolution, fix version, sprint, timestamps de sync, metadata JSONB).
+  - Tables de mapping dynamiques : `jira_status_mapping` et `jira_priority_mapping` pour gérer les correspondances Jira → Supabase.
+  - Fonctions SQL : `get_supabase_status_from_jira()` et `get_supabase_priority_from_jira()` pour récupérer les mappings.
+  - Données initiales : 6 mappings de statuts (Sprint Backlog → Nouveau, Traitement en Cours → En_cours, Terminé(e) → Resolue) et 4 mappings de priorités (Priorité 1 → Critical, Priorité 2 → High, Priorité 3 → Medium, Priorité 4 → Low).
+  - Services TypeScript : `src/services/jira/mapping.ts` (gestion mappings) et `src/services/jira/sync.ts` (synchronisation complète Jira → Supabase).
+  - Types TypeScript : mise à jour `Ticket` avec tous les nouveaux champs, nouveau type `JiraSync` complet.
+  - Webhook API amélioré : support format complet Phase 1 avec `jira_data` + compatibilité legacy.
+  - Documentation complète : `PHASE1-MAPPING-CHAMPS-STANDARDS.md`, `PHASE1-IMPLEMENTATION-COMPLETE.md`, `PROPOSITION-MAPPING-JIRA-SUPABASE.md`.
+- ✅ **Corrections TypeScript**
+  - Export `BasicProfile` depuis `services/users/index.ts` pour utilisation côté client.
+  - Correction schéma Zod pour `submoduleId`/`featureId` (gestion chaînes vides).
+  - Mise à jour service `createTicket` pour convertir chaînes vides en `null`.
+  - Correction erreur serveur : retrait export `listBasicProfiles` depuis `index.ts` (fonction serveur uniquement).
+- ✅ **Sécurisation Git/GitHub**
+  - Commit Phase 1 : `07b2d8f` - "feat(jira): Phase 1 - Mapping champs standards Jira ↔ Supabase"
+  - Commit corrections TypeScript : `5847099` - "fix(typescript): Correction erreurs TypeScript Phase 1"
+  - Commit correction serveur : `9881289` - "fix(server): Retirer export listBasicProfiles depuis index.ts"
+  - Tous les commits sauvegardés localement (push GitHub en attente suite à erreur 500 temporaire).
+
 ## À faire
+- ⏳ **Phase 2 : Informations client/contact**
+  - Extension `contacts` avec champ `function` (poste).
+  - Mapping des canaux de contact (Appel Téléphonique → Appel, Appel WhatsApp → Whatsapp, etc.).
+  - Synchronisation client/entreprise depuis Jira.
+- ⏳ **Phase 3 : Structure produit/module**
+  - Table `jira_feature_mapping` pour mapper les valeurs Jira vers `features.id`.
+  - Script d'initialisation des mappings.
+  - Synchronisation module/fonctionnalité.
+- ⏳ **Phase 4 : Workflow et suivi**
+  - Extension `tickets` avec champs workflow (`workflow_status`, `test_status`, `sprint_id`, `target_date`, `resolved_at`).
+  - Synchronisation sprint/workflow/test status.
+- ⏳ **Phase 5 : Champs spécifiques produits**
+  - Extension `tickets.custom_fields` (JSONB) pour champs conditionnels par produit.
+  - Synchronisation champs spécifiques (Opérations, Finance, RH, Projets, CRM).
 - ⏳ **Configuration N8N** : Importer et configurer les workflows N8N pour la synchronisation complète.
 - ⏳ **Import initial** : Exécuter l'import initial des tickets JIRA existants.
 - ⏳ **Webhooks JIRA** : Configurer les webhooks JIRA pour la synchronisation continue.
