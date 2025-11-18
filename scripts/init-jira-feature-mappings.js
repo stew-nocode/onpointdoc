@@ -11,15 +11,29 @@
  */
 
 import dotenv from 'dotenv';
+import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-dotenv.config({ path: '.env.local' });
+// Charger .env.local
+try {
+  const envPath = path.resolve(process.cwd(), '.env.local');
+  dotenv.config({ path: envPath });
+} catch {}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const jiraUrl = process.env.JIRA_URL || process.env.JIRA_BASE_URL;
-const jiraEmail = process.env.JIRA_USERNAME || process.env.JIRA_EMAIL;
+const jiraEmail = process.env.JIRA_USERNAME || process.env.JIRA_EMAIL || process.env.JIRA_API_EMAIL;
 const jiraToken = process.env.JIRA_TOKEN || process.env.JIRA_API_TOKEN;
+
+// Debug: Afficher les variables détectées (masquer les valeurs sensibles)
+console.log('🔍 Variables d\'environnement détectées:');
+console.log(`   - NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl ? '✅' : '❌'}`);
+console.log(`   - SUPABASE_SERVICE_ROLE_KEY: ${supabaseServiceKey ? '✅' : '❌'}`);
+console.log(`   - JIRA_URL/JIRA_BASE_URL: ${jiraUrl ? '✅' : '❌'}`);
+console.log(`   - JIRA_USERNAME/JIRA_EMAIL/JIRA_API_EMAIL: ${jiraEmail ? '✅' : '❌'}`);
+console.log(`   - JIRA_TOKEN/JIRA_API_TOKEN: ${jiraToken ? '✅' : '❌'}`);
+console.log('');
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('❌ Variables d\'environnement Supabase manquantes:');
@@ -31,8 +45,10 @@ if (!supabaseUrl || !supabaseServiceKey) {
 if (!jiraUrl || !jiraEmail || !jiraToken) {
   console.error('❌ Variables d\'environnement Jira manquantes:');
   console.error('   - JIRA_URL ou JIRA_BASE_URL');
-  console.error('   - JIRA_USERNAME ou JIRA_EMAIL');
+  console.error('   - JIRA_USERNAME, JIRA_EMAIL ou JIRA_API_EMAIL');
   console.error('   - JIRA_TOKEN ou JIRA_API_TOKEN');
+  console.error('');
+  console.error('💡 Vérifiez que ces variables sont définies dans votre fichier .env.local');
   process.exit(1);
 }
 
@@ -75,56 +91,39 @@ async function fetchJiraFeatureValues() {
   logSection('ÉTAPE 1: Récupération des fonctionnalités Jira');
 
   const projectKey = 'OD'; // Projet OD
-  const jiraApiUrl = `${cleanJiraUrl}/rest/api/3/search/jql`;
+  const jiraSearchUrl = `${cleanJiraUrl}/rest/api/3/search/jql`;
+  const jiraIssueUrl = `${cleanJiraUrl}/rest/api/3/issue`;
 
+  // Utiliser l'API /rest/api/3/search/jql pour récupérer les IDs, puis /rest/api/3/issue pour les détails
   const jqlQuery = `project = ${projectKey} AND customfield_10052 IS NOT EMPTY`;
+  
+  log(`🔍 Requête JQL: ${jqlQuery}`, 'blue');
   
   const allFeatures = new Map(); // Map pour éviter les doublons
 
   try {
-    // Première requête pour obtenir le total
-    const firstResponse = await fetch(
-      `${jiraApiUrl}?jql=${encodeURIComponent(jqlQuery)}&maxResults=1`,
-      {
+    // Étape 1: Récupérer tous les IDs/clés des tickets avec customfield_10052
+    let allIssueKeys = [];
+    let nextPageToken = null;
+    let isLast = false;
+    let pageCount = 0;
+    const maxResults = 100;
+
+    log('📥 Récupération des IDs/clés des tickets...', 'blue');
+
+    while (!isLast) {
+      let url = `${jiraSearchUrl}?jql=${encodeURIComponent(jqlQuery)}&maxResults=${maxResults}`;
+      if (nextPageToken) {
+        url += `&nextPageToken=${encodeURIComponent(nextPageToken)}`;
+      }
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Basic ${Buffer.from(`${cleanJiraEmail}:${cleanJiraToken}`).toString('base64')}`,
           'Accept': 'application/json'
         }
-      }
-    );
-
-    if (!firstResponse.ok) {
-      const errorText = await firstResponse.text();
-      throw new Error(`Erreur HTTP ${firstResponse.status}: ${errorText}`);
-    }
-
-    const firstData = await firstResponse.json();
-    const total = firstData.total || 0;
-
-    log(`📊 ${total} tickets trouvés avec customfield_10052`, 'blue');
-
-    if (total === 0) {
-      log('⚠️  Aucun ticket avec fonctionnalité trouvé', 'yellow');
-      return [];
-    }
-
-    // Récupérer tous les tickets par lots
-    let startAt = 0;
-    const maxResults = 100;
-    let fetched = 0;
-
-    while (startAt < total) {
-      const response = await fetch(
-        `${jiraApiUrl}?jql=${encodeURIComponent(jqlQuery)}&maxResults=${maxResults}&startAt=${startAt}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${Buffer.from(`${cleanJiraEmail}:${cleanJiraToken}`).toString('base64')}`,
-            'Accept': 'application/json'
-          }
-        }
-      );
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -132,32 +131,149 @@ async function fetchJiraFeatureValues() {
       }
 
       const data = await response.json();
-      const issues = data.issues || [];
+      pageCount++;
 
-      for (const issue of issues) {
-        const customField = issue.fields?.customfield_10052;
-        if (customField && customField.value) {
-          const featureValue = customField.value;
-          const featureId = customField.id;
-
-          if (!allFeatures.has(featureValue)) {
-            allFeatures.set(featureValue, {
-              value: featureValue,
-              id: featureId,
-              count: 0
-            });
+      if (data.issues && Array.isArray(data.issues)) {
+        data.issues.forEach(issue => {
+          if (issue.id || issue.key) {
+            allIssueKeys.push(issue.id || issue.key);
           }
-          allFeatures.get(featureValue).count++;
+        });
+        log(`   ✓ Page ${pageCount}: ${data.issues.length} tickets (Total: ${allIssueKeys.length})...`, 'blue');
+      }
+
+      nextPageToken = data.nextPageToken || null;
+      isLast = data.isLast === true;
+    }
+
+    const total = allIssueKeys.length;
+    log(`📊 ${total} tickets trouvés avec customfield_10052`, 'green');
+
+    if (total === 0) {
+      log('⚠️  Aucun ticket avec customfield_10052 trouvé', 'yellow');
+      return [];
+    }
+
+    // Étape 2: Récupérer les détails complets de chaque ticket
+    log(`\n📥 Récupération des détails complets pour ${total} tickets...`, 'blue');
+    
+    const batchSize = 50;
+    let fetched = 0;
+
+    for (let i = 0; i < allIssueKeys.length; i += batchSize) {
+      const batch = allIssueKeys.slice(i, i + batchSize);
+
+      // Récupérer les détails en parallèle avec retry pour 429
+      const promises = batch.map(async (issueKey) => {
+        let retries = 3;
+        let delay = 1000; // 1 seconde initial
+        
+        while (retries > 0) {
+          try {
+            const issueResponse = await fetch(
+              `${jiraIssueUrl}/${issueKey}`,
+              {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Basic ${Buffer.from(`${cleanJiraEmail}:${cleanJiraToken}`).toString('base64')}`,
+                  'Accept': 'application/json'
+                }
+              }
+            );
+
+            if (issueResponse.ok) {
+              return await issueResponse.json();
+            } else if (issueResponse.status === 429) {
+              // Rate limiting, attendre et réessayer
+              retries--;
+              if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Exponential backoff
+                continue;
+              } else {
+                console.warn(`   ⚠ Erreur 429 pour ${issueKey} après 3 tentatives`);
+                return null;
+              }
+            } else {
+              console.warn(`   ⚠ Erreur pour ${issueKey}: ${issueResponse.status}`);
+              return null;
+            }
+          } catch (error) {
+            retries--;
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              delay *= 2;
+            } else {
+              console.warn(`   ⚠ Erreur pour ${issueKey}:`, error.message);
+              return null;
+            }
+          }
+        }
+        return null;
+      });
+
+      const batchResults = await Promise.all(promises);
+      
+      for (const issue of batchResults) {
+        if (issue && issue.fields) {
+          const customField = issue.fields.customfield_10052;
+          
+          // Debug: Afficher la structure du premier ticket pour comprendre le format
+          if (fetched === 0 && customField) {
+            log(`\n🔍 Exemple de structure customfield_10052:`, 'blue');
+            log(`   ${JSON.stringify(customField, null, 2)}`, 'blue');
+          }
+          
+          if (customField) {
+            // Le champ peut être :
+            // 1. Un tableau : [{value: "...", id: "..."}, ...]
+            // 2. Un objet simple : {value: "...", id: "..."}
+            // 3. Une chaîne : "..."
+            
+            const processFeature = (item) => {
+              let featureValue = null;
+              let featureId = null;
+              
+              if (typeof item === 'string') {
+                featureValue = item;
+              } else if (item && typeof item === 'object') {
+                if (item.value) {
+                  featureValue = item.value;
+                  featureId = item.id || null;
+                } else if (item.name) {
+                  featureValue = item.name;
+                  featureId = item.id || null;
+                }
+              }
+              
+              if (featureValue) {
+                if (!allFeatures.has(featureValue)) {
+                  allFeatures.set(featureValue, {
+                    value: featureValue,
+                    id: featureId,
+                    count: 0
+                  });
+                }
+                allFeatures.get(featureValue).count++;
+              }
+            };
+            
+            // Gérer les tableaux
+            if (Array.isArray(customField)) {
+              customField.forEach(processFeature);
+            } else {
+              processFeature(customField);
+            }
+          }
         }
       }
 
-      fetched += issues.length;
-      log(`   Récupéré ${fetched}/${total} tickets...`, 'blue');
-      startAt += maxResults;
+      fetched += batchResults.filter(r => r !== null).length;
+      log(`   ✓ Détails récupérés: ${fetched}/${total} tickets...`, 'blue');
 
-      // Pause pour éviter rate limiting
-      if (startAt < total) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Pause plus longue pour éviter rate limiting
+      if (i + batchSize < allIssueKeys.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
@@ -188,7 +304,7 @@ async function findMatchingFeatures(jiraFeatureValue) {
     .select(`
       id,
       name,
-      sub_modules!inner (
+      submodules!inner (
         id,
         name,
         modules!inner (
@@ -206,17 +322,17 @@ async function findMatchingFeatures(jiraFeatureValue) {
   }
 
   // Filtrer par module si disponible
-  const filtered = (features || []).filter((f: any) => {
+  const filtered = (features || []).filter((f) => {
     if (!moduleName) return true;
-    const module = f.sub_modules?.modules?.name;
+    const module = f.submodules?.modules?.name;
     return module && module.toLowerCase().includes(moduleName.toLowerCase());
   });
 
-  return filtered.map((f: any) => ({
+  return filtered.map((f) => ({
     id: f.id,
     name: f.name,
-    submodule: f.sub_modules?.name || null,
-    module: f.sub_modules?.modules?.name || null
+    submodule: f.submodules?.name || null,
+    module: f.submodules?.modules?.name || null
   }));
 }
 
