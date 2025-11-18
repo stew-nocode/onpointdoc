@@ -56,11 +56,12 @@ CREATE INDEX IF NOT EXISTS idx_jira_sync_metadata_gin ON public.jira_sync USING 
 -- Table pour gérer les mappings dynamiques des statuts Jira → Supabase
 CREATE TABLE IF NOT EXISTS public.jira_status_mapping (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  jira_status_name TEXT NOT NULL UNIQUE,
+  jira_status_name TEXT NOT NULL,
   supabase_status TEXT NOT NULL,
   ticket_type TEXT NOT NULL CHECK (ticket_type IN ('BUG', 'REQ', 'ASSISTANCE')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(jira_status_name, ticket_type)
 );
 
 COMMENT ON TABLE public.jira_status_mapping IS 'Mapping des statuts Jira vers les statuts Supabase';
@@ -101,7 +102,7 @@ VALUES
   ('Traitement en Cours', 'En_cours', 'REQ'),
   ('Terminé(e)', 'Resolue', 'BUG'),
   ('Terminé(e)', 'Resolue', 'REQ')
-ON CONFLICT (jira_status_name) DO NOTHING;
+ON CONFLICT (jira_status_name, ticket_type) DO NOTHING;
 
 -------------------------------
 -- 6. DONNÉES INITIALES - Mapping des priorités
