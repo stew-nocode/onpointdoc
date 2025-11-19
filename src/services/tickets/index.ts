@@ -95,6 +95,7 @@ export const listTicketsPaginated = async (
       jira_issue_key,
       origin,
       target_date,
+      bug_type,
       created_at,
       created_by,
       created_user:profiles!tickets_created_by_fkey(id, full_name),
