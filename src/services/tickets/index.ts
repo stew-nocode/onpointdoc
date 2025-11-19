@@ -121,8 +121,22 @@ export const listTicketsPaginated = async (
     throw new Error(error.message);
   }
 
+  // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
+  const transformedTickets = (data || []).map((ticket: any) => ({
+    ...ticket,
+    assigned_user: Array.isArray(ticket.assigned_user) 
+      ? ticket.assigned_user[0] || null 
+      : ticket.assigned_user,
+    product: Array.isArray(ticket.product) 
+      ? ticket.product[0] || null 
+      : ticket.product,
+    module: Array.isArray(ticket.module) 
+      ? ticket.module[0] || null 
+      : ticket.module
+  }));
+
   return {
-    tickets: data || [],
+    tickets: transformedTickets,
     hasMore: count ? offset + limit < count : false,
     total: count || 0
   };

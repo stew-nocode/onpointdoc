@@ -108,7 +108,7 @@ export async function mapJiraCompanyToCompanyId(
   // 2. Rechercher par nom (correspondance exacte)
   const { data: companyByName, error: errorByName } = await supabase
     .from('companies')
-    .select('id')
+    .select('id, jira_company_id')
     .eq('name', jiraCompanyValue.trim())
     .single();
 

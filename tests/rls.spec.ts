@@ -44,6 +44,7 @@ describe('RLS Policies - Tickets', () => {
       const ticketDepartment = 'IT';
       const userRole = 'agent';
       const isDirectorOrAdmin = ['director', 'admin'].includes(userRole);
+      // @ts-expect-error - Test intentionnel : comparaison de départements différents
       const canRead = isDirectorOrAdmin || userDepartment === ticketDepartment;
       expect(canRead).toBe(false);
     });
@@ -66,6 +67,7 @@ describe('RLS Policies - Tickets', () => {
     it('should reject tickets with mismatched created_by', () => {
       const authenticatedUserId = 'user-123';
       const ticketCreatedBy = 'user-456';
+      // @ts-expect-error - Test intentionnel : comparaison d'utilisateurs différents
       const canInsert = ticketCreatedBy === authenticatedUserId;
       expect(canInsert).toBe(false);
     });
@@ -143,6 +145,7 @@ describe('RLS Policies - Products/Modules Access', () => {
       const userId = 'user-123';
       const ticketCreatedBy = 'user-456';
       const hasModuleAccess = false;
+      // @ts-expect-error - Test intentionnel : comparaison d'utilisateurs différents
       const isOwner = ticketCreatedBy === userId;
       const canAccess = hasModuleAccess || isOwner;
       expect(canAccess).toBe(false);

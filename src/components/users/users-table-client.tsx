@@ -64,7 +64,7 @@ export function UsersTableClient({ rows, companies }: Props) {
   }, [rows]);
 
   const uniqueDepartments = useMemo(() => {
-    const depts = new Set(rows.map((r) => r.department).filter(Boolean));
+    const depts = new Set(rows.map((r) => r.department).filter((d): d is string => Boolean(d)));
     return Array.from(depts).sort();
   }, [rows]);
 

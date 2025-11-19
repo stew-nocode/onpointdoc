@@ -1,8 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
-import Link from 'next/link';
 
 import { createTicket, listTicketsPaginated } from '@/services/tickets';
-import { TICKET_STATUSES, countTicketsByStatus } from '@/services/tickets';
+import { TICKET_STATUSES } from '@/services/tickets';
 import {
   listProducts,
   listModules,
@@ -18,11 +17,11 @@ import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scr
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 
 type TicketsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     type?: string;
     status?: string;
     search?: string;
-  };
+  }>;
 };
 
 async function loadInitialTickets(typeParam?: string, statusParam?: string, searchParam?: string) {
@@ -70,26 +69,16 @@ async function loadProductsAndModules() {
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   noStore(); // S'assurer que la page n'est pas mise en cache
   
+  // Résoudre la Promise searchParams pour Next.js 15
+  const resolvedSearchParams = await searchParams;
+  
   try {
     // Charger les données en parallèle
     const [initialTicketsData, productsData] = await Promise.all([
-      loadInitialTickets(searchParams?.type, searchParams?.status, searchParams?.search),
+      loadInitialTickets(resolvedSearchParams?.type, resolvedSearchParams?.status, resolvedSearchParams?.search),
       loadProductsAndModules()
     ]);
     const { products, modules, submodules, features, contacts } = productsData;
-
-    let counters:
-      | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
-      | undefined;
-    
-    if (searchParams?.type === 'BUG' || searchParams?.type === 'REQ' || searchParams?.type === 'ASSISTANCE') {
-      try {
-        counters = await countTicketsByStatus(searchParams.type as any);
-      } catch (error) {
-        console.error('Erreur lors du calcul des compteurs:', error);
-        counters = undefined;
-      }
-    }
 
     async function handleTicketSubmit(values: CreateTicketInput) {
       'use server';
@@ -121,53 +110,6 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         />
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="flex gap-2">
-          {[undefined, ...TICKET_STATUSES].map((statusOption) => {
-            const isActive =
-              searchParams?.status === statusOption ||
-              (!searchParams?.status && statusOption === undefined);
-            
-            // Construire l'URL en préservant le type s'il existe
-            const params = new URLSearchParams();
-            if (searchParams?.type) {
-              params.set('type', searchParams.type);
-            }
-            if (statusOption) {
-              params.set('status', statusOption);
-            }
-            const href = params.toString() 
-              ? `/gestion/tickets?${params.toString()}`
-              : '/gestion/tickets';
-            
-            return (
-              <Link
-                key={(statusOption ?? 'ALL') + (searchParams?.type ?? 'ALL')}
-                href={href}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                  isActive
-                    ? 'bg-brand text-white dark:bg-brand dark:text-white'
-                    : 'bg-slate-800/40 text-slate-300 hover:bg-slate-700/50 dark:bg-slate-800/60 dark:text-slate-300'
-                }`}
-              >
-                <span>
-                  {statusOption ? statusOption.replace('_', ' ') : 'Tous'}
-                </span>
-                {statusOption && counters && (
-                  <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
-                    isActive 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-slate-900/30 text-slate-300 dark:bg-slate-200/20 dark:text-slate-400'
-                  }`}>
-                    {counters[statusOption as (typeof TICKET_STATUSES)[number]] ?? 0}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -179,7 +121,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 </span>
               )}
             </CardTitle>
-            <TicketsSearchBar initialSearch={searchParams?.search} />
+            <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -187,9 +129,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTickets={initialTicketsData.tickets}
             initialHasMore={initialTicketsData.hasMore}
             initialTotal={initialTicketsData.total}
-            type={searchParams?.type}
-            status={searchParams?.status}
-            search={searchParams?.search}
+            type={resolvedSearchParams?.type}
+            status={resolvedSearchParams?.status}
+            search={resolvedSearchParams?.search}
           />
         </CardContent>
       </Card>

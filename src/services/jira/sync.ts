@@ -373,13 +373,13 @@ export async function syncJiraToSupabase(
   }
 
   // Phase 5: Ajouter les métadonnées des champs spécifiques produits
-  const productSpecificFields = [
+  const productSpecificFieldsPhase5 = [
     'customfield_10297', 'customfield_10298', 'customfield_10300',
     'customfield_10299', 'customfield_10301', 'customfield_10313',
     'customfield_10324', 'customfield_10364'
   ];
 
-  for (const fieldId of productSpecificFields) {
+  for (const fieldId of productSpecificFieldsPhase5) {
     const fieldValue = (jiraData as any)[fieldId];
     if (fieldValue) {
       syncMetadata[fieldId] = typeof fieldValue === 'string' 
