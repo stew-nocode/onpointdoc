@@ -98,7 +98,7 @@ export async function syncJiraToSupabase(
   ticketId: string,
   jiraData: JiraIssueData
 ): Promise<void> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // 1. Déterminer le type de ticket
   const ticketType = mapJiraIssueTypeToTicketType(jiraData.issuetype.name);
@@ -482,7 +482,7 @@ function mapJiraIssueTypeToTicketType(jiraIssueType: string): TicketType {
  * @returns Le profile_id Supabase ou null si non trouvé
  */
 async function mapJiraAccountIdToProfileId(jiraAccountId: string): Promise<string | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('profiles')
@@ -505,7 +505,7 @@ async function mapJiraAccountIdToProfileId(jiraAccountId: string): Promise<strin
  * @returns Le ticket trouvé ou null
  */
 async function findTicketByJiraKey(jiraKey: string): Promise<{ id: string } | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_sync')

@@ -7,7 +7,7 @@ import { ContactsPageClient, type ContactRow } from '@/components/users/contacts
 
 async function loadContacts(): Promise<{ rows: ContactRow[]; companies: Record<string, string> }> {
   noStore();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const [{ data: contacts, error: cErr }, { data: companies, error: pErr }] = await Promise.all([
     supabase
       .from('profiles')

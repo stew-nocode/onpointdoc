@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 
 export const createTicket = async (payload: CreateTicketInput) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   // Récupérer le profil de l'utilisateur connecté pour created_by
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Non authentifié');
@@ -48,7 +48,7 @@ export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue
 export const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
 
 export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatusFilter) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('tickets')
     .select('id, title, ticket_type, status, priority, assigned_to, created_at')
@@ -78,7 +78,7 @@ export const listTicketsPaginated = async (
   limit: number = 25,
   search?: string
 ) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('tickets')
     .select(`
@@ -129,7 +129,7 @@ export const listTicketsPaginated = async (
 };
 
 export async function countTicketsByStatus(type: TicketTypeFilter) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const result: Record<(typeof TICKET_STATUSES)[number], number> = {
     Nouveau: 0,
     En_cours: 0,
