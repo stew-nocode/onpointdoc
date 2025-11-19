@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
+import type { QuickFilter } from '@/types/ticket-filters';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -76,7 +77,9 @@ export const listTicketsPaginated = async (
   status?: TicketStatusFilter,
   offset: number = 0,
   limit: number = 25,
-  search?: string
+  search?: string,
+  quickFilter?: QuickFilter,
+  currentProfileId?: string | null
 ) => {
   const supabase = await createSupabaseServerClient();
   let query = supabase
@@ -91,6 +94,7 @@ export const listTicketsPaginated = async (
       canal,
       jira_issue_key,
       origin,
+      target_date,
       created_at,
       created_by,
       created_user:profiles!tickets_created_by_fkey(id, full_name),
@@ -116,6 +120,8 @@ export const listTicketsPaginated = async (
     // Format: "col1.op.val1,col2.op.val2" (sans guillemets autour des valeurs)
     query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
   }
+
+  query = applyQuickFilter(query, quickFilter, { currentProfileId: currentProfileId ?? undefined });
 
   const { data, error, count } = await query;
 
@@ -146,6 +152,51 @@ export const listTicketsPaginated = async (
     total: count || 0
   };
 };
+
+export function applyQuickFilter(
+  query: any,
+  quickFilter?: QuickFilter,
+  options?: { currentProfileId?: string }
+) {
+  if (!quickFilter) {
+    return query;
+  }
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const startOfWeek = new Date(today);
+  const day = startOfWeek.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+  const startOfWeekStr = startOfWeek.toISOString().slice(0, 10);
+
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstDayOfMonthStr = firstDayOfMonth.toISOString().slice(0, 10);
+
+  switch (quickFilter) {
+    case 'mine':
+      if (options?.currentProfileId) {
+        return query.eq('assigned_to', options.currentProfileId);
+      }
+      return query;
+    case 'unassigned':
+      return query.is('assigned_to', null);
+    case 'overdue':
+      return query
+        .not('target_date', 'eq', null)
+        .lt('target_date', todayStr);
+    case 'to_validate':
+      return query.eq('status', 'Transfere');
+    case 'week':
+      return query.gte('created_at', startOfWeekStr);
+    case 'month':
+      return query.gte('created_at', firstDayOfMonthStr);
+    default:
+      return query;
+  }
+}
+
 
 export async function countTicketsByStatus(type: TicketTypeFilter) {
   const supabase = await createSupabaseServerClient();

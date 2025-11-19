@@ -15,16 +15,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
+import { TicketsQuickFilters } from '@/components/tickets/tickets-quick-filters';
+import type { QuickFilter } from '@/types/ticket-filters';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
     type?: string;
     status?: string;
     search?: string;
+    quick?: QuickFilter;
   }>;
 };
 
-async function loadInitialTickets(typeParam?: string, statusParam?: string, searchParam?: string) {
+async function loadInitialTickets(
+  typeParam?: string,
+  statusParam?: string,
+  searchParam?: string,
+  quickFilterParam?: QuickFilter,
+  currentProfileId?: string | null
+) {
   noStore();
   try {
     const normalizedType =
@@ -36,9 +46,38 @@ async function loadInitialTickets(typeParam?: string, statusParam?: string, sear
       ? (statusParam as (typeof TICKET_STATUSES)[number])
       : undefined;
 
-    return await listTicketsPaginated(normalizedType as any, normalizedStatus, 0, 25, searchParam);
+    return await listTicketsPaginated(
+      normalizedType as any,
+      normalizedStatus,
+      0,
+      25,
+      searchParam,
+      quickFilterParam,
+      currentProfileId
+    );
   } catch {
     return { tickets: [], hasMore: false, total: 0 };
+  }
+}
+
+async function getCurrentUserProfileId() {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth_uid', user.id)
+      .single();
+
+    return profile?.id ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -71,13 +110,20 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   
   // Résoudre la Promise searchParams pour Next.js 15
   const resolvedSearchParams = await searchParams;
+  const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
+  const currentProfileIdPromise = getCurrentUserProfileId();
+  const productsPromise = loadProductsAndModules();
+  const currentProfileId = await currentProfileIdPromise;
+  const initialTicketsPromise = loadInitialTickets(
+    resolvedSearchParams?.type,
+    resolvedSearchParams?.status,
+    resolvedSearchParams?.search,
+    quickFilter,
+    currentProfileId
+  );
   
   try {
-    // Charger les données en parallèle
-    const [initialTicketsData, productsData] = await Promise.all([
-      loadInitialTickets(resolvedSearchParams?.type, resolvedSearchParams?.status, resolvedSearchParams?.search),
-      loadProductsAndModules()
-    ]);
+    const [initialTicketsData, productsData] = await Promise.all([initialTicketsPromise, productsPromise]);
     const { products, modules, submodules, features, contacts } = productsData;
 
     async function handleTicketSubmit(values: CreateTicketInput) {
@@ -110,7 +156,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         />
       </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>
@@ -124,6 +170,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />
           </div>
         </CardHeader>
+          <div className="px-6 pb-4">
+            <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
+          </div>
         <CardContent className="overflow-x-auto">
           <TicketsInfiniteScroll
             initialTickets={initialTicketsData.tickets}
@@ -131,7 +180,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTotal={initialTicketsData.total}
             type={resolvedSearchParams?.type}
             status={resolvedSearchParams?.status}
-            search={resolvedSearchParams?.search}
+              search={resolvedSearchParams?.search}
+              quickFilter={quickFilter}
+              currentProfileId={currentProfileId ?? undefined}
           />
         </CardContent>
       </Card>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { applyQuickFilter } from '@/services/tickets';
+import type { QuickFilter } from '@/types/ticket-filters';
 
 export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
 export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
@@ -12,6 +14,8 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as TicketTypeFilter | null;
     const status = searchParams.get('status') as TicketStatusFilter | null;
     const search = searchParams.get('search') || null;
+    const quickFilterParam = searchParams.get('quick') as QuickFilter | null;
+    const currentProfileIdParam = searchParams.get('currentProfileId');
     const offset = parseInt(searchParams.get('offset') || '0', 10);
     const limit = parseInt(searchParams.get('limit') || '25', 10);
 
@@ -40,6 +44,7 @@ export async function GET(request: NextRequest) {
         canal,
         jira_issue_key,
         origin,
+        target_date,
         created_at,
         created_by,
         created_user:profiles!tickets_created_by_fkey(id, full_name),
@@ -66,6 +71,10 @@ export async function GET(request: NextRequest) {
       // Format: "col1.op.val1,col2.op.val2" (sans guillemets autour des valeurs)
       query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
     }
+
+    query = applyQuickFilter(query, quickFilterParam ?? undefined, {
+      currentProfileId: currentProfileIdParam || undefined
+    });
 
     const { data, error, count } = await query;
 

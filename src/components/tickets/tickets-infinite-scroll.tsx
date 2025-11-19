@@ -7,6 +7,7 @@ import { Badge } from '@/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
+import type { QuickFilter } from '@/types/ticket-filters';
 
 type Ticket = {
   id: string;
@@ -18,6 +19,7 @@ type Ticket = {
   canal: string | null;
   jira_issue_key: string | null;
   origin: string | null;
+  target_date?: string | null;
   created_at: string;
   created_by: string | null;
   created_user: { id: string; full_name: string } | null;
@@ -34,6 +36,8 @@ type TicketsInfiniteScrollProps = {
   type?: string;
   status?: string;
   search?: string;
+  quickFilter?: QuickFilter;
+  currentProfileId?: string;
 };
 
 const ITEMS_PER_PAGE = 25;
@@ -44,7 +48,9 @@ export function TicketsInfiniteScroll({
   initialTotal,
   type,
   status,
-  search
+  search,
+  quickFilter,
+  currentProfileId
 }: TicketsInfiniteScrollProps) {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -102,6 +108,8 @@ export function TicketsInfiniteScroll({
       if (type) params.set('type', type);
       if (status) params.set('status', status);
       if (search) params.set('search', search);
+      if (quickFilter) params.set('quick', quickFilter);
+      if (currentProfileId) params.set('currentProfileId', currentProfileId);
 
       const response = await fetch(`/api/tickets/list?${params.toString()}`);
       
@@ -125,7 +133,7 @@ export function TicketsInfiniteScroll({
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, type, status, search]);
+  }, [isLoading, hasMore, type, status, search, quickFilter, currentProfileId]);
 
   // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
   const initialTicketIds = useMemo(() => 
@@ -149,7 +157,7 @@ export function TicketsInfiniteScroll({
     });
     setHasMore(initialHasMore);
     setError(null);
-  }, [type, status, search, initialHasMore, initialTicketIds, initialTickets]);
+  }, [type, status, search, quickFilter, initialHasMore, initialTicketIds, initialTickets]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
