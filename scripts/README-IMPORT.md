@@ -64,6 +64,7 @@ Les scripts utilisent :
 
 #### 6. Utilitaires Jira
 - `list-jira-projects.js` - Liste les projets Jira disponibles via l'API REST
+- `map-jira-users-to-profiles.js` - Mappe les utilisateurs Jira vers les profils Supabase et remplit les champs `assigned_to` des tickets
 
 ## 🔧 Utilisation
 
@@ -155,9 +156,31 @@ node scripts/update-cilagri-job-titles.js
 ```bash
 # Lister les projets Jira disponibles
 node scripts/list-jira-projects.js
+
+# Mapper les utilisateurs Jira vers les profils et remplir assigned_to
+node scripts/map-jira-users-to-profiles.js
 ```
 
-> **Note** : Ce script nécessite les variables d'environnement `JIRA_URL`, `JIRA_USERNAME` (ou `JIRA_EMAIL`), et `JIRA_TOKEN` (ou `JIRA_API_TOKEN`) dans `.env.local`.
+> **Note** : Ces scripts nécessitent les variables d'environnement `JIRA_URL`, `JIRA_USERNAME` (ou `JIRA_EMAIL`), et `JIRA_TOKEN` (ou `JIRA_API_TOKEN`) dans `.env.local`.
+
+#### Script `map-jira-users-to-profiles.js`
+
+Ce script :
+1. Récupère tous les `jira_assignee_account_id` uniques depuis `jira_sync`
+2. Pour chaque assigné, récupère les informations depuis l'API Jira
+3. Cherche un profil existant par :
+   - `jira_user_id` (correspondance exacte)
+   - `email` (si disponible)
+   - `full_name` (correspondance approximative)
+4. Crée un nouveau profil si aucun match n'est trouvé
+5. Met à jour tous les tickets avec `assigned_to` basé sur le mapping
+
+**Utilisation** :
+```bash
+node scripts/map-jira-users-to-profiles.js
+```
+
+Le script affiche un rapport détaillé du nombre de tickets mis à jour et d'utilisateurs mappés.
 
 ## 🔍 Dépannage
 

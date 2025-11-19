@@ -75,12 +75,28 @@ export const listTicketsPaginated = async (
   type?: TicketTypeFilter,
   status?: TicketStatusFilter,
   offset: number = 0,
-  limit: number = 25
+  limit: number = 25,
+  search?: string
 ) => {
   const supabase = createSupabaseServerClient();
   let query = supabase
     .from('tickets')
-    .select('id, title, ticket_type, status, priority, assigned_to, created_at', { count: 'exact' })
+    .select(`
+      id,
+      title,
+      description,
+      ticket_type,
+      status,
+      priority,
+      canal,
+      jira_issue_key,
+      origin,
+      created_at,
+      assigned_to,
+      assigned_user:profiles!tickets_assigned_to_fkey(id, full_name),
+      product:products(id, name),
+      module:modules(id, name)
+    `, { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -89,6 +105,14 @@ export const listTicketsPaginated = async (
   }
   if (status) {
     query = query.eq('status', status);
+  }
+
+  // Recherche textuelle dans titre, description et clé Jira
+  if (search && search.trim().length > 0) {
+    const searchTerm = `%${search.trim()}%`;
+    // Utiliser .or() avec la syntaxe correcte pour Supabase
+    // Format: "col1.op.val1,col2.op.val2" (sans guillemets autour des valeurs)
+    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
   }
 
   const { data, error, count } = await query;

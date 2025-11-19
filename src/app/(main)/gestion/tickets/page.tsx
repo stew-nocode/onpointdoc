@@ -15,15 +15,17 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
+import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 
 type TicketsPageProps = {
   searchParams?: {
     type?: string;
     status?: string;
+    search?: string;
   };
 };
 
-async function loadInitialTickets(typeParam?: string, statusParam?: string) {
+async function loadInitialTickets(typeParam?: string, statusParam?: string, searchParam?: string) {
   noStore();
   try {
     const normalizedType =
@@ -35,7 +37,7 @@ async function loadInitialTickets(typeParam?: string, statusParam?: string) {
       ? (statusParam as (typeof TICKET_STATUSES)[number])
       : undefined;
 
-    return await listTicketsPaginated(normalizedType as any, normalizedStatus, 0, 25);
+    return await listTicketsPaginated(normalizedType as any, normalizedStatus, 0, 25, searchParam);
   } catch {
     return { tickets: [], hasMore: false, total: 0 };
   }
@@ -71,7 +73,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   try {
     // Charger les données en parallèle
     const [initialTicketsData, productsData] = await Promise.all([
-      loadInitialTickets(searchParams?.type, searchParams?.status),
+      loadInitialTickets(searchParams?.type, searchParams?.status, searchParams?.search),
       loadProductsAndModules()
     ]);
     const { products, modules, submodules, features, contacts } = productsData;
@@ -168,14 +170,17 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            Tickets récents
-            {initialTicketsData.total > 0 && (
-              <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
-                ({initialTicketsData.total} au total)
-              </span>
-            )}
-          </CardTitle>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle>
+              Tickets récents
+              {initialTicketsData.total > 0 && (
+                <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                  ({initialTicketsData.total} au total)
+                </span>
+              )}
+            </CardTitle>
+            <TicketsSearchBar initialSearch={searchParams?.search} />
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <TicketsInfiniteScroll
@@ -184,6 +189,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTotal={initialTicketsData.total}
             type={searchParams?.type}
             status={searchParams?.status}
+            search={searchParams?.search}
           />
         </CardContent>
       </Card>

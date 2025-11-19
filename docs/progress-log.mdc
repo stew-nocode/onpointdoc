@@ -200,17 +200,30 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
   - Scripts : `create-missing-features.js` (création features), `create-jira-feature-mappings.js` (création mappings), `count-jira-feature-mappings.js` (vérification).
   - Documentation : `docs/import/MAPPINGS-FEATURES-JIRA-RESULTS.md` avec résultats complets.
 
+## 2025-01-19
+- ✅ **Améliorations UX - Tableau des tickets**
+  - **Recherche textuelle globale** : Barre de recherche avec debounce (500ms) permettant de rechercher dans le titre, la description et la clé Jira des tickets. Mise en surbrillance des termes recherchés dans les résultats. Intégration avec l'infinite scroll et les filtres existants.
+    - Composant `TicketsSearchBar` avec gestion de l'URL et debounce
+    - Extension de l'API `/api/tickets/list` et du service `listTicketsPaginated` pour supporter la recherche
+    - Utilisation de `ILIKE` avec `OR` pour recherche multi-colonnes dans Supabase
+  - **Colonnes personnalisables** : Système complet de gestion des colonnes visibles avec sauvegarde dans localStorage.
+    - Utilitaire `column-preferences.ts` pour gérer les préférences (getVisibleColumns, saveVisibleColumns, resetColumnsToDefault)
+    - Dialog de configuration `ColumnsConfigDialog` avec checkboxes pour chaque colonne
+    - Colonnes disponibles : Titre (requis), Type, Statut, Priorité, Canal, Produit, Module, Jira, Créé le, Assigné
+    - Affichage conditionnel des colonnes dans le tableau selon les préférences utilisateur
+    - Persistance des préférences dans localStorage avec clé `tickets-table-columns`
+  - **Corrections** : Résolution des erreurs de build (balise JSX manquante) et d'import (Check2 → Check)
+
 ## À faire
-- ⏳ **Phase 4 : Workflow et suivi**
-  - Extension `tickets` avec champs workflow (`workflow_status`, `test_status`, `sprint_id`, `target_date`, `resolved_at`).
-  - Synchronisation sprint/workflow/test status.
-- ⏳ **Phase 5 : Champs spécifiques produits**
-  - Extension `tickets.custom_fields` (JSONB) pour champs conditionnels par produit.
-  - Synchronisation champs spécifiques (Opérations, Finance, RH, Projets, CRM).
+- ⏳ **Actions rapides (bulk actions)** : Sélection multiple de tickets avec actions en masse (changer statut, réassigner, changer priorité, exporter CSV/Excel)
+- ⏳ **Tri par colonnes** : Permettre le tri par colonne avec indicateurs visuels et persistance dans l'URL
+- ⏳ **Filtres avancés** : Panel latéral avec multi-sélection pour tous les filtres (type, statut, priorité, assigné, produit, module, canal, dates)
+- ⏳ **Édition rapide (inline)** : Modification directe dans le tableau (statut, priorité, assigné)
+- ⏳ **Phase 4 : Workflow et suivi** (déjà complétée mais à documenter)
+- ⏳ **Phase 5 : Champs spécifiques produits** (déjà complétée mais à documenter)
 - ⏳ **Configuration N8N** : Importer et configurer les workflows N8N pour la synchronisation complète.
-- ⏳ **Import initial** : Exécuter l'import initial des tickets JIRA existants.
+- ⏳ **Import initial** : Exécuter l'import initial des tickets JIRA existants (déjà fait mais à documenter).
 - ⏳ **Webhooks JIRA** : Configurer les webhooks JIRA pour la synchronisation continue.
 - ⏳ **Tests** : Valider que tous les tickets JIRA sont synchronisés et que les changements remontent en temps réel.
 - ⏳ Édition/Suppression côté "Contacts" (si souhaité).
-- ⏳ Recherche/filtrage/pagination avancée sur listes (Users/Companies/Modules/…).
 - ⏳ Tests unitaires/e2e sur services sensibles (auth, RLS, creation flows).

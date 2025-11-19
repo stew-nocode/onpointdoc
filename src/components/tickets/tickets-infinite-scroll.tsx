@@ -1,18 +1,28 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Loader2, Bug, FileText, HelpCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
+import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
+import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
 
 type Ticket = {
   id: string;
   title: string;
+  description: string | null;
   ticket_type: string;
   status: string;
   priority: string;
-  assigned_to: string | null;
+  canal: string | null;
+  jira_issue_key: string | null;
+  origin: string | null;
   created_at: string;
+  assigned_to: string | null;
+  assigned_user: { id: string; full_name: string } | null;
+  product: { id: string; name: string } | null;
+  module: { id: string; name: string } | null;
 };
 
 type TicketsInfiniteScrollProps = {
@@ -21,6 +31,7 @@ type TicketsInfiniteScrollProps = {
   initialTotal: number;
   type?: string;
   status?: string;
+  search?: string;
 };
 
 const ITEMS_PER_PAGE = 25;
@@ -30,13 +41,39 @@ export function TicketsInfiniteScroll({
   initialHasMore,
   initialTotal,
   type,
-  status
+  status,
+  search
 }: TicketsInfiniteScrollProps) {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const ticketsLengthRef = useRef(initialTickets.length);
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(getVisibleColumns());
+
+  // Charger les colonnes visibles au montage
+  useEffect(() => {
+    setVisibleColumns(getVisibleColumns());
+  }, []);
+
+  // Fonction pour mettre en surbrillance les termes recherchés
+  const highlightSearchTerm = useCallback((text: string, searchTerm?: string) => {
+    if (!searchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className="bg-yellow-200 dark:bg-yellow-900/50 px-0.5 rounded">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  }, []);
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -45,13 +82,17 @@ export function TicketsInfiniteScroll({
     setError(null);
 
     try {
+      // Utiliser la ref pour obtenir la longueur actuelle de manière synchrone
+      const currentLength = ticketsLengthRef.current;
+
       const params = new URLSearchParams({
-        offset: tickets.length.toString(),
+        offset: currentLength.toString(),
         limit: ITEMS_PER_PAGE.toString()
       });
 
       if (type) params.set('type', type);
       if (status) params.set('status', status);
+      if (search) params.set('search', search);
 
       const response = await fetch(`/api/tickets/list?${params.toString()}`);
       
@@ -61,21 +102,45 @@ export function TicketsInfiniteScroll({
 
       const data = await response.json();
       
-      setTickets(prev => [...prev, ...data.tickets]);
+      // Filtrer les doublons en utilisant l'ID comme clé unique
+      setTickets(prev => {
+        const existingIds = new Set(prev.map(t => t.id));
+        const newTickets = data.tickets.filter((t: Ticket) => !existingIds.has(t.id));
+        const updated = [...prev, ...newTickets];
+        ticketsLengthRef.current = updated.length;
+        return updated;
+      });
       setHasMore(data.hasMore);
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
     } finally {
       setIsLoading(false);
     }
-  }, [tickets.length, isLoading, hasMore, type, status]);
+  }, [isLoading, hasMore, type, status, search]);
+
+  // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
+  const initialTicketIds = useMemo(() => 
+    new Set(initialTickets.map(t => t.id)), 
+    [initialTickets.map(t => t.id).join(',')]
+  );
 
   useEffect(() => {
     // Réinitialiser quand les filtres changent
-    setTickets(initialTickets);
+    setTickets(prev => {
+      const currentIds = new Set(prev.map(t => t.id));
+      
+      // Si les IDs sont identiques, ne pas réinitialiser
+      if (initialTicketIds.size === currentIds.size && 
+          Array.from(initialTicketIds).every(id => currentIds.has(id))) {
+        return prev;
+      }
+      
+      ticketsLengthRef.current = initialTickets.length;
+      return initialTickets;
+    });
     setHasMore(initialHasMore);
     setError(null);
-  }, [type, status, initialTickets, initialHasMore]);
+  }, [type, status, search, initialHasMore, initialTicketIds, initialTickets]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -107,65 +172,342 @@ export function TicketsInfiniteScroll({
     );
   }
 
+  // Fonction pour obtenir l'icône selon le type de ticket
+  const getTicketTypeIcon = (type: string) => {
+    switch (type) {
+      case 'BUG':
+        return <Bug className="h-3.5 w-3.5 text-red-500" />;
+      case 'REQ':
+        return <FileText className="h-3.5 w-3.5 text-blue-500" />;
+      case 'ASSISTANCE':
+        return <HelpCircle className="h-3.5 w-3.5 text-amber-500" />;
+      default:
+        return <AlertCircle className="h-3.5 w-3.5 text-slate-400" />;
+    }
+  };
+
+  // Fonction pour obtenir la couleur de priorité
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toUpperCase()) {
+      case 'CRITICAL':
+        return 'text-red-600 dark:text-red-400';
+      case 'HIGH':
+        return 'text-orange-600 dark:text-orange-400';
+      case 'MEDIUM':
+        return 'text-yellow-600 dark:text-yellow-400';
+      case 'LOW':
+        return 'text-slate-600 dark:text-slate-400';
+      default:
+        return 'text-slate-600 dark:text-slate-400';
+    }
+  };
+
+  // Fonction pour obtenir les initiales d'un nom
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Fonction pour obtenir une couleur d'avatar basée sur le nom
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-pink-500',
+      'bg-indigo-500',
+      'bg-yellow-500',
+      'bg-red-500',
+      'bg-teal-500'
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
+  const isColumnVisible = (columnId: ColumnId) => visibleColumns.has(columnId);
+
   return (
-    <>
-      <table className="min-w-full text-left">
-        <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          <tr>
-            <th className="pb-2">Titre</th>
-            <th className="pb-2">Type</th>
-            <th className="pb-2">Statut</th>
-            <th className="pb-2">Priorité</th>
-            <th className="pb-2">Assigné</th>
-            <th className="pb-2" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {tickets.map((ticket) => (
-            <tr key={ticket.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-              <td className="py-3 text-xs font-medium">
-                <Link
-                  href={`/gestion/tickets/${ticket.id}`}
-                  className="text-brand hover:underline dark:text-status-info dark:hover:text-status-info/80"
-                >
-                  {ticket.title}
-                </Link>
-              </td>
-              <td className="py-3 text-xs text-slate-600 dark:text-slate-300">{ticket.ticket_type}</td>
-              <td className="py-3 text-xs">
-                <Badge
-                  variant={
-                    ticket.status === 'Resolue'
-                      ? 'success'
-                      : ticket.status === 'Transfere'
-                        ? 'danger'
-                        : 'warning'
-                  }
-                >
-                  {ticket.status.replace('_', ' ')}
-                </Badge>
-              </td>
-              <td className="py-3 text-xs capitalize text-slate-600 dark:text-slate-300">
-                {ticket.priority}
-              </td>
-              <td className="py-3 text-xs text-slate-600 dark:text-slate-300">
-                {ticket.assigned_to ?? '-'}
-              </td>
-              <td className="py-3 text-right text-xs">
-                <div className="flex justify-end gap-1.5">
-                  <Link
-                    href={`/gestion/tickets/${ticket.id}`}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
-                    aria-label="Voir le ticket"
-                  >
-                    <Eye className="h-3 w-3" />
-                  </Link>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <TooltipProvider>
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <ColumnsConfigDialog onColumnsChange={setVisibleColumns} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left">
+            <thead className="border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                {isColumnVisible('title') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Titre
+                  </th>
+                )}
+                {isColumnVisible('type') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Type
+                  </th>
+                )}
+                {isColumnVisible('status') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Statut
+                  </th>
+                )}
+                {isColumnVisible('priority') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Priorité
+                  </th>
+                )}
+                {isColumnVisible('canal') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Canal
+                  </th>
+                )}
+                {isColumnVisible('product') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Produit
+                  </th>
+                )}
+                {isColumnVisible('module') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Module
+                  </th>
+                )}
+                {isColumnVisible('jira') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Jira
+                  </th>
+                )}
+                {isColumnVisible('created_at') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Créé le
+                  </th>
+                )}
+                {isColumnVisible('assigned') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Assigné
+                  </th>
+                )}
+                <th className="pb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" />
+              </tr>
+            </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {tickets.map((ticket) => (
+              <tr
+                key={ticket.id}
+                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+              >
+                {/* Titre avec tooltip */}
+                {isColumnVisible('title') && (
+                  <td className="py-2.5 pr-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Link
+                            href={`/gestion/tickets/${ticket.id}`}
+                            className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
+                          >
+                            {search ? highlightSearchTerm(ticket.title, search) : ticket.title}
+                          </Link>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-md">
+                        <p className="text-sm">{ticket.title}</p>
+                        {ticket.description && (
+                          <p className="text-xs text-slate-400 mt-1 line-clamp-3">
+                            {ticket.description.length > 200 
+                              ? `${ticket.description.substring(0, 200)}...` 
+                              : ticket.description}
+                          </p>
+                        )}
+                        {ticket.jira_issue_key && (
+                          <p className="text-xs text-slate-400 mt-1">Jira: {ticket.jira_issue_key}</p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </td>
+                )}
+
+                {/* Type avec icône */}
+                {isColumnVisible('type') && (
+                  <td className="py-2.5 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      {getTicketTypeIcon(ticket.ticket_type)}
+                      <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {ticket.ticket_type}
+                      </span>
+                    </div>
+                  </td>
+                )}
+
+                {/* Statut */}
+                {isColumnVisible('status') && (
+                  <td className="py-2.5 pr-4">
+                    <Badge
+                      variant={
+                        ticket.status === 'Resolue'
+                          ? 'success'
+                          : ticket.status === 'Transfere'
+                            ? 'danger'
+                            : 'warning'
+                      }
+                      className="text-[10px] px-2 py-0.5 whitespace-nowrap"
+                    >
+                      {ticket.status.replace('_', ' ')}
+                    </Badge>
+                  </td>
+                )}
+
+                {/* Priorité avec couleur */}
+                {isColumnVisible('priority') && (
+                  <td className="py-2.5 pr-4">
+                    <span className={`text-xs font-medium capitalize whitespace-nowrap ${getPriorityColor(ticket.priority)}`}>
+                      {ticket.priority}
+                    </span>
+                  </td>
+                )}
+
+                {/* Canal */}
+                {isColumnVisible('canal') && (
+                  <td className="py-2.5 pr-4">
+                    <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {ticket.canal || '-'}
+                    </span>
+                  </td>
+                )}
+
+                {/* Produit */}
+                {isColumnVisible('product') && (
+                  <td className="py-2.5 pr-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[120px]">
+                          {ticket.product?.name || '-'}
+                        </span>
+                      </TooltipTrigger>
+                      {ticket.product?.name && (
+                        <TooltipContent>
+                          <p>{ticket.product.name}</p>
+                          {ticket.module?.name && <p className="text-xs text-slate-400 mt-1">Module: {ticket.module.name}</p>}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </td>
+                )}
+
+                {/* Module */}
+                {isColumnVisible('module') && (
+                  <td className="py-2.5 pr-4">
+                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[120px]">
+                      {ticket.module?.name || '-'}
+                    </span>
+                  </td>
+                )}
+
+                {/* Jira */}
+                {isColumnVisible('jira') && (
+                  <td className="py-2.5 pr-4">
+                    {ticket.jira_issue_key ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 whitespace-nowrap">
+                            {ticket.jira_issue_key}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ticket Jira: {ticket.jira_issue_key}</p>
+                          <p className="text-xs text-slate-400 mt-1">Origine: {ticket.origin || 'Supabase'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </td>
+                )}
+
+                {/* Date de création */}
+                {isColumnVisible('created_at') && (
+                  <td className="py-2.5 pr-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          {ticket.created_at
+                            ? new Date(ticket.created_at).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                              })
+                            : '-'}
+                        </span>
+                      </TooltipTrigger>
+                      {ticket.created_at && (
+                        <TooltipContent>
+                          <p>
+                            {new Date(ticket.created_at).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </td>
+                )}
+
+                {/* Assigné avec avatar */}
+                {isColumnVisible('assigned') && (
+                  <td className="py-2.5 pr-4">
+                    {ticket.assigned_user?.full_name ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.assigned_user.full_name)}`}
+                            >
+                              {getInitials(ticket.assigned_user.full_name)}
+                            </div>
+                            <span className="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
+                              {ticket.assigned_user.full_name}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{ticket.assigned_user.full_name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
+                  </td>
+                )}
+
+                {/* Actions */}
+                <td className="py-2.5 text-right">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/gestion/tickets/${ticket.id}`}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                        aria-label="Voir le ticket"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Voir les détails</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Zone de déclenchement pour l'infinite scroll */}
       <div ref={observerTarget} className="h-10 flex items-center justify-center py-4">
@@ -184,7 +526,8 @@ export function TicketsInfiniteScroll({
           </p>
         )}
       </div>
-    </>
+      </div>
+    </TooltipProvider>
   );
 }
 
