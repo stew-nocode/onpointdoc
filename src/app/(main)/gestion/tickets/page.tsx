@@ -1,8 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
 
-import { createTicket, listTickets } from '@/services/tickets';
+import { createTicket, listTicketsPaginated } from '@/services/tickets';
 import { TICKET_STATUSES, countTicketsByStatus } from '@/services/tickets';
 import {
   listProducts,
@@ -13,9 +12,9 @@ import {
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
-import { Badge } from '@/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
+import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 
 type TicketsPageProps = {
   searchParams?: {
@@ -24,7 +23,7 @@ type TicketsPageProps = {
   };
 };
 
-async function loadTickets(typeParam?: string, statusParam?: string) {
+async function loadInitialTickets(typeParam?: string, statusParam?: string) {
   noStore();
   try {
     const normalizedType =
@@ -36,9 +35,9 @@ async function loadTickets(typeParam?: string, statusParam?: string) {
       ? (statusParam as (typeof TICKET_STATUSES)[number])
       : undefined;
 
-    return await listTickets(normalizedType as any, normalizedStatus);
+    return await listTicketsPaginated(normalizedType as any, normalizedStatus, 0, 25);
   } catch {
-    return [];
+    return { tickets: [], hasMore: false, total: 0 };
   }
 }
 
@@ -71,8 +70,8 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   
   try {
     // Charger les données en parallèle
-    const [tickets, productsData] = await Promise.all([
-      loadTickets(searchParams?.type, searchParams?.status),
+    const [initialTicketsData, productsData] = await Promise.all([
+      loadInitialTickets(searchParams?.type, searchParams?.status),
       loadProductsAndModules()
     ]);
     const { products, modules, submodules, features, contacts } = productsData;
@@ -169,71 +168,23 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Tickets récents</CardTitle>
+          <CardTitle>
+            Tickets récents
+            {initialTicketsData.total > 0 && (
+              <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                ({initialTicketsData.total} au total)
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              <tr>
-                <th className="pb-2">Titre</th>
-                <th className="pb-2">Type</th>
-                <th className="pb-2">Statut</th>
-                <th className="pb-2">Priorité</th>
-                <th className="pb-2">Assigné</th>
-                <th className="pb-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {tickets.map((ticket) => (
-                <tr key={ticket.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="py-3 text-xs font-medium">
-                    <Link
-                      href={`/gestion/tickets/${ticket.id}`}
-                      className="text-brand hover:underline dark:text-status-info dark:hover:text-status-info/80"
-                    >
-                      {ticket.title}
-                    </Link>
-                  </td>
-                  <td className="py-3 text-xs text-slate-600 dark:text-slate-300">{ticket.ticket_type}</td>
-                  <td className="py-3 text-xs">
-                    <Badge
-                      variant={
-                        ticket.status === 'Resolue'
-                          ? 'success'
-                          : ticket.status === 'Transfere'
-                            ? 'danger'
-                            : 'warning'
-                      }
-                    >
-                      {ticket.status.replace('_', ' ')}
-                    </Badge>
-                  </td>
-                  <td className="py-3 text-xs capitalize text-slate-600 dark:text-slate-300">
-                    {ticket.priority}
-                  </td>
-                  <td className="py-3 text-xs text-slate-600 dark:text-slate-300">
-                    {ticket.assigned_to ?? '-'}
-                  </td>
-                  <td className="py-3 text-right text-xs">
-                    <div className="flex justify-end gap-1.5">
-                      <Link
-                        href={`/gestion/tickets/${ticket.id}`}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0 text-slate-600 hover:bg-slate-600/10 dark:text-slate-200 dark:hover:bg-slate-200/10"
-                        aria-label="Voir le ticket"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!tickets.length && (
-            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              Aucun ticket enregistré pour le moment.
-            </p>
-          )}
+          <TicketsInfiniteScroll
+            initialTickets={initialTicketsData.tickets}
+            initialHasMore={initialTicketsData.hasMore}
+            initialTotal={initialTicketsData.total}
+            type={searchParams?.type}
+            status={searchParams?.status}
+          />
         </CardContent>
       </Card>
     </div>

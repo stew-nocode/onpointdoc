@@ -71,6 +71,39 @@ export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatus
   return data;
 };
 
+export const listTicketsPaginated = async (
+  type?: TicketTypeFilter,
+  status?: TicketStatusFilter,
+  offset: number = 0,
+  limit: number = 25
+) => {
+  const supabase = createSupabaseServerClient();
+  let query = supabase
+    .from('tickets')
+    .select('id, title, ticket_type, status, priority, assigned_to, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (type) {
+    query = query.eq('ticket_type', type);
+  }
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    tickets: data || [],
+    hasMore: count ? offset + limit < count : false,
+    total: count || 0
+  };
+};
+
 export async function countTicketsByStatus(type: TicketTypeFilter) {
   const supabase = createSupabaseServerClient();
   const result: Record<(typeof TICKET_STATUSES)[number], number> = {
