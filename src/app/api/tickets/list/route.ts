@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
         jira_issue_key,
         origin,
         created_at,
+        created_by,
+        created_user:profiles!tickets_created_by_fkey(id, full_name),
         assigned_to,
         assigned_user:profiles!tickets_assigned_to_fkey(id, full_name),
         product:products(id, name),
@@ -74,8 +76,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
+    const transformedTickets = (data || []).map((ticket: any) => ({
+      ...ticket,
+      created_user: Array.isArray(ticket.created_user) 
+        ? ticket.created_user[0] || null 
+        : ticket.created_user,
+      assigned_user: Array.isArray(ticket.assigned_user) 
+        ? ticket.assigned_user[0] || null 
+        : ticket.assigned_user,
+      product: Array.isArray(ticket.product) 
+        ? ticket.product[0] || null 
+        : ticket.product,
+      module: Array.isArray(ticket.module) 
+        ? ticket.module[0] || null 
+        : ticket.module
+    }));
+
     return NextResponse.json({
-      tickets: data || [],
+      tickets: transformedTickets,
       hasMore: count ? offset + limit < count : false,
       total: count || 0
     });

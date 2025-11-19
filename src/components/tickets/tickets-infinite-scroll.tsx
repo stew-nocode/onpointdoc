@@ -19,6 +19,8 @@ type Ticket = {
   jira_issue_key: string | null;
   origin: string | null;
   created_at: string;
+  created_by: string | null;
+  created_user: { id: string; full_name: string } | null;
   assigned_to: string | null;
   assigned_user: { id: string; full_name: string } | null;
   product: { id: string; name: string } | null;
@@ -50,10 +52,17 @@ export function TicketsInfiniteScroll({
   const [error, setError] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const ticketsLengthRef = useRef(initialTickets.length);
-  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(getVisibleColumns());
+  // Initialiser avec toutes les colonnes par défaut pour éviter l'erreur d'hydratation
+  // Les préférences seront chargées après le montage côté client uniquement
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
+    // Toujours retourner toutes les colonnes par défaut pour l'hydratation
+    return new Set(['title', 'type', 'status', 'priority', 'canal', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
+  });
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Charger les colonnes visibles au montage
+  // Charger les colonnes visibles après le montage pour éviter l'erreur d'hydratation
   useEffect(() => {
+    setIsMounted(true);
     setVisibleColumns(getVisibleColumns());
   }, []);
 
@@ -228,7 +237,14 @@ export function TicketsInfiniteScroll({
     return colors[index];
   };
 
-  const isColumnVisible = (columnId: ColumnId) => visibleColumns.has(columnId);
+  // Utiliser toutes les colonnes pendant l'hydratation, puis les préférences après le montage
+  const isColumnVisible = (columnId: ColumnId) => {
+    if (!isMounted) {
+      // Pendant l'hydratation, utiliser toutes les colonnes pour éviter les erreurs
+      return true;
+    }
+    return visibleColumns.has(columnId);
+  };
 
   return (
     <TooltipProvider>
@@ -283,6 +299,11 @@ export function TicketsInfiniteScroll({
                 {isColumnVisible('created_at') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Créé le
+                  </th>
+                )}
+                {isColumnVisible('reporter') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Rapporteur
                   </th>
                 )}
                 {isColumnVisible('assigned') && (
@@ -456,6 +477,33 @@ export function TicketsInfiniteScroll({
                         </TooltipContent>
                       )}
                     </Tooltip>
+                  </td>
+                )}
+
+                {/* Rapporteur avec avatar */}
+                {isColumnVisible('reporter') && (
+                  <td className="py-2.5 pr-4">
+                    {ticket.created_user?.full_name ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.created_user.full_name)}`}
+                            >
+                              {getInitials(ticket.created_user.full_name)}
+                            </div>
+                            <span className="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
+                              {ticket.created_user.full_name}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Rapporteur: {ticket.created_user.full_name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-xs text-slate-400">-</span>
+                    )}
                   </td>
                 )}
 

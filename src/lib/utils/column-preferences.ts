@@ -13,8 +13,8 @@ export type ColumnId =
   | 'module' 
   | 'jira' 
   | 'created_at' 
+  | 'reporter'
   | 'assigned';
-  // 'reporter' et 'client' seront ajoutés quand les données seront disponibles
 
 export type ColumnConfig = {
   id: ColumnId;
@@ -32,8 +32,8 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   { id: 'module', label: 'Module' },
   { id: 'jira', label: 'Jira' },
   { id: 'created_at', label: 'Créé le' },
+  { id: 'reporter', label: 'Rapporteur' },
   { id: 'assigned', label: 'Assigné' }
-  // Note: 'reporter' et 'client' seront ajoutés quand les données seront disponibles
 ];
 
 const STORAGE_KEY = 'tickets-table-columns';

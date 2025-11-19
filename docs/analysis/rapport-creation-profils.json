@@ -1,0 +1,19 @@
+{
+  "profilesCreated": [
+    {
+      "id": "62494f26-691b-4332-b831-07741d927779",
+      "full_name": "EVA BASSE",
+      "email": "ebasse@onpointafrica.om",
+      "jira_user_id": "712020:d4a5e54b-dc78-41d8-a397-cc5dbd0461f0"
+    },
+    {
+      "id": "c8431448-08b0-4349-9fb3-c0cc7447db04",
+      "full_name": "JOEL SIE",
+      "email": "jsie@onpointafrica.om",
+      "jira_user_id": "qm:f507503c-9014-4349-850e-b2659005bfbd:fc62df1a-ef74-43b4-9cdf-e9360887885c"
+    }
+  ],
+  "profilesSkipped": [],
+  "ticketsUpdated": 8,
+  "ticketsSkipped": 0
+}
