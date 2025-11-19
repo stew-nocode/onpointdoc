@@ -12,7 +12,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
  * @returns Le ticket mis à jour avec le statut "Transféré"
  */
 export const transferTicketToJira = async (ticketId: string) => {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   // 1. Récupérer le ticket pour vérifier qu'il est bien une ASSISTANCE et en statut "En_cours"
   const { data: ticket, error: ticketError } = await supabase
@@ -117,7 +117,7 @@ export const transferTicketToJira = async (ticketId: string) => {
  * Récupère les détails complets d'un ticket avec ses relations
  */
 export const getTicketById = async (ticketId: string) => {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('tickets')
     .select(`

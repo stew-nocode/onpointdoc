@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
 
     // Vérifier que le ticket existe
     const { data: ticket, error: ticketError } = await supabase

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { linkProductToDepartment, unlinkProductFromDepartment } from '@/services/departments/client';
 import { Combobox } from '@/ui/combobox';
@@ -35,7 +35,11 @@ export function DepartmentProductsManager({ departmentId }: Props) {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [linking, setLinking] = useState(false);
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    loadData();
+  }, [departmentId]);
+
+  async function loadData() {
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
 
@@ -59,11 +63,7 @@ export function DepartmentProductsManager({ departmentId }: Props) {
     setProducts(allProducts ?? []);
     setLinkedProducts(linked);
     setLoading(false);
-  }, [departmentId]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  }
 
   async function handleLink() {
     if (!selectedProductId) return;

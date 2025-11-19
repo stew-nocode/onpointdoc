@@ -213,53 +213,16 @@ Ce journal liste les jalons validés et les prochaines étapes à suivre pour On
     - Affichage conditionnel des colonnes dans le tableau selon les préférences utilisateur
     - Persistance des préférences dans localStorage avec clé `tickets-table-columns`
   - **Corrections** : Résolution des erreurs de build (balise JSX manquante) et d'import (Check2 → Check)
-- ✅ **Corrections Build et Architecture - 19 Janvier 2025**
-  - **Problème résolu : Build bloqué 23+ minutes** → Build réussi en 10 secondes ✅
-  - **Correction 100+ erreurs TypeScript** : Ajout de `await` sur `createSupabaseServerClient()` dans 25+ fichiers
-    - Services : `jira/sync.ts`, `jira/feature-mapping.ts`, `jira/contact-mapping.ts`, `tickets/index.ts`, `tickets/jira-transfer.ts`, `activities/index.ts`, `tasks/index.ts`, `users/server.ts`, `departments/server.ts`, `products/server.ts`
-    - Routes API : `/api/webhooks/jira`, `/api/admin/departments/*`, `/api/admin/users/create`, `/api/tickets/list`
-    - Pages : Toutes les pages de configuration (`config/*`) et gestion (`gestion/*`)
-  - **Correction gestion cookies Next.js 15** : No-op dans Server Components (modification uniquement dans Server Actions/Route Handlers)
-    - Mise à jour `src/lib/supabase/server.ts` : fonctions `set()` et `remove()` sont des no-ops dans Server Components
-    - Documentation complète des exigences Next.js 15 pour la gestion des cookies
-  - **Refactorisation routes API bulk actions** : Élimination de la duplication de code
-    - Création `src/lib/validators/bulk-actions.ts` : Schémas Zod pour validation (bulkUpdateStatusSchema, bulkUpdatePrioritySchema, bulkReassignSchema)
-    - Refactorisation routes API : `/api/tickets/bulk/status`, `/api/tickets/bulk/priority`, `/api/tickets/bulk/reassign`
-    - Utilisation des services `src/services/tickets/bulk-actions.ts` au lieu de dupliquer la logique
-    - Validation Zod complète avec gestion d'erreurs détaillée
-  - **Correction Next.js 15 searchParams** : `searchParams` est maintenant une Promise
-    - Mise à jour `src/app/(main)/gestion/tickets/page.tsx` : `await searchParams` avant utilisation
-    - Type correct : `searchParams?: Promise<{...}>` au lieu de `searchParams?: {...}`
-  - **Correction erreurs ESLint** : 15+ erreurs corrigées
-    - Apostrophes échappées : `l'assistance` → `l&apos;assistance`
-    - Guillemets échappés : `"nom"` → `&quot;nom&quot;`
-    - setState dans useEffect : Utilisation de `useRef` pour éviter les cascades (6 fichiers table-client)
-    - useCallback pour dépendances useEffect : `department-products-manager.tsx`
-    - Suspense pour useSearchParams : Page login enveloppée dans `<Suspense>`
-  - **Optimisation Next.js** : Configuration améliorée dans `next.config.mjs`
-    - `compiler.removeConsole` : Suppression console.log en production
-    - `experimental.optimizePackageImports` : Optimisation imports packages volumineux (lucide-react, radix-ui)
-  - **Documentation complète** : Création de 4 documents de référence
-    - `CORRECTIONS-BUILD-2025-01-19.md` : Détails complets de toutes les corrections
-    - `EXIGENCES-TECHNIQUES-PROJET.md` : Exigences techniques Next.js 15, TypeScript, Supabase SSR, React Hooks
-    - `REFERENCE-RAPIDE-EXIGENCES.md` : Checklist rapide et erreurs courantes
-    - `QUALITE-CODE-BULK-ACTIONS.md` : Analyse qualité code bulk actions
-  - **Mise à jour règles Cursor** : Ajout des exigences critiques dans `.cursor/rules/master.mdc` et `tech-stack.mdc`
-    - Exigences Next.js 15 (searchParams, cookies, Suspense)
-    - Exigences TypeScript Strict (await Promises, enums Zod)
-    - Exigences Supabase SSR (gestion cookies, async)
-    - Exigences Architecture (séparation services/routes API, validation Zod)
-    - Exigences React Hooks (setState, useCallback, échappement caractères)
-  - **Métriques** :
-    - Erreurs TypeScript : 100+ → 0 ✅
-    - Temps de build : 23+ min (bloqué) → 10s ✅
-    - Erreurs ESLint : 15+ → 0 (1 warning non bloquant) ✅
-    - Duplication de code : Éliminée ✅
-  - **Commit Git** : `f52c435` - "fix(build): Corrections build TypeScript, Next.js 15 et architecture"
-  - **Push GitHub** : Sauvegarde complète sur branche `snapshot/before-quality-refactor`
+- ✅ **Tests - Actions rapides (bulk actions)** : Script de test complet pour valider la structure des actions en masse
+  - Script `test-bulk-actions.js` avec 8 tests structurels (7/7 réussis)
+  - Validation de la base de données (colonnes, tables, relations)
+  - Test de génération CSV pour l'export
+  - Vérification de la table `ticket_status_history`
+  - Documentation complète dans `docs/tests/TEST-BULK-ACTIONS-RESULTS.md`
+  - **Note** : Tests en mode simulation (pas de modification réelle), routes API à créer
 
 ## À faire
-- ✅ **Actions rapides (bulk actions)** : Sélection multiple de tickets avec actions en masse (changer statut, réassigner, changer priorité, exporter CSV/Excel) - **IMPLÉMENTÉ** (à tester)
+- ⏳ **Actions rapides (bulk actions)** : Implémentation des routes API et des composants UI pour les actions en masse (changer statut, réassigner, changer priorité, exporter CSV/Excel)
 - ⏳ **Tri par colonnes** : Permettre le tri par colonne avec indicateurs visuels et persistance dans l'URL
 - ⏳ **Filtres avancés** : Panel latéral avec multi-sélection pour tous les filtres (type, statut, priorité, assigné, produit, module, canal, dates)
 - ⏳ **Édition rapide (inline)** : Modification directe dans le tableau (statut, priorité, assigné)

@@ -7,7 +7,7 @@ import { FeaturesTableClient, type FeatureRow } from '@/components/features/feat
 
 async function loadData(): Promise<{ rows: FeatureRow[]; submodules: Record<string, string> }> {
   noStore();
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const [{ data: feats, error: fErr }, { data: subs, error: sErr }] = await Promise.all([
     supabase.from('features').select('id, name, submodule_id, created_at').order('created_at', { ascending: false }),
     supabase.from('submodules').select('id, name').order('name', { ascending: true })

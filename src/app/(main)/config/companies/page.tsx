@@ -7,7 +7,7 @@ import { CompaniesTableClient, type CompanyRow } from '@/components/companies/co
 
 async function loadCompanies(): Promise<CompanyRow[]> {
   noStore();
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('companies')
     .select(
@@ -30,7 +30,7 @@ async function loadCompanies(): Promise<CompanyRow[]> {
 export default async function CompaniesIndexPage() {
   const companies = await loadCompanies();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const [{ data: countries }, { data: profiles }] = await Promise.all([
     supabase.from('countries').select('id, name').order('name', { ascending: true }),
     supabase.from('profiles').select('id, full_name, email').limit(500)

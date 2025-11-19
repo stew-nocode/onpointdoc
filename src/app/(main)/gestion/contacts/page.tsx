@@ -3,12 +3,11 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewContactDialog } from '@/components/users/new-contact-dialog';
-import { ContactsPageClient } from '@/components/users/contacts-page-client';
-import type { ContactRow } from '@/components/users/contacts-table';
+import { ContactsPageClient, type ContactRow } from '@/components/users/contacts-page-client';
 
 async function loadContacts(): Promise<{ rows: ContactRow[]; companies: Record<string, string> }> {
   noStore();
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const [{ data: contacts, error: cErr }, { data: companies, error: pErr }] = await Promise.all([
     supabase
       .from('profiles')

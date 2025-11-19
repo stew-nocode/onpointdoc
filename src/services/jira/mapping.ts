@@ -35,7 +35,7 @@ export async function getSupabaseStatusFromJira(
   jiraStatus: string,
   ticketType: TicketType
 ): Promise<SupabaseStatus | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_status_mapping')
@@ -61,7 +61,7 @@ export async function getSupabaseStatusFromJira(
 export async function getSupabasePriorityFromJira(
   jiraPriority: string
 ): Promise<SupabasePriority | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_priority_mapping')
@@ -83,7 +83,7 @@ export async function getSupabasePriorityFromJira(
  * @returns Liste de tous les mappings de statuts
  */
 export async function getAllStatusMappings(): Promise<JiraStatusMapping[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_status_mapping')
@@ -105,7 +105,7 @@ export async function getAllStatusMappings(): Promise<JiraStatusMapping[]> {
  * @returns Liste de tous les mappings de priorités
  */
 export async function getAllPriorityMappings(): Promise<JiraPriorityMapping[]> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_priority_mapping')
@@ -133,7 +133,7 @@ export async function createStatusMapping(
   supabaseStatus: SupabaseStatus,
   ticketType: TicketType
 ): Promise<JiraStatusMapping | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_status_mapping')
@@ -164,7 +164,7 @@ export async function createPriorityMapping(
   jiraPriority: string,
   supabasePriority: SupabasePriority
 ): Promise<JiraPriorityMapping | null> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_priority_mapping')

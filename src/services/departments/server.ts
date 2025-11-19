@@ -12,7 +12,7 @@ export type Department = {
 };
 
 export const listDepartments = async (): Promise<Department[]> => {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('departments')
     .select('id, name, code, description, color, is_active, created_at, updated_at')
@@ -22,7 +22,7 @@ export const listDepartments = async (): Promise<Department[]> => {
 };
 
 export const getDepartment = async (id: string): Promise<Department | null> => {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('departments')
     .select('id, name, code, description, color, is_active, created_at, updated_at')

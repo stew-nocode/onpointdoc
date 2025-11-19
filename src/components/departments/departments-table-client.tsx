@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewDepartmentDialog } from '@/components/departments/view-department-dialog';
 import { EditDepartmentDialog } from '@/components/departments/edit-department-dialog';
@@ -51,14 +51,8 @@ export function DepartmentsTableClient({ rows }: Props) {
 
   const totalPages = Math.ceil(filteredRows.length / ITEMS_PER_PAGE);
 
-  // Réinitialiser la page quand les filtres changent
-  const prevFilters = useRef({ search, statusFilter });
   useEffect(() => {
-    if (prevFilters.current.search !== search || prevFilters.current.statusFilter !== statusFilter) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage(1);
-      prevFilters.current = { search, statusFilter };
-    }
+    setCurrentPage(1);
   }, [search, statusFilter]);
 
   return (

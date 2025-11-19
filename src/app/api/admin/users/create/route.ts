@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     // AuthN/role check
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json('Unauthorized', { status: 401 });

@@ -323,7 +323,7 @@ export const TicketForm = ({
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium text-slate-700">
-            Durée de l&apos;assistance (minutes)
+            Durée de l'assistance (minutes)
           </label>
           <input
             type="number"
@@ -336,7 +336,7 @@ export const TicketForm = ({
             <p className="text-xs text-status-danger">{errors.durationMinutes.message}</p>
           )}
           <p className="text-xs text-slate-500">
-            Obligatoire pour les tickets Assistance afin d&apos;alimenter les KPIs Support.
+            Obligatoire pour les tickets Assistance afin d'alimenter les KPIs Support.
           </p>
         </div>
       </div>
