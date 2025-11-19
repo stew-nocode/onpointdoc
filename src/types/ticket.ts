@@ -1,3 +1,5 @@
+import type { BugType } from '@/lib/constants/tickets';
+
 export type TicketStatus = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue' | 'To_Do' | 'In_Progress' | 'Done' | 'Closed';
 export type TicketType = 'BUG' | 'REQ' | 'ASSISTANCE';
 export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -56,5 +58,6 @@ export type Ticket = {
   customer_context?: string | null;
   team_id?: string | null;
   contact_user_id?: string | null;
+  bug_type?: BugType | null;
 };
 

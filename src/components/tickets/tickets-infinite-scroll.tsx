@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Eye, Loader2, Bug, FileText, HelpCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/ui/badge';
+import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
@@ -136,9 +137,11 @@ export function TicketsInfiniteScroll({
   }, [isLoading, hasMore, type, status, search, quickFilter, currentProfileId]);
 
   // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
+  const initialTicketIdsString = initialTickets.map(t => t.id).join(',');
   const initialTicketIds = useMemo(() => 
     new Set(initialTickets.map(t => t.id)), 
-    [initialTickets.map(t => t.id).join(',')]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initialTicketIdsString]
   );
 
   useEffect(() => {
@@ -574,9 +577,19 @@ export function TicketsInfiniteScroll({
           </div>
         )}
         {error && (
-          <p className="text-sm text-status-danger">{error}</p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-status-danger">{error}</p>
+            <Button size="sm" onClick={() => loadMore()}>
+              Réessayer
+            </Button>
+          </div>
         )}
-        {!hasMore && tickets.length > 0 && (
+        {hasMore && !isLoading && !error && (
+          <Button variant="outline" size="sm" onClick={() => loadMore()}>
+            Charger plus
+          </Button>
+        )}
+        {!hasMore && !isLoading && tickets.length > 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Tous les tickets ont été chargés ({tickets.length} sur {initialTotal})
           </p>
