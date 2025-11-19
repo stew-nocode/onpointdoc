@@ -7,7 +7,7 @@ import { DepartmentsTableClient, type DepartmentRow } from '@/components/departm
 
 async function loadDepartments(): Promise<DepartmentRow[]> {
   noStore();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('departments')
     .select('id, name, code, description, color, is_active, created_at')

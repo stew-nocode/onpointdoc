@@ -29,6 +29,7 @@ export function ColumnsConfigDialog({ onColumnsChange }: ColumnsConfigDialogProp
 
   // Charger les colonnes visibles au montage
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleColumns(getVisibleColumns());
   }, []);
 

@@ -88,7 +88,7 @@ export default async function TicketDetailPage({
             {ticket.duration_minutes && (
               <div>
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Durée de l'assistance
+                  Durée de l&apos;assistance
                 </label>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {ticket.duration_minutes} minutes

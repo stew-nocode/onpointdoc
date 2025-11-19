@@ -18,11 +18,11 @@ import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scr
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 
 type TicketsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     type?: string;
     status?: string;
     search?: string;
-  };
+  }>;
 };
 
 async function loadInitialTickets(typeParam?: string, statusParam?: string, searchParam?: string) {
@@ -70,10 +70,13 @@ async function loadProductsAndModules() {
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   noStore(); // S'assurer que la page n'est pas mise en cache
   
+  // Résoudre la Promise searchParams (Next.js 15)
+  const params = await searchParams;
+  
   try {
     // Charger les données en parallèle
     const [initialTicketsData, productsData] = await Promise.all([
-      loadInitialTickets(searchParams?.type, searchParams?.status, searchParams?.search),
+      loadInitialTickets(params?.type, params?.status, params?.search),
       loadProductsAndModules()
     ]);
     const { products, modules, submodules, features, contacts } = productsData;
@@ -82,9 +85,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       | Record<'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue', number>
       | undefined;
     
-    if (searchParams?.type === 'BUG' || searchParams?.type === 'REQ' || searchParams?.type === 'ASSISTANCE') {
+    if (params?.type === 'BUG' || params?.type === 'REQ' || params?.type === 'ASSISTANCE') {
       try {
-        counters = await countTicketsByStatus(searchParams.type as any);
+        counters = await countTicketsByStatus(params.type as any);
       } catch (error) {
         console.error('Erreur lors du calcul des compteurs:', error);
         counters = undefined;
@@ -125,24 +128,24 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         <div className="flex gap-2">
           {[undefined, ...TICKET_STATUSES].map((statusOption) => {
             const isActive =
-              searchParams?.status === statusOption ||
-              (!searchParams?.status && statusOption === undefined);
+              params?.status === statusOption ||
+              (!params?.status && statusOption === undefined);
             
             // Construire l'URL en préservant le type s'il existe
-            const params = new URLSearchParams();
-            if (searchParams?.type) {
-              params.set('type', searchParams.type);
+            const urlParams = new URLSearchParams();
+            if (params?.type) {
+              urlParams.set('type', params.type);
             }
             if (statusOption) {
-              params.set('status', statusOption);
+              urlParams.set('status', statusOption);
             }
-            const href = params.toString() 
-              ? `/gestion/tickets?${params.toString()}`
+            const href = urlParams.toString() 
+              ? `/gestion/tickets?${urlParams.toString()}`
               : '/gestion/tickets';
             
             return (
               <Link
-                key={(statusOption ?? 'ALL') + (searchParams?.type ?? 'ALL')}
+                key={(statusOption ?? 'ALL') + (params?.type ?? 'ALL')}
                 href={href}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                   isActive
@@ -179,7 +182,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 </span>
               )}
             </CardTitle>
-            <TicketsSearchBar initialSearch={searchParams?.search} />
+            <TicketsSearchBar initialSearch={params?.search} />
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -187,9 +190,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTickets={initialTicketsData.tickets}
             initialHasMore={initialTicketsData.hasMore}
             initialTotal={initialTicketsData.total}
-            type={searchParams?.type}
-            status={searchParams?.status}
-            search={searchParams?.search}
+            type={params?.type}
+            status={params?.status}
+            search={params?.search}
           />
         </CardContent>
       </Card>

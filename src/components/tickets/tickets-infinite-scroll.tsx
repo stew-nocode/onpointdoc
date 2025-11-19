@@ -7,6 +7,8 @@ import { Badge } from '@/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
+import { BulkActionsBar } from '@/components/tickets/bulk-actions-bar';
+import { CheckSquare, Square } from 'lucide-react';
 
 type Ticket = {
   id: string;
@@ -51,11 +53,17 @@ export function TicketsInfiniteScroll({
   const observerTarget = useRef<HTMLDivElement>(null);
   const ticketsLengthRef = useRef(initialTickets.length);
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(getVisibleColumns());
+  const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set());
 
   // Charger les colonnes visibles au montage
   useEffect(() => {
     setVisibleColumns(getVisibleColumns());
   }, []);
+
+  // Réinitialiser la sélection quand les filtres changent
+  useEffect(() => {
+    setSelectedTickets(new Set());
+  }, [type, status, search]);
 
   // Fonction pour mettre en surbrillance les termes recherchés
   const highlightSearchTerm = useCallback((text: string, searchTerm?: string) => {
@@ -119,9 +127,11 @@ export function TicketsInfiniteScroll({
   }, [isLoading, hasMore, type, status, search]);
 
   // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
+  const initialTicketIdsString = initialTickets.map(t => t.id).join(',');
   const initialTicketIds = useMemo(() => 
     new Set(initialTickets.map(t => t.id)), 
-    [initialTickets.map(t => t.id).join(',')]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initialTicketIdsString]
   );
 
   useEffect(() => {
@@ -230,6 +240,39 @@ export function TicketsInfiniteScroll({
 
   const isColumnVisible = (columnId: ColumnId) => visibleColumns.has(columnId);
 
+  // Gestion de la sélection
+  const handleSelectAll = () => {
+    if (selectedTickets.size === tickets.length) {
+      setSelectedTickets(new Set());
+    } else {
+      setSelectedTickets(new Set(tickets.map(t => t.id)));
+    }
+  };
+
+  const handleSelectTicket = (ticketId: string) => {
+    setSelectedTickets(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(ticketId)) {
+        newSet.delete(ticketId);
+      } else {
+        newSet.add(ticketId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedTickets(new Set());
+  };
+
+  const handleRefresh = () => {
+    // Recharger les tickets depuis le serveur
+    window.location.reload();
+  };
+
+  const allSelected = tickets.length > 0 && selectedTickets.size === tickets.length;
+  const someSelected = selectedTickets.size > 0 && selectedTickets.size < tickets.length;
+
   return (
     <TooltipProvider>
       <div className="space-y-3">
@@ -240,6 +283,21 @@ export function TicketsInfiniteScroll({
           <table className="min-w-full text-left">
             <thead className="border-b border-slate-200 dark:border-slate-800">
               <tr>
+                <th className="pb-2.5 pr-2 w-10">
+                  <button
+                    onClick={handleSelectAll}
+                    className="flex items-center justify-center h-5 w-5 rounded border border-slate-300 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
+                    aria-label={allSelected ? 'Désélectionner tout' : 'Sélectionner tout'}
+                  >
+                    {allSelected ? (
+                      <CheckSquare className="h-4 w-4 text-brand" />
+                    ) : someSelected ? (
+                      <div className="h-4 w-4 border-2 border-brand bg-brand/20 rounded" />
+                    ) : (
+                      <Square className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
+                </th>
                 {isColumnVisible('title') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Titre
@@ -297,8 +355,24 @@ export function TicketsInfiniteScroll({
             {tickets.map((ticket) => (
               <tr
                 key={ticket.id}
-                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${
+                  selectedTickets.has(ticket.id) ? 'bg-brand/5 dark:bg-brand/10' : ''
+                }`}
               >
+                {/* Checkbox de sélection */}
+                <td className="py-2.5 pr-2 w-10">
+                  <button
+                    onClick={() => handleSelectTicket(ticket.id)}
+                    className="flex items-center justify-center h-5 w-5 rounded border border-slate-300 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
+                    aria-label={selectedTickets.has(ticket.id) ? 'Désélectionner' : 'Sélectionner'}
+                  >
+                    {selectedTickets.has(ticket.id) ? (
+                      <CheckSquare className="h-4 w-4 text-brand" />
+                    ) : (
+                      <Square className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
+                </td>
                 {/* Titre avec tooltip */}
                 {isColumnVisible('title') && (
                   <td className="py-2.5 pr-4">
@@ -527,6 +601,13 @@ export function TicketsInfiniteScroll({
         )}
       </div>
       </div>
+
+      <BulkActionsBar
+        selectedTickets={selectedTickets}
+        totalTickets={initialTotal}
+        onClearSelection={handleClearSelection}
+        onRefresh={handleRefresh}
+      />
     </TooltipProvider>
   );
 }

@@ -7,7 +7,7 @@ import { ModulesTableClient, type ModuleRow } from '@/components/modules/modules
 
 async function loadModules(): Promise<{ rows: ModuleRow[]; products: Record<string, string> }> {
   noStore();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const [{ data: modules, error: mErr }, { data: products, error: pErr }] = await Promise.all([
     supabase.from('modules').select('id, name, product_id, created_at').order('created_at', { ascending: false }),
     supabase.from('products').select('id, name').order('name', { ascending: true })

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
-export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
-
-const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
+import type { TicketTypeFilter, TicketStatusFilter } from '@/lib/constants/tickets';
+import { TICKET_STATUSES } from '@/lib/constants/tickets';
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,7 +50,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('ticket_type', type);
     }
 
-    if (status && TICKET_STATUSES.includes(status as any)) {
+    if (status && (TICKET_STATUSES as readonly string[]).includes(status)) {
       query = query.eq('status', status);
     }
 

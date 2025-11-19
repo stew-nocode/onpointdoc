@@ -8,7 +8,7 @@ import { UsersTableClient, type UserRow } from '@/components/users/users-table-c
 
 async function loadUsers(): Promise<UserRow[]> {
   noStore();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('profiles')
     .select('id, email, full_name, role, department, is_active, company_id')
@@ -20,7 +20,7 @@ async function loadUsers(): Promise<UserRow[]> {
 
 export default async function UsersIndexPage() {
   const users = await loadUsers();
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: companies } = await supabase.from('companies').select('id, name').order('name', { ascending: true });
   const companiesMap: Record<string, string> = {};
   (companies ?? []).forEach((c: any) => {

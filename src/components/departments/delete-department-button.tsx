@@ -29,7 +29,7 @@ export function DeleteDepartmentButton({ departmentId, departmentName, className
   if (confirm) {
     return (
       <div className="inline-flex items-center gap-2">
-        <span className="text-xs text-slate-600 dark:text-slate-300">Supprimer "{departmentName}" ?</span>
+        <span className="text-xs text-slate-600 dark:text-slate-300">Supprimer &quot;{departmentName}&quot; ?</span>
         <button
           className="rounded bg-rose-600 px-2 py-1 text-xs text-white hover:bg-rose-700 disabled:opacity-50"
           onClick={handleDelete}

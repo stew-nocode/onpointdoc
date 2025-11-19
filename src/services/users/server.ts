@@ -7,7 +7,7 @@ export type BasicProfile = {
 };
 
 export async function listBasicProfiles(limit = 100): Promise<BasicProfile[]> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('profiles')
     .select('id, full_name, email')

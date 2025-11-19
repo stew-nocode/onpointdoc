@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewUserDialog } from '@/components/users/view-user-dialog';
 import { EditUserDialog } from '@/components/users/edit-user-dialog';
@@ -64,7 +64,7 @@ export function UsersTableClient({ rows, companies }: Props) {
   }, [rows]);
 
   const uniqueDepartments = useMemo(() => {
-    const depts = new Set(rows.map((r) => r.department).filter(Boolean));
+    const depts = new Set(rows.map((r) => r.department).filter((d): d is string => Boolean(d)));
     return Array.from(depts).sort();
   }, [rows]);
 
@@ -75,8 +75,20 @@ export function UsersTableClient({ rows, companies }: Props) {
   }, [companies]);
 
   // Reset to page 1 when filters change
+  const prevFilters = useRef({ search, roleFilter, departmentFilter, companyFilter, statusFilter });
   useEffect(() => {
-    setCurrentPage(1);
+    const hasChanged = 
+      prevFilters.current.search !== search ||
+      prevFilters.current.roleFilter !== roleFilter ||
+      prevFilters.current.departmentFilter !== departmentFilter ||
+      prevFilters.current.companyFilter !== companyFilter ||
+      prevFilters.current.statusFilter !== statusFilter;
+    
+    if (hasChanged) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentPage(1);
+      prevFilters.current = { search, roleFilter, departmentFilter, companyFilter, statusFilter };
+    }
   }, [search, roleFilter, departmentFilter, companyFilter, statusFilter]);
 
   return (

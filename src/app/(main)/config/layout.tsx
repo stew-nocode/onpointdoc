@@ -11,7 +11,7 @@ type ConfigLayoutProps = {
 // - Autorisé : admin, manager, director
 // - Interdit : agent, client, autres rôles → redirection vers les tickets
 export default async function ConfigLayout({ children }: ConfigLayoutProps) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user }

@@ -505,3 +505,18 @@
 
 **Note** : Les priorités peuvent être ajustées selon les besoins métier et les retours utilisateurs.
 
+---
+
+## 📝 Corrections Effectuées - 19 Janvier 2025
+
+### Problèmes Résolus
+1. ✅ **Build bloqué** : Corrigé (23+ min → 10s)
+2. ✅ **Erreurs TypeScript** : 100+ erreurs corrigées (ajout de `await`)
+3. ✅ **Erreurs Next.js 15** : Gestion des cookies corrigée
+4. ✅ **Duplication de code** : Routes API refactorisées pour utiliser les services
+5. ✅ **Validation Zod** : Ajoutée pour toutes les routes API bulk actions
+
+### Documents de Référence
+- [`CORRECTIONS-BUILD-2025-01-19.md`](./CORRECTIONS-BUILD-2025-01-19.md) : Détails des corrections
+- [`EXIGENCES-TECHNIQUES-PROJET.md`](./EXIGENCES-TECHNIQUES-PROJET.md) : Exigences techniques complètes
+

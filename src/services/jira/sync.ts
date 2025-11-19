@@ -98,7 +98,7 @@ export async function syncJiraToSupabase(
   ticketId: string,
   jiraData: JiraIssueData
 ): Promise<void> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // 1. Déterminer le type de ticket
   const ticketType = mapJiraIssueTypeToTicketType(jiraData.issuetype.name);
@@ -284,7 +284,7 @@ export async function syncJiraToSupabase(
   }
 
   // Phase 5: Mapper les champs spécifiques produits dans custom_fields
-  const productSpecificFields = [
+  const productSpecificFieldIds = [
     'customfield_10297', // OBC - Opérations
     'customfield_10298', // OBC - Finance
     'customfield_10300', // OBC - RH
@@ -303,7 +303,7 @@ export async function syncJiraToSupabase(
     }
   };
 
-  for (const fieldId of productSpecificFields) {
+  for (const fieldId of productSpecificFieldIds) {
     const fieldValue = (jiraData as any)[fieldId];
     if (fieldValue) {
       // Extraire la valeur (peut être string, object avec value/name, ou array)
@@ -372,14 +372,8 @@ export async function syncJiraToSupabase(
     }
   }
 
-  // Phase 5: Ajouter les métadonnées des champs spécifiques produits
-  const productSpecificFields = [
-    'customfield_10297', 'customfield_10298', 'customfield_10300',
-    'customfield_10299', 'customfield_10301', 'customfield_10313',
-    'customfield_10324', 'customfield_10364'
-  ];
-
-  for (const fieldId of productSpecificFields) {
+  // Phase 5: Ajouter les métadonnées des champs spécifiques produits dans sync_metadata
+  for (const fieldId of productSpecificFieldIds) {
     const fieldValue = (jiraData as any)[fieldId];
     if (fieldValue) {
       syncMetadata[fieldId] = typeof fieldValue === 'string' 
@@ -482,7 +476,7 @@ function mapJiraIssueTypeToTicketType(jiraIssueType: string): TicketType {
  * @returns Le profile_id Supabase ou null si non trouvé
  */
 async function mapJiraAccountIdToProfileId(jiraAccountId: string): Promise<string | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('profiles')
@@ -505,7 +499,7 @@ async function mapJiraAccountIdToProfileId(jiraAccountId: string): Promise<strin
  * @returns Le ticket trouvé ou null
  */
 async function findTicketByJiraKey(jiraKey: string): Promise<{ id: string } | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_sync')

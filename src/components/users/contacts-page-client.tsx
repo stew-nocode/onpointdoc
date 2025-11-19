@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { ContactsTable, type ContactRow } from '@/components/users/contacts-table';
+import { ContactsTable } from '@/components/users/contacts-table';
+import type { ContactRow } from '@/components/users/contacts-table';
 import { cn } from '@/lib/utils';
 
 type Props = {

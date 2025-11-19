@@ -9,7 +9,7 @@ export type TaskPayload = {
 };
 
 export const createTask = async (payload: TaskPayload) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('tasks')
     .insert({

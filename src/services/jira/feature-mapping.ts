@@ -28,7 +28,7 @@ export async function getFeatureIdFromJira(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_feature_mapping')
@@ -60,7 +60,7 @@ export async function getSubmoduleIdFromFeatureId(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('features')
@@ -126,7 +126,7 @@ export async function upsertFeatureMapping(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const mappingData: Partial<JiraFeatureMapping> = {
     jira_feature_value: jiraFeatureValue.trim(),
@@ -165,7 +165,7 @@ export async function upsertFeatureMapping(
 export async function getAllFeatureMappings(
   jiraCustomFieldId?: string
 ): Promise<JiraFeatureMapping[]> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   let query = supabase
     .from('jira_feature_mapping')
@@ -205,7 +205,7 @@ export async function searchFeaturesByName(
     return [];
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // Recherche dans features avec jointure vers submodules et modules
   const { data, error } = await supabase

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewSubmoduleDialog } from '@/components/submodules/view-submodule-dialog';
 import { EditSubmoduleDialog } from '@/components/submodules/edit-submodule-dialog';
@@ -53,8 +53,14 @@ export function SubmodulesTableClient({ rows, modules }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [modules]);
 
+  // Réinitialiser la page quand les filtres changent
+  const prevFilters = useRef({ search, moduleFilter });
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevFilters.current.search !== search || prevFilters.current.moduleFilter !== moduleFilter) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentPage(1);
+      prevFilters.current = { search, moduleFilter };
+    }
   }, [search, moduleFilter]);
 
   return (

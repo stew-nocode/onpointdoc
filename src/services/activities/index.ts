@@ -9,7 +9,7 @@ export type ActivityPayload = {
 };
 
 export const createActivity = async (payload: ActivityPayload) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('activities')
     .insert({

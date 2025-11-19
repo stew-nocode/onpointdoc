@@ -1,8 +1,10 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
+import type { TicketTypeFilter, TicketStatusFilter } from '@/lib/constants/tickets';
+import { TICKET_STATUSES } from '@/lib/constants/tickets';
 
 export const createTicket = async (payload: CreateTicketInput) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   // Récupérer le profil de l'utilisateur connecté pour created_by
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Non authentifié');
@@ -42,13 +44,12 @@ export const createTicket = async (payload: CreateTicketInput) => {
   return data;
 };
 
-export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
-export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
-
-export const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
+// Types et constantes exportés depuis @/lib/constants/tickets pour éviter les imports serveur côté client
+export type { TicketTypeFilter, TicketStatusFilter } from '@/lib/constants/tickets';
+export { TICKET_STATUSES } from '@/lib/constants/tickets';
 
 export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatusFilter) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('tickets')
     .select('id, title, ticket_type, status, priority, assigned_to, created_at')
@@ -78,7 +79,7 @@ export const listTicketsPaginated = async (
   limit: number = 25,
   search?: string
 ) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('tickets')
     .select(`
@@ -121,15 +122,29 @@ export const listTicketsPaginated = async (
     throw new Error(error.message);
   }
 
+  // Normaliser les données : s'assurer que assigned_user, product et module sont des objets ou null
+  const normalizedTickets = (data || []).map((ticket: any) => ({
+    ...ticket,
+    assigned_user: Array.isArray(ticket.assigned_user) 
+      ? (ticket.assigned_user[0] || null)
+      : ticket.assigned_user || null,
+    product: Array.isArray(ticket.product)
+      ? (ticket.product[0] || null)
+      : ticket.product || null,
+    module: Array.isArray(ticket.module)
+      ? (ticket.module[0] || null)
+      : ticket.module || null
+  }));
+
   return {
-    tickets: data || [],
+    tickets: normalizedTickets,
     hasMore: count ? offset + limit < count : false,
     total: count || 0
   };
 };
 
 export async function countTicketsByStatus(type: TicketTypeFilter) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const result: Record<(typeof TICKET_STATUSES)[number], number> = {
     Nouveau: 0,
     En_cours: 0,

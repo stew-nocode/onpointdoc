@@ -30,7 +30,7 @@ export async function mapJiraClientNameToProfile(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // Rechercher un profil existant
   let query = supabase
@@ -90,7 +90,7 @@ export async function mapJiraCompanyToCompanyId(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // 1. Rechercher via jira_company_id (mapping direct)
   if (jiraCompanyId) {
@@ -108,7 +108,7 @@ export async function mapJiraCompanyToCompanyId(
   // 2. Rechercher par nom (correspondance exacte)
   const { data: companyByName, error: errorByName } = await supabase
     .from('companies')
-    .select('id')
+    .select('id, jira_company_id')
     .eq('name', jiraCompanyValue.trim())
     .single();
 
@@ -155,7 +155,7 @@ export async function getSupabaseChannelFromJira(
     return null;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_channel_mapping')
@@ -185,7 +185,7 @@ export async function updateProfileJobTitle(
     return;
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
     .from('profiles')
@@ -203,7 +203,7 @@ export async function updateProfileJobTitle(
  * @returns Liste de tous les mappings de canaux
  */
 export async function getAllChannelMappings(): Promise<JiraChannelMapping[]> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
     .from('jira_channel_mapping')
