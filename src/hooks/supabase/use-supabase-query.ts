@@ -81,12 +81,22 @@ export function useSupabaseQuery<T = unknown>(
     enabled = true
   } = options;
 
+  const [state, setState] = useState<UseSupabaseQueryResult<T>>({
+    data: null,
+    error: null,
+    isLoading: true,
+    refetch: async () => {} // Placeholder initial
+  });
+
   const executeQuery = useCallback(async () => {
     if (!enabled) {
+      setState(prev => ({ ...prev, isLoading: false }));
       return;
     }
 
     try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
       const supabase = createSupabaseBrowserClient();
 
       // Utiliser queryFn personnalisée si fournie
@@ -136,13 +146,6 @@ export function useSupabaseQuery<T = unknown>(
       });
     }
   }, [enabled, table, select, queryFn, filters, orderBy, limit]);
-
-  const [state, setState] = useState<UseSupabaseQueryResult<T>>({
-    data: null,
-    error: null,
-    isLoading: true,
-    refetch: executeQuery
-  });
 
   useEffect(() => {
     executeQuery();
