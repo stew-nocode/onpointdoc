@@ -16,7 +16,7 @@ import {
   getPriorityColorClass,
   getUserInitials,
   getAvatarColorClass
-} from '@/lib/utils/ticket-display';
+} from './utils/ticket-display';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
@@ -170,61 +170,10 @@ export function TicketsInfiniteScroll({
     );
   }
 
-  // Fonction pour obtenir l'icône selon le type de ticket
-  const getTicketTypeIcon = (type: string) => {
-    switch (type) {
-      case 'BUG':
-        return <Bug className="h-3.5 w-3.5 text-red-500" />;
-      case 'REQ':
-        return <FileText className="h-3.5 w-3.5 text-blue-500" />;
-      case 'ASSISTANCE':
-        return <HelpCircle className="h-3.5 w-3.5 text-amber-500" />;
-      default:
-        return <AlertCircle className="h-3.5 w-3.5 text-slate-400" />;
-    }
-  };
-
-  // Fonction pour obtenir la couleur de priorité
-  const getPriorityColor = (priority: string) => {
-    switch (priority?.toUpperCase()) {
-      case 'CRITICAL':
-        return 'text-red-600 dark:text-red-400';
-      case 'HIGH':
-        return 'text-orange-600 dark:text-orange-400';
-      case 'MEDIUM':
-        return 'text-yellow-600 dark:text-yellow-400';
-      case 'LOW':
-        return 'text-slate-600 dark:text-slate-400';
-      default:
-        return 'text-slate-600 dark:text-slate-400';
-    }
-  };
-
-  // Fonction pour obtenir les initiales d'un nom
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  // Fonction pour obtenir une couleur d'avatar basée sur le nom
-  const getAvatarColor = (name: string) => {
-    const colors = [
-      'bg-blue-500',
-      'bg-green-500',
-      'bg-purple-500',
-      'bg-pink-500',
-      'bg-indigo-500',
-      'bg-yellow-500',
-      'bg-red-500',
-      'bg-teal-500'
-    ];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
+  // Wrappers pour compatibilité avec le code existant
+  const getPriorityColor = getPriorityColorClass;
+  const getInitials = getUserInitials;
+  const getAvatarColor = getAvatarColorClass;
 
   // Utiliser toutes les colonnes pendant l'hydratation, puis les préférences après le montage
   const isColumnVisible = (columnId: ColumnId) => {
@@ -348,7 +297,7 @@ export function TicketsInfiniteScroll({
                 {isColumnVisible('type') && (
                   <td className="py-2.5 pr-4">
                     <div className="flex items-center gap-1.5">
-                      {getTicketTypeIconLocal(ticket.ticket_type)}
+                      {getTicketTypeIcon(ticket.ticket_type)}
                       <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         {ticket.ticket_type}
                       </span>

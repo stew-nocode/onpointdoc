@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Utilitaires pour l'affichage des tickets
  * 
@@ -5,9 +7,8 @@
  * Séparant la logique de présentation selon les principes Clean Code
  */
 
+import React from 'react';
 import { Bug, FileText, HelpCircle, AlertCircle } from 'lucide-react';
-import type { TicketType } from '@/lib/validators/ticket';
-import type { Priority } from '@/types/ticket-with-relations';
 
 /**
  * Met en surbrillance les termes recherchés dans un texte
