@@ -1,7 +1,14 @@
+/**
+ * Shell principal de l'application
+ * 
+ * Gère la structure de base : Sidebar, TopBar, contenu principal
+ * Utilise les hooks personnalisés pour l'authentification
+ */
+
 'use client';
-import { ReactNode, useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+
+import { ReactNode } from 'react';
+import { useAuth, useAuthRedirect } from '@/hooks';
 import { Sidebar } from '@/components/layout/sidebar';
 import { TopBar } from '@/components/navigation/top-bar';
 
@@ -9,42 +16,44 @@ type AppShellProps = {
   children: ReactNode;
 };
 
+/**
+ * Shell principal de l'application
+ * 
+ * Affiche la sidebar, la barre supérieure et le contenu principal.
+ * Gère automatiquement l'authentification et la redirection.
+ * 
+ * @param children - Contenu principal à afficher
+ */
 export const AppShell = ({ children }: AppShellProps) => {
-  const router = useRouter();
-  const pathname = usePathname() || '/';
-  const [role, setRole] = useState<'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'admin'>('agent');
+  // Rediriger automatiquement si non authentifié
+  useAuthRedirect();
 
-  useEffect(() => {
-    // Rediriger côté client si non authentifié et hors /auth
-    if (pathname.startsWith('/auth')) return;
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data?.user) {
-        router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
-      }
-    });
-  }, [pathname, router]);
+  // Récupérer l'utilisateur et son rôle
+  const { role, isLoading } = useAuth();
 
-  useEffect(() => {
-    // Charger le rôle du profil pour adapter la navigation
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data?.user) return;
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('auth_uid', data.user.id)
-        .single();
-      if (profile?.role) {
-        // cast sûr sur union connue
-        setRole(profile.role as any);
-      }
-    });
-  }, []);
+  // Afficher un état de chargement pendant l'authentification
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent mx-auto mb-4" />
+          <p className="text-sm text-slate-600 dark:text-slate-400">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mapper le rôle pour Sidebar (exclure 'client' qui n'est pas un rôle interne, mapper 'director' à 'direction')
+  const displayRole: 'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'admin' = 
+    role === 'client' 
+      ? 'agent' 
+      : role === 'director' 
+        ? 'direction' 
+        : (role ?? 'agent') as 'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'admin';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <Sidebar role={role} />
+      <Sidebar role={displayRole} />
       <div className="flex min-h-screen flex-col lg:ml-64">
         <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80">
           <TopBar />

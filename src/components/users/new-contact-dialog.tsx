@@ -1,8 +1,14 @@
+/**
+ * Dialog pour créer un nouveau contact (client externe)
+ * 
+ * Utilise les hooks personnalisés pour charger les données (companies)
+ * Séparant la logique métier de la présentation selon les principes Clean Code
+ */
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/ui/dialog';
@@ -11,16 +17,22 @@ import { Combobox } from '@/ui/combobox';
 import { contactCreateSchema } from '@/lib/validators/user';
 import { createContact } from '@/services/contacts';
 import { toast } from 'sonner';
+import { useCompanies } from '@/hooks';
 
 type Props = { children: React.ReactNode };
 
+/**
+ * Dialog pour créer un nouveau contact (client externe)
+ * 
+ * @param children - Trigger pour ouvrir le dialog
+ */
 export function NewContactDialog({ children }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  // Formulaire
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,13 +41,8 @@ export function NewContactDialog({ children }: Props) {
   const [isActive, setIsActive] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    const supabase = createSupabaseBrowserClient();
-    supabase.from('companies').select('id, name').order('name', { ascending: true }).then(({ data }) => {
-      setCompanies(data ?? []);
-    });
-  }, [open]);
+  // Charger les entreprises avec le hook personnalisé (uniquement quand le dialog est ouvert)
+  const { companyOptions: companies, isLoading: isLoadingCompanies } = useCompanies({ enabled: open });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,8 +67,8 @@ export function NewContactDialog({ children }: Props) {
       setCompanyId('');
       setIsActive(true);
       router.refresh();
-    } catch (err: any) {
-      const msg = err?.message ?? 'Erreur inattendue';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inattendue';
       setError(msg);
       toast.error(msg);
     } finally {
@@ -77,7 +84,12 @@ export function NewContactDialog({ children }: Props) {
           <DialogTitle>Créer un contact</DialogTitle>
           <DialogDescription>Compte client (externe) avec entreprise associée.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {isLoadingCompanies ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-4 border-brand border-t-transparent" />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-700">Nom complet</label>
@@ -147,6 +159,7 @@ export function NewContactDialog({ children }: Props) {
             {saving ? 'Création…' : 'Créer'}
           </Button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

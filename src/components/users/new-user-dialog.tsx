@@ -1,8 +1,14 @@
+/**
+ * Dialog pour créer un nouvel utilisateur interne
+ * 
+ * Utilise les hooks personnalisés pour charger les données (companies, modules)
+ * Séparant la logique métier de la présentation selon les principes Clean Code
+ */
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import {
   Dialog,
@@ -19,17 +25,20 @@ import { userCreateInternalSchema, departments, type Department } from '@/lib/va
 import { createInternalUser } from '@/services/users';
 import { toast } from 'sonner';
 import { User, Shield, Crown, Users, Headphones, Code, Megaphone } from 'lucide-react';
+import { useCompanies, useModules } from '@/hooks';
 
 type Props = { children: React.ReactNode };
 
+/**
+ * Dialog pour créer un nouvel utilisateur interne
+ * 
+ * @param children - Trigger pour ouvrir le dialog
+ */
 export function NewUserDialog({ children }: Props) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
-  const [modules, setModules] = useState<Array<{ id: string; name: string }>>([]);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,16 +51,9 @@ export function NewUserDialog({ children }: Props) {
   const [moduleToAdd, setModuleToAdd] = useState<string>('');
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (!open) return;
-    const supabase = createSupabaseBrowserClient();
-    supabase.from('companies').select('id, name').order('name', { ascending: true }).then(({ data }) => {
-      setCompanies(data ?? []);
-    });
-    supabase.from('modules').select('id, name').order('name', { ascending: true }).then(({ data }) => {
-      setModules(data ?? []);
-    });
-  }, [open]);
+  // Charger les données avec les hooks personnalisés (uniquement quand le dialog est ouvert)
+  const { companyOptions: companies, isLoading: isLoadingCompanies } = useCompanies({ enabled: open });
+  const { moduleOptions: modules, isLoading: isLoadingModules } = useModules({ enabled: open });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,8 +84,8 @@ export function NewUserDialog({ children }: Props) {
       setIsActive(true);
       setSelectedModuleIds([]);
       router.refresh();
-    } catch (err: any) {
-      const msg = err?.message ?? 'Erreur inattendue';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inattendue';
       setError(msg);
       toast.error(msg);
     } finally {
@@ -235,23 +237,26 @@ export function NewUserDialog({ children }: Props) {
             {selectedModuleIds.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {selectedModuleIds
-                  .map((id) => modules.find((m) => m.id === id))
-                  .filter(Boolean)
-                  .map((m) => (
-                    <span
-                      key={m!.id}
-                      className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800"
-                    >
-                      {m!.name}
-                      <button
-                        type="button"
-                        className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
-                        onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== m!.id))}
+                  .map((id) => {
+                    const module = modules.find((m) => m.id === id);
+                    if (!module) return null;
+                    return (
+                      <span
+                        key={module.id}
+                        className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800"
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {module.name}
+                        <button
+                          type="button"
+                          className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
+                          onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== module.id))}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })
+                  .filter(Boolean)}
               </div>
             )}
           </div>
@@ -261,6 +266,7 @@ export function NewUserDialog({ children }: Props) {
             {saving ? 'Création…' : 'Créer'}
           </Button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
