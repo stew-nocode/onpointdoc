@@ -11,29 +11,10 @@ import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences
 import { parseADFToText } from '@/lib/utils/adf-parser';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 import type { QuickFilter } from '@/types/ticket-filters';
-
-type Ticket = {
-  id: string;
-  title: string;
-  description: string | null;
-  ticket_type: string;
-  status: string;
-  priority: string;
-  canal: string | null;
-  jira_issue_key: string | null;
-  origin: string | null;
-  target_date?: string | null;
-  created_at: string;
-  created_by: string | null;
-  created_user: { id: string; full_name: string } | null;
-  assigned_to: string | null;
-  assigned_user: { id: string; full_name: string } | null;
-  product: { id: string; name: string } | null;
-  module: { id: string; name: string } | null;
-};
+import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
 type TicketsInfiniteScrollProps = {
-  initialTickets: Ticket[];
+  initialTickets: TicketWithRelations[];
   initialHasMore: boolean;
   initialTotal: number;
   type?: string;
@@ -55,7 +36,7 @@ export function TicketsInfiniteScroll({
   quickFilter,
   currentProfileId
 }: TicketsInfiniteScrollProps) {
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
+  const [tickets, setTickets] = useState<TicketWithRelations[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +106,7 @@ export function TicketsInfiniteScroll({
       // Filtrer les doublons en utilisant l'ID comme clé unique
       setTickets(prev => {
         const existingIds = new Set(prev.map(t => t.id));
-        const newTickets = data.tickets.filter((t: Ticket) => !existingIds.has(t.id));
+        const newTickets = data.tickets.filter((t: TicketWithRelations) => !existingIds.has(t.id));
         const updated = [...prev, ...newTickets];
         ticketsLengthRef.current = updated.length;
         return updated;
@@ -568,7 +549,7 @@ export function TicketsInfiniteScroll({
         </table>
       </div>
 
-      {/* Zone de déclenchement pour l'infinite scroll */}
+      {/* Zone de declenchement pour l'infinite scroll */}
       <div ref={observerTarget} className="h-10 flex items-center justify-center py-4">
         {isLoading && (
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">

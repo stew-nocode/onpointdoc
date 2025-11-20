@@ -1,55 +1,102 @@
+/**
+ * Schémas de validation Zod pour les utilisateurs
+ */
+
 import { z } from 'zod';
+import type { ProfileRole } from '@/types/profile';
 
-export const internalRoles = ['admin', 'manager', 'director', 'agent', 'it', 'marketing'] as const;
-export const allRoles = [...internalRoles, 'client'] as const;
+/**
+ * Rôles autorisés pour les utilisateurs
+ */
+const profileRoles: [ProfileRole, ...ProfileRole[]] = ['admin', 'manager', 'director', 'agent', 'client'];
 
+/**
+ * Rôles autorisés pour les utilisateurs internes (sans 'client')
+ */
+const internalProfileRoles: [ProfileRole, ...ProfileRole[]] = ['admin', 'manager', 'director', 'agent'];
+
+/**
+ * Départements disponibles
+ */
 export const departments = ['Support', 'IT', 'Marketing'] as const;
-export type Department = typeof departments[number];
 
-export const userCreateInternalSchema = z.object({
-  fullName: z.string().min(2, 'Nom trop court'),
-  email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Mot de passe trop court'),
-  role: z.enum(internalRoles),
-  companyId: z.string().uuid('Entreprise invalide'),
-  isActive: z.boolean().default(true),
-  department: z.enum(departments).optional().nullable(),
-  jobTitle: z.string().min(2).optional().nullable(),
-  moduleIds: z.array(z.string().uuid()).default([])
-});
-export type UserCreateInternalInput = z.infer<typeof userCreateInternalSchema>;
+export type Department = (typeof departments)[number];
 
-export const userUpdateSchema = z.object({
-  id: z.string().uuid(),
-  fullName: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  role: z.enum(allRoles).optional(),
-  companyId: z.string().uuid().optional(),
+/**
+ * Schéma pour créer un utilisateur (via API)
+ */
+export const userCreateSchema = z.object({
+  fullName: z.string().min(2).max(100),
+  email: z.string().email(),
+  password: z.string().min(8),
+  role: z.enum(profileRoles),
+  companyId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().optional(),
-  department: z.enum(departments).optional().nullable(),
-  jobTitle: z.string().min(2).optional().nullable(),
+  moduleIds: z.array(z.string().uuid()).optional(),
+  department: z.string().optional().nullable(),
+  jobTitle: z.string().optional().nullable()
+});
+
+export type UserCreateInput = z.infer<typeof userCreateSchema>;
+
+/**
+ * Schéma pour créer un utilisateur interne (via interface)
+ */
+export const userCreateInternalSchema = z.object({
+  fullName: z.string().min(2).max(100),
+  email: z.string().email(),
+  password: z.string().min(8),
+  role: z.enum(internalProfileRoles),
+  department: z.enum(departments).optional(),
+  jobTitle: z.string().optional(),
+  companyId: z.string().uuid().optional().nullable(),
+  isActive: z.boolean().optional(),
   moduleIds: z.array(z.string().uuid()).optional()
 });
+
+export type UserCreateInternalInput = z.infer<typeof userCreateInternalSchema>;
+
+/**
+ * Schéma pour mettre à jour un utilisateur interne
+ */
+export const userUpdateSchema = z.object({
+  id: z.string().uuid(),
+  fullName: z.string().min(2).max(100).optional(),
+  email: z.string().email().optional(),
+  role: z.enum(internalProfileRoles).optional(),
+  department: z.enum(departments).optional(),
+  jobTitle: z.string().optional().nullable(),
+  companyId: z.string().uuid().optional().nullable(),
+  isActive: z.boolean().optional(),
+  moduleIds: z.array(z.string().uuid()).optional()
+});
+
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
 
+/**
+ * Schéma pour créer un contact (client externe)
+ */
 export const contactCreateSchema = z.object({
-  fullName: z.string().min(2),
+  fullName: z.string().min(2).max(100),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
+  jobTitle: z.string().optional(),
   companyId: z.string().uuid(),
-  isActive: z.boolean().default(true),
-  jobTitle: z.string().min(2).optional().nullable()
+  isActive: z.boolean().optional()
 });
+
 export type ContactCreateInput = z.infer<typeof contactCreateSchema>;
 
+/**
+ * Schéma pour mettre à jour un contact (client externe)
+ */
 export const contactUpdateSchema = z.object({
   id: z.string().uuid(),
-  fullName: z.string().min(2).optional(),
+  fullName: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
+  jobTitle: z.string().optional().nullable(),
   companyId: z.string().uuid().optional(),
-  isActive: z.boolean().optional(),
-  jobTitle: z.string().min(2).optional().nullable()
+  isActive: z.boolean().optional()
 });
+
 export type ContactUpdateInput = z.infer<typeof contactUpdateSchema>;
-
-

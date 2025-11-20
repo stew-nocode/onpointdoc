@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { QuickFilter } from '@/types/ticket-filters';
+import type { TicketsPaginatedResult, TicketWithRelations, SupabaseTicketRaw } from '@/types/ticket-with-relations';
+import { transformRelation } from '@/types/ticket-with-relations';
 import { getInitialStatus } from '@/lib/utils/ticket-status';
 import { createJiraIssue } from '@/services/jira/client';
 
@@ -148,7 +150,7 @@ export const listTicketsPaginated = async (
   search?: string,
   quickFilter?: QuickFilter,
   currentProfileId?: string | null
-) => {
+): Promise<TicketsPaginatedResult> => {
   const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('tickets')
@@ -199,20 +201,13 @@ export const listTicketsPaginated = async (
   }
 
   // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
-  const transformedTickets = (data || []).map((ticket: any) => ({
+  const transformedTickets: TicketWithRelations[] = (data || []).map((ticket: SupabaseTicketRaw) => ({
     ...ticket,
-    created_user: Array.isArray(ticket.created_user) 
-      ? ticket.created_user[0] || null 
-      : ticket.created_user,
-    assigned_user: Array.isArray(ticket.assigned_user) 
-      ? ticket.assigned_user[0] || null 
-      : ticket.assigned_user,
-    product: Array.isArray(ticket.product) 
-      ? ticket.product[0] || null 
-      : ticket.product,
-    module: Array.isArray(ticket.module) 
-      ? ticket.module[0] || null 
-      : ticket.module
+    created_user: transformRelation(ticket.created_user),
+    assigned_user: transformRelation(ticket.assigned_user),
+    contact_user: transformRelation(ticket.contact_user),
+    product: transformRelation(ticket.product),
+    module: transformRelation(ticket.module)
   }));
 
   return {
@@ -285,8 +280,8 @@ export async function countTicketsByStatus(type: TicketTypeFilter) {
   
   // Compter tous les statuts dynamiquement
   for (const row of data ?? []) {
-    const status = (row as any).status as string | null;
-    if (status) {
+    const status = row?.status as string | null | undefined;
+    if (status && typeof status === 'string') {
       result[status] = (result[status] || 0) + 1;
     }
   }

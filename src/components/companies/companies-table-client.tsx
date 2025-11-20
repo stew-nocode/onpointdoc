@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewCompanyDialog } from '@/components/companies/view-company-dialog';
 import { EditCompanyDialog } from '@/components/companies/edit-company-dialog';
@@ -57,8 +57,19 @@ export function CompaniesTableClient({ rows, countries, users }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [countries]);
 
+  // Réinitialiser la page quand les filtres changent
+  const prevSearchRef = useRef(search);
+  const prevCountryFilterRef = useRef(countryFilter);
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevSearchRef.current !== search || prevCountryFilterRef.current !== countryFilter) {
+      prevSearchRef.current = search;
+      prevCountryFilterRef.current = countryFilter;
+      // Réinitialiser la page à 1 quand les filtres changent
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentPage(1);
+    }
   }, [search, countryFilter]);
 
   return (

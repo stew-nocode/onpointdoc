@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchJiraIssue, syncTicketFromJira } from '@/services/jira/sync-manual';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
+import { z } from 'zod';
 
 /**
  * Route API pour synchroniser manuellement un ticket depuis JIRA
@@ -14,7 +17,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const paramsData = await params;
+    const validationResult = z.object({ id: z.string().uuid() }).safeParse(paramsData);
+    if (!validationResult.success) {
+      return handleApiError(createError.validationError('ID de ticket invalide', {
+        issues: validationResult.error.issues
+      }));
+    }
+    const { id } = validationResult.data;
     const supabase = await createSupabaseServerClient();
 
     // Vérifier que le ticket existe et a une clé JIRA
@@ -25,27 +35,18 @@ export async function GET(
       .single();
 
     if (ticketError || !ticket) {
-      return NextResponse.json(
-        { error: 'Ticket non trouvé' },
-        { status: 404 }
-      );
+      return handleApiError(createError.notFound('Ticket'));
     }
 
     if (!ticket.jira_issue_key) {
-      return NextResponse.json(
-        { error: 'Ce ticket n\'a pas de clé JIRA associée' },
-        { status: 400 }
-      );
+      return handleApiError(createError.validationError('Ce ticket n\'a pas de clé JIRA associée'));
     }
 
     // Synchroniser depuis JIRA
     const success = await syncTicketFromJira(ticket.jira_issue_key);
 
     if (!success) {
-      return NextResponse.json(
-        { error: 'Erreur lors de la synchronisation depuis JIRA' },
-        { status: 500 }
-      );
+      return handleApiError(createError.jiraError('Erreur lors de la synchronisation depuis JIRA'));
     }
 
     // Récupérer le ticket mis à jour
@@ -60,12 +61,8 @@ export async function GET(
       message: 'Ticket synchronisé avec succès',
       ticket: updatedTicket
     });
-  } catch (error) {
-    console.error('Erreur lors de la synchronisation:', error);
-    return NextResponse.json(
-      { error: 'Erreur serveur', message: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

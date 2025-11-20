@@ -88,7 +88,7 @@ export async function getSubmoduleIdFromFeatureId(
 export async function mapJiraFeatureToSupabase(
   jiraFeatureValue: string,
   jiraCustomFieldId: string = 'customfield_10052'
-): Promise<{ featureId: string; submoduleId: string } | null> {
+): Promise<{ featureId: string; submoduleId: string | null } | null> {
   const featureId = await getFeatureIdFromJira(jiraFeatureValue, jiraCustomFieldId);
   
   if (!featureId) {
@@ -100,7 +100,7 @@ export async function mapJiraFeatureToSupabase(
   if (!submoduleId) {
     // Feature trouvée mais sans submodule_id (cas rare)
     console.warn(`Feature "${featureId}" trouvée mais sans submodule_id`);
-    return { featureId, submoduleId: null as any };
+    return { featureId, submoduleId: null };
   }
 
   return { featureId, submoduleId };

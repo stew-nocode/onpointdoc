@@ -4,6 +4,8 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewFeatureDialog } from '@/components/features/new-feature-dialog';
 import { FeaturesTableClient, type FeatureRow } from '@/components/features/features-table-client';
+import type { Submodule } from '@/types/submodule';
+import type { Feature } from '@/types/feature';
 
 async function loadData(): Promise<{ rows: FeatureRow[]; submodules: Record<string, string> }> {
   noStore();
@@ -14,8 +16,10 @@ async function loadData(): Promise<{ rows: FeatureRow[]; submodules: Record<stri
   ]);
   if (fErr || sErr) throw new Error(fErr?.message || sErr?.message || 'Load error');
   const subMap: Record<string, string> = {};
-  for (const s of subs ?? []) subMap[(s as any).id] = (s as any).name;
-  return { rows: (feats as any) ?? [], submodules: subMap };
+  for (const s of (subs ?? []) as Submodule[]) {
+    subMap[s.id] = s.name;
+  }
+  return { rows: (feats ?? []) as FeatureRow[], submodules: subMap };
 }
 
 export default async function FeaturesIndexPage() {

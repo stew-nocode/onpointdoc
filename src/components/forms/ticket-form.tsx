@@ -36,7 +36,7 @@ export const TicketForm = ({
   contacts
 }: TicketFormProps) => {
   const form = useForm<CreateTicketInput>({
-    resolver: zodResolver(createTicketSchema) as any,
+    resolver: zodResolver(createTicketSchema) as any, // Type incompatibilité entre Zod et react-hook-form pour priority avec default
       defaultValues: {
       title: '',
       description: '',
@@ -107,7 +107,7 @@ export const TicketForm = ({
   const productField = form.register('productId');
   const moduleField = form.register('moduleId');
 
-  const handleSubmit = form.handleSubmit(async (values) => {
+  const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
     await onSubmit(values, selectedFiles);
       form.reset({
       title: '',
@@ -375,7 +375,7 @@ export const TicketForm = ({
       <div className="grid gap-2">
         <div className="flex items-center justify-between gap-4">
           <label htmlFor="durationMinutes" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            Durée de l'assistance (minutes)
+            Durée de l&apos;assistance (minutes)
           </label>
           <div className="flex items-center gap-2">
             <input

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { linkProductToDepartment, unlinkProductFromDepartment } from '@/services/departments/client';
 import { Combobox } from '@/ui/combobox';
@@ -35,11 +35,7 @@ export function DepartmentProductsManager({ departmentId }: Props) {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [linking, setLinking] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [departmentId]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     const supabase = createSupabaseBrowserClient();
 
@@ -63,7 +59,12 @@ export function DepartmentProductsManager({ departmentId }: Props) {
     setProducts(allProducts ?? []);
     setLinkedProducts(linked);
     setLoading(false);
-  }
+  }, [departmentId]);
+
+  useEffect(() => {
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departmentId]);
 
   async function handleLink() {
     if (!selectedProductId) return;

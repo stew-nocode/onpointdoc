@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { UserPlus } from 'lucide-react';
 import { NewUserDialog } from '@/components/users/new-user-dialog';
 import { UsersTableClient, type UserRow } from '@/components/users/users-table-client';
+import type { Company } from '@/types/company';
 
 async function loadUsers(): Promise<UserRow[]> {
   noStore();
@@ -15,7 +16,7 @@ async function loadUsers(): Promise<UserRow[]> {
     .neq('role', 'client')
     .order('full_name', { ascending: true });
   if (error) throw new Error(error.message);
-  return (data as any) ?? [];
+  return (data ?? []) as UserRow[];
 }
 
 export default async function UsersIndexPage() {
@@ -23,7 +24,7 @@ export default async function UsersIndexPage() {
   const supabase = await createSupabaseServerClient();
   const { data: companies } = await supabase.from('companies').select('id, name').order('name', { ascending: true });
   const companiesMap: Record<string, string> = {};
-  (companies ?? []).forEach((c: any) => {
+  (companies ?? [] as Company[]).forEach((c) => {
     companiesMap[c.id] = c.name;
   });
 

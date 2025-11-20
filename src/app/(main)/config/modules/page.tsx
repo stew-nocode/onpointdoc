@@ -4,6 +4,7 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewModuleDialog } from '@/components/modules/new-module-dialog';
 import { ModulesTableClient, type ModuleRow } from '@/components/modules/modules-table-client';
+import type { Product } from '@/types/product';
 
 async function loadModules(): Promise<{ rows: ModuleRow[]; products: Record<string, string> }> {
   noStore();
@@ -16,8 +17,10 @@ async function loadModules(): Promise<{ rows: ModuleRow[]; products: Record<stri
     throw new Error(mErr?.message || pErr?.message || 'Load error');
   }
   const map: Record<string, string> = {};
-  for (const p of products ?? []) map[(p as any).id] = (p as any).name;
-  return { rows: (modules as any) ?? [], products: map };
+  for (const p of (products ?? []) as Product[]) {
+    map[p.id] = p.name;
+  }
+  return { rows: (modules ?? []) as ModuleRow[], products: map };
 }
 
 export default async function ModulesIndexPage() {

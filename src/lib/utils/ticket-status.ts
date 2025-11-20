@@ -9,17 +9,27 @@ import type { TicketType } from '@/types/ticket';
 import { JIRA_STATUSES, ASSISTANCE_LOCAL_STATUSES, ASSISTANCE_TRANSFER_STATUS } from '@/lib/constants/tickets';
 
 /**
+ * Type pour les statuts JIRA
+ */
+type JiraStatus = typeof JIRA_STATUSES[number];
+
+/**
+ * Type pour les statuts locaux ASSISTANCE
+ */
+type AssistanceLocalStatus = typeof ASSISTANCE_LOCAL_STATUSES[number];
+
+/**
  * Détermine si un statut est un statut JIRA
  */
-export function isJiraStatus(status: string): boolean {
-  return JIRA_STATUSES.includes(status as any);
+export function isJiraStatus(status: string): status is JiraStatus {
+  return (JIRA_STATUSES as readonly string[]).includes(status);
 }
 
 /**
  * Détermine si un statut est un statut local ASSISTANCE
  */
-export function isAssistanceLocalStatus(status: string): boolean {
-  return ASSISTANCE_LOCAL_STATUSES.includes(status as any) || status === ASSISTANCE_TRANSFER_STATUS;
+export function isAssistanceLocalStatus(status: string): status is AssistanceLocalStatus | typeof ASSISTANCE_TRANSFER_STATUS {
+  return (ASSISTANCE_LOCAL_STATUSES as readonly string[]).includes(status) || status === ASSISTANCE_TRANSFER_STATUS;
 }
 
 /**

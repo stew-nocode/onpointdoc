@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
+import { departmentLinkProductSchema } from '@/lib/validators/department';
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
+      return handleApiError(createError.unauthorized('Non authentifié'));
     }
 
     const { data: profile } = await supabase
@@ -16,15 +19,17 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!profile || !['admin', 'director'].includes(profile.role)) {
-      return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+      return handleApiError(createError.forbidden('Accès refusé', { requiredRole: ['admin', 'director'] }));
     }
 
     const body = await req.json();
-    const { departmentId, productId } = body;
-
-    if (!departmentId || !productId) {
-      return NextResponse.json({ message: 'departmentId et productId requis' }, { status: 400 });
+    const validationResult = departmentLinkProductSchema.safeParse(body);
+    if (!validationResult.success) {
+      return handleApiError(createError.validationError('Données invalides', {
+        issues: validationResult.error.issues
+      }));
     }
+    const { departmentId, productId } = validationResult.data;
 
     const { data, error } = await supabase
       .from('product_department_link')
@@ -37,14 +42,14 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       if (error.code === '23505') {
-        return NextResponse.json({ message: 'Cette liaison existe déjà' }, { status: 400 });
+        return handleApiError(createError.conflict('Cette liaison existe déjà'));
       }
-      return NextResponse.json({ message: error.message }, { status: 400 });
+      return handleApiError(createError.supabaseError('Erreur lors de la liaison département-produit', new Error(error.message)));
     }
 
     return NextResponse.json(data);
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Erreur serveur' }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

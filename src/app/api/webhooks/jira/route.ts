@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabase/server';
 import { syncJiraToSupabase, JiraIssueData } from '@/services/jira';
 import type { TicketType } from '@/types/ticket';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Route API pour recevoir les webhooks JIRA
@@ -109,15 +111,8 @@ export async function POST(request: NextRequest) {
             message: 'Ticket synchronisé avec succès',
             action: 'updated'
           });
-        } catch (syncError) {
-          console.error('Erreur lors de la synchronisation:', syncError);
-          return NextResponse.json(
-            {
-              error: 'Erreur de synchronisation',
-              message: syncError instanceof Error ? syncError.message : 'Unknown error'
-            },
-            { status: 500 }
-          );
+        } catch (syncError: unknown) {
+          return handleApiError(createError.jiraError('Erreur lors de la synchronisation du ticket depuis JIRA', syncError instanceof Error ? syncError : undefined));
         }
       } else if (ticketError?.code === 'PGRST116') {
         // Ticket n'existe pas (PGRST116 = no rows returned) : créer
@@ -128,26 +123,12 @@ export async function POST(request: NextRequest) {
             message: 'Ticket créé depuis JIRA avec succès',
             action: 'created'
           });
-        } catch (createError) {
-          console.error('Erreur lors de la création du ticket:', createError);
-          return NextResponse.json(
-            {
-              error: 'Erreur de création',
-              message: createError instanceof Error ? createError.message : 'Unknown error'
-            },
-            { status: 500 }
-          );
+        } catch (createErr: unknown) {
+          return handleApiError(createError.jiraError('Erreur lors de la création du ticket depuis JIRA', createErr instanceof Error ? createErr : undefined));
         }
       } else {
         // Autre erreur
-        console.error('Erreur lors de la recherche du ticket:', ticketError);
-        return NextResponse.json(
-          {
-            error: 'Erreur lors de la recherche du ticket',
-            message: ticketError?.message || 'Unknown error'
-          },
-          { status: 500 }
-        );
+        return handleApiError(createError.supabaseError('Erreur lors de la recherche du ticket', ticketError ? new Error(ticketError.message) : undefined));
       }
     }
 
@@ -177,25 +158,15 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (ticketError || !ticket) {
-        return NextResponse.json(
-          { error: 'Ticket non trouvé' },
-          { status: 404 }
-        );
+        return handleApiError(createError.notFound('Ticket'));
       }
 
       try {
         // Passer le client Service Role pour contourner les RLS
         await syncJiraToSupabase(ticket_id, jira_data as JiraIssueData, supabase);
         return NextResponse.json({ success: true, message: 'Synchronisation complète réussie' });
-      } catch (syncError) {
-        console.error('Erreur lors de la synchronisation complète:', syncError);
-        return NextResponse.json(
-          {
-            error: 'Erreur de synchronisation',
-            message: syncError instanceof Error ? syncError.message : 'Unknown error'
-          },
-          { status: 500 }
-        );
+      } catch (syncError: unknown) {
+        return handleApiError(createError.jiraError('Erreur lors de la synchronisation complète depuis JIRA', syncError instanceof Error ? syncError : undefined));
       }
     }
 
@@ -224,10 +195,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (ticketError || !ticket) {
-        return NextResponse.json(
-          { error: 'Ticket non trouvé' },
-          { status: 404 }
-        );
+        return handleApiError(createError.notFound('Ticket'));
       }
 
       // Mettre à jour selon le type d'événement
@@ -293,19 +261,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Si aucun format reconnu
-    return NextResponse.json(
-      { error: 'Format de webhook non reconnu' },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('Erreur webhook JIRA:', error);
-    return NextResponse.json(
-      {
-        error: 'Erreur serveur',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    return handleApiError(createError.validationError('Format de webhook non reconnu'));
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

@@ -2,29 +2,57 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { applyQuickFilter } from '@/services/tickets';
 import type { QuickFilter } from '@/types/ticket-filters';
+import type { TicketWithRelations, SupabaseTicketRaw } from '@/types/ticket-with-relations';
+import { transformRelation } from '@/types/ticket-with-relations';
+import { ticketsListParamsSchema } from '@/lib/validators/api-params';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
 
 export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
 export type TicketStatusFilter = string; // Accepte tous les statuts (JIRA ou locaux)
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    // Extraire et valider les paramètres avec Zod
     const searchParams = request.nextUrl.searchParams;
-    const type = searchParams.get('type') as TicketTypeFilter | null;
-    const status = searchParams.get('status') as TicketStatusFilter | null;
-    const search = searchParams.get('search') || null;
-    const quickFilterParam = searchParams.get('quick') as QuickFilter | null;
-    const currentProfileIdParam = searchParams.get('currentProfileId');
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-    const limit = parseInt(searchParams.get('limit') || '25', 10);
+    const rawParams = {
+      type: searchParams.get('type') || undefined,
+      status: searchParams.get('status') || undefined,
+      search: searchParams.get('search') || undefined,
+      quick: searchParams.get('quick') || undefined,
+      currentProfileId: searchParams.get('currentProfileId') || undefined,
+      offset: searchParams.get('offset') || '0',
+      limit: searchParams.get('limit') || '25'
+    };
+
+    // Valider avec Zod
+    const validationResult = ticketsListParamsSchema.safeParse(rawParams);
+    if (!validationResult.success) {
+      return handleApiError(
+        createError.validationError('Paramètres invalides', {
+          issues: validationResult.error.issues
+        })
+      );
+    }
+
+    const params = validationResult.data;
+    const type = params.type as TicketTypeFilter | undefined;
+    const status = params.status as TicketStatusFilter | undefined;
+    const search = params.search || null;
+    const quickFilterParam = params.quick as QuickFilter | undefined;
+    const currentProfileIdParam = params.currentProfileId || null;
+    const offset = params.offset;
+    const limit = params.limit;
 
     // Utiliser le service role key pour contourner RLS dans l'API
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json(
-        { error: 'Configuration Supabase manquante' },
-        { status: 500 }
+      return handleApiError(
+        createError.internalError('Configuration Supabase manquante', undefined, {
+          missing: !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL' : 'SUPABASE_SERVICE_ROLE_KEY'
+        })
       );
     }
 
@@ -78,27 +106,17 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return handleApiError(createError.supabaseError('Erreur lors de la récupération des tickets', error));
     }
 
     // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
-    const transformedTickets = (data || []).map((ticket: any) => ({
+    const transformedTickets: TicketWithRelations[] = (data || []).map((ticket: SupabaseTicketRaw) => ({
       ...ticket,
-      created_user: Array.isArray(ticket.created_user) 
-        ? ticket.created_user[0] || null 
-        : ticket.created_user,
-      assigned_user: Array.isArray(ticket.assigned_user) 
-        ? ticket.assigned_user[0] || null 
-        : ticket.assigned_user,
-      product: Array.isArray(ticket.product) 
-        ? ticket.product[0] || null 
-        : ticket.product,
-      module: Array.isArray(ticket.module) 
-        ? ticket.module[0] || null 
-        : ticket.module
+      created_user: transformRelation(ticket.created_user),
+      assigned_user: transformRelation(ticket.assigned_user),
+      contact_user: transformRelation(ticket.contact_user),
+      product: transformRelation(ticket.product),
+      module: transformRelation(ticket.module)
     }));
 
     return NextResponse.json({
@@ -106,11 +124,8 @@ export async function GET(request: NextRequest) {
       hasMore: count ? offset + limit < count : false,
       total: count || 0
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Erreur lors du chargement des tickets' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

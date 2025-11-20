@@ -17,7 +17,7 @@ export const createTicketSchema = z
     // Sous-module et fonctionnalité sont optionnels dans l'UI (chaîne vide acceptée)
     submoduleId: z.union([z.string().uuid(), z.literal('')]).optional(),
     featureId: z.union([z.string().uuid(), z.literal('')]).optional(),
-    priority: z.enum(ticketPriorities).default('Medium'),
+    priority: z.enum(ticketPriorities),
     durationMinutes: z.union([z.number().int().min(0), z.null()]).optional(),
     customerContext: z.string().optional(),
     contactUserId: z.string().uuid({ message: 'Contact requis' }),

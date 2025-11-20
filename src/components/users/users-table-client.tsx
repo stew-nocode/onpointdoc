@@ -85,8 +85,11 @@ export function UsersTableClient({ rows, companies }: Props) {
       prev.companyFilter !== companyFilter ||
       prev.statusFilter !== statusFilter
     ) {
-      setCurrentPage(1);
       prevFiltersRef.current = { search, roleFilter, departmentFilter, companyFilter, statusFilter };
+      // Utiliser setTimeout pour éviter l'appel synchrone de setState
+      setTimeout(() => {
+        setCurrentPage(1);
+      }, 0);
     }
   }, [search, roleFilter, departmentFilter, companyFilter, statusFilter]);
 
@@ -161,7 +164,12 @@ export function UsersTableClient({ rows, companies }: Props) {
           </label>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === 'all' || value === 'active' || value === 'inactive') {
+                setStatusFilter(value);
+              }
+            }}
             className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="all">Tous</option>

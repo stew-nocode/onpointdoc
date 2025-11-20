@@ -15,7 +15,7 @@ async function loadDepartments(): Promise<DepartmentRow[]> {
   if (error) {
     throw new Error(error.message);
   }
-  return (data as any) ?? [];
+  return (data ?? []) as DepartmentRow[];
 }
 
 export default async function DepartmentsIndexPage() {

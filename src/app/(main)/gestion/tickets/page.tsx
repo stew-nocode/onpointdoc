@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 
 import { createTicket, listTicketsPaginated } from '@/services/tickets';
+import type { TicketsPaginatedResult } from '@/types/ticket-with-relations';
 import {
   listProducts,
   listModules,
@@ -34,7 +35,7 @@ async function loadInitialTickets(
   searchParam?: string,
   quickFilterParam?: QuickFilter,
   currentProfileId?: string | null
-) {
+): Promise<TicketsPaginatedResult> {
   noStore();
   try {
     const normalizedType =
@@ -46,7 +47,7 @@ async function loadInitialTickets(
     const normalizedStatus = statusParam || undefined;
 
     return await listTicketsPaginated(
-      normalizedType as any,
+      normalizedType,
       normalizedStatus,
       0,
       25,

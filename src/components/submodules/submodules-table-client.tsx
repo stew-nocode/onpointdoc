@@ -57,8 +57,11 @@ export function SubmodulesTableClient({ rows, modules }: Props) {
   // Réinitialiser la page quand les filtres changent
   useEffect(() => {
     if (prevFiltersRef.current.search !== search || prevFiltersRef.current.moduleFilter !== moduleFilter) {
-      setCurrentPage(1);
       prevFiltersRef.current = { search, moduleFilter };
+      // Utiliser setTimeout pour éviter l'appel synchrone de setState
+      setTimeout(() => {
+        setCurrentPage(1);
+      }, 0);
     }
   }, [search, moduleFilter]);
 

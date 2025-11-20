@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
+import { departmentUnlinkProductSchema } from '@/lib/validators/department';
 
 export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
+      return handleApiError(createError.unauthorized('Non authentifié'));
     }
 
     const { data: profile } = await supabase
@@ -16,16 +19,21 @@ export async function DELETE(req: NextRequest) {
       .single();
 
     if (!profile || !['admin', 'director'].includes(profile.role)) {
-      return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+      return handleApiError(createError.forbidden('Accès refusé', { requiredRole: ['admin', 'director'] }));
     }
 
     const { searchParams } = new URL(req.url);
-    const departmentId = searchParams.get('departmentId');
-    const productId = searchParams.get('productId');
-
-    if (!departmentId || !productId) {
-      return NextResponse.json({ message: 'departmentId et productId requis' }, { status: 400 });
+    const rawParams = {
+      departmentId: searchParams.get('departmentId'),
+      productId: searchParams.get('productId')
+    };
+    const validationResult = departmentUnlinkProductSchema.safeParse(rawParams);
+    if (!validationResult.success) {
+      return handleApiError(createError.validationError('Paramètres invalides', {
+        issues: validationResult.error.issues
+      }));
     }
+    const { departmentId, productId } = validationResult.data;
 
     const { error } = await supabase
       .from('product_department_link')
@@ -34,12 +42,12 @@ export async function DELETE(req: NextRequest) {
       .eq('product_id', productId);
 
     if (error) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
+      return handleApiError(createError.supabaseError('Erreur lors de la suppression de la liaison département-produit', new Error(error.message)));
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Erreur serveur' }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

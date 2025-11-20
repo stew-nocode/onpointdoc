@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewFeatureDialog } from '@/components/features/view-feature-dialog';
 import { EditFeatureDialog } from '@/components/features/edit-feature-dialog';
@@ -53,8 +53,19 @@ export function FeaturesTableClient({ rows, submodules }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [submodules]);
 
+  // Réinitialiser la page quand les filtres changent
+  const prevSearchRef = useRef(search);
+  const prevSubmoduleFilterRef = useRef(submoduleFilter);
+  
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevSearchRef.current !== search || prevSubmoduleFilterRef.current !== submoduleFilter) {
+      prevSearchRef.current = search;
+      prevSubmoduleFilterRef.current = submoduleFilter;
+      // Utiliser setTimeout pour éviter l'appel synchrone de setState
+      setTimeout(() => {
+        setCurrentPage(1);
+      }, 0);
+    }
   }, [search, submoduleFilter]);
 
   return (

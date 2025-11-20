@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { handleApiError } from '@/lib/errors/handlers';
+import { createError } from '@/lib/errors/types';
+import { z } from 'zod';
 
 export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
+      return handleApiError(createError.unauthorized('Non authentifié'));
     }
 
     const { data: profile } = await supabase
@@ -16,14 +19,18 @@ export async function DELETE(req: NextRequest) {
       .single();
 
     if (!profile || !['admin', 'director'].includes(profile.role)) {
-      return NextResponse.json({ message: 'Accès refusé' }, { status: 403 });
+      return handleApiError(createError.forbidden('Accès refusé', { requiredRole: ['admin', 'director'] }));
     }
 
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    if (!id) {
-      return NextResponse.json({ message: 'ID requis' }, { status: 400 });
+    const idParam = searchParams.get('id');
+    const validationResult = z.object({ id: z.string().uuid() }).safeParse({ id: idParam });
+    if (!validationResult.success) {
+      return handleApiError(createError.validationError('ID invalide', {
+        issues: validationResult.error.issues
+      }));
     }
+    const { id } = validationResult.data;
 
     // Vérifier si le département est utilisé
     const { data: profiles } = await supabase
@@ -33,21 +40,18 @@ export async function DELETE(req: NextRequest) {
       .limit(1);
 
     if (profiles && profiles.length > 0) {
-      return NextResponse.json(
-        { message: 'Impossible de supprimer : des utilisateurs sont associés à ce département' },
-        { status: 400 }
-      );
+      return handleApiError(createError.conflict('Impossible de supprimer : des utilisateurs sont associés à ce département'));
     }
 
     const { error } = await supabase.from('departments').delete().eq('id', id);
 
     if (error) {
-      return NextResponse.json({ message: error.message }, { status: 400 });
+      return handleApiError(createError.supabaseError('Erreur lors de la suppression du département', new Error(error.message)));
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message || 'Erreur serveur' }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 

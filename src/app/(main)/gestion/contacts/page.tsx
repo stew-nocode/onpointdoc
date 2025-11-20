@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewContactDialog } from '@/components/users/new-contact-dialog';
 import { ContactsPageClient } from '@/components/users/contacts-page-client';
 import type { ContactRow } from '@/components/users/contacts-table';
+import type { Company } from '@/types/company';
 
 async function loadContacts(): Promise<{ rows: ContactRow[]; companies: Record<string, string> }> {
   noStore();
@@ -19,8 +20,10 @@ async function loadContacts(): Promise<{ rows: ContactRow[]; companies: Record<s
   ]);
   if (cErr || pErr) throw new Error(cErr?.message || pErr?.message || 'Load error');
   const map: Record<string, string> = {};
-  for (const c of companies ?? []) map[(c as any).id] = (c as any).name;
-  return { rows: (contacts as any) ?? [], companies: map };
+  for (const c of (companies ?? []) as Company[]) {
+    map[c.id] = c.name;
+  }
+  return { rows: (contacts ?? []) as ContactRow[], companies: map };
 }
 
 export default async function ContactsPage() {

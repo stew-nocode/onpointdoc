@@ -4,6 +4,8 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewSubmoduleDialog } from '@/components/submodules/new-submodule-dialog';
 import { SubmodulesTableClient, type SubmoduleRow } from '@/components/submodules/submodules-table-client';
+import type { Module } from '@/types/module';
+import type { Submodule } from '@/types/submodule';
 
 async function loadData(): Promise<{ rows: SubmoduleRow[]; modules: Record<string, string> }> {
   noStore();
@@ -16,8 +18,10 @@ async function loadData(): Promise<{ rows: SubmoduleRow[]; modules: Record<strin
     throw new Error(sErr?.message || mErr?.message || 'Load error');
   }
   const modsMap: Record<string, string> = {};
-  for (const m of mods ?? []) modsMap[(m as any).id] = (m as any).name;
-  return { rows: (subs as any) ?? [], modules: modsMap };
+  for (const m of (mods ?? []) as Module[]) {
+    modsMap[m.id] = m.name;
+  }
+  return { rows: (subs ?? []) as SubmoduleRow[], modules: modsMap };
 }
 
 export default async function SubmodulesIndexPage() {

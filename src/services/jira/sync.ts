@@ -8,11 +8,14 @@ import {
   updateProfileJobTitle
 } from './contact-mapping';
 import { mapJiraFeatureToSupabase } from './feature-mapping';
+import type { JiraIssueData as JiraIssueDataType, JiraCustomFieldValue } from '@/types/jira-data';
+import { extractJiraCustomFieldValue } from '@/types/jira-data';
 
 /**
  * Interface pour les données Jira issues d'un webhook ou de l'API
+ * @deprecated Utiliser le type JiraIssueData de @/types/jira-data à la place
  */
-export interface JiraIssueData {
+export interface JiraIssueData extends JiraIssueDataType {
   key: string;
   id: string;
   summary: string;
@@ -86,6 +89,8 @@ export interface JiraIssueData {
     value: string;
     id: string;
   }; // Module/Fonctionnalité
+  // Index signature pour permettre l'accès aux champs personnalisés dynamiques
+  [key: string]: JiraCustomFieldValue | unknown;
 }
 
 /**
@@ -179,7 +184,7 @@ export async function syncJiraToSupabase(
   }
 
   // 5. Préparer les données de mise à jour
-  const ticketUpdate: Record<string, any> = {
+  const ticketUpdate: Record<string, string | number | null | undefined | Record<string, unknown>> = {
     title: jiraData.summary,
     description: jiraData.description || null,
     updated_at: jiraData.updated,
@@ -311,20 +316,9 @@ export async function syncJiraToSupabase(
   };
 
   for (const fieldId of productSpecificFields) {
-    const fieldValue = (jiraData as any)[fieldId];
+    const fieldValue = jiraData[fieldId] as JiraCustomFieldValue;
     if (fieldValue) {
-      // Extraire la valeur (peut être string, object avec value/name, ou array)
-      let value: string | null = null;
-      
-      if (typeof fieldValue === 'string') {
-        value = fieldValue;
-      } else if (Array.isArray(fieldValue)) {
-        value = fieldValue.map((v: any) => 
-          typeof v === 'string' ? v : v?.value || v?.name || null
-        ).filter(Boolean).join(', ');
-      } else if (fieldValue && typeof fieldValue === 'object') {
-        value = fieldValue.value || fieldValue.name || null;
-      }
+      const value = extractJiraCustomFieldValue(fieldValue);
       
       if (value) {
         customFields.product_specific[fieldId] = value;
@@ -349,7 +343,7 @@ export async function syncJiraToSupabase(
   }
 
   // 7. Mettre à jour jira_sync avec les métadonnées
-  const syncMetadata: Record<string, any> = {};
+  const syncMetadata: Record<string, string | string[] | null> = {};
   if (jiraData.labels && jiraData.labels.length > 0) {
     syncMetadata.labels = jiraData.labels;
   }
@@ -387,11 +381,12 @@ export async function syncJiraToSupabase(
   ];
 
   for (const fieldId of productSpecificFieldsPhase5) {
-    const fieldValue = (jiraData as any)[fieldId];
+    const fieldValue = jiraData[fieldId] as JiraCustomFieldValue;
     if (fieldValue) {
-      syncMetadata[fieldId] = typeof fieldValue === 'string' 
-        ? fieldValue 
-        : fieldValue?.value || fieldValue?.name || null;
+      const value = extractJiraCustomFieldValue(fieldValue);
+      if (value) {
+        syncMetadata[fieldId] = value;
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewModuleDialog } from '@/components/modules/view-module-dialog';
 import { EditModuleDialog } from '@/components/modules/edit-module-dialog';
@@ -53,8 +53,19 @@ export function ModulesTableClient({ rows, products }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
 
+  // Réinitialiser la page quand les filtres changent
+  const prevSearchRef = useRef(search);
+  const prevProductFilterRef = useRef(productFilter);
+  
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevSearchRef.current !== search || prevProductFilterRef.current !== productFilter) {
+      prevSearchRef.current = search;
+      prevProductFilterRef.current = productFilter;
+      // Utiliser setTimeout pour éviter l'appel synchrone de setState
+      setTimeout(() => {
+        setCurrentPage(1);
+      }, 0);
+    }
   }, [search, productFilter]);
 
   return (
