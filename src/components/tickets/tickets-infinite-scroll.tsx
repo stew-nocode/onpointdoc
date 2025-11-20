@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Eye, Loader2, Bug, FileText, HelpCircle, AlertCircle } from 'lucide-react';
+import { Eye, Loader2 } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
@@ -10,6 +10,13 @@ import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog'
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
 import { parseADFToText } from '@/lib/utils/adf-parser';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
+import {
+  highlightText,
+  getTicketTypeIcon,
+  getPriorityColorClass,
+  getUserInitials,
+  getAvatarColorClass
+} from '@/lib/utils/ticket-display';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
@@ -56,23 +63,11 @@ export function TicketsInfiniteScroll({
     setVisibleColumns(getVisibleColumns());
   }, []);
 
-  // Fonction pour mettre en surbrillance les termes recherchés
-  const highlightSearchTerm = useCallback((text: string, searchTerm?: string) => {
-    if (!searchTerm || !text) return text;
-    
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    const parts = text.split(regex);
-    
-    return parts.map((part, index) => 
-      regex.test(part) ? (
-        <mark key={index} className="bg-yellow-200 dark:bg-yellow-900/50 px-0.5 rounded">
-          {part}
-        </mark>
-      ) : (
-        part
-      )
-    );
-  }, []);
+  // Utiliser la fonction utilitaire pour mettre en surbrillance les termes recherchés
+  const highlightSearchTerm = useCallback(
+    (text: string, searchTerm?: string) => highlightText(text, searchTerm),
+    []
+  );
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -353,7 +348,7 @@ export function TicketsInfiniteScroll({
                 {isColumnVisible('type') && (
                   <td className="py-2.5 pr-4">
                     <div className="flex items-center gap-1.5">
-                      {getTicketTypeIcon(ticket.ticket_type)}
+                      {getTicketTypeIconLocal(ticket.ticket_type)}
                       <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         {ticket.ticket_type}
                       </span>
