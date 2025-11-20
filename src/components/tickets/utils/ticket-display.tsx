@@ -27,24 +27,33 @@ export function highlightText(
 ): string | React.ReactNode[] {
   if (!searchTerm || !text) return text;
 
-  const regex = new RegExp(
-    `(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
-    'gi'
-  );
-  const parts = text.split(regex);
+  try {
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedTerm})`, 'gi');
+    const parts = text.split(regex);
 
-  return parts.map((part, index) =>
-    regex.test(part) ? (
-      <mark
-        key={index}
-        className="bg-yellow-200 dark:bg-yellow-900/50 px-0.5 rounded"
-      >
-        {part}
-      </mark>
-    ) : (
-      part
-    )
-  );
+    // Mapper les parties : les correspondances (index impairs) sont surlignées
+    return parts
+      .filter((part) => part.length > 0)
+      .map((part, index) => {
+        // Les parties aux index impairs sont les correspondances (à cause du split avec groupe)
+        const isMatch = index % 2 === 1;
+        return isMatch ? (
+          <mark
+            key={index}
+            className="bg-yellow-200 dark:bg-yellow-900/50 px-0.5 rounded"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        );
+      });
+  } catch (error) {
+    // En cas d'erreur avec la regex, retourner le texte tel quel
+    console.warn('Erreur lors de la mise en surbrillance:', error);
+    return text;
+  }
 }
 
 /**
