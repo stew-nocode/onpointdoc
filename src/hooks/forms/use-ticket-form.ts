@@ -32,7 +32,6 @@ type UseTicketFormResult = {
   filteredModules: Module[];
   filteredSubmodules: Submodule[];
   filteredFeatures: Feature[];
-  handleSubmit: (files?: File[]) => Promise<void>;
   setSelectedProductId: (productId: string) => void;
   setSelectedModuleId: (moduleId: string) => void;
 };
@@ -44,7 +43,7 @@ type UseTicketFormResult = {
  * @returns État et handlers du formulaire
  * 
  * @example
- * const { form, filteredModules, handleSubmit } = useTicketForm({
+ * const { form, filteredModules } = useTicketForm({
  *   products,
  *   modules,
  *   submodules,
@@ -52,6 +51,7 @@ type UseTicketFormResult = {
  *   contacts,
  *   onSubmit: async (values, files) => { ... }
  * });
+ * // Utiliser form.handleSubmit() dans le composant pour gérer la soumission
  */
 export function useTicketForm(options: UseTicketFormOptions): UseTicketFormResult {
   const { products, modules, submodules, features, contacts, onSubmit } = options;
