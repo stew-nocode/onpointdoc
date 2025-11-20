@@ -8,6 +8,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 
+export type FileWithPreview = File & { preview?: string; id?: string };
+
 type FileUploadOptions = {
   /** Types MIME acceptés (ex: ['image/*', 'application/pdf']) */
   acceptTypes?: string[];
@@ -18,11 +20,11 @@ type FileUploadOptions = {
 };
 
 type UseFileUploadResult = {
-  files: File[];
+  files: FileWithPreview[];
   isDragging: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   addFiles: (filesList: FileList | File[]) => void;
-  removeFile: (index: number) => void;
+  removeFile: (indexOrKey: number | string) => void;
   clearFiles: () => void;
   handleDragOver: (e: React.DragEvent) => void;
   handleDragLeave: (e: React.DragEvent) => void;

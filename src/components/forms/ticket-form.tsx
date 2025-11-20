@@ -20,8 +20,7 @@ import { RadioGroup, RadioCard } from '@/ui/radio-group';
 import { Combobox } from '@/ui/combobox';
 import type { BasicProfile } from '@/services/users';
 import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal, AlertCircle, AlertTriangle, Zap, Shield } from 'lucide-react';
-import { useTicketForm, useFileUpload } from '@/hooks';
-import { TicketFormFileUpload } from './ticket-form-file-upload';
+import { useTicketForm, useFileUpload, type FileWithPreview } from '@/hooks';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
@@ -78,7 +77,6 @@ export const TicketForm = ({
     filteredModules,
     filteredSubmodules,
     filteredFeatures,
-    handleSubmit,
     setSelectedProductId,
     setSelectedModuleId
   } = useTicketForm({
@@ -89,8 +87,30 @@ export const TicketForm = ({
     contacts,
     onSubmit: async (values: CreateTicketInput) => {
       await onSubmit(values, selectedFiles);
-      clearFiles();
     }
+  });
+
+  // Handler de soumission du formulaire
+  const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
+    await onSubmit(values, selectedFiles);
+    clearFiles();
+    // Réinitialiser le formulaire après soumission
+    form.reset({
+      title: '',
+      description: '',
+      type: 'ASSISTANCE',
+      channel: 'Whatsapp',
+      productId: products[0]?.id ?? '',
+      moduleId: modules[0]?.id ?? '',
+      submoduleId: '',
+      featureId: '',
+      customerContext: '',
+      priority: 'Medium',
+      contactUserId: contacts[0]?.id ?? '',
+      bug_type: null
+    });
+    setSelectedProductId(products[0]?.id ?? '');
+    setSelectedModuleId(modules[0]?.id ?? '');
   });
 
   const { errors } = form.formState;

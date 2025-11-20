@@ -130,28 +130,6 @@ export function useTicketForm(options: UseTicketFormOptions): UseTicketFormResul
     }
   }, [filteredModules, form]);
 
-  // Handler de soumission
-  const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
-    await onSubmit(values, []);
-    // Réinitialiser le formulaire après soumission
-    form.reset({
-      title: '',
-      description: '',
-      type: 'ASSISTANCE',
-      channel: 'Whatsapp',
-      productId: products[0]?.id ?? '',
-      moduleId: modules[0]?.id ?? '',
-      submoduleId: '',
-      featureId: '',
-      customerContext: '',
-      priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? '',
-      bug_type: null
-    });
-    setSelectedProductId(products[0]?.id ?? '');
-    setSelectedModuleId(modules[0]?.id ?? '');
-  });
-
   return {
     form,
     selectedProductId,
@@ -159,7 +137,6 @@ export function useTicketForm(options: UseTicketFormOptions): UseTicketFormResul
     filteredModules,
     filteredSubmodules,
     filteredFeatures,
-    handleSubmit,
     setSelectedProductId,
     setSelectedModuleId
   };
