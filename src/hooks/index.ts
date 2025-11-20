@@ -24,4 +24,5 @@ export { useUserModules } from './supabase/use-user-modules';
 
 // Hooks de formulaires
 export { useFileUpload } from './forms/use-file-upload';
+export { useTicketForm } from './forms/use-ticket-form';
 
