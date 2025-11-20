@@ -148,5 +148,8 @@ export function useSupabaseQuery<T = unknown>(
     executeQuery();
   }, [executeQuery]);
 
-  return state;
+  return {
+    ...state,
+    refetch: executeQuery
+  };
 }
