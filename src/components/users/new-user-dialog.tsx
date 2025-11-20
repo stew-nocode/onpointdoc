@@ -55,6 +55,8 @@ export function NewUserDialog({ children }: Props) {
   const { companyOptions: companies, isLoading: isLoadingCompanies } = useCompanies({ enabled: open });
   const { moduleOptions: modules, isLoading: isLoadingModules } = useModules({ enabled: open });
 
+  const isLoading = isLoadingCompanies || isLoadingModules;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -101,7 +103,12 @@ export function NewUserDialog({ children }: Props) {
           <DialogTitle>Créer un utilisateur</DialogTitle>
           <DialogDescription>Compte Auth + profil + affectations modules.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-4 border-brand border-t-transparent" />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-700">Nom complet</label>
