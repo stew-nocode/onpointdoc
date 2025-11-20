@@ -15,8 +15,10 @@ export { useSupabaseQuery } from './supabase/use-supabase-query';
 export { useCountries } from './supabase/use-countries';
 export { useSectors } from './supabase/use-sectors';
 export { useProfiles } from './supabase/use-profiles';
+export { useProfile } from './supabase/use-profile';
 export { useCompanies } from './supabase/use-companies';
 export { useModules } from './supabase/use-modules';
+export { useUserModules } from './supabase/use-user-modules';
 
 // Hooks de formulaires
 export { useFileUpload } from './forms/use-file-upload';

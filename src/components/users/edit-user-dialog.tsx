@@ -1,8 +1,14 @@
+/**
+ * Dialog pour modifier un utilisateur interne existant
+ * 
+ * Utilise les hooks personnalisés pour charger les données (companies, modules, profile)
+ * Séparant la logique métier de la présentation selon les principes Clean Code
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import {
   Dialog,
@@ -19,22 +25,26 @@ import { userUpdateSchema, departments, type Department } from '@/lib/validators
 import { updateUser } from '@/services/users';
 import { toast } from 'sonner';
 import { User, Shield, Crown, Users, Headphones, Code, Megaphone } from 'lucide-react';
+import { useCompanies, useModules, useProfile, useUserModules } from '@/hooks';
 
 type Props = {
   userId: string;
   trigger: React.ReactNode;
 };
 
+/**
+ * Dialog pour modifier un utilisateur interne existant
+ * 
+ * @param userId - ID de l'utilisateur à modifier
+ * @param trigger - Trigger pour ouvrir le dialog
+ */
 export function EditUserDialog({ userId, trigger }: Props) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
-  const [modules, setModules] = useState<Array<{ id: string; name: string }>>([]);
-
+  // Formulaire
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'agent' | 'manager' | 'admin' | 'director'>('agent');
@@ -45,39 +55,34 @@ export function EditUserDialog({ userId, trigger }: Props) {
   const [moduleToAdd, setModuleToAdd] = useState<string>('');
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
 
+  // Charger les données avec les hooks personnalisés (uniquement quand le dialog est ouvert)
+  const { companyOptions: companies, isLoading: isLoadingCompanies } = useCompanies({ enabled: open });
+  const { moduleOptions: modules, isLoading: isLoadingModules } = useModules({ enabled: open });
+  const { profile, isLoading: isLoadingProfile } = useProfile(open ? userId : null, { enabled: open });
+  const { moduleIds: assignedModuleIds, isLoading: isLoadingUserModules } = useUserModules(
+    open ? userId : null,
+    { enabled: open }
+  );
+
+  // Pré-remplir le formulaire quand le profil est chargé
   useEffect(() => {
-    if (!open) return;
-    (async () => {
-      setLoading(true);
-      const supabase = createSupabaseBrowserClient();
-      const [{ data: companiesData }, { data: modulesData }] = await Promise.all([
-        supabase.from('companies').select('id, name').order('name', { ascending: true }),
-        supabase.from('modules').select('id, name').order('name', { ascending: true })
-      ]);
-      setCompanies(companiesData ?? []);
-      setModules(modulesData ?? []);
+    if (profile && open) {
+      setFullName(profile.full_name ?? '');
+      setEmail(profile.email ?? '');
+      setRole((profile.role ?? 'agent') as 'agent' | 'manager' | 'admin' | 'director');
+      setDepartment((profile.department as Department) ?? '');
+      setJobTitle(profile.job_title ?? '');
+      setCompanyId(profile.company_id ?? '');
+      setIsActive(profile.is_active ?? true);
+    }
+  }, [profile, open]);
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email, role, department, job_title, is_active, company_id')
-        .eq('id', userId)
-        .single();
-      setFullName((profile?.full_name as string) ?? '');
-      setEmail((profile?.email as string) ?? '');
-      setRole((profile?.role ?? 'agent') as 'agent' | 'manager' | 'admin' | 'director');
-      setDepartment((profile?.department as Department) ?? '');
-      setJobTitle((profile?.job_title as string) ?? '');
-      setCompanyId((profile?.company_id as string) ?? '');
-      setIsActive((profile?.is_active as boolean) ?? true);
-
-      const { data: links } = await supabase
-        .from('user_module_assignments')
-        .select('module_id')
-        .eq('user_id', userId);
-      setSelectedModuleIds((links ?? []).map((l: any) => l.module_id as string));
-      setLoading(false);
-    })();
-  }, [open, userId]);
+  // Pré-remplir les modules assignés quand ils sont chargés
+  useEffect(() => {
+    if (assignedModuleIds.length > 0 && open) {
+      setSelectedModuleIds(assignedModuleIds);
+    }
+  }, [assignedModuleIds, open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,8 +104,8 @@ export function EditUserDialog({ userId, trigger }: Props) {
       toast.success('Utilisateur mis à jour');
       setOpen(false);
       router.refresh();
-    } catch (err: any) {
-      const msg = err?.message ?? 'Erreur inattendue';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inattendue';
       setError(msg);
       toast.error(msg);
     } finally {
@@ -113,11 +118,13 @@ export function EditUserDialog({ userId, trigger }: Props) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Modifier l’utilisateur</DialogTitle>
+          <DialogTitle>Modifier l'utilisateur</DialogTitle>
           <DialogDescription>Mise à jour du profil et des affectations.</DialogDescription>
         </DialogHeader>
-        {loading ? (
-          <p className="py-6 text-sm text-slate-500">Chargement…</p>
+        {isLoadingCompanies || isLoadingModules || isLoadingProfile || isLoadingUserModules ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-4 border-brand border-t-transparent" />
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -245,23 +252,26 @@ export function EditUserDialog({ userId, trigger }: Props) {
               {selectedModuleIds.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-1">
                   {selectedModuleIds
-                    .map((id) => modules.find((m) => m.id === id))
-                    .filter(Boolean)
-                    .map((m) => (
-                      <span
-                        key={m!.id}
-                        className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800"
-                      >
-                        {m!.name}
-                        <button
-                          type="button"
-                          className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
-                          onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== m!.id))}
+                    .map((id) => {
+                      const module = modules.find((m) => m.id === id);
+                      if (!module) return null;
+                      return (
+                        <span
+                          key={module.id}
+                          className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800"
                         >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+                          {module.name}
+                          <button
+                            type="button"
+                            className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
+                            onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== module.id))}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })
+                    .filter(Boolean)}
                 </div>
               )}
             </div>

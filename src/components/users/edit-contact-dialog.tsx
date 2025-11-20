@@ -1,8 +1,14 @@
+/**
+ * Dialog pour modifier un contact existant
+ * 
+ * Utilise les hooks personnalisés pour charger les données (companies, profile)
+ * Séparant la logique métier de la présentation selon les principes Clean Code
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/ui/button';
 import {
   Dialog,
@@ -17,55 +23,46 @@ import { Combobox } from '@/ui/combobox';
 import { contactUpdateSchema } from '@/lib/validators/user';
 import { updateContact } from '@/services/contacts';
 import { toast } from 'sonner';
+import { useCompanies, useProfile } from '@/hooks';
 
 type Props = {
   contactId: string;
   trigger: React.ReactNode;
 };
 
+/**
+ * Dialog pour modifier un contact existant
+ * 
+ * @param contactId - ID du contact à modifier
+ * @param trigger - Trigger pour ouvrir le dialog
+ */
 export function EditContactDialog({ contactId, trigger }: Props) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  // Formulaire
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [companyId, setCompanyId] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
 
-  useEffect(() => {
-    if (!open) return;
-    (async () => {
-      setLoading(true);
-      const supabase = createSupabaseBrowserClient();
-      
-      // Charger les entreprises
-      const { data: companiesData } = await supabase
-        .from('companies')
-        .select('id, name')
-        .order('name', { ascending: true });
-      setCompanies(companiesData ?? []);
+  // Charger les données avec les hooks personnalisés (uniquement quand le dialog est ouvert)
+  const { companyOptions: companies, isLoading: isLoadingCompanies } = useCompanies({ enabled: open });
+  const { profile, isLoading: isLoadingProfile } = useProfile(open ? contactId : null, { enabled: open });
 
-      // Charger les données du contact
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email, job_title, is_active, company_id')
-        .eq('id', contactId)
-        .single();
-      
-      setFullName((profile?.full_name as string) ?? '');
-      setEmail((profile?.email as string) ?? '');
-      setJobTitle((profile?.job_title as string) ?? '');
-      setCompanyId((profile?.company_id as string) ?? '');
-      setIsActive((profile?.is_active as boolean) ?? true);
-      
-      setLoading(false);
-    })();
-  }, [open, contactId]);
+  // Pré-remplir le formulaire quand le profil est chargé
+  useEffect(() => {
+    if (profile && open) {
+      setFullName(profile.full_name ?? '');
+      setEmail(profile.email ?? '');
+      setJobTitle(profile.job_title ?? '');
+      setCompanyId(profile.company_id ?? '');
+      setIsActive(profile.is_active ?? true);
+    }
+  }, [profile, open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,14 +81,16 @@ export function EditContactDialog({ contactId, trigger }: Props) {
       toast.success('Contact mis à jour');
       setOpen(false);
       router.refresh();
-    } catch (err: any) {
-      const msg = err?.message ?? 'Erreur inattendue';
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erreur inattendue';
       setError(msg);
       toast.error(msg);
     } finally {
       setSaving(false);
     }
   }
+
+  const isLoading = isLoadingCompanies || isLoadingProfile;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -101,8 +100,10 @@ export function EditContactDialog({ contactId, trigger }: Props) {
           <DialogTitle>Modifier le contact</DialogTitle>
           <DialogDescription>Mise à jour des informations du contact client.</DialogDescription>
         </DialogHeader>
-        {loading ? (
-          <p className="py-6 text-sm text-slate-500">Chargement…</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-4 border-brand border-t-transparent" />
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -157,4 +158,3 @@ export function EditContactDialog({ contactId, trigger }: Props) {
     </Dialog>
   );
 }
-
