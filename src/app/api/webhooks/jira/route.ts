@@ -22,6 +22,17 @@ export async function POST(request: NextRequest) {
     const jiraIssue = body.issue;
     const jiraIssueKey = jiraIssue?.key;
     
+    // Filtrer uniquement les tickets du projet OD (ignorer OBCS et autres projets)
+    if (jiraIssueKey && !jiraIssueKey.startsWith('OD-')) {
+      console.log(`[Webhook JIRA] Ticket ignoré (projet non OD): ${jiraIssueKey}`);
+      return NextResponse.json({
+        success: true,
+        message: 'Ticket ignoré (projet non OD)',
+        action: 'ignored',
+        jira_issue_key: jiraIssueKey
+      });
+    }
+    
     // Si c'est un webhook JIRA natif, transformer les données
     if (webhookEvent && jiraIssue) {
       // Utiliser Service Role pour contourner les RLS (webhook externe)
@@ -143,6 +154,18 @@ export async function POST(request: NextRequest) {
     // Format complet avec jira_data (Phase 1) - Compatibilité
     const { ticket_id, jira_data } = body;
     if (ticket_id && jira_data) {
+      // Filtrer uniquement les tickets du projet OD (ignorer OBCS et autres projets)
+      const jiraKey = (jira_data as JiraIssueData)?.key;
+      if (jiraKey && !jiraKey.startsWith('OD-')) {
+        console.log(`[Webhook JIRA] Ticket ignoré (projet non OD): ${jiraKey}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Ticket ignoré (projet non OD)',
+          action: 'ignored',
+          jira_issue_key: jiraKey
+        });
+      }
+
       // Utiliser Service Role pour contourner les RLS (webhook externe)
       const supabase = createSupabaseServiceRoleClient();
 
@@ -179,6 +202,17 @@ export async function POST(request: NextRequest) {
     // Format simplifié (legacy) - Compatibilité avec l'ancien workflow
     const { event_type, jira_issue_key, updates } = body;
     if (event_type && jira_issue_key) {
+      // Filtrer uniquement les tickets du projet OD (ignorer OBCS et autres projets)
+      if (!jira_issue_key.startsWith('OD-')) {
+        console.log(`[Webhook JIRA] Ticket ignoré (projet non OD): ${jira_issue_key}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Ticket ignoré (projet non OD)',
+          action: 'ignored',
+          jira_issue_key: jira_issue_key
+        });
+      }
+
       // Utiliser Service Role pour contourner les RLS (webhook externe)
       const supabase = createSupabaseServiceRoleClient();
 
