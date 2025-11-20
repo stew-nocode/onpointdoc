@@ -9,7 +9,7 @@ const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  return <RadioGroupPrimitive.Root className={cn('grid gap-2', className)} {...props} ref={ref} />;
+  return <RadioGroupPrimitive.Root className={cn('grid gap-1.5', className)} {...props} ref={ref} />;
 });
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
 
@@ -61,12 +61,12 @@ export function RadioCard({ value, label, icon, className }: RadioCardProps) {
       value={value}
       id={value}
       className={cn(
-        'group relative flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-slate-200 bg-white px-3 py-2.5 transition-all hover:border-brand hover:bg-brand/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-white dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand dark:hover:bg-brand/20 dark:data-[state=checked]:border-brand dark:data-[state=checked]:bg-brand dark:data-[state=checked]:text-white',
+        'group relative flex w-full min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-2 border-slate-200 bg-white px-2 py-1.5 transition-all hover:border-brand hover:bg-brand/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-white dark:border-slate-700 dark:bg-slate-900 dark:hover:border-brand dark:hover:bg-brand/20 dark:data-[state=checked]:border-brand dark:data-[state=checked]:bg-brand dark:data-[state=checked]:text-white',
         className
       )}
     >
       {icon && (
-        <div className="flex-shrink-0 text-slate-600 group-data-[state=checked]:text-white dark:text-slate-300 dark:group-data-[state=checked]:text-white">
+        <div className="flex-shrink-0 text-slate-600 group-data-[state=checked]:text-white dark:text-slate-300 dark:group-data-[state=checked]:text-white [&>svg]:h-3.5 [&>svg]:w-3.5">
           {icon}
         </div>
       )}
