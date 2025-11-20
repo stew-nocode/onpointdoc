@@ -8,6 +8,7 @@ import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
+import { parseADFToText } from '@/lib/utils/adf-parser';
 import type { QuickFilter } from '@/types/ticket-filters';
 
 type Ticket = {
@@ -347,13 +348,17 @@ export function TicketsInfiniteScroll({
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-md">
                         <p className="text-sm">{ticket.title}</p>
-                        {ticket.description && (
-                          <p className="text-xs text-slate-400 mt-1 line-clamp-3">
-                            {ticket.description.length > 200 
-                              ? `${ticket.description.substring(0, 200)}...` 
-                              : ticket.description}
-                          </p>
-                        )}
+                        {ticket.description && (() => {
+                          const descriptionText = parseADFToText(ticket.description);
+                          const truncatedText = descriptionText.length > 200 
+                            ? `${descriptionText.substring(0, 200)}...` 
+                            : descriptionText;
+                          return (
+                            <p className="text-xs text-slate-400 mt-1 line-clamp-3 whitespace-pre-wrap">
+                              {truncatedText}
+                            </p>
+                          );
+                        })()}
                         {ticket.jira_issue_key && (
                           <p className="text-xs text-slate-400 mt-1">Jira: {ticket.jira_issue_key}</p>
                         )}
