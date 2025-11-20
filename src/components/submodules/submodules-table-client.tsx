@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewSubmoduleDialog } from '@/components/submodules/view-submodule-dialog';
 import { EditSubmoduleDialog } from '@/components/submodules/edit-submodule-dialog';
@@ -25,6 +25,7 @@ export function SubmodulesTableClient({ rows, modules }: Props) {
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const prevFiltersRef = useRef({ search, moduleFilter });
 
   const filteredRows = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -53,8 +54,12 @@ export function SubmodulesTableClient({ rows, modules }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [modules]);
 
+  // Réinitialiser la page quand les filtres changent
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevFiltersRef.current.search !== search || prevFiltersRef.current.moduleFilter !== moduleFilter) {
+      setCurrentPage(1);
+      prevFiltersRef.current = { search, moduleFilter };
+    }
   }, [search, moduleFilter]);
 
   return (

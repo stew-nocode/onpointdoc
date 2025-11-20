@@ -307,7 +307,7 @@ function mapSubmodule(submoduleName) {
 async function loadMetadata() {
   const [{ data: products, error: productError }, { data: modules, error: moduleError }, { data: submodules, error: submoduleError }] =
     await Promise.all([
-      supabase.from('products').select('id, name, code'),
+      supabase.from('products').select('id, name, jira_product_id'),
       supabase.from('modules').select('id, name, product_id'),
       supabase.from('submodules').select('id, name, module_id')
     ]);
@@ -317,11 +317,20 @@ async function loadMetadata() {
   if (submoduleError) throw new Error(submoduleError.message);
 
   products?.forEach((product) => {
-    if (product.code) {
-      productMap.set(product.code.toLowerCase(), product);
-    }
+    // Utiliser le nom normalisé pour le mapping
     productMap.set(normalizeKey(product.name), product);
+    // Si jira_product_id existe, l'utiliser aussi comme clé
+    if (product.jira_product_id) {
+      productMap.set(String(product.jira_product_id), product);
+    }
   });
+
+  // Mapping spécial pour OBCS -> OBC (le Google Sheet utilise OBCS mais la DB a OBC)
+  const obcProduct = products?.find(p => normalizeKey(p.name) === 'obc');
+  if (obcProduct) {
+    productMap.set('obcs', obcProduct);
+    productMap.set('obc', obcProduct);
+  }
 
   modules?.forEach((module) => {
     moduleMap.set(normalizeKey(module.name), module);

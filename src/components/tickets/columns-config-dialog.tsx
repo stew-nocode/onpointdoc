@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/ui/button';
 import {
   Dialog,
@@ -25,12 +25,8 @@ type ColumnsConfigDialogProps = {
 
 export function ColumnsConfigDialog({ onColumnsChange }: ColumnsConfigDialogProps) {
   const [open, setOpen] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(new Set());
-
-  // Charger les colonnes visibles au montage
-  useEffect(() => {
-    setVisibleColumns(getVisibleColumns());
-  }, []);
+  // Initialiser directement avec les colonnes visibles pour éviter setState dans useEffect
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => getVisibleColumns());
 
   const handleToggleColumn = (columnId: ColumnId) => {
     const column = AVAILABLE_COLUMNS.find(col => col.id === columnId);

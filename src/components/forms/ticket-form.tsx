@@ -273,13 +273,8 @@ export const TicketForm = ({
         </div>
       )}
       {products.length === 1 ? (
-        <div className="grid gap-2 min-w-0">
-          <label className="text-sm font-medium text-slate-700">Produit concerné</label>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-            {products[0]?.name}
-          </div>
-          <input type="hidden" {...productField} />
-        </div>
+        // Produit unique : champ caché, valeur pré-sélectionnée automatiquement
+        <input type="hidden" {...productField} />
       ) : (
         <div className="grid gap-2 min-w-0">
           <label className="text-sm font-medium text-slate-700">Produit concerné</label>

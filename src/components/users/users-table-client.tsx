@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { ViewUserDialog } from '@/components/users/view-user-dialog';
 import { EditUserDialog } from '@/components/users/edit-user-dialog';
@@ -31,6 +31,7 @@ export function UsersTableClient({ rows, companies }: Props) {
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const prevFiltersRef = useRef({ search, roleFilter, departmentFilter, companyFilter, statusFilter });
 
   const filteredRows = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -76,7 +77,17 @@ export function UsersTableClient({ rows, companies }: Props) {
 
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    const prev = prevFiltersRef.current;
+    if (
+      prev.search !== search ||
+      prev.roleFilter !== roleFilter ||
+      prev.departmentFilter !== departmentFilter ||
+      prev.companyFilter !== companyFilter ||
+      prev.statusFilter !== statusFilter
+    ) {
+      setCurrentPage(1);
+      prevFiltersRef.current = { search, roleFilter, departmentFilter, companyFilter, statusFilter };
+    }
   }, [search, roleFilter, departmentFilter, companyFilter, statusFilter]);
 
   return (
