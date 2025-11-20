@@ -29,6 +29,7 @@ export const createTicket = async (payload: CreateTicketInput) => {
       duration_minutes: payload.durationMinutes ?? null,
       customer_context: payload.customerContext,
       contact_user_id: payload.contactUserId,
+      bug_type: payload.bug_type ?? null,
       created_by: profile.id, // ID du profil (pas auth.uid())
       status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
       origin: 'supabase'

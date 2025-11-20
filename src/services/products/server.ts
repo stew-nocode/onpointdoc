@@ -81,4 +81,51 @@ export const listModulesByProduct = async (productId: string): Promise<Module[]>
   return data ?? [];
 };
 
+/**
+ * Récupère les produits accessibles au département de l'utilisateur actuel
+ * via la table product_department_link
+ */
+export const listProductsForCurrentUserDepartment = async (): Promise<Product[]> => {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('department_id')
+    .eq('auth_uid', user.id)
+    .single();
+
+  if (!profile?.department_id) return [];
+
+  const { data, error } = await supabase
+    .from('product_department_link')
+    .select('product:products(id, name, description, accent_color)')
+    .eq('department_id', profile.department_id);
+
+  if (error) throw new Error(error.message);
+  
+  return (data ?? [])
+    .map((row: { product: Product | null }) => row.product)
+    .filter((p): p is Product => p !== null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+/**
+ * Récupère le profil de l'utilisateur actuel avec son département
+ */
+export const getCurrentUserProfileWithDepartment = async (): Promise<{ id: string; department_id: string | null } | null> => {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, department_id')
+    .eq('auth_uid', user.id)
+    .single();
+
+  return profile ?? null;
+};
+
 

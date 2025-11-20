@@ -8,6 +8,7 @@ import {
   ticketChannels,
   ticketTypes
 } from '@/lib/validators/ticket';
+import { BUG_TYPES } from '@/lib/constants/tickets';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import { Button } from '@/ui/button';
 import { RadioGroup, RadioCard } from '@/ui/radio-group';
@@ -36,7 +37,7 @@ export const TicketForm = ({
 }: TicketFormProps) => {
   const form = useForm<CreateTicketInput>({
     resolver: zodResolver(createTicketSchema) as any,
-    defaultValues: {
+      defaultValues: {
       title: '',
       description: '',
       type: 'ASSISTANCE',
@@ -47,7 +48,8 @@ export const TicketForm = ({
       featureId: '',
       customerContext: '',
       priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? ''
+      contactUserId: contacts[0]?.id ?? '',
+      bug_type: null
     }
   });
   const { errors } = form.formState;
@@ -72,6 +74,28 @@ export const TicketForm = ({
   const inputClass =
     'rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500';
 
+  // Pré-sélectionner le produit si un seul est disponible
+  useEffect(() => {
+    if (products.length === 1 && products[0]?.id) {
+      const singleProductId = products[0].id;
+      form.setValue('productId', singleProductId);
+      setSelectedProductId(singleProductId);
+    } else if (products.length > 0 && !form.getValues('productId')) {
+      // Si plusieurs produits, sélectionner le premier par défaut
+      const firstProductId = products[0]?.id ?? '';
+      form.setValue('productId', firstProductId);
+      setSelectedProductId(firstProductId);
+    }
+  }, [products, form]);
+
+  // Réinitialiser bug_type si le type change de BUG à autre chose
+  const ticketType = form.watch('type');
+  useEffect(() => {
+    if (ticketType !== 'BUG') {
+      form.setValue('bug_type', null);
+    }
+  }, [ticketType, form]);
+
   useEffect(() => {
     if (filteredModules.length > 0) {
       form.setValue('moduleId', filteredModules[0].id);
@@ -85,7 +109,7 @@ export const TicketForm = ({
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit(values, selectedFiles);
-    form.reset({
+      form.reset({
       title: '',
       description: '',
       type: 'ASSISTANCE',
@@ -96,7 +120,8 @@ export const TicketForm = ({
       featureId: '',
       customerContext: '',
       priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? ''
+      contactUserId: contacts[0]?.id ?? '',
+      bug_type: null
     });
     setSelectedProductId(products[0]?.id ?? '');
     setSelectedModuleId(modules[0]?.id ?? '');
@@ -225,29 +250,61 @@ export const TicketForm = ({
           </RadioGroup>
         </div>
       </div>
-      <div className="grid gap-3 min-w-0">
-        <label className="text-sm font-medium text-slate-700">Produit concerné</label>
-        <RadioGroup
-          value={form.watch('productId')}
-          onValueChange={(v) => {
-            form.setValue('productId', v);
-            setSelectedProductId(v);
-          }}
-          className="grid grid-cols-3 gap-2 w-full"
-        >
-          {products.map((product) => (
-            <RadioCard
-              key={product.id}
-              value={product.id}
-              label={product.name}
-              icon={<Shield className="h-4 w-4" />}
-            />
-          ))}
-        </RadioGroup>
-        {errors.productId && (
-          <p className="text-xs text-status-danger">{errors.productId.message}</p>
-        )}
-      </div>
+      {form.watch('type') === 'BUG' && (
+        <div className="grid gap-2 min-w-0">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Type de bug <span className="text-status-danger">*</span>
+          </label>
+          <Combobox
+            options={BUG_TYPES.map((bugType) => ({
+              value: bugType,
+              label: bugType,
+              searchable: bugType
+            }))}
+            value={form.watch('bug_type') ?? ''}
+            onValueChange={(v) => form.setValue('bug_type', v as CreateTicketInput['bug_type'])}
+            placeholder="Sélectionner un type de bug"
+            searchPlaceholder="Rechercher un type de bug..."
+            emptyText="Aucun type de bug disponible"
+          />
+          {errors.bug_type && (
+            <p className="text-xs text-status-danger">{errors.bug_type.message}</p>
+          )}
+        </div>
+      )}
+      {products.length === 1 ? (
+        <div className="grid gap-2 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Produit concerné</label>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+            {products[0]?.name}
+          </div>
+          <input type="hidden" {...productField} />
+        </div>
+      ) : (
+        <div className="grid gap-3 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Produit concerné</label>
+          <RadioGroup
+            value={form.watch('productId')}
+            onValueChange={(v) => {
+              form.setValue('productId', v);
+              setSelectedProductId(v);
+            }}
+            className="grid grid-cols-3 gap-2 w-full"
+          >
+            {products.map((product) => (
+              <RadioCard
+                key={product.id}
+                value={product.id}
+                label={product.name}
+                icon={<Shield className="h-4 w-4" />}
+              />
+            ))}
+          </RadioGroup>
+          {errors.productId && (
+            <p className="text-xs text-status-danger">{errors.productId.message}</p>
+          )}
+        </div>
+      )}
       <div className="grid gap-2 min-w-0">
         <label className="text-sm font-medium text-slate-700">Module / Sous-module / Fonctionnalité</label>
         <div className="grid gap-2 md:grid-cols-3 w-full">

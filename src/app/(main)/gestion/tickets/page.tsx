@@ -7,7 +7,8 @@ import {
   listModules,
   listSubmodules,
   listFeatures,
-  listModulesForCurrentUser
+  listModulesForCurrentUser,
+  listProductsForCurrentUserDepartment
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
@@ -84,8 +85,13 @@ async function getCurrentUserProfileId() {
 async function loadProductsAndModules() {
   noStore();
   try {
-    const [products, allModules, submodules, features, contacts, allowedModules] = await Promise.all([
-      listProducts(),
+    // Récupérer les produits accessibles au département de l'utilisateur
+    const departmentProducts = await listProductsForCurrentUserDepartment();
+    
+    // Si aucun produit n'est lié au département, utiliser tous les produits (fallback)
+    const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
+    
+    const [allModules, submodules, features, contacts, allowedModules] = await Promise.all([
       listModules(),
       listSubmodules(),
       listFeatures(),
