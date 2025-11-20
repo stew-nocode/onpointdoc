@@ -3,14 +3,15 @@
  */
 
 import { z } from 'zod';
-import { TICKET_STATUSES, TICKET_PRIORITIES } from '@/lib/constants/tickets';
+import { TICKET_PRIORITIES } from '@/lib/constants/tickets';
 
 /**
  * Schéma pour la mise à jour en masse du statut
+ * Accepte tous les statuts (JIRA ou locaux) pour flexibilité
  */
 export const bulkUpdateStatusSchema = z.object({
   ticketIds: z.array(z.string().uuid()).min(1, 'Au moins un ticket doit être sélectionné'),
-  status: z.enum(['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as [string, ...string[]])
+  status: z.string().min(1, 'Le statut est requis')
 });
 
 /**

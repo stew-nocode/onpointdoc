@@ -1,6 +1,20 @@
 import type { BugType } from '@/lib/constants/tickets';
 
-export type TicketStatus = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue' | 'To_Do' | 'In_Progress' | 'Done' | 'Closed';
+/**
+ * Statuts possibles pour les tickets
+ * 
+ * Statuts locaux (ASSISTANCE avant transfert):
+ * - Nouveau, En_cours, Resolue
+ * 
+ * Statut de transition (ASSISTANCE):
+ * - Transfere
+ * 
+ * Statuts JIRA (BUG, REQ, ASSISTANCE après transfert):
+ * - Sprint Backlog, Traitement en Cours, Test en Cours, Terminé(e), Terminé
+ * 
+ * Note: Le type est string pour accepter n'importe quel statut JIRA dynamique
+ */
+export type TicketStatus = string;
 export type TicketType = 'BUG' | 'REQ' | 'ASSISTANCE';
 export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 

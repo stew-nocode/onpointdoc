@@ -104,7 +104,9 @@ export async function syncJiraToSupabase(
   const ticketType = mapJiraIssueTypeToTicketType(jiraData.issuetype.name);
 
   // 2. Mapper le statut Jira vers Supabase
-  const supabaseStatus = await getSupabaseStatusFromJira(jiraData.status.name, ticketType);
+  // Pour BUG/REQ: retourne directement le statut JIRA brut
+  // Pour ASSISTANCE: utilise le mapping ou retourne le statut JIRA brut si transféré
+  const supabaseStatus = await getSupabaseStatusFromJira(jiraData.status.name, ticketType) || jiraData.status.name;
 
   // 3. Mapper la priorité Jira vers Supabase
   const supabasePriority = await getSupabasePriorityFromJira(jiraData.priority.name);

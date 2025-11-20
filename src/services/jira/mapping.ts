@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
  * Types pour les mappings Jira
  */
 export type TicketType = 'BUG' | 'REQ' | 'ASSISTANCE';
-export type SupabaseStatus = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue' | 'To_Do' | 'In_Progress' | 'Done' | 'Closed';
+export type SupabaseStatus = string; // Accepte tous les statuts (JIRA bruts ou locaux)
 export type SupabasePriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface JiraStatusMapping {
@@ -27,14 +27,25 @@ export interface JiraPriorityMapping {
 /**
  * Récupère le statut Supabase correspondant à un statut Jira
  * 
+ * Pour BUG et REQ: retourne directement le statut JIRA brut (stockage direct)
+ * Pour ASSISTANCE: utilise le mapping pour convertir en statut local ou JIRA selon le contexte
+ * 
  * @param jiraStatus - Nom du statut Jira (ex: "Sprint Backlog", "Traitement en Cours")
  * @param ticketType - Type de ticket (BUG, REQ, ASSISTANCE)
- * @returns Le statut Supabase correspondant ou null si aucun mapping trouvé
+ * @returns Le statut Supabase correspondant (statut JIRA brut pour BUG/REQ, ou statut mappé pour ASSISTANCE)
  */
 export async function getSupabaseStatusFromJira(
   jiraStatus: string,
   ticketType: TicketType
 ): Promise<SupabaseStatus | null> {
+  // Pour BUG et REQ, on stocke directement les statuts JIRA bruts
+  if (ticketType === 'BUG' || ticketType === 'REQ') {
+    return jiraStatus;
+  }
+
+  // Pour ASSISTANCE, on utilise le mapping pour déterminer le statut
+  // Si le ticket est transféré, on utilise le statut JIRA brut
+  // Sinon, on utilise le mapping vers les statuts locaux
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase
@@ -45,11 +56,21 @@ export async function getSupabaseStatusFromJira(
     .single();
 
   if (error || !data) {
-    console.warn(`Aucun mapping trouvé pour le statut Jira "${jiraStatus}" (type: ${ticketType})`);
-    return null;
+    // Si aucun mapping trouvé, retourner le statut JIRA brut (cas d'un ASSISTANCE transféré)
+    console.warn(`Aucun mapping trouvé pour le statut Jira "${jiraStatus}" (type: ${ticketType}), utilisation du statut JIRA brut`);
+    return jiraStatus;
   }
 
-  return data.supabase_status as SupabaseStatus;
+  // Si le mapping retourne un statut JIRA (même valeur), c'est qu'on doit stocker le statut JIRA brut
+  // Sinon, c'est un mapping vers un statut local
+  const mappedStatus = data.supabase_status as string;
+  
+  // Si le mapping retourne la même valeur que le statut JIRA, c'est qu'on stocke directement
+  if (mappedStatus === jiraStatus) {
+    return jiraStatus;
+  }
+  
+  return mappedStatus;
 }
 
 /**

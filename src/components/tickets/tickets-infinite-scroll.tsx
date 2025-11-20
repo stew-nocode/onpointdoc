@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/t
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
 import { parseADFToText } from '@/lib/utils/adf-parser';
+import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 import type { QuickFilter } from '@/types/ticket-filters';
 
 type Ticket = {
@@ -383,13 +384,7 @@ export function TicketsInfiniteScroll({
                 {isColumnVisible('status') && (
                   <td className="py-2.5 pr-4">
                     <Badge
-                      variant={
-                        ticket.status === 'Resolue'
-                          ? 'success'
-                          : ticket.status === 'Transfere'
-                            ? 'danger'
-                            : 'warning'
-                      }
+                      variant={getStatusBadgeVariant(ticket.status)}
                       className="text-[10px] px-2 py-0.5 whitespace-nowrap"
                     >
                       {ticket.status.replace('_', ' ')}

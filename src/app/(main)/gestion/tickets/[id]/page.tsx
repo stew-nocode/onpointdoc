@@ -8,6 +8,7 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { TransferTicketButton } from '@/components/tickets/transfer-ticket-button';
 import { TicketDescription } from '@/components/tickets/ticket-description';
+import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 
 async function loadTicket(id: string) {
   noStore();
@@ -117,15 +118,7 @@ export default async function TicketDetailPage({
               </label>
               <div className="mt-1">
                 <Badge
-                  variant={
-                    ticket.status === 'Resolue'
-                      ? 'success'
-                      : ticket.status === 'Transfere'
-                        ? 'danger'
-                        : ticket.status === 'En_cours'
-                          ? 'warning'
-                          : 'info'
-                  }
+                  variant={getStatusBadgeVariant(ticket.status)}
                 >
                   {ticket.status.replace('_', ' ')}
                 </Badge>

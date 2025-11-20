@@ -4,9 +4,7 @@ import { applyQuickFilter } from '@/services/tickets';
 import type { QuickFilter } from '@/types/ticket-filters';
 
 export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
-export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
-
-const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
+export type TicketStatusFilter = string; // Accepte tous les statuts (JIRA ou locaux)
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +59,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('ticket_type', type);
     }
 
-    if (status && TICKET_STATUSES.includes(status as any)) {
+    if (status) {
       query = query.eq('status', status);
     }
 

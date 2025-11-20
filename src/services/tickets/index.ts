@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { QuickFilter } from '@/types/ticket-filters';
+import { getInitialStatus } from '@/lib/utils/ticket-status';
+import { createJiraIssue } from '@/services/jira/client';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -31,7 +33,7 @@ export const createTicket = async (payload: CreateTicketInput) => {
       contact_user_id: payload.contactUserId,
       bug_type: payload.bug_type ?? null,
       created_by: profile.id, // ID du profil (pas auth.uid())
-      status: payload.type === 'ASSISTANCE' ? 'Nouveau' : 'En_cours', // Aligné avec enum Supabase
+      status: getInitialStatus(payload.type), // Statut initial selon le type (JIRA pour BUG/REQ, local pour ASSISTANCE)
       origin: 'supabase'
     })
     .select('id')
@@ -41,13 +43,61 @@ export const createTicket = async (payload: CreateTicketInput) => {
     throw new Error(error.message);
   }
 
+  // Pour BUG et REQ, créer immédiatement le ticket JIRA
+  if (payload.type === 'BUG' || payload.type === 'REQ') {
+    try {
+      const jiraResponse = await createJiraIssue({
+        ticketId: data.id,
+        title: payload.title,
+        description: payload.description,
+        ticketType: payload.type,
+        priority: payload.priority,
+        canal: payload.channel,
+        productId: payload.productId ?? undefined,
+        moduleId: payload.moduleId ?? undefined,
+        customerContext: payload.customerContext,
+        bugType: payload.bug_type ?? undefined
+      });
+
+      if (jiraResponse.success && jiraResponse.jiraIssueKey) {
+        // Mettre à jour le ticket avec la clé JIRA
+        await supabase
+          .from('tickets')
+          .update({
+            jira_issue_key: jiraResponse.jiraIssueKey,
+            origin: 'supabase'
+          })
+          .eq('id', data.id);
+
+        // Enregistrer dans jira_sync
+        await supabase.from('jira_sync').upsert({
+          ticket_id: data.id,
+          jira_issue_key: jiraResponse.jiraIssueKey,
+          origin: 'supabase',
+          last_synced_at: new Date().toISOString()
+        });
+      } else {
+        console.error('Erreur lors de la création du ticket JIRA:', jiraResponse.error);
+        // Ne pas faire échouer la création du ticket Supabase si JIRA échoue
+        // Le ticket sera créé dans Supabase et pourra être synchronisé plus tard
+      }
+    } catch (jiraError) {
+      console.error('Erreur lors de la création du ticket JIRA:', jiraError);
+      // Ne pas faire échouer la création du ticket Supabase
+    }
+  }
+
   return data;
 };
 
 export type TicketTypeFilter = 'BUG' | 'REQ' | 'ASSISTANCE';
-export type TicketStatusFilter = 'Nouveau' | 'En_cours' | 'Transfere' | 'Resolue';
+export type TicketStatusFilter = string; // Accepte tous les statuts (JIRA ou locaux)
 
-export const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue'] as const;
+/**
+ * @deprecated Utiliser getTicketStatuses() depuis @/lib/constants/tickets
+ * Conservé pour compatibilité avec le code existant
+ */
+export const TICKET_STATUSES = ['Nouveau', 'En_cours', 'Transfere', 'Resolue', 'Sprint Backlog', 'Traitement en Cours', 'Test en Cours', 'Terminé(e)', 'Terminé'] as const;
 
 export const listTickets = async (type?: TicketTypeFilter, status?: TicketStatusFilter) => {
   const supabase = await createSupabaseServerClient();
@@ -202,26 +252,28 @@ export function applyQuickFilter(
 
 export async function countTicketsByStatus(type: TicketTypeFilter) {
   const supabase = await createSupabaseServerClient();
-  const result: Record<(typeof TICKET_STATUSES)[number], number> = {
-    Nouveau: 0,
-    En_cours: 0,
-    Transfere: 0,
-    Resolue: 0
-  };
+  
+  // Utiliser un Record dynamique pour accepter tous les statuts (JIRA ou locaux)
+  const result: Record<string, number> = {};
+  
   const { data, error } = await supabase
     .from('tickets')
     .select('status')
     .eq('ticket_type', type)
     .limit(1000);
+    
   if (error) {
     throw new Error(error.message);
   }
+  
+  // Compter tous les statuts dynamiquement
   for (const row of data ?? []) {
-    const status = (row as any).status as (typeof TICKET_STATUSES)[number] | null;
-    if (status && status in result) {
-      result[status] += 1;
+    const status = (row as any).status as string | null;
+    if (status) {
+      result[status] = (result[status] || 0) + 1;
     }
   }
+  
   return result;
 }
 

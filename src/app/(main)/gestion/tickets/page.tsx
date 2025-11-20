@@ -1,7 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 
 import { createTicket, listTicketsPaginated } from '@/services/tickets';
-import { TICKET_STATUSES } from '@/services/tickets';
 import {
   listProducts,
   listModules,
@@ -43,9 +42,8 @@ async function loadInitialTickets(
         ? typeParam
         : undefined;
 
-    const normalizedStatus = (TICKET_STATUSES as readonly string[]).includes(statusParam as any)
-      ? (statusParam as (typeof TICKET_STATUSES)[number])
-      : undefined;
+    // Accepter tous les statuts (JIRA ou locaux) comme filtre valide
+    const normalizedStatus = statusParam || undefined;
 
     return await listTicketsPaginated(
       normalizedType as any,

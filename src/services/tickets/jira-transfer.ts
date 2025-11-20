@@ -1,15 +1,17 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createJiraIssue } from '@/services/jira/client';
 
 /**
- * Transfère un ticket Assistance vers JIRA via N8N
+ * Transfère un ticket Assistance vers JIRA (appel direct à l'API JIRA)
  * 
  * Workflow :
  * 1. Met à jour le statut du ticket à "Transféré" dans Supabase
- * 2. Enregistre dans jira_sync pour tracking
- * 3. Déclenche le webhook N8N qui créera le ticket JIRA
+ * 2. Crée le ticket JIRA directement via l'API JIRA
+ * 3. Enregistre dans jira_sync pour tracking
+ * 4. Après transfert, le ticket ASSISTANCE utilisera les statuts JIRA
  * 
  * @param ticketId - UUID du ticket à transférer
- * @returns Le ticket mis à jour avec le statut "Transféré"
+ * @returns Le ticket mis à jour avec le statut "Transféré" et la clé JIRA
  */
 export const transferTicketToJira = async (ticketId: string) => {
   const supabase = await createSupabaseServerClient();
@@ -56,58 +58,42 @@ export const transferTicketToJira = async (ticketId: string) => {
     source: 'supabase'
   });
 
-  // 4. Préparer les données pour N8N
-  const n8nPayload = {
-    ticket_id: ticket.id,
-    title: ticket.title,
-    description: ticket.description,
-    canal: ticket.canal,
-    priority: ticket.priority,
-    product_id: ticket.product_id,
-    module_id: ticket.module_id,
-    customer_context: ticket.customer_context,
-    action: 'transfer_to_jira'
-  };
+  // 4. Créer le ticket JIRA directement (sans N8N)
+  try {
+    const jiraResponse = await createJiraIssue({
+      ticketId: ticket.id,
+      title: ticket.title,
+      description: ticket.description || '',
+      ticketType: 'BUG', // Les ASSISTANCE transférés deviennent des BUG dans JIRA
+      priority: ticket.priority as 'Low' | 'Medium' | 'High' | 'Critical',
+      canal: ticket.canal || null,
+      productId: ticket.product_id || undefined,
+      moduleId: ticket.module_id || undefined,
+      customerContext: ticket.customer_context || undefined
+    });
 
-  // 5. Appeler le webhook N8N (si configuré)
-  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-  if (n8nWebhookUrl) {
-    try {
-      const response = await fetch(n8nWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(n8nPayload)
+    if (jiraResponse.success && jiraResponse.jiraIssueKey) {
+      // Mettre à jour le ticket avec la clé JIRA
+      await supabase
+        .from('tickets')
+        .update({ jira_issue_key: jiraResponse.jiraIssueKey })
+        .eq('id', ticketId);
+
+      // Enregistrer dans jira_sync
+      await supabase.from('jira_sync').upsert({
+        ticket_id: ticketId,
+        jira_issue_key: jiraResponse.jiraIssueKey,
+        origin: 'supabase',
+        last_synced_at: new Date().toISOString()
       });
-
-      if (!response.ok) {
-        console.error('Erreur lors de l\'appel au webhook N8N:', await response.text());
-        // Ne pas faire échouer la transaction si N8N est down, le statut est déjà mis à jour
-      } else {
-        const n8nResponse = await response.json();
-        // Si N8N retourne le jira_issue_key, l'enregistrer
-        if (n8nResponse.jira_issue_key) {
-          await supabase.from('jira_sync').upsert({
-            ticket_id: ticketId,
-            jira_issue_key: n8nResponse.jira_issue_key,
-            origin: 'supabase',
-            last_synced_at: new Date().toISOString()
-          });
-
-          // Mettre à jour le ticket avec le jira_issue_key
-          await supabase
-            .from('tickets')
-            .update({ jira_issue_key: n8nResponse.jira_issue_key })
-            .eq('id', ticketId);
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'appel au webhook N8N:', error);
-      // Ne pas faire échouer la transaction, le statut est déjà mis à jour
+    } else {
+      console.error('Erreur lors de la création du ticket JIRA:', jiraResponse.error);
+      throw new Error(`Impossible de créer le ticket JIRA: ${jiraResponse.error || 'Erreur inconnue'}`);
     }
-  } else {
-    console.warn('N8N_WEBHOOK_URL non configuré. Le transfert JIRA ne sera pas automatique.');
+  } catch (error) {
+    console.error('Erreur lors de la création du ticket JIRA:', error);
+    // Re-lancer l'erreur pour que l'utilisateur soit informé
+    throw new Error(`Erreur lors du transfert vers JIRA: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
   }
 
   return updatedTicket;

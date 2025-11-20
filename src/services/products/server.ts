@@ -105,8 +105,12 @@ export const listProductsForCurrentUserDepartment = async (): Promise<Product[]>
 
   if (error) throw new Error(error.message);
   
+  // Supabase retourne product comme un tableau dans les relations
   return (data ?? [])
-    .map((row: { product: Product | null }) => row.product)
+    .map((row: any) => {
+      const product = Array.isArray(row.product) ? row.product[0] : row.product;
+      return product as Product | null;
+    })
     .filter((p): p is Product => p !== null)
     .sort((a, b) => a.name.localeCompare(b.name));
 };
