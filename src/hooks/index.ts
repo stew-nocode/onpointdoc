@@ -17,6 +17,8 @@ export { useSectors } from './supabase/use-sectors';
 export { useProfiles } from './supabase/use-profiles';
 export { useProfile } from './supabase/use-profile';
 export { useCompanies } from './supabase/use-companies';
+export { useCompany } from './supabase/use-company';
+export { useCompanySectors } from './supabase/use-company-sectors';
 export { useModules } from './supabase/use-modules';
 export { useUserModules } from './supabase/use-user-modules';
 
