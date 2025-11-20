@@ -1,135 +1,365 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/server';
 import { syncJiraToSupabase, JiraIssueData } from '@/services/jira';
+import type { TicketType } from '@/types/ticket';
 
 /**
- * Route API pour recevoir les webhooks JIRA via N8N
+ * Route API pour recevoir les webhooks JIRA
  * 
- * Cette route est appelée par N8N après traitement des événements JIRA
- * pour mettre à jour Supabase avec les statuts, commentaires et assignations.
- * 
- * Supporte deux formats :
- * 1. Format simplifié (legacy) : { event_type, ticket_id, jira_issue_key, updates }
- * 2. Format complet (Phase 1) : { ticket_id, jira_data: JiraIssueData }
+ * Supporte trois formats :
+ * 1. Format webhook JIRA natif : { webhookEvent, issue, ... }
+ * 2. Format simplifié (legacy) : { event_type, ticket_id, jira_issue_key, updates }
+ * 3. Format complet (Phase 1) : { ticket_id, jira_data: JiraIssueData }
  * 
  * Note: En production, cette route devrait être sécurisée (authentification, validation)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { event_type, ticket_id, jira_issue_key, updates, jira_data } = body;
+    
+    // Nouveau : Gérer le format webhook JIRA natif
+    const webhookEvent = body.webhookEvent; // "jira:issue_created" ou "jira:issue_updated"
+    const jiraIssue = body.issue;
+    const jiraIssueKey = jiraIssue?.key;
+    
+    // Si c'est un webhook JIRA natif, transformer les données
+    if (webhookEvent && jiraIssue) {
+      // Utiliser Service Role pour contourner les RLS (webhook externe)
+      const supabase = createSupabaseServiceRoleClient();
 
-    if (!ticket_id) {
-      return NextResponse.json(
-        { error: 'ticket_id requis' },
-        { status: 400 }
-      );
+      // Transformer le format JIRA webhook vers notre format JiraIssueData
+      const jiraData: JiraIssueData = {
+        key: jiraIssue.key,
+        id: jiraIssue.id,
+        summary: jiraIssue.fields?.summary || '',
+        description: typeof jiraIssue.fields?.description === 'string'
+          ? jiraIssue.fields.description
+          : JSON.stringify(jiraIssue.fields?.description || {}),
+        status: {
+          name: jiraIssue.fields?.status?.name || ''
+        },
+        priority: {
+          name: jiraIssue.fields?.priority?.name || ''
+        },
+        issuetype: {
+          name: jiraIssue.fields?.issuetype?.name || ''
+        },
+        reporter: jiraIssue.fields?.reporter
+          ? {
+              accountId: jiraIssue.fields.reporter.accountId,
+              displayName: jiraIssue.fields.reporter.displayName
+            }
+          : undefined,
+        assignee: jiraIssue.fields?.assignee
+          ? {
+              accountId: jiraIssue.fields.assignee.accountId,
+              displayName: jiraIssue.fields.assignee.displayName
+            }
+          : undefined,
+        resolution: jiraIssue.fields?.resolution
+          ? {
+              name: jiraIssue.fields.resolution.name
+            }
+          : undefined,
+        fixVersions: jiraIssue.fields?.fixVersions?.map((fv: any) => ({ name: fv.name })) || [],
+        created: jiraIssue.fields?.created || '',
+        updated: jiraIssue.fields?.updated || '',
+        labels: jiraIssue.fields?.labels || [],
+        components: jiraIssue.fields?.components?.map((c: any) => ({ name: c.name })) || [],
+        // Custom fields
+        customfield_10020: jiraIssue.fields?.customfield_10020,
+        customfield_10021: jiraIssue.fields?.customfield_10021,
+        customfield_10045: jiraIssue.fields?.customfield_10045,
+        customfield_10052: jiraIssue.fields?.customfield_10052,
+        customfield_10053: jiraIssue.fields?.customfield_10053,
+        customfield_10054: jiraIssue.fields?.customfield_10054,
+        customfield_10055: jiraIssue.fields?.customfield_10055,
+        customfield_10057: jiraIssue.fields?.customfield_10057,
+        customfield_10083: jiraIssue.fields?.customfield_10083,
+        customfield_10084: jiraIssue.fields?.customfield_10084,
+        customfield_10111: jiraIssue.fields?.customfield_10111,
+        customfield_10115: jiraIssue.fields?.customfield_10115
+      };
+
+      // Chercher le ticket par jira_issue_key
+      const { data: existingTicket, error: ticketError } = await supabase
+        .from('tickets')
+        .select('id, ticket_type')
+        .eq('jira_issue_key', jiraIssueKey)
+        .single();
+
+      if (existingTicket) {
+        // Ticket existe : synchroniser (mise à jour statut, assignation, etc.)
+        try {
+          // Passer le client Service Role pour contourner les RLS
+          await syncJiraToSupabase(existingTicket.id, jiraData, supabase);
+          return NextResponse.json({
+            success: true,
+            message: 'Ticket synchronisé avec succès',
+            action: 'updated'
+          });
+        } catch (syncError) {
+          console.error('Erreur lors de la synchronisation:', syncError);
+          return NextResponse.json(
+            {
+              error: 'Erreur de synchronisation',
+              message: syncError instanceof Error ? syncError.message : 'Unknown error'
+            },
+            { status: 500 }
+          );
+        }
+      } else if (ticketError?.code === 'PGRST116') {
+        // Ticket n'existe pas (PGRST116 = no rows returned) : créer
+        try {
+          await createTicketFromJira(jiraData, supabase);
+          return NextResponse.json({
+            success: true,
+            message: 'Ticket créé depuis JIRA avec succès',
+            action: 'created'
+          });
+        } catch (createError) {
+          console.error('Erreur lors de la création du ticket:', createError);
+          return NextResponse.json(
+            {
+              error: 'Erreur de création',
+              message: createError instanceof Error ? createError.message : 'Unknown error'
+            },
+            { status: 500 }
+          );
+        }
+      } else {
+        // Autre erreur
+        console.error('Erreur lors de la recherche du ticket:', ticketError);
+        return NextResponse.json(
+          {
+            error: 'Erreur lors de la recherche du ticket',
+            message: ticketError?.message || 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
     }
 
-    const supabase = await createSupabaseServerClient();
+    // Format complet avec jira_data (Phase 1) - Compatibilité
+    const { ticket_id, jira_data } = body;
+    if (ticket_id && jira_data) {
+      // Utiliser Service Role pour contourner les RLS (webhook externe)
+      const supabase = createSupabaseServiceRoleClient();
 
-    // Vérifier que le ticket existe
-    const { data: ticket, error: ticketError } = await supabase
-      .from('tickets')
-      .select('id, jira_issue_key, ticket_type')
-      .eq('id', ticket_id)
-      .single();
+      // Vérifier que le ticket existe
+      const { data: ticket, error: ticketError } = await supabase
+        .from('tickets')
+        .select('id, jira_issue_key, ticket_type')
+        .eq('id', ticket_id)
+        .single();
 
-    if (ticketError || !ticket) {
-      return NextResponse.json(
-        { error: 'Ticket non trouvé' },
-        { status: 404 }
-      );
-    }
+      if (ticketError || !ticket) {
+        return NextResponse.json(
+          { error: 'Ticket non trouvé' },
+          { status: 404 }
+        );
+      }
 
-    // Format complet avec jira_data (Phase 1)
-    if (jira_data) {
       try {
-        await syncJiraToSupabase(ticket_id, jira_data as JiraIssueData);
+        // Passer le client Service Role pour contourner les RLS
+        await syncJiraToSupabase(ticket_id, jira_data as JiraIssueData, supabase);
         return NextResponse.json({ success: true, message: 'Synchronisation complète réussie' });
       } catch (syncError) {
         console.error('Erreur lors de la synchronisation complète:', syncError);
         return NextResponse.json(
-          { error: 'Erreur de synchronisation', message: syncError instanceof Error ? syncError.message : 'Unknown error' },
+          {
+            error: 'Erreur de synchronisation',
+            message: syncError instanceof Error ? syncError.message : 'Unknown error'
+          },
           { status: 500 }
         );
       }
     }
 
     // Format simplifié (legacy) - Compatibilité avec l'ancien workflow
-    if (!jira_issue_key) {
-      return NextResponse.json(
-        { error: 'jira_issue_key requis pour le format simplifié' },
-        { status: 400 }
-      );
-    }
+    const { event_type, jira_issue_key, updates } = body;
+    if (event_type && jira_issue_key) {
+      // Utiliser Service Role pour contourner les RLS (webhook externe)
+      const supabase = createSupabaseServiceRoleClient();
 
-    // Mettre à jour selon le type d'événement
-    switch (event_type) {
-      case 'status_changed':
-        if (updates?.status) {
-          await supabase
-            .from('tickets')
-            .update({
-              status: updates.status,
-              last_update_source: 'jira'
-            })
-            .eq('id', ticket_id);
+      // Trouver le ticket par jira_issue_key
+      const { data: ticket, error: ticketError } = await supabase
+        .from('tickets')
+        .select('id, jira_issue_key, ticket_type')
+        .eq('jira_issue_key', jira_issue_key)
+        .single();
 
-          // Enregistrer dans l'historique
-          if (updates.status_from && updates.status_to) {
-            await supabase.from('ticket_status_history').insert({
-              ticket_id,
-              status_from: updates.status_from,
-              status_to: updates.status_to,
-              source: 'jira'
+      if (ticketError || !ticket) {
+        return NextResponse.json(
+          { error: 'Ticket non trouvé' },
+          { status: 404 }
+        );
+      }
+
+      // Mettre à jour selon le type d'événement
+      switch (event_type) {
+        case 'status_changed':
+          if (updates?.status) {
+            await supabase
+              .from('tickets')
+              .update({
+                status: updates.status,
+                last_update_source: 'jira'
+              })
+              .eq('id', ticket.id);
+
+            // Enregistrer dans l'historique
+            if (updates.status_from && updates.status_to) {
+              await supabase.from('ticket_status_history').insert({
+                ticket_id: ticket.id,
+                status_from: updates.status_from,
+                status_to: updates.status_to,
+                source: 'jira'
+              });
+            }
+          }
+          break;
+
+        case 'comment_added':
+          if (updates?.comment) {
+            await supabase.from('ticket_comments').insert({
+              ticket_id: ticket.id,
+              content: updates.comment.content,
+              origin: 'jira_comment',
+              user_id: null // Peut être mappé depuis JIRA si nécessaire
             });
           }
-        }
-        break;
+          break;
 
-      case 'comment_added':
-        if (updates?.comment) {
-          await supabase.from('ticket_comments').insert({
-            ticket_id,
-            content: updates.comment.content,
-            origin: 'jira_comment',
-            user_id: null // Peut être mappé depuis JIRA si nécessaire
-          });
-        }
-        break;
+        case 'assignee_changed':
+          if (updates?.assigned_to_id) {
+            await supabase
+              .from('tickets')
+              .update({
+                assigned_to: updates.assigned_to_id,
+                last_update_source: 'jira'
+              })
+              .eq('id', ticket.id);
+          }
+          break;
+      }
 
-      case 'assignee_changed':
-        if (updates?.assigned_to_id) {
-          await supabase
-            .from('tickets')
-            .update({
-              assigned_to: updates.assigned_to_id,
-              last_update_source: 'jira'
-            })
-            .eq('id', ticket_id);
-        }
-        break;
+      // Mettre à jour jira_sync (format simplifié)
+      await supabase
+        .from('jira_sync')
+        .upsert({
+          ticket_id: ticket.id,
+          jira_issue_key,
+          origin: 'jira',
+          last_synced_at: new Date().toISOString(),
+          sync_error: null
+        });
+
+      return NextResponse.json({ success: true });
     }
 
-    // Mettre à jour jira_sync (format simplifié)
-    await supabase
-      .from('jira_sync')
-      .upsert({
-        ticket_id,
-        jira_issue_key,
-        origin: 'jira',
-        last_synced_at: new Date().toISOString(),
-        sync_error: null
-      });
-
-    return NextResponse.json({ success: true });
+    // Si aucun format reconnu
+    return NextResponse.json(
+      { error: 'Format de webhook non reconnu' },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Erreur webhook JIRA:', error);
     return NextResponse.json(
-      { error: 'Erreur serveur', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Erreur serveur',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
+}
+
+/**
+ * Mappe le type d'issue Jira vers le type de ticket Supabase
+ */
+function mapJiraIssueTypeToTicketType(jiraIssueType: string): TicketType {
+  const upperType = jiraIssueType.toUpperCase();
+  if (upperType.includes('BUG')) {
+    return 'BUG';
+  }
+  if (upperType.includes('REQ') || upperType.includes('REQUEST') || upperType.includes('STORY') || upperType.includes('REQUÊTE')) {
+    return 'REQ';
+  }
+  return 'ASSISTANCE';
+}
+
+/**
+ * Mappe un accountId Jira vers un profile_id Supabase
+ */
+async function mapJiraAccountIdToProfileId(
+  supabase: ReturnType<typeof createSupabaseServiceRoleClient>,
+  jiraAccountId: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('jira_user_id', jiraAccountId)
+    .single();
+
+  if (error || !data) {
+    console.warn(`Aucun profil trouvé pour le jira_user_id "${jiraAccountId}"`);
+    return null;
+  }
+
+  return data.id;
+}
+
+/**
+ * Crée un ticket dans Supabase depuis les données JIRA
+ * 
+ * @param jiraData - Données du ticket JIRA
+ * @param supabase - Client Supabase (Service Role)
+ */
+async function createTicketFromJira(
+  jiraData: JiraIssueData,
+  supabase: ReturnType<typeof createSupabaseServiceRoleClient>
+): Promise<void> {
+  // Déterminer le type de ticket
+  const ticketType = mapJiraIssueTypeToTicketType(jiraData.issuetype.name);
+
+  // Mapper le reporter (créateur du ticket)
+  const createdBy = jiraData.reporter?.accountId
+    ? await mapJiraAccountIdToProfileId(supabase, jiraData.reporter.accountId)
+    : null;
+
+  // Mapper l'assigné
+  const assignedTo = jiraData.assignee?.accountId
+    ? await mapJiraAccountIdToProfileId(supabase, jiraData.assignee.accountId)
+    : null;
+
+  // Créer le ticket dans Supabase
+  const { data: newTicket, error: ticketError } = await supabase
+    .from('tickets')
+    .insert({
+      title: jiraData.summary,
+      description: jiraData.description || null,
+      ticket_type: ticketType,
+      status: jiraData.status.name, // Pour BUG/REQ, stocker directement le statut JIRA
+      priority: 'Medium', // Par défaut, sera mis à jour par syncJiraToSupabase si priorité disponible
+      jira_issue_key: jiraData.key,
+      origin: 'jira',
+      created_by: createdBy,
+      assigned_to: assignedTo,
+      created_at: jiraData.created || new Date().toISOString(),
+      updated_at: jiraData.updated || new Date().toISOString(),
+      last_update_source: 'jira'
+    })
+    .select('id')
+    .single();
+
+  if (ticketError || !newTicket) {
+    throw new Error(`Erreur lors de la création du ticket: ${ticketError?.message || 'Unknown error'}`);
+  }
+
+  // Utiliser syncJiraToSupabase pour compléter les données (priorité, produits, modules, etc.)
+  // Cela garantit que tous les champs sont correctement mappés
+  // Passer le client Service Role pour contourner les RLS
+  await syncJiraToSupabase(newTicket.id, jiraData, supabase);
 }
 

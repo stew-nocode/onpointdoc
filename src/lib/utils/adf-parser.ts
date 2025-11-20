@@ -22,6 +22,7 @@ type ADFNode = {
   text?: string;
   marks?: ADFMark[];
   attrs?: Record<string, unknown>;
+  version?: number; // Version ADF (requis pour le nœud racine 'doc')
 };
 
 /**
@@ -183,5 +184,79 @@ export function parseADFToHTML(adfString: string | null): string {
     // Si ce n'est pas du JSON valide, retourner tel quel (échappé)
     return escapeHtml(adfString);
   }
+}
+
+/**
+ * Convertit un texte brut en format ADF (Atlassian Document Format)
+ * Utilisé pour créer des descriptions JIRA depuis du texte simple
+ */
+export function textToADF(text: string | null | undefined): ADFNode {
+  if (!text || text.trim().length === 0) {
+    return {
+      type: 'doc',
+      version: 1,
+      content: [
+        {
+          type: 'paragraph',
+          content: []
+        }
+      ]
+    };
+  }
+
+  // Diviser le texte en paragraphes (séparés par deux sauts de ligne)
+  const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0);
+
+  const content = paragraphs.map((paragraph) => {
+    const trimmedParagraph = paragraph.trim();
+    
+    // Diviser chaque paragraphe en lignes
+    const lines = trimmedParagraph.split('\n');
+    
+    if (lines.length === 1) {
+      // Paragraphe simple
+      return {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: lines[0].trim()
+          }
+        ]
+      };
+    } else {
+      // Plusieurs lignes - créer un paragraphe avec des sauts de ligne
+      const textContent: ADFNode[] = [];
+      lines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.length > 0) {
+          textContent.push({
+            type: 'text',
+            text: trimmedLine
+          });
+          if (index < lines.length - 1) {
+            textContent.push({
+              type: 'hardBreak'
+            });
+          }
+        }
+      });
+      return {
+        type: 'paragraph',
+        content: textContent.length > 0 ? textContent : []
+      };
+    }
+  });
+
+  return {
+    type: 'doc',
+    version: 1,
+    content: content.length > 0 ? content : [
+      {
+        type: 'paragraph',
+        content: []
+      }
+    ]
+  };
 }
 

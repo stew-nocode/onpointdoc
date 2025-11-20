@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Crée un client Supabase pour les Server Components, Server Actions et Route Handlers
@@ -39,5 +40,38 @@ export const createSupabaseServerClient = async () => {
       }
     }
   );
+};
+
+/**
+ * Crée un client Supabase avec Service Role Key pour contourner les RLS
+ * 
+ * ⚠️ ATTENTION: Ce client contourne toutes les RLS policies.
+ * À utiliser UNIQUEMENT pour :
+ * - Les webhooks externes (JIRA, etc.)
+ * - Les scripts d'administration
+ * - Les opérations système qui nécessitent un accès complet
+ * 
+ * NE JAMAIS utiliser ce client dans :
+ * - Les Server Components normaux
+ * - Les Server Actions utilisateur
+ * - Les routes API accessibles aux utilisateurs
+ */
+export const createSupabaseServiceRoleClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY manquant. ' +
+      'Ce client est requis pour les webhooks externes qui doivent contourner les RLS.'
+    );
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  });
 };
 

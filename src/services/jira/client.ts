@@ -7,6 +7,7 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { TicketType } from '@/types/ticket';
+import { textToADF } from '@/lib/utils/adf-parser';
 
 /**
  * Configuration JIRA depuis les variables d'environnement
@@ -95,30 +96,34 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     // Déterminer le type d'issue JIRA
     const jiraIssueType = input.ticketType === 'BUG' ? 'Bug' : 'Requêtes';
 
-    // Mapper la priorité Supabase vers JIRA
-    const jiraPriorityMap: Record<string, string> = {
-      'Low': 'Lowest',
-      'Medium': 'Medium',
-      'High': 'High',
-      'Critical': 'Highest'
+    // Mapper la priorité Supabase vers les IDs JIRA
+    // JIRA utilise des IDs numériques : 1=Priorité 1 (Highest), 2=Priorité 2 (High), 3=Priorité 3 (Medium), 4=Priorité 4 (Lowest)
+    const jiraPriorityIdMap: Record<string, string> = {
+      'Low': '4',      // Priorité 4 (Lowest)
+      'Medium': '3',   // Priorité 3 (Medium)
+      'High': '2',     // Priorité 2 (High)
+      'Critical': '1'  // Priorité 1 (Highest)
     };
-    const jiraPriority = jiraPriorityMap[input.priority] || 'Medium';
+    const jiraPriorityId = jiraPriorityIdMap[input.priority] || '3'; // Par défaut: Medium (Priorité 3)
 
     // Construire la description enrichie
-    let description = input.description || '';
+    let descriptionText = input.description || '';
     
     if (input.customerContext || input.canal || productName || moduleName) {
-      description += '\n\n---\n';
-      description += '**Contexte Client** : ' + (input.customerContext || 'N/A') + '\n';
-      description += '**Canal** : ' + (input.canal || 'N/A') + '\n';
-      description += '**Produit** : ' + (productName || 'N/A') + '\n';
+      descriptionText += '\n\n---\n';
+      descriptionText += '**Contexte Client** : ' + (input.customerContext || 'N/A') + '\n';
+      descriptionText += '**Canal** : ' + (input.canal || 'N/A') + '\n';
+      descriptionText += '**Produit** : ' + (productName || 'N/A') + '\n';
       if (moduleName) {
-        description += '**Module** : ' + moduleName + '\n';
+        descriptionText += '**Module** : ' + moduleName + '\n';
       }
       if (input.bugType) {
-        description += '**Type de bug** : ' + input.bugType + '\n';
+        descriptionText += '**Type de bug** : ' + input.bugType + '\n';
       }
     }
+
+    // Convertir la description en format ADF (requis par JIRA API v3)
+    const descriptionADF = textToADF(descriptionText);
 
     // Préparer les labels
     const labels: string[] = [];
@@ -133,20 +138,19 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     }
 
     // Préparer le payload JIRA
-    // Note: JIRA accepte soit du texte brut, soit ADF (Atlassian Document Format)
-    // On utilise du texte brut pour simplifier
+    // JIRA API v3 requiert ADF pour la description et un ID pour la priorité
     const jiraPayload: any = {
       fields: {
         project: {
           key: 'OD' // Projet OBC
         },
         summary: input.title,
-        description: description, // Texte brut (JIRA le convertira automatiquement)
+        description: descriptionADF, // Format ADF (requis par JIRA API v3)
         issuetype: {
           name: jiraIssueType
         },
         priority: {
-          name: jiraPriority
+          id: jiraPriorityId // Utiliser l'ID numérique (requis par JIRA API v3)
         },
         labels: labels.length > 0 ? labels : undefined
       }

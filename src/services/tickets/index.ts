@@ -78,11 +78,28 @@ export const createTicket = async (payload: CreateTicketInput) => {
         });
       } else {
         console.error('Erreur lors de la création du ticket JIRA:', jiraResponse.error);
+        // Enregistrer l'erreur dans jira_sync pour diagnostic
+        await supabase.from('jira_sync').upsert({
+          ticket_id: data.id,
+          jira_issue_key: null,
+          origin: 'supabase',
+          sync_error: jiraResponse.error || 'Erreur inconnue lors de la création JIRA',
+          last_synced_at: new Date().toISOString()
+        });
         // Ne pas faire échouer la création du ticket Supabase si JIRA échoue
         // Le ticket sera créé dans Supabase et pourra être synchronisé plus tard
       }
     } catch (jiraError) {
       console.error('Erreur lors de la création du ticket JIRA:', jiraError);
+      // Enregistrer l'erreur dans jira_sync pour diagnostic
+      const errorMessage = jiraError instanceof Error ? jiraError.message : 'Erreur inconnue';
+      await supabase.from('jira_sync').upsert({
+        ticket_id: data.id,
+        jira_issue_key: null,
+        origin: 'supabase',
+        sync_error: errorMessage,
+        last_synced_at: new Date().toISOString()
+      });
       // Ne pas faire échouer la création du ticket Supabase
     }
   }

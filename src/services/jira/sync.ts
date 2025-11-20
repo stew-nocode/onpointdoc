@@ -1,4 +1,5 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseStatusFromJira, getSupabasePriorityFromJira, TicketType } from './mapping';
 import {
   mapJiraClientNameToProfile,
@@ -92,13 +93,17 @@ export interface JiraIssueData {
  * 
  * @param ticketId - UUID du ticket Supabase
  * @param jiraData - Données du ticket Jira
+ * @param supabaseClient - Client Supabase optionnel (utilise Service Role si non fourni pour les webhooks)
  * @returns Le ticket mis à jour
  */
 export async function syncJiraToSupabase(
   ticketId: string,
-  jiraData: JiraIssueData
+  jiraData: JiraIssueData,
+  supabaseClient?: SupabaseClient
 ): Promise<void> {
-  const supabase = await createSupabaseServerClient();
+  // Utiliser le client fourni ou créer un client Service Role par défaut
+  // (pour les webhooks qui doivent contourner les RLS)
+  const supabase = supabaseClient || createSupabaseServiceRoleClient();
 
   // 1. Déterminer le type de ticket
   const ticketType = mapJiraIssueTypeToTicketType(jiraData.issuetype.name);
