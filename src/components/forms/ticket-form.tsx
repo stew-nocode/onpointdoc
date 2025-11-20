@@ -1,12 +1,17 @@
+/**
+ * Formulaire de création de ticket
+ * 
+ * Utilise les hooks personnalisés pour la logique métier (useTicketForm, useFileUpload)
+ * Séparant la logique métier de la présentation selon les principes Clean Code
+ * 
+ * Composant principal : orchestration des sous-composants
+ */
+
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  createTicketSchema,
-  type CreateTicketInput,
-  ticketChannels,
-  ticketTypes
+
+import { useEffect, useState } from 'react';
+import type {
+  CreateTicketInput,
 } from '@/lib/validators/ticket';
 import { BUG_TYPES } from '@/lib/constants/tickets';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
@@ -15,6 +20,8 @@ import { RadioGroup, RadioCard } from '@/ui/radio-group';
 import { Combobox } from '@/ui/combobox';
 import type { BasicProfile } from '@/services/users';
 import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal, AlertCircle, AlertTriangle, Zap, Shield } from 'lucide-react';
+import { useTicketForm, useFileUpload } from '@/hooks';
+import { TicketFormFileUpload } from './ticket-form-file-upload';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
@@ -26,6 +33,17 @@ type TicketFormProps = {
   contacts: BasicProfile[];
 };
 
+/**
+ * Formulaire de création de ticket
+ * 
+ * @param onSubmit - Fonction appelée lors de la soumission
+ * @param isSubmitting - État de soumission
+ * @param products - Liste des produits
+ * @param modules - Liste des modules
+ * @param submodules - Liste des sous-modules
+ * @param features - Liste des fonctionnalités
+ * @param contacts - Liste des contacts
+ */
 export const TicketForm = ({
   onSubmit,
   isSubmitting,
@@ -35,135 +53,63 @@ export const TicketForm = ({
   features,
   contacts
 }: TicketFormProps) => {
-  const form = useForm<CreateTicketInput>({
-    resolver: zodResolver(createTicketSchema) as any, // Type incompatibilité entre Zod et react-hook-form pour priority avec default
-      defaultValues: {
-      title: '',
-      description: '',
-      type: 'ASSISTANCE',
-      channel: 'Whatsapp',
-      productId: products[0]?.id ?? '',
-      moduleId: modules[0]?.id ?? '',
-      submoduleId: '',
-      featureId: '',
-      customerContext: '',
-      priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? '',
-      bug_type: null
+  // Gestion des fichiers avec le hook personnalisé
+  const {
+    files: selectedFiles,
+    addFiles,
+    removeFile: removeFileByKey,
+    clearFiles,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    openFileDialog,
+    isDragging,
+    fileInputRef
+  } = useFileUpload({
+    acceptTypes: ['image/*', 'application/pdf'],
+    maxSizeBytes: 20 * 1024 * 1024 // 20MB
+  });
+
+  // Gestion du formulaire avec le hook personnalisé
+  const {
+    form,
+    selectedProductId,
+    selectedModuleId,
+    filteredModules,
+    filteredSubmodules,
+    filteredFeatures,
+    handleSubmit,
+    setSelectedProductId,
+    setSelectedModuleId
+  } = useTicketForm({
+    products,
+    modules,
+    submodules,
+    features,
+    contacts,
+    onSubmit: async (values: CreateTicketInput) => {
+      await onSubmit(values, selectedFiles);
+      clearFiles();
     }
   });
+
   const { errors } = form.formState;
-  const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
-  const [selectedModuleId, setSelectedModuleId] = useState(modules[0]?.id ?? '');
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const filteredModules = useMemo(
-    () => modules.filter((module) => module.product_id === selectedProductId),
-    [selectedProductId, modules]
-  );
-  const filteredSubmodules = useMemo(
-    () => submodules.filter((sm) => sm.module_id === selectedModuleId),
-    [selectedModuleId, submodules]
-  );
-  const filteredFeatures = useMemo(
-    () => features.filter((f) => filteredSubmodules.some((sm) => sm.id === f.submodule_id) && f.submodule_id === form.getValues('submoduleId')),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [features, filteredSubmodules, form.watch('submoduleId')]
-  );
   const inputClass =
     'rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500';
 
-  // Pré-sélectionner le produit si un seul est disponible
-  useEffect(() => {
-    if (products.length === 1 && products[0]?.id) {
-      const singleProductId = products[0].id;
-      form.setValue('productId', singleProductId);
-      setSelectedProductId(singleProductId);
-    } else if (products.length > 0 && !form.getValues('productId')) {
-      // Si plusieurs produits, sélectionner le premier par défaut
-      const firstProductId = products[0]?.id ?? '';
-      form.setValue('productId', firstProductId);
-      setSelectedProductId(firstProductId);
-    }
-  }, [products, form]);
-
-  // Réinitialiser bug_type si le type change de BUG à autre chose
-  const ticketType = form.watch('type');
-  useEffect(() => {
-    if (ticketType !== 'BUG') {
-      form.setValue('bug_type', null);
-    }
-  }, [ticketType, form]);
-
-  useEffect(() => {
-    if (filteredModules.length > 0) {
-      form.setValue('moduleId', filteredModules[0].id);
-    } else {
-      form.setValue('moduleId', '');
-    }
-  }, [filteredModules, form]);
-
   const productField = form.register('productId');
-  const moduleField = form.register('moduleId');
-
-  const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
-    await onSubmit(values, selectedFiles);
-      form.reset({
-      title: '',
-      description: '',
-      type: 'ASSISTANCE',
-      channel: 'Whatsapp',
-      productId: products[0]?.id ?? '',
-      moduleId: modules[0]?.id ?? '',
-      submoduleId: '',
-      featureId: '',
-      customerContext: '',
-      priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? '',
-      bug_type: null
-    });
-    setSelectedProductId(products[0]?.id ?? '');
-    setSelectedModuleId(modules[0]?.id ?? '');
-    setSelectedFiles([]);
-  });
-
-  function handleFilesAdded(filesList: FileList | File[]) {
-    const incoming = Array.from(filesList);
-    const sanitized = incoming.filter((f) => {
-      const isOkType = f.type.startsWith('image/') || f.type === 'application/pdf';
-      // 20MB max file size (ajustable)
-      const isOkSize = f.size <= 20 * 1024 * 1024;
-      return isOkType && isOkSize;
-    });
-    // éviter doublons par nom+taille
-    const currentKeys = new Set(selectedFiles.map((f) => `${f.name}:${f.size}`));
-    const merged = [...selectedFiles];
-    for (const f of sanitized) {
-      const key = `${f.name}:${f.size}`;
-      if (!currentKeys.has(key)) {
-        merged.push(f);
-        currentKeys.add(key);
-      }
-    }
-    setSelectedFiles(merged);
-  }
-
-  function removeFile(fileKey: string) {
-    setSelectedFiles((prev) => prev.filter((f) => `${f.name}:${f.size}` !== fileKey));
-  }
-
-  function openFileDialog() {
-    fileInputRef.current?.click();
-  }
+  const ticketType = form.watch('type');
 
   return (
     <form className="space-y-3 w-full" onSubmit={handleSubmit}>
+      {/* Titre */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Titre</label>
         <input className={inputClass} placeholder="Résumé du besoin" {...form.register('title')} />
         {errors.title && <p className="text-xs text-status-danger">{errors.title.message}</p>}
       </div>
+
+      {/* Contact */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Contact</label>
         <Combobox
@@ -183,6 +129,8 @@ export const TicketForm = ({
           <p className="text-xs text-status-danger">{errors.contactUserId.message}</p>
         )}
       </div>
+
+      {/* Description */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Description</label>
         <textarea
@@ -195,62 +143,38 @@ export const TicketForm = ({
           <p className="text-xs text-status-danger">{errors.description.message}</p>
         )}
       </div>
+
+      {/* Type et Canal */}
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="grid gap-2 min-w-0">
           <label className="text-sm font-medium text-slate-700">Type de ticket</label>
-          <RadioGroup 
-            value={form.watch('type')} 
-            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])} 
+          <RadioGroup
+            value={form.watch('type')}
+            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])}
             className="grid grid-cols-1 sm:grid-cols-3 w-full"
           >
-            <RadioCard
-              value="BUG"
-              label="BUG"
-              icon={<Bug className="h-3.5 w-3.5" />}
-            />
-            <RadioCard
-              value="REQ"
-              label="Requête"
-              icon={<FileText className="h-3.5 w-3.5" />}
-            />
-            <RadioCard
-              value="ASSISTANCE"
-              label="Assistance"
-              icon={<HelpCircle className="h-3.5 w-3.5" />}
-            />
+            <RadioCard value="BUG" label="BUG" icon={<Bug className="h-3.5 w-3.5" />} />
+            <RadioCard value="REQ" label="Requête" icon={<FileText className="h-3.5 w-3.5" />} />
+            <RadioCard value="ASSISTANCE" label="Assistance" icon={<HelpCircle className="h-3.5 w-3.5" />} />
           </RadioGroup>
         </div>
         <div className="grid gap-2 min-w-0">
           <label className="text-sm font-medium text-slate-700">Canal de contact</label>
-          <RadioGroup 
-            value={form.watch('channel')} 
-            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])} 
+          <RadioGroup
+            value={form.watch('channel')}
+            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])}
             className="grid grid-cols-1 sm:grid-cols-4 w-full"
           >
-            <RadioCard
-              value="Whatsapp"
-              label="WhatsApp"
-              icon={<MessageSquare className="h-3.5 w-3.5" />}
-            />
-            <RadioCard
-              value="Email"
-              label="Email"
-              icon={<Mail className="h-3.5 w-3.5" />}
-            />
-            <RadioCard
-              value="Appel"
-              label="Appel"
-              icon={<Phone className="h-3.5 w-3.5" />}
-            />
-            <RadioCard
-              value="Autre"
-              label="Autre"
-              icon={<MoreHorizontal className="h-3.5 w-3.5" />}
-            />
+            <RadioCard value="Whatsapp" label="WhatsApp" icon={<MessageSquare className="h-3.5 w-3.5" />} />
+            <RadioCard value="Email" label="Email" icon={<Mail className="h-3.5 w-3.5" />} />
+            <RadioCard value="Appel" label="Appel" icon={<Phone className="h-3.5 w-3.5" />} />
+            <RadioCard value="Autre" label="Autre" icon={<MoreHorizontal className="h-3.5 w-3.5" />} />
           </RadioGroup>
         </div>
       </div>
-      {form.watch('type') === 'BUG' && (
+
+      {/* Type de bug (conditionnel) */}
+      {ticketType === 'BUG' && (
         <div className="grid gap-2 min-w-0">
           <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Type de bug <span className="text-status-danger">*</span>
@@ -272,8 +196,9 @@ export const TicketForm = ({
           )}
         </div>
       )}
+
+      {/* Produit */}
       {products.length === 1 ? (
-        // Produit unique : champ caché, valeur pré-sélectionnée automatiquement
         <input type="hidden" {...productField} />
       ) : (
         <div className="grid gap-2 min-w-0">
@@ -300,6 +225,8 @@ export const TicketForm = ({
           )}
         </div>
       )}
+
+      {/* Module / Sous-module / Fonctionnalité */}
       <div className="grid gap-2 min-w-0">
         <label className="text-sm font-medium text-slate-700">Module / Sous-module / Fonctionnalité</label>
         <div className="grid gap-2 md:grid-cols-3 w-full">
@@ -343,35 +270,23 @@ export const TicketForm = ({
           <p className="text-xs text-status-danger">{errors.moduleId.message}</p>
         )}
       </div>
+
+      {/* Priorité */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Priorité</label>
-        <RadioGroup 
-          value={form.watch('priority')} 
-          onValueChange={(v) => form.setValue('priority', v as CreateTicketInput['priority'])} 
+        <RadioGroup
+          value={form.watch('priority')}
+          onValueChange={(v) => form.setValue('priority', v as CreateTicketInput['priority'])}
           className="grid grid-cols-1 sm:grid-cols-4 w-full"
         >
-          <RadioCard
-            value="Low"
-            label="Faible"
-            icon={<Zap className="h-3.5 w-3.5" />}
-          />
-          <RadioCard
-            value="Medium"
-            label="Moyenne"
-            icon={<AlertCircle className="h-3.5 w-3.5" />}
-          />
-          <RadioCard
-            value="High"
-            label="Élevée"
-            icon={<AlertTriangle className="h-3.5 w-3.5" />}
-          />
-          <RadioCard
-            value="Critical"
-            label="Critique"
-            icon={<Shield className="h-3.5 w-3.5" />}
-          />
+          <RadioCard value="Low" label="Faible" icon={<Zap className="h-3.5 w-3.5" />} />
+          <RadioCard value="Medium" label="Moyenne" icon={<AlertCircle className="h-3.5 w-3.5" />} />
+          <RadioCard value="High" label="Élevée" icon={<AlertTriangle className="h-3.5 w-3.5" />} />
+          <RadioCard value="Critical" label="Critique" icon={<Shield className="h-3.5 w-3.5" />} />
         </RadioGroup>
       </div>
+
+      {/* Durée */}
       <div className="grid gap-2">
         <div className="flex items-center justify-between gap-4">
           <label htmlFor="durationMinutes" className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -396,6 +311,8 @@ export const TicketForm = ({
           Obligatoire pour les tickets Assistance.
         </p>
       </div>
+
+      {/* Contexte client */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Contexte client</label>
         <textarea
@@ -405,25 +322,17 @@ export const TicketForm = ({
           {...form.register('customerContext')}
         />
       </div>
+
+      {/* Pièces jointes */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Pièces jointes</label>
         <div
           className={`group relative rounded-xl border-2 border-dashed p-4 transition
             ${isDragging ? 'border-brand bg-brand/5' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600'}
           `}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDragging(false);
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-              handleFilesAdded(e.dataTransfer.files);
-              e.dataTransfer.clearData();
-            }
-          }}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           onClick={openFileDialog}
           role="button"
           tabIndex={0}
@@ -436,7 +345,6 @@ export const TicketForm = ({
         >
           <div className="flex flex-col items-center justify-center gap-2 text-center text-slate-600 dark:text-slate-300">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition group-hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
-              {/* simple upload icon */}
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 118 0v1h1a3 3 0 110 6H6a3 3 0 110-6h1v-1z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 12V3m0 0l-3 3m3-3l3 3" />
@@ -458,14 +366,15 @@ export const TicketForm = ({
             <div className="text-xs text-slate-500">Formats acceptés: images et PDF. 20 Mo max par fichier.</div>
           </div>
           <input
-            ref={fileInputRef}
+            ref={fileInputRef as React.RefObject<HTMLInputElement>}
             type="file"
             multiple
             className="sr-only"
             accept="image/*,application/pdf"
             onChange={(event) => {
-              if (event.target.files) handleFilesAdded(event.target.files);
-              // ne pas nettoyer la value pour permettre re-sélection des mêmes fichiers si besoin
+              if (event.target.files) {
+                addFiles(event.target.files);
+              }
             }}
           />
         </div>
@@ -473,7 +382,7 @@ export const TicketForm = ({
         {selectedFiles.length > 0 && (
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {selectedFiles.map((file) => {
-              const key = `${file.name}:${file.size}`;
+              const key = file.id || `${file.name}:${file.size}`;
               const isImage = file.type.startsWith('image/');
               return (
                 <div
@@ -482,21 +391,14 @@ export const TicketForm = ({
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                      {isImage ? (
-                        // preview image
+                      {isImage && file.preview ? (
                         <img
-                          src={URL.createObjectURL(file)}
+                          src={file.preview}
                           alt={file.name}
                           className="h-full w-full object-cover"
-                          onLoad={(e) => {
-                            // libère l'URL après chargement pour éviter fuites mémoire
-                            try {
-                              URL.revokeObjectURL((e.target as HTMLImageElement).src);
-                            } catch {}
-                          }}
                         />
                       ) : (
-                        <span className="text-xs">PDF</span>
+                        <span className="text-xs">{isImage ? 'IMG' : 'PDF'}</span>
                       )}
                     </div>
                     <div className="min-w-0">
@@ -511,7 +413,7 @@ export const TicketForm = ({
                   <button
                     type="button"
                     className="ml-2 rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                    onClick={() => removeFile(key)}
+                    onClick={() => removeFileByKey(key)}
                     aria-label="Retirer le fichier"
                     title="Retirer le fichier"
                   >
@@ -525,10 +427,11 @@ export const TicketForm = ({
           </div>
         )}
       </div>
+
+      {/* Bouton de soumission */}
       <Button className="w-full" disabled={isSubmitting} type="submit">
         Enregistrer le ticket
       </Button>
     </form>
   );
 };
-

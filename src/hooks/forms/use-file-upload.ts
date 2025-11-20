@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 type FileUploadOptions = {
   /** Types MIME acceptés (ex: ['image/*', 'application/pdf']) */
@@ -59,7 +59,7 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRes
     validate
   } = options;
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,19 +111,45 @@ export function useFileUpload(options: FileUploadOptions = {}): UseFileUploadRes
       console.warn('Fichiers rejetés:', errors);
     }
 
-    // Éviter les doublons (par nom et taille)
+    // Éviter les doublons (par nom et taille) et créer les previews
     setFiles((prev) => {
       const currentKeys = new Set(prev.map((f) => `${f.name}:${f.size}`));
-      const newFiles = validated.filter((f) => {
-        const key = `${f.name}:${f.size}`;
-        return !currentKeys.has(key);
-      });
-      return [...prev, ...newFiles];
+      const newFilesWithPreview: FileWithPreview[] = validated
+        .filter((f) => {
+          const key = `${f.name}:${f.size}`;
+          return !currentKeys.has(key);
+        })
+        .map((f) => {
+          const fileWithPreview = f as FileWithPreview;
+          if (f.type.startsWith('image/')) {
+            fileWithPreview.preview = URL.createObjectURL(f);
+          }
+          fileWithPreview.id = `${f.name}:${f.size}`;
+          return fileWithPreview;
+        });
+      return [...prev, ...newFilesWithPreview];
     });
   }, [validateFile]);
 
-  const removeFile = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = useCallback((indexOrKey: number | string) => {
+    setFiles((prev) => {
+      let fileToRemove: FileWithPreview | undefined;
+      if (typeof indexOrKey === 'number') {
+        fileToRemove = prev[indexOrKey];
+        return prev.filter((_, i) => i !== indexOrKey);
+      }
+      // Si c'est une clé (name:size ou id), filtrer par clé
+      const filtered = prev.filter((f) => {
+        const matches = f.id === indexOrKey || `${f.name}:${f.size}` === indexOrKey;
+        if (matches) fileToRemove = f;
+        return !matches;
+      });
+      // Nettoyer la preview du fichier supprimé
+      if (fileToRemove?.preview) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+      return filtered;
+    });
   }, []);
 
   const clearFiles = useCallback(() => {
