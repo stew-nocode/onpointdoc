@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BUG_TYPES } from '@/lib/constants/tickets';
+import { BUG_TYPES, ASSISTANCE_LOCAL_STATUSES } from '@/lib/constants/tickets';
 
 // Valeurs alignées avec les enums Supabase
 export const ticketChannels = ['Whatsapp', 'Email', 'Appel', 'Autre'] as const;
@@ -21,7 +21,9 @@ export const createTicketSchema = z
     durationMinutes: z.union([z.number().int().min(0), z.null()]).optional(),
     customerContext: z.string().optional(),
     contactUserId: z.string().uuid({ message: 'Contact requis' }),
-    bug_type: z.enum(BUG_TYPES).nullable().optional()
+    bug_type: z.enum(BUG_TYPES).nullable().optional(),
+    // Statut optionnel pour le formulaire (utilisé uniquement en mode édition pour ASSISTANCE)
+    status: z.enum(ASSISTANCE_LOCAL_STATUSES).optional()
   })
   .refine(
     (data) => {
@@ -40,3 +42,40 @@ export const createTicketSchema = z
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 
+/**
+ * Schéma pour la mise à jour d'un ticket
+ * Tous les champs sont optionnels sauf l'ID
+ */
+export const updateTicketSchema = z
+  .object({
+    id: z.string().uuid({ message: 'ID de ticket invalide' }),
+    title: z.string().min(4).max(180).optional(),
+    description: z.string().min(10).optional(),
+    type: z.enum(ticketTypes).optional(),
+    channel: z.enum(ticketChannels).optional(),
+    productId: z.string().uuid().optional().nullable(),
+    moduleId: z.string().uuid().optional().nullable(),
+    submoduleId: z.union([z.string().uuid(), z.literal('')]).optional().nullable(),
+    featureId: z.union([z.string().uuid(), z.literal('')]).optional().nullable(),
+    priority: z.enum(ticketPriorities).optional(),
+    durationMinutes: z.union([z.number().int().min(0), z.null()]).optional(),
+    customerContext: z.string().optional().nullable(),
+    contactUserId: z.string().uuid().optional().nullable(),
+    bug_type: z.enum(BUG_TYPES).nullable().optional(),
+    status: z.enum(ASSISTANCE_LOCAL_STATUSES).optional()
+  })
+  .refine(
+    (data) => {
+      // Si type = BUG, bug_type est requis
+      if (data.type === 'BUG') {
+        return data.bug_type !== undefined && data.bug_type !== null;
+      }
+      return true;
+    },
+    {
+      message: 'Le type de bug est requis pour les tickets BUG',
+      path: ['bug_type']
+    }
+  );
+
+export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;

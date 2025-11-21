@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Edit, Loader2 } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
@@ -19,6 +19,9 @@ import {
 } from './utils/ticket-display';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
+import { useAuth } from '@/hooks';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -43,6 +46,8 @@ export function TicketsInfiniteScroll({
   quickFilter,
   currentProfileId
 }: TicketsInfiniteScrollProps) {
+  const router = useRouter();
+  const { role } = useAuth();
   const [tickets, setTickets] = useState<TicketWithRelations[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +61,9 @@ export function TicketsInfiniteScroll({
     return new Set(['title', 'type', 'status', 'priority', 'canal', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
   });
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Vérifier les permissions pour l'édition (admin/manager)
+  const canEdit = role === 'admin' || role === 'manager';
 
   // Charger les colonnes visibles après le montage pour éviter l'erreur d'hydratation
   useEffect(() => {
@@ -68,6 +76,16 @@ export function TicketsInfiniteScroll({
     (text: string, searchTerm?: string) => highlightText(text, searchTerm),
     []
   );
+
+  /**
+   * Handler pour l'édition d'un ticket
+   * Redirige vers la page de détail du ticket avec le paramètre edit
+   * 
+   * @param ticketId - ID du ticket à éditer
+   */
+  const handleEdit = useCallback((ticketId: string) => {
+    router.push(`/gestion/tickets/${ticketId}?edit=true`);
+  }, [router]);
 
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
@@ -472,20 +490,42 @@ export function TicketsInfiniteScroll({
 
                 {/* Actions */}
                 <td className="py-2.5 text-right">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={`/gestion/tickets/${ticket.id}`}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
-                        aria-label="Voir le ticket"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Voir les détails</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Voir les détails */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={`/gestion/tickets/${ticket.id}`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                          aria-label="Voir les détails"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Voir les détails</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Éditer - Admin/Manager uniquement */}
+                    {canEdit && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleEdit(ticket.id)}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                            aria-label="Éditer le ticket"
+                            type="button"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Éditer</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import type {
   CreateTicketInput,
 } from '@/lib/validators/ticket';
-import { BUG_TYPES } from '@/lib/constants/tickets';
+import { BUG_TYPES, ASSISTANCE_LOCAL_STATUSES } from '@/lib/constants/tickets';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import { Button } from '@/ui/button';
 import { RadioGroup, RadioCard } from '@/ui/radio-group';
@@ -30,6 +30,8 @@ type TicketFormProps = {
   submodules: Submodule[];
   features: Feature[];
   contacts: BasicProfile[];
+  initialValues?: Partial<CreateTicketInput>;
+  mode?: 'create' | 'edit';
 };
 
 /**
@@ -50,7 +52,9 @@ export const TicketForm = ({
   modules,
   submodules,
   features,
-  contacts
+  contacts,
+  initialValues,
+  mode = 'create'
 }: TicketFormProps) => {
   // Gestion des fichiers avec le hook personnalisé
   const {
@@ -85,6 +89,7 @@ export const TicketForm = ({
     submodules,
     features,
     contacts,
+    initialValues,
     onSubmit: async (values: CreateTicketInput) => {
       await onSubmit(values, selectedFiles);
     }
@@ -94,23 +99,25 @@ export const TicketForm = ({
   const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
     await onSubmit(values, selectedFiles);
     clearFiles();
-    // Réinitialiser le formulaire après soumission
-    form.reset({
-      title: '',
-      description: '',
-      type: 'ASSISTANCE',
-      channel: 'Whatsapp',
-      productId: products[0]?.id ?? '',
-      moduleId: modules[0]?.id ?? '',
-      submoduleId: '',
-      featureId: '',
-      customerContext: '',
-      priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? '',
-      bug_type: null
-    });
-    setSelectedProductId(products[0]?.id ?? '');
-    setSelectedModuleId(modules[0]?.id ?? '');
+    // Réinitialiser le formulaire après soumission uniquement en mode création
+    if (mode === 'create') {
+      form.reset({
+        title: '',
+        description: '',
+        type: 'ASSISTANCE',
+        channel: 'Whatsapp',
+        productId: products[0]?.id ?? '',
+        moduleId: modules[0]?.id ?? '',
+        submoduleId: '',
+        featureId: '',
+        customerContext: '',
+        priority: 'Medium',
+        contactUserId: contacts[0]?.id ?? '',
+        bug_type: null
+      });
+      setSelectedProductId(products[0]?.id ?? '');
+      setSelectedModuleId(modules[0]?.id ?? '');
+    }
   });
 
   const { errors } = form.formState;
@@ -306,6 +313,30 @@ export const TicketForm = ({
         </RadioGroup>
       </div>
 
+      {/* Statut (uniquement pour ASSISTANCE en mode édition) */}
+      {mode === 'edit' && ticketType === 'ASSISTANCE' && (
+        <div className="grid gap-2 min-w-0">
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Statut
+          </label>
+          <Combobox
+            options={ASSISTANCE_LOCAL_STATUSES.map((status: (typeof ASSISTANCE_LOCAL_STATUSES)[number]) => ({
+              value: status,
+              label: status.replace('_', ' '),
+              searchable: status
+            }))}
+            value={form.watch('status') ?? ''}
+            onValueChange={(v) => form.setValue('status', v as CreateTicketInput['status'])}
+            placeholder="Sélectionner un statut"
+            searchPlaceholder="Rechercher un statut..."
+            emptyText="Aucun statut disponible"
+          />
+          {errors.status && (
+            <p className="text-xs text-status-danger">{errors.status.message}</p>
+          )}
+        </div>
+      )}
+
       {/* Durée */}
       <div className="grid gap-2">
         <div className="flex items-center justify-between gap-4">
@@ -450,7 +481,9 @@ export const TicketForm = ({
 
       {/* Bouton de soumission */}
       <Button className="w-full" disabled={isSubmitting} type="submit">
-        Enregistrer le ticket
+        {isSubmitting 
+          ? (mode === 'edit' ? 'Enregistrement...' : 'Création...') 
+          : (mode === 'edit' ? 'Enregistrer les modifications' : 'Créer le ticket')}
       </Button>
     </form>
   );

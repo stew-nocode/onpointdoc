@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import type { CreateTicketInput } from '@/lib/validators/ticket';
+import type { CreateTicketInput, UpdateTicketInput } from '@/lib/validators/ticket';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketsPaginatedResult, TicketWithRelations, SupabaseTicketRaw } from '@/types/ticket-with-relations';
 import { transformRelation } from '@/types/ticket-with-relations';
@@ -103,6 +103,105 @@ export const createTicket = async (payload: CreateTicketInput) => {
         last_synced_at: new Date().toISOString()
       });
       // Ne pas faire échouer la création du ticket Supabase
+    }
+  }
+
+  return data;
+};
+
+/**
+ * Met à jour un ticket existant
+ * 
+ * @param payload - Données de mise à jour du ticket (ID requis, autres champs optionnels)
+ * @returns Le ticket mis à jour
+ */
+export const updateTicket = async (payload: UpdateTicketInput) => {
+  const supabase = await createSupabaseServerClient();
+  
+  // Vérifier que l'utilisateur est authentifié
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Non authentifié');
+  }
+
+  // Récupérer le ticket actuel pour vérifier le type et le statut actuel
+  const { data: currentTicket, error: fetchError } = await supabase
+    .from('tickets')
+    .select('ticket_type, status')
+    .eq('id', payload.id)
+    .single();
+
+  if (fetchError || !currentTicket) {
+    throw new Error(`Ticket non trouvé: ${fetchError?.message ?? 'Ticket introuvable'}`);
+  }
+
+  // Vérifier que le changement de statut est autorisé (uniquement pour ASSISTANCE non transférés)
+  if (payload.status !== undefined) {
+    if (currentTicket.ticket_type !== 'ASSISTANCE') {
+      throw new Error('Le statut ne peut être modifié que pour les tickets ASSISTANCE');
+    }
+    
+    // Ne pas permettre de changer le statut si le ticket est transféré (utilise les statuts JIRA)
+    if (currentTicket.status === 'Transfere') {
+      throw new Error('Le statut ne peut pas être modifié pour un ticket ASSISTANCE transféré');
+    }
+  }
+
+  // Préparer les données de mise à jour
+  const updateData: Record<string, unknown> = {};
+  const oldStatus = currentTicket.status;
+  
+  if (payload.title !== undefined) updateData.title = payload.title;
+  if (payload.description !== undefined) updateData.description = payload.description;
+  if (payload.type !== undefined) updateData.ticket_type = payload.type;
+  if (payload.channel !== undefined) updateData.canal = payload.channel;
+  if (payload.productId !== undefined) updateData.product_id = payload.productId;
+  if (payload.moduleId !== undefined) updateData.module_id = payload.moduleId;
+  if (payload.submoduleId !== undefined) {
+    updateData.submodule_id = (payload.submoduleId && payload.submoduleId !== '') 
+      ? payload.submoduleId 
+      : null;
+  }
+  if (payload.featureId !== undefined) {
+    updateData.feature_id = (payload.featureId && payload.featureId !== '') 
+      ? payload.featureId 
+      : null;
+  }
+  if (payload.priority !== undefined) updateData.priority = payload.priority;
+  if (payload.durationMinutes !== undefined) updateData.duration_minutes = payload.durationMinutes;
+  if (payload.customerContext !== undefined) updateData.customer_context = payload.customerContext;
+  if (payload.contactUserId !== undefined) updateData.contact_user_id = payload.contactUserId;
+  if (payload.bug_type !== undefined) updateData.bug_type = payload.bug_type;
+  if (payload.status !== undefined) updateData.status = payload.status;
+
+  // Mettre à jour le ticket
+  const { data, error } = await supabase
+    .from('tickets')
+    .update(updateData)
+    .eq('id', payload.id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Erreur lors de la mise à jour du ticket: ${error.message}`);
+  }
+
+  // Enregistrer dans l'historique si le statut a changé
+  if (payload.status !== undefined && payload.status !== oldStatus) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth_uid', user.id)
+      .single();
+
+    if (profile) {
+      await supabase.from('ticket_status_history').insert({
+        ticket_id: payload.id,
+        status_from: oldStatus,
+        status_to: payload.status,
+        changed_by: profile.id,
+        source: 'app'
+      });
     }
   }
 

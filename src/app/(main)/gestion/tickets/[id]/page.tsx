@@ -8,7 +8,17 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { TransferTicketButton } from '@/components/tickets/transfer-ticket-button';
 import { TicketDescription } from '@/components/tickets/ticket-description';
+import { TicketEditForm } from '@/components/tickets/ticket-edit-form';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
+import {
+  listProducts,
+  listModules,
+  listSubmodules,
+  listFeatures,
+  listModulesForCurrentUser,
+  listProductsForCurrentUserDepartment
+} from '@/services/products';
+import { listBasicProfiles } from '@/services/users/server';
 
 async function loadTicket(id: string) {
   noStore();
@@ -20,13 +30,49 @@ async function loadTicket(id: string) {
   }
 }
 
-export default async function TicketDetailPage({
-  params
-}: {
+async function loadFormData() {
+  noStore();
+  try {
+    const departmentProducts = await listProductsForCurrentUserDepartment();
+    const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
+    
+    const [allModules, submodules, features, contacts, allowedModules] = await Promise.all([
+      listModules(),
+      listSubmodules(),
+      listFeatures(),
+      listBasicProfiles(),
+      listModulesForCurrentUser()
+    ]);
+
+    const modules =
+      allowedModules && allowedModules.length
+        ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
+        : allModules;
+
+    return { products, modules, submodules, features, contacts };
+  } catch (error) {
+    console.error('Erreur lors du chargement des données du formulaire:', error);
+    return { products: [], modules: [], submodules: [], features: [], contacts: [] };
+  }
+}
+
+type TicketDetailPageProps = {
   params: Promise<{ id: string }>;
-}) {
+  searchParams: Promise<{ edit?: string }>;
+};
+
+export default async function TicketDetailPage({
+  params,
+  searchParams
+}: TicketDetailPageProps) {
   const { id } = await params;
-  const ticket = await loadTicket(id);
+  const { edit } = await searchParams;
+  const isEditMode = edit === 'true';
+  
+  const [ticket, formData] = await Promise.all([
+    loadTicket(id),
+    isEditMode ? loadFormData() : Promise.resolve(null)
+  ]);
 
   if (!ticket) {
     notFound();
@@ -43,6 +89,48 @@ export default async function TicketDetailPage({
 
   const canTransfer =
     ticket.ticket_type === 'ASSISTANCE' && ticket.status === 'En_cours';
+
+  // Si mode édition, afficher le formulaire d'édition
+  if (isEditMode && formData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Link
+              href="/gestion/tickets"
+              className="text-sm text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              ← Retour à la liste
+            </Link>
+            <h1 className="mt-2 text-2xl font-bold">Édition : {ticket.title}</h1>
+          </div>
+        </div>
+        <TicketEditForm
+          ticketId={id}
+          ticketData={{
+            title: ticket.title,
+            description: ticket.description || '',
+            ticket_type: ticket.ticket_type as 'BUG' | 'REQ' | 'ASSISTANCE',
+            status: ticket.status || 'Nouveau',
+            canal: ticket.canal || 'Whatsapp',
+            priority: ticket.priority || 'Medium',
+            customer_context: ticket.customer_context,
+            contact_user_id: ticket.contact_user_id,
+            bug_type: ticket.bug_type,
+            product_id: ticket.product_id,
+            module_id: ticket.module_id,
+            submodule_id: ticket.submodule_id,
+            feature_id: ticket.feature_id
+          }}
+          products={formData.products}
+          modules={formData.modules}
+          submodules={formData.submodules}
+          features={formData.features}
+          contacts={formData.contacts}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

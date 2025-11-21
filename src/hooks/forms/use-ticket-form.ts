@@ -23,6 +23,7 @@ type UseTicketFormOptions = {
   features: Feature[];
   contacts: BasicProfile[];
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
+  initialValues?: Partial<CreateTicketInput>;
 };
 
 type UseTicketFormResult = {
@@ -54,28 +55,32 @@ type UseTicketFormResult = {
  * // Utiliser form.handleSubmit() dans le composant pour gérer la soumission
  */
 export function useTicketForm(options: UseTicketFormOptions): UseTicketFormResult {
-  const { products, modules, submodules, features, contacts, onSubmit } = options;
+  const { products, modules, submodules, features, contacts, onSubmit, initialValues } = options;
+
+  // Valeurs par défaut pour création
+  const defaultValues: CreateTicketInput = {
+    title: initialValues?.title ?? '',
+    description: initialValues?.description ?? '',
+    type: initialValues?.type ?? 'ASSISTANCE',
+    channel: initialValues?.channel ?? 'Whatsapp',
+    productId: initialValues?.productId ?? products[0]?.id ?? '',
+    moduleId: initialValues?.moduleId ?? modules[0]?.id ?? '',
+    submoduleId: initialValues?.submoduleId ?? '',
+    featureId: initialValues?.featureId ?? '',
+    customerContext: initialValues?.customerContext ?? '',
+    priority: initialValues?.priority ?? 'Medium',
+    contactUserId: initialValues?.contactUserId ?? contacts[0]?.id ?? '',
+    bug_type: initialValues?.bug_type ?? null,
+    status: initialValues?.status ?? undefined
+  };
 
   const form = useForm<CreateTicketInput>({
     resolver: zodResolver(createTicketSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      type: 'ASSISTANCE',
-      channel: 'Whatsapp',
-      productId: products[0]?.id ?? '',
-      moduleId: modules[0]?.id ?? '',
-      submoduleId: '',
-      featureId: '',
-      customerContext: '',
-      priority: 'Medium',
-      contactUserId: contacts[0]?.id ?? '',
-      bug_type: null
-    }
+    defaultValues
   });
 
-  const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? '');
-  const [selectedModuleId, setSelectedModuleId] = useState(modules[0]?.id ?? '');
+  const [selectedProductId, setSelectedProductId] = useState(defaultValues.productId);
+  const [selectedModuleId, setSelectedModuleId] = useState(defaultValues.moduleId);
 
   // Filtrer les modules selon le produit sélectionné
   const filteredModules = useMemo(
