@@ -17,6 +17,8 @@ import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 import { TicketsQuickFilters } from '@/components/tickets/tickets-quick-filters';
+import { TicketsKPISection } from '@/components/tickets/tickets-kpi-section';
+import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -129,6 +131,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const currentProfileIdPromise = getCurrentUserProfileId();
   const productsPromise = loadProductsAndModules();
   const currentProfileId = await currentProfileIdPromise;
+  const kpisPromise = getSupportTicketKPIs(currentProfileId);
   const initialTicketsPromise = loadInitialTickets(
     resolvedSearchParams?.type,
     resolvedSearchParams?.status,
@@ -138,7 +141,11 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   );
   
   try {
-    const [initialTicketsData, productsData] = await Promise.all([initialTicketsPromise, productsPromise]);
+    const [initialTicketsData, productsData, kpis] = await Promise.all([
+      initialTicketsPromise,
+      productsPromise,
+      kpisPromise
+    ]);
     const { products, modules, submodules, features, contacts } = productsData;
 
     async function handleTicketSubmit(values: CreateTicketInput) {
@@ -170,6 +177,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           onSubmit={handleTicketSubmit}
         />
       </div>
+
+      {/* Section KPIs */}
+      <TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />
 
         <Card>
         <CardHeader>
