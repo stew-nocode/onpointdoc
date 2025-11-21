@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 import { getTicketById, transferTicketToJira } from '@/services/tickets/jira-transfer';
+import { loadTicketInteractions } from '@/services/tickets/comments';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
@@ -10,6 +11,7 @@ import { TransferTicketButton } from '@/components/tickets/transfer-ticket-butto
 import { ValidateTicketButton } from '@/components/tickets/validate-ticket-button';
 import { TicketDescription } from '@/components/tickets/ticket-description';
 import { TicketEditForm } from '@/components/tickets/ticket-edit-form';
+import { TicketTimeline } from '@/components/tickets/ticket-timeline';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
@@ -99,6 +101,15 @@ export default async function TicketDetailPage({
     getCurrentUserRole()
   ]);
 
+  // Charger les interactions uniquement si le ticket existe et n'est pas en mode édition
+  const interactions = ticket && !isEditMode
+    ? await loadTicketInteractions(
+        id,
+        ticket.created_at,
+        ticket.created_by as string | null
+      )
+    : [];
+
   if (!ticket) {
     notFound();
   }
@@ -166,8 +177,9 @@ export default async function TicketDetailPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="flex h-[calc(100vh-4rem)] flex-col gap-4">
+      {/* En-tête avec titre et actions */}
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
         <div>
           <Link
             href="/gestion/tickets"
@@ -175,7 +187,7 @@ export default async function TicketDetailPage({
           >
             ← Retour à la liste
           </Link>
-          <h1 className="mt-2 text-2xl font-bold">{ticket.title}</h1>
+          <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{ticket.title}</h1>
         </div>
         <div className="flex items-center gap-3">
           {canTransfer && (
@@ -187,150 +199,159 @@ export default async function TicketDetailPage({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Détails du ticket</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Description
-              </label>
-              <TicketDescription description={ticket.description} />
-            </div>
-
-            {ticket.customer_context && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Contexte client
-                </label>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {ticket.customer_context}
-                </p>
-              </div>
-            )}
-
-            {ticket.duration_minutes && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Durée de l&apos;assistance
-                </label>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {ticket.duration_minutes} minutes
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Type
-              </label>
-              <div className="mt-1">
-                <Badge variant="info">{ticket.ticket_type}</Badge>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Statut
-              </label>
-              <div className="mt-1">
-                <Badge
-                  variant={getStatusBadgeVariant(ticket.status)}
-                >
-                  {ticket.status.replace('_', ' ')}
-                </Badge>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Priorité
-              </label>
-              <div className="mt-1">
-                <Badge variant={ticket.priority === 'High' ? 'danger' : 'info'}>
-                  {ticket.priority}
-                </Badge>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Canal
-              </label>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                {ticket.canal}
-              </p>
-            </div>
-
-            {ticket.product && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Produit
-                </label>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {ticket.product.name}
-                </p>
-              </div>
-            )}
-
-            {ticket.module && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Module
-                </label>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {ticket.module.name}
-                </p>
-              </div>
-            )}
-
-            {ticket.jira_issue_key && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Ticket JIRA
-                </label>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {ticket.jira_issue_key}
-                </p>
-              </div>
-            )}
-
-            {isValidated && (
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Statut de validation
-                </label>
-                <div className="mt-1">
-                  <Badge variant="success">Validé par un manager</Badge>
+      {/* Contenu principal : Infos en haut, Timeline à droite avec scroll interne */}
+      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
+        {/* Colonne gauche : Détails + Informations en haut */}
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Détails du ticket</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Description
+                  </label>
+                  <TicketDescription description={ticket.description} />
                 </div>
-              </div>
-            )}
 
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Créé le
-              </label>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                {new Date(ticket.created_at).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                {ticket.customer_context && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Contexte client
+                    </label>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      {ticket.customer_context}
+                    </p>
+                  </div>
+                )}
+
+                {ticket.duration_minutes && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Durée de l&apos;assistance
+                    </label>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      {ticket.duration_minutes} minutes
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Type
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant="info">{ticket.ticket_type}</Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Statut
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant={getStatusBadgeVariant(ticket.status)}>
+                      {ticket.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Priorité
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant={ticket.priority === 'High' ? 'danger' : 'info'}>
+                      {ticket.priority}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Canal
+                  </label>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    {ticket.canal}
+                  </p>
+                </div>
+
+                {ticket.product && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Produit
+                    </label>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      {ticket.product.name}
+                    </p>
+                  </div>
+                )}
+
+                {ticket.module && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Module
+                    </label>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      {ticket.module.name}
+                    </p>
+                  </div>
+                )}
+
+                {ticket.jira_issue_key && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Ticket JIRA
+                    </label>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      {ticket.jira_issue_key}
+                    </p>
+                  </div>
+                )}
+
+                {isValidated && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Statut de validation
+                    </label>
+                    <div className="mt-1">
+                      <Badge variant="success">Validé par un manager</Badge>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Créé le
+                  </label>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    {new Date(ticket.created_at).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Colonne droite : Timeline fixe avec scroll interne */}
+        <div className="hidden lg:block w-96 flex-shrink-0">
+          <TicketTimeline interactions={interactions} ticketTitle={ticket.title} />
+        </div>
       </div>
     </div>
   );
