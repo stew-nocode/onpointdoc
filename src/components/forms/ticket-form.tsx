@@ -21,6 +21,7 @@ import { Combobox } from '@/ui/combobox';
 import type { BasicProfile } from '@/services/users';
 import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal, AlertCircle, AlertTriangle, Zap, Shield } from 'lucide-react';
 import { useTicketForm, useFileUpload, type FileWithPreview } from '@/hooks';
+import { RichTextEditor } from '@/components/editors/rich-text-editor';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
@@ -160,11 +161,13 @@ export const TicketForm = ({
       {/* Description */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Description</label>
-        <textarea
-          rows={4}
-          className={inputClass}
+        <RichTextEditor
+          value={form.watch('description') || ''}
+          onChange={(value) => form.setValue('description', value, { shouldValidate: true })}
           placeholder="Détails fournis par le client"
-          {...form.register('description')}
+          disabled={isSubmitting}
+          format="html"
+          minHeight={150}
         />
         {errors.description && (
           <p className="text-xs text-status-danger">{errors.description.message}</p>

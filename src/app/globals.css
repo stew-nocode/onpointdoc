@@ -26,6 +26,32 @@ body {
   color: #f8fafc;
 }
 
+/* Styles pour Tiptap Editor */
+.tiptap-editor {
+  outline: none;
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark .tiptap-editor p.is-editor-empty:first-child::before {
+  color: #64748b;
+}
+
+.tiptap-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.dark .tiptap-editor a {
+  color: #60a5fa;
+}
+
 * {
   box-sizing: border-box;
 }

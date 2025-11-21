@@ -1,0 +1,71 @@
+/**
+ * Wrapper pour l'éditeur de texte riche avec dynamic import
+ * 
+ * Utilise un dynamic import pour éviter les erreurs de chunk loading avec Next.js
+ * Composant < 30 lignes selon principes Clean Code
+ */
+
+'use client';
+
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import type { RichTextEditorOptions } from '@/types/rich-text';
+
+type RichTextEditorProps = RichTextEditorOptions & {
+  value: string | null | undefined;
+  onChange: (value: string) => void;
+  minHeight?: number;
+};
+
+/**
+ * Import dynamique de l'éditeur client uniquement
+ * ssr: false pour éviter tout rendu côté serveur
+ */
+const RichTextEditorClient = dynamic(
+  () => import('./rich-text-editor-client').then((mod) => ({ default: mod.RichTextEditorClient })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="border border-slate-200 rounded-lg dark:border-slate-700 bg-white dark:bg-slate-950">
+        <div className="flex items-center justify-center p-4 min-h-[150px]">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+        </div>
+      </div>
+    )
+  }
+);
+
+/**
+ * Éditeur de texte riche réutilisable (avec dynamic import)
+ * 
+ * @param value - Valeur actuelle (HTML, ADF ou texte brut selon format)
+ * @param onChange - Callback appelé lors des modifications
+ * @param placeholder - Placeholder de l'éditeur
+ * @param disabled - Désactiver l'éditeur
+ * @param format - Format de stockage (html, adf, plain)
+ * @param minHeight - Hauteur minimale en pixels
+ * 
+ * @example
+ * <RichTextEditor
+ *   value={form.watch('description')}
+ *   onChange={(html) => form.setValue('description', html)}
+ *   placeholder="Description du ticket..."
+ *   format="html"
+ * />
+ */
+export function RichTextEditor(props: RichTextEditorProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="border border-slate-200 rounded-lg dark:border-slate-700 bg-white dark:bg-slate-950">
+          <div className="flex items-center justify-center p-4 min-h-[150px]">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
+          </div>
+        </div>
+      }
+    >
+      <RichTextEditorClient {...props} />
+    </Suspense>
+  );
+}
+
