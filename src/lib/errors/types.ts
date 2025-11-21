@@ -114,6 +114,12 @@ export const createError = {
   jiraError: (message: string, originalError?: Error, details?: Record<string, unknown>) =>
     new ApplicationError(ErrorCode.JIRA_ERROR, message, 500, details, originalError),
 
+  n8nError: (message: string, originalError?: Error, details?: Record<string, unknown>) =>
+    new ApplicationError(ErrorCode.N8N_ERROR, message, 500, details, originalError),
+
+  networkError: (message: string, originalError?: Error, details?: Record<string, unknown>) =>
+    new ApplicationError(ErrorCode.NETWORK_ERROR, message, 500, details, originalError),
+
   internalError: (message: string = 'Erreur interne', originalError?: Error, details?: Record<string, unknown>) =>
     new ApplicationError(ErrorCode.INTERNAL_ERROR, message, 500, details, originalError)
 };

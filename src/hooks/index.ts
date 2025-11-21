@@ -27,3 +27,6 @@ export { useFileUpload } from './forms/use-file-upload';
 export type { FileWithPreview } from './forms/use-file-upload';
 export { useTicketForm } from './forms/use-ticket-form';
 
+// Hooks N8N
+export { useAnalysisGenerator } from './n8n/use-analysis-generator';
+

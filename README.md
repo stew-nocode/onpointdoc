@@ -38,12 +38,18 @@ Variables pour intégration JIRA directe (requis pour création/synchronisation 
 - `JIRA_USERNAME` ou `JIRA_EMAIL` : Email ou nom d'utilisateur Jira
 - `JIRA_TOKEN` ou `JIRA_API_TOKEN` : Token API Jira (créé sur https://id.atlassian.com/manage-profile/security/api-tokens)
 
+Variables pour intégration N8N (optionnel, pour l'analyse IA) :
+- `N8N_ANALYSIS_WEBHOOK_URL` : URL du webhook N8N pour générer des analyses (ex: `https://votre-n8n.example.com/webhook/analysis`)
+- `N8N_API_KEY` : Clé API pour authentifier les appels au webhook N8N (optionnel)
+
 **Vérifier la configuration JIRA** :
 ```bash
 node scripts/check-jira-env.js
 ```
 
-**Documentation complète** : Voir [`docs/configuration-jira-env.md`](./docs/configuration-jira-env.md)
+**Documentation complète** :
+- JIRA : [`docs/configuration-jira-env.md`](./docs/configuration-jira-env.md)
+- N8N Analyse IA : [`docs/workflows/n8n-analysis-setup.md`](./docs/workflows/n8n-analysis-setup.md)
 
 ### Test Local du Webhook JIRA (avec ngrok)
 

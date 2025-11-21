@@ -21,7 +21,7 @@ import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 import { useAuth } from '@/hooks';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { AnalysisButton } from '@/components/n8n/analysis-button';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -525,6 +525,13 @@ export function TicketsInfiniteScroll({
                         </TooltipContent>
                       </Tooltip>
                     )}
+
+                    {/* Générer une analyse - Tous les utilisateurs authentifiés */}
+                    <AnalysisButton
+                      context="ticket"
+                      id={ticket.id}
+                      tooltip="Générer une analyse IA"
+                    />
                   </div>
                 </td>
               </tr>
