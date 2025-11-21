@@ -30,6 +30,14 @@ export type TicketModuleRelation = {
 } | null;
 
 /**
+ * Entreprise simplifiée (utilisée dans les relations tickets)
+ */
+export type TicketCompanyRelation = {
+  id: string;
+  name: string;
+} | null;
+
+/**
  * Ticket avec ses relations transformées (après transformation Supabase)
  */
 export type TicketWithRelations = Ticket & {
@@ -38,6 +46,7 @@ export type TicketWithRelations = Ticket & {
   contact_user?: (TicketUserRelation & {
     company_id?: string | null;
   }) | null;
+  company?: TicketCompanyRelation;
   product?: TicketProductRelation;
   module?: TicketModuleRelation;
 };
@@ -54,10 +63,11 @@ export type TicketsPaginatedResult = {
 /**
  * Type brut retourné par Supabase avant transformation
  */
-export type SupabaseTicketRaw = Omit<Ticket, 'created_user' | 'assigned_user' | 'contact_user' | 'product' | 'module'> & {
+export type SupabaseTicketRaw = Omit<Ticket, 'created_user' | 'assigned_user' | 'contact_user' | 'company' | 'product' | 'module'> & {
   created_user?: TicketUserRelation | TicketUserRelation[];
   assigned_user?: TicketUserRelation | TicketUserRelation[];
   contact_user?: (TicketUserRelation & { company_id?: string | null }) | Array<TicketUserRelation & { company_id?: string | null }>;
+  company?: TicketCompanyRelation | TicketCompanyRelation[];
   product?: TicketProductRelation | TicketProductRelation[];
   module?: TicketModuleRelation | TicketModuleRelation[];
 };

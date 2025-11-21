@@ -5,14 +5,15 @@
  * et appelle le webhook N8N pour générer l'analyse.
  */
 
-import type { AnalysisContext, N8NAnalysisResponse, AnalysisResult } from '@/types/n8n';
+import type { AnalysisContext, AnalysisResult } from '@/types/n8n';
 import { createError } from '@/lib/errors/types';
+import { parseN8NResponse, validateAnalysisResponse } from './analysis-validators';
 
 /**
  * Construit la question pré-remplie selon le contexte
  * 
  * @param context - Le contexte de l'analyse (ticket, company, contact)
- * @param id - L'identifiant de l'entité
+ * @param id - L'identifiant de l'entité (UUID)
  * @returns La question formatée pour N8N
  */
 function buildQuestion(context: AnalysisContext, id: string): string {
@@ -69,7 +70,7 @@ export async function generateAnalysis(
       },
       body: JSON.stringify({
         context,
-        id,
+        id, // Toujours utiliser l'ID (UUID) pour les tickets
         question
       }),
       // Timeout de 60 secondes (les analyses IA peuvent prendre du temps)
@@ -81,12 +82,13 @@ export async function generateAnalysis(
       throw createError.networkError(`Erreur HTTP ${response.status}: ${errorText}`);
     }
 
-    const data = (await response.json()) as N8NAnalysisResponse;
+    // Parser et valider la réponse N8N
+    const data = await parseN8NResponse(response);
+    validateAnalysisResponse(data);
 
-    if (!data.success || !data.analysis) {
-      throw createError.n8nError(
-        data.error || 'Le webhook N8N n\'a pas retourné d\'analyse valide'
-      );
+    // data.analysis est garanti non-null par validateAnalysisResponse
+    if (!data.analysis) {
+      throw createError.n8nError('L\'analyse est manquante après validation');
     }
 
     return {

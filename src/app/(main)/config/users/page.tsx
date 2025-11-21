@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { UserPlus } from 'lucide-react';
-import { NewUserDialog } from '@/components/users/new-user-dialog';
+import { NewUserDialogLazy } from '@/components/users/new-user-dialog-lazy';
 import { UsersTableClient, type UserRow } from '@/components/users/users-table-client';
 import type { Company } from '@/types/company';
 
@@ -32,12 +32,12 @@ export default async function UsersIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Utilisateurs</h1>
-        <NewUserDialog>
+        <NewUserDialogLazy>
           <Button>
             <UserPlus className="mr-2 h-4 w-4" />
             Nouvel utilisateur
           </Button>
-        </NewUserDialog>
+        </NewUserDialogLazy>
       </div>
       <Card>
         <CardHeader>

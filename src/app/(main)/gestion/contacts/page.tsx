@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewContactDialog } from '@/components/users/new-contact-dialog';
+import { NewContactDialogLazy } from '@/components/users/new-contact-dialog-lazy';
 import { ContactsPageClient } from '@/components/users/contacts-page-client';
 import type { ContactRow } from '@/components/users/contacts-table';
 import type { Company } from '@/types/company';
@@ -42,9 +42,9 @@ export default async function ContactsPage() {
             Points focaux clients et utilisateurs internes associés aux entreprises.
           </p>
         </div>
-        <NewContactDialog>
+        <NewContactDialogLazy>
           <Button>Nouveau contact</Button>
-        </NewContactDialog>
+        </NewContactDialogLazy>
       </div>
       <Card>
         <CardHeader>

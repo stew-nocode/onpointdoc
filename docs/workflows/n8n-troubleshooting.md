@@ -30,7 +30,7 @@ N8N_ANALYSIS_WEBHOOK_URL=https://votre-n8n.example.com/webhook/analysis
 1. Arrêter l'application (Ctrl+C)
 2. Redémarrer : `npm run dev`
 
-#### 3. Workflow N8N non actif ⚠️ **CAUSE LA PLUS COURANTE**
+#### 3. Workflow N8N non actif ⚠️ **CAUSE COURANTE**
 
 **Symptôme** :
 ```
@@ -47,6 +47,34 @@ N8N_ANALYSIS_WEBHOOK_URL=https://votre-n8n.example.com/webhook/analysis
 2. Cliquer sur le bouton **"Active"** (ou "Inactive" si désactivé) en haut à droite
 3. Le workflow doit passer en mode **ACTIVE** (bouton vert)
 4. Le webhook sera alors accessible en permanence
+
+📖 **Guide détaillé** : Voir `docs/workflows/n8n-activation-guide.md`
+
+#### 4. Nœud "Respond to Webhook" inutilisé ⚠️ **CAUSE COURANTE**
+
+**Symptôme** :
+```
+[NETWORK_ERROR] Erreur HTTP 500: {"code":0,"message":"Unused Respond to Webhook node found in the workflow"}
+```
+
+**Causes** :
+- Plusieurs nœuds "Respond to Webhook" dans le workflow
+- Un nœud "Respond to Webhook" non connecté au flux
+- Un nœud "Respond to Webhook" dans une branche jamais exécutée
+
+**Vérification** :
+1. Ouvrir le workflow dans N8N
+2. Compter les nœuds "Respond to Webhook" (il ne doit y en avoir **qu'un seul**)
+3. Vérifier que ce nœud est **à la fin** du workflow
+4. Vérifier qu'il est **connecté** à tous les chemins (succès et erreur)
+
+**Solution** :
+1. Identifier tous les nœuds "Respond to Webhook" dans le workflow
+2. Supprimer tous sauf **un seul**
+3. Placer ce nœud unique **à la fin** du workflow
+4. Connecter ce nœud à **tous les chemins** de sortie (succès et erreur)
+
+📖 **Guide détaillé** : Voir `docs/workflows/n8n-fix-unused-respond-to-webhook.md`
 
 ⚠️ **Note** : En mode "Inactive", le webhook ne fonctionne qu'en mode test après avoir cliqué sur "Execute workflow". Pour une utilisation en production, le workflow doit être **ACTIVE**.
 

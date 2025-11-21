@@ -284,6 +284,8 @@ export const listTicketsPaginated = async (
       created_user:profiles!tickets_created_by_fkey(id, full_name),
       assigned_to,
       assigned_user:profiles!tickets_assigned_to_fkey(id, full_name),
+      contact_user_id,
+      contact_user:profiles!tickets_contact_user_id_fkey(id, full_name, company_id),
       product:products(id, name),
       module:modules(id, name)
     `, { count: 'exact' })
@@ -313,15 +315,111 @@ export const listTicketsPaginated = async (
     throw new Error(error.message);
   }
 
+  // Récupérer tous les company_id uniques depuis contact_user
+  const companyIds = new Set<string>();
+  (data || []).forEach((ticket: SupabaseTicketRaw) => {
+    const contactUser = transformRelation(ticket.contact_user);
+    if (contactUser && typeof contactUser === 'object' && 'company_id' in contactUser && contactUser.company_id) {
+      // S'assurer que company_id est une string
+      const companyId = String(contactUser.company_id);
+      if (companyId) {
+        companyIds.add(companyId);
+      }
+    }
+  });
+
+  // Charger toutes les companies nécessaires
+  const companiesMap: Record<string, { id: string; name: string }> = {};
+  if (companyIds.size > 0) {
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('id, name')
+      .in('id', Array.from(companyIds));
+    
+    if (companies) {
+      companies.forEach((company) => {
+        // S'assurer que les valeurs sont des strings sérialisables
+        if (company && company.id && company.name) {
+          companiesMap[String(company.id)] = {
+            id: String(company.id),
+            name: String(company.name)
+          };
+        }
+      });
+    }
+  }
+
   // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
-  const transformedTickets: TicketWithRelations[] = (data || []).map((ticket: SupabaseTicketRaw) => ({
-    ...ticket,
-    created_user: transformRelation(ticket.created_user),
-    assigned_user: transformRelation(ticket.assigned_user),
-    contact_user: transformRelation(ticket.contact_user),
-    product: transformRelation(ticket.product),
-    module: transformRelation(ticket.module)
-  }));
+  const transformedTickets: TicketWithRelations[] = (data || []).map((ticket: SupabaseTicketRaw) => {
+    const transformedContactUser = transformRelation(ticket.contact_user);
+    
+    // Trouver la company via contact_user.company_id et s'assurer qu'elle est sérialisable
+    let company: { id: string; name: string } | null = null;
+    if (transformedContactUser && typeof transformedContactUser === 'object' && 'company_id' in transformedContactUser && transformedContactUser.company_id) {
+      const companyIdStr = String(transformedContactUser.company_id);
+      const companyData = companiesMap[companyIdStr];
+      if (companyData) {
+        // S'assurer que c'est un objet plain sérialisable
+        company = {
+          id: String(companyData.id),
+          name: String(companyData.name)
+        };
+      }
+    }
+    
+    // S'assurer que contact_user est sérialisable
+    const cleanContactUser = transformedContactUser && typeof transformedContactUser === 'object'
+      ? {
+          id: String(transformedContactUser.id),
+          full_name: String(transformedContactUser.full_name),
+          company_id: transformedContactUser.company_id ? String(transformedContactUser.company_id) : null
+        }
+      : transformedContactUser;
+    
+    // Nettoyer toutes les relations pour les rendre sérialisables
+    const cleanCreatedUser = transformRelation(ticket.created_user);
+    const cleanAssignedUser = transformRelation(ticket.assigned_user);
+    const cleanProduct = transformRelation(ticket.product);
+    const cleanModule = transformRelation(ticket.module);
+    
+    // S'assurer que toutes les relations sont des objets plain sérialisables
+    const serializableCreatedUser = cleanCreatedUser && typeof cleanCreatedUser === 'object'
+      ? { id: String(cleanCreatedUser.id), full_name: String(cleanCreatedUser.full_name) }
+      : cleanCreatedUser;
+    
+    const serializableAssignedUser = cleanAssignedUser && typeof cleanAssignedUser === 'object'
+      ? { id: String(cleanAssignedUser.id), full_name: String(cleanAssignedUser.full_name) }
+      : cleanAssignedUser;
+    
+    const serializableProduct = cleanProduct && typeof cleanProduct === 'object'
+      ? { id: String(cleanProduct.id), name: String(cleanProduct.name) }
+      : cleanProduct;
+    
+    const serializableModule = cleanModule && typeof cleanModule === 'object'
+      ? { id: String(cleanModule.id), name: String(cleanModule.name) }
+      : cleanModule;
+    
+    // S'assurer que tous les champs sont sérialisables
+    // Utiliser JSON.parse(JSON.stringify()) pour garantir la sérialisation
+    const baseTicket = {
+      ...ticket,
+      created_user: serializableCreatedUser,
+      assigned_user: serializableAssignedUser,
+      contact_user: cleanContactUser,
+      company: company,
+      product: serializableProduct,
+      module: serializableModule,
+      // S'assurer que created_at est une string si c'est une Date
+      created_at: ticket.created_at ? (typeof ticket.created_at === 'string' ? ticket.created_at : new Date(ticket.created_at).toISOString()) : ticket.created_at,
+      // S'assurer que target_date est une string si c'est une Date
+      target_date: ticket.target_date ? (typeof ticket.target_date === 'string' ? ticket.target_date : new Date(ticket.target_date).toISOString()) : ticket.target_date
+    };
+    
+    // Utiliser JSON.parse(JSON.stringify()) pour garantir que l'objet est sérialisable
+    const serializableTicket = JSON.parse(JSON.stringify(baseTicket)) as TicketWithRelations;
+    
+    return serializableTicket;
+  });
 
   return {
     tickets: transformedTickets,

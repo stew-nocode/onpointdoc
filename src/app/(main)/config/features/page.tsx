@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewFeatureDialog } from '@/components/features/new-feature-dialog';
+import { NewFeatureDialogLazy } from '@/components/features/new-feature-dialog-lazy';
 import { FeaturesTableClient, type FeatureRow } from '@/components/features/features-table-client';
 import type { Submodule } from '@/types/submodule';
 import type { Feature } from '@/types/feature';
@@ -28,9 +28,9 @@ export default async function FeaturesIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Fonctionnalités</h1>
-        <NewFeatureDialog>
+        <NewFeatureDialogLazy>
           <Button>Nouvelle fonctionnalité</Button>
-        </NewFeatureDialog>
+        </NewFeatureDialogLazy>
       </div>
       <Card>
         <CardHeader>

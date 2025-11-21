@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewModuleDialog } from '@/components/modules/new-module-dialog';
+import { NewModuleDialogLazy } from '@/components/modules/new-module-dialog-lazy';
 import { ModulesTableClient, type ModuleRow } from '@/components/modules/modules-table-client';
 import type { Product } from '@/types/product';
 
@@ -29,9 +29,9 @@ export default async function ModulesIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Modules</h1>
-        <NewModuleDialog>
+        <NewModuleDialogLazy>
           <Button>Nouveau module</Button>
-        </NewModuleDialog>
+        </NewModuleDialogLazy>
       </div>
       <Card>
         <CardHeader>

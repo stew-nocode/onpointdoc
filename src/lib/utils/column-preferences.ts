@@ -9,6 +9,7 @@ export type ColumnId =
   | 'status' 
   | 'priority' 
   | 'canal' 
+  | 'company'
   | 'product' 
   | 'module' 
   | 'jira' 
@@ -28,6 +29,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   { id: 'status', label: 'Statut' },
   { id: 'priority', label: 'Priorité' },
   { id: 'canal', label: 'Canal' },
+  { id: 'company', label: 'Entreprise' },
   { id: 'product', label: 'Produit' },
   { id: 'module', label: 'Module' },
   { id: 'jira', label: 'Jira' },

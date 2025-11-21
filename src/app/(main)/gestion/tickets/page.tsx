@@ -13,7 +13,7 @@ import {
 import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { CreateTicketDialog } from '@/components/tickets/create-ticket-dialog';
+import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 import { TicketsQuickFilters } from '@/components/tickets/tickets-quick-filters';
@@ -168,14 +168,14 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             Cycle de vie : Nouveau → En cours → Transféré → Résolu
           </p>
         </div>
-        <CreateTicketDialog
-          products={products}
-          modules={modules}
-          submodules={submodules}
-          features={features}
-          contacts={contacts}
-          onSubmit={handleTicketSubmit}
-        />
+          <CreateTicketDialogLazy
+            products={products}
+            modules={modules}
+            submodules={submodules}
+            features={features}
+            contacts={contacts}
+            onSubmit={handleTicketSubmit}
+          />
       </div>
 
       {/* Section KPIs */}

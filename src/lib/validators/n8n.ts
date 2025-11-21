@@ -13,6 +13,8 @@ export const analysisContextSchema = z.enum(['ticket', 'company', 'contact'], {
 
 /**
  * Schéma pour valider les données de génération d'analyse
+ * 
+ * L'ID doit être un UUID pour tous les contextes (ticket, company, contact)
  */
 export const generateAnalysisSchema = z.object({
   context: analysisContextSchema,

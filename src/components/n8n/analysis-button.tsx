@@ -79,6 +79,8 @@ export function AnalysisButton({
         error={error}
         analysis={analysis}
         title={getContextTitle()}
+        context={context}
+        id={id}
       />
     </>
   );

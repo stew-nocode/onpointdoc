@@ -5,9 +5,9 @@ import { CheckSquare2, X, FileDown, ArrowUpDown, Flag, User } from 'lucide-react
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
 import { useBulkActions } from '@/hooks/tickets/use-bulk-actions';
-import { BulkUpdateStatusDialog } from './bulk-update-status-dialog';
-import { BulkReassignDialog } from './bulk-reassign-dialog';
-import { BulkUpdatePriorityDialog } from './bulk-update-priority-dialog';
+import { BulkUpdateStatusDialogLazy } from './bulk-update-status-dialog-lazy';
+import { BulkReassignDialogLazy } from './bulk-reassign-dialog-lazy';
+import { BulkUpdatePriorityDialogLazy } from './bulk-update-priority-dialog-lazy';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
 type BulkActionsBarProps = {
@@ -106,18 +106,18 @@ export function BulkActionsBar({
         </div>
       </div>
 
-      <BulkUpdateStatusDialog
+      <BulkUpdateStatusDialogLazy
         open={statusDialogOpen}
         onOpenChange={setStatusDialogOpen}
         ticketIds={selectedTicketIds}
         tickets={selectedTickets}
       />
-      <BulkReassignDialog
+      <BulkReassignDialogLazy
         open={reassignDialogOpen}
         onOpenChange={setReassignDialogOpen}
         ticketIds={selectedTicketIds}
       />
-      <BulkUpdatePriorityDialog
+      <BulkUpdatePriorityDialogLazy
         open={priorityDialogOpen}
         onOpenChange={setPriorityDialogOpen}
         ticketIds={selectedTicketIds}

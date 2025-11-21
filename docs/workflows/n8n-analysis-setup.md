@@ -58,6 +58,12 @@ if (!validContexts.includes(context)) {
   throw new Error(`Contexte invalide : doit être ${validContexts.join(', ')}`);
 }
 
+// Valider que l'ID est un UUID
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!uuidRegex.test(id)) {
+  throw new Error(`ID invalide : doit être un UUID valide, reçu: ${id}`);
+}
+
 return {
   context,
   id,
@@ -214,44 +220,89 @@ Ajouter un node **Function** pour formater la réponse :
 const aiResponse = $input.item.json;
 const originalData = $('Format Data').item.json;
 
-// Extraire le texte de l'analyse
-const analysis = aiResponse.choices?.[0]?.message?.content || 
-                 aiResponse.content || 
-                 'Aucune analyse générée';
+// Extraire le texte de l'analyse selon le type de réponse IA
+let analysis = '';
+if (aiResponse.choices && Array.isArray(aiResponse.choices) && aiResponse.choices.length > 0) {
+  // Format OpenAI
+  analysis = aiResponse.choices[0].message?.content || '';
+} else if (aiResponse.content) {
+  // Format Anthropic ou autre
+  analysis = aiResponse.content;
+} else if (typeof aiResponse === 'string') {
+  // Réponse directe en string
+  analysis = aiResponse;
+} else {
+  // Format inattendu, essayer d'extraire le texte
+  analysis = JSON.stringify(aiResponse);
+}
+
+// Vérifier que l'analyse n'est pas vide
+if (!analysis || analysis.trim().length === 0) {
+  throw new Error('L\'analyse générée est vide. Vérifiez la réponse de l\'IA.');
+}
 
 return {
   success: true,
-  analysis: analysis,
+  analysis: analysis.trim(),
   context: originalData.context,
-  id: originalData.originalData.id,
+  id: originalData.originalData?.id || originalData.id,
   generatedAt: new Date().toISOString()
 };
 ```
 
 ### Étape 7 : Gérer les erreurs
 
-Ajouter un node **Error Trigger** ou un node **Function** avec try/catch :
+Pour gérer les erreurs de manière uniforme, utilisez des **branches conditionnelles** qui convergent vers le même nœud "Respond to Webhook" :
+
+#### Option 1 : Utiliser des branches "On Error"
+
+1. Configurez chaque node critique (Supabase, OpenAI) avec **"Continue On Fail"** activé
+2. Ajoutez une branche **"On Error"** qui formate l'erreur
+3. Connectez toutes les branches (succès et erreur) vers le même "Respond to Webhook"
+
+#### Option 2 : Node "Switch" pour router les erreurs
+
+Ajouter un node **Switch** après chaque node critique :
+
+- **Mode** : `Expression`
+- **Rules** :
+  - `success: true` → Continue vers le prochain node
+  - `success: false` → Route vers "Format Error Response"
+
+#### Format uniforme des erreurs
+
+Créer un node **Function** "Format Error Response" :
 
 ```javascript
-try {
-  // Traitement normal
-  return $input.item.json;
-} catch (error) {
-  return {
-    success: false,
-    error: error.message || 'Erreur inconnue',
-    context: $('Validate Input').item.json.context,
-    id: $('Validate Input').item.json.id
-  };
-}
+// Dans Format Error Response
+const errorData = $input.item.json;
+const errorMessage = errorData.error?.message || 
+                     errorData.error || 
+                     errorData.message || 
+                     'Erreur inconnue';
+
+return {
+  success: false,
+  error: errorMessage,
+  context: errorData.context || 'unknown',
+  id: errorData.id || 'unknown'
+};
 ```
 
+⚠️ **IMPORTANT** : Tous les chemins (succès et erreur) doivent se terminer au **même** nœud "Respond to Webhook" pour éviter l'erreur "Unused Respond to Webhook node".
+
 ### Étape 8 : Répondre au Webhook
+
+⚠️ **IMPORTANT** : Il ne doit y avoir **qu'un seul** nœud "Respond to Webhook" dans le workflow, et il doit être **à la fin**, connecté à tous les chemins de sortie (succès et erreur).
 
 Ajouter un node **Respond to Webhook** :
 
 - **Respond With** : `JSON`
 - **Response Body** : `{{ $json }}`
+- **Placement** : À la fin du workflow, après tous les autres nodes
+- **Connexions** : Connecté à tous les chemins (succès via "Format Response" et erreur via "Handle Error")
+
+Si vous voyez l'erreur `"Unused Respond to Webhook node found in the workflow"`, consultez le guide de correction : `docs/workflows/n8n-fix-unused-respond-to-webhook.md`
 
 ## Variables d'environnement N8N
 
@@ -348,6 +399,18 @@ if (!origin || !origin.includes('votre-domaine.com')) {
 ### Erreur "Webhook N8N non configuré"
 - Vérifier que `N8N_ANALYSIS_WEBHOOK_URL` est défini dans `.env.local`
 - Vérifier l'URL du webhook dans N8N
+
+### Erreur "Unused Respond to Webhook node found in the workflow"
+Cette erreur se produit lorsque le workflow N8N contient plusieurs nœuds "Respond to Webhook" ou un nœud non connecté.
+
+**Solution** :
+1. Ouvrir le workflow dans N8N
+2. Identifier tous les nœuds "Respond to Webhook"
+3. Supprimer tous sauf **un seul**
+4. Vérifier que ce nœud unique est **à la fin** du workflow
+5. Connecter ce nœud à **tous les chemins** de sortie (succès et erreur)
+
+📖 **Guide détaillé** : Voir `docs/workflows/n8n-fix-unused-respond-to-webhook.md`
 
 ### Erreur "Timeout"
 - Augmenter le timeout dans le service (actuellement 60 secondes)

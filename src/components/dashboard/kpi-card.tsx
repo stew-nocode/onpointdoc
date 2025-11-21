@@ -1,15 +1,17 @@
 'use client';
 
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { type LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { cn } from '@/lib/utils';
 import { KPIMiniChart } from './kpi-mini-chart';
+import { KPIIcon } from './kpi-icon';
+import type { IconId } from '@/lib/utils/icon-map';
 
 type KPICardProps = {
   title: string;
   value: number | string;
   description?: string;
-  icon: LucideIcon;
+  icon: LucideIcon | IconId; // Accepte soit une icône directement, soit un identifiant (recommandé: IconId)
   trend?: {
     value: number;
     isPositive: boolean;
@@ -39,13 +41,14 @@ export function KPICard({
   title,
   value,
   description,
-  icon: Icon,
+  icon,
   trend,
   chartData,
   variant = 'default',
   subtitle,
   className
 }: KPICardProps) {
+
   const variantStyles = {
     default: 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900',
     success: 'border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20',
@@ -54,13 +57,6 @@ export function KPICard({
     info: 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20'
   };
 
-  const iconStyles = {
-    default: 'text-slate-600 dark:text-slate-400',
-    success: 'text-green-600 dark:text-green-400',
-    warning: 'text-orange-600 dark:text-orange-400',
-    danger: 'text-red-600 dark:text-red-400',
-    info: 'text-blue-600 dark:text-blue-400'
-  };
 
   const trendIcon = trend ? (
     trend.value > 0 ? (
@@ -78,7 +74,7 @@ export function KPICard({
         <CardTitle className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
           {title}
         </CardTitle>
-        <Icon className={cn('h-3 w-3', iconStyles[variant])} />
+        <KPIIcon icon={icon} variant={variant} />
       </CardHeader>
       <CardContent className="px-3 pb-3">
         <div className="space-y-1">

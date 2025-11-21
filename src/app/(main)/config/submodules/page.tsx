@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewSubmoduleDialog } from '@/components/submodules/new-submodule-dialog';
+import { NewSubmoduleDialogLazy } from '@/components/submodules/new-submodule-dialog-lazy';
 import { SubmodulesTableClient, type SubmoduleRow } from '@/components/submodules/submodules-table-client';
 import type { Module } from '@/types/module';
 import type { Submodule } from '@/types/submodule';
@@ -30,9 +30,9 @@ export default async function SubmodulesIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Sous-modules</h1>
-        <NewSubmoduleDialog>
+        <NewSubmoduleDialogLazy>
           <Button>Nouveau sous-module</Button>
-        </NewSubmoduleDialog>
+        </NewSubmoduleDialogLazy>
       </div>
       <Card>
         <CardHeader>

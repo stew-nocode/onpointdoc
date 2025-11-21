@@ -72,7 +72,7 @@ export function TicketsInfiniteScroll({
   // Les préférences seront chargées après le montage côté client uniquement
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
     // Toujours retourner toutes les colonnes par défaut pour l'hydratation
-    return new Set(['title', 'type', 'status', 'priority', 'canal', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
+    return new Set(['title', 'type', 'status', 'priority', 'canal', 'company', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
   });
   const [isMounted, setIsMounted] = useState(false);
   
@@ -327,6 +327,11 @@ export function TicketsInfiniteScroll({
                     Canal
                   </th>
                 )}
+                {isColumnVisible('company') && (
+                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Entreprise
+                  </th>
+                )}
                 {isColumnVisible('product') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Produit
@@ -458,6 +463,24 @@ export function TicketsInfiniteScroll({
                     <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {ticket.canal || '-'}
                     </span>
+                  </td>
+                )}
+
+                {/* Entreprise */}
+                {isColumnVisible('company') && (
+                  <td className="py-2.5 pr-4">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[150px]">
+                          {ticket.company?.name || '-'}
+                        </span>
+                      </TooltipTrigger>
+                      {ticket.company?.name && (
+                        <TooltipContent>
+                          <p>{ticket.company.name}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </td>
                 )}
 

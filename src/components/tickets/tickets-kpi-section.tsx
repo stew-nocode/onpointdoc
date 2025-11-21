@@ -1,8 +1,8 @@
 'use client';
 
-import { Clock, MessageSquare, CheckCircle2, GitBranch } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { SupportTicketKPIs } from '@/services/tickets/support-kpis';
+import type { IconId } from '@/lib/utils/icon-map';
 
 type TicketsKPISectionProps = {
   kpis: SupportTicketKPIs;
@@ -29,7 +29,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
           title="Mes tickets en retard"
           value={kpis.myTicketsOverdue}
           description="Dates dépassées"
-          icon={Clock}
+          icon="clock"
           variant="danger"
           subtitle={hasProfile ? "vs mois dernier" : "Connexion requise"}
           trend={
@@ -50,7 +50,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
           title="ASSISTANCE ce mois"
           value={kpis.assistanceCountThisMonth}
           description="Tickets ASSISTANCE créés"
-          icon={MessageSquare}
+          icon="message-square"
           variant="info"
           subtitle="vs mois dernier"
           trend={
@@ -71,7 +71,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
           title="Mes tickets résolus"
           value={kpis.myTicketsResolvedThisMonth}
           description="Résolutions ce mois"
-          icon={CheckCircle2}
+          icon="check-circle-2"
           variant="success"
           subtitle={hasProfile ? "vs mois dernier" : "Connexion requise"}
           trend={
@@ -92,7 +92,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
           title="BUG et REQ transférés"
           value={kpis.bugAndReqTransferred}
           description="Transférés vers JIRA"
-          icon={GitBranch}
+          icon="git-branch"
           variant="default"
           subtitle="vs mois dernier"
           trend={

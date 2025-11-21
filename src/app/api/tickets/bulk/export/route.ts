@@ -68,6 +68,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       created_user: transformRelation(ticket.created_user),
       assigned_user: transformRelation(ticket.assigned_user),
       contact_user: transformRelation(ticket.contact_user),
+      company: transformRelation(ticket.company),
       product: transformRelation(ticket.product),
       module: transformRelation(ticket.module)
     }));

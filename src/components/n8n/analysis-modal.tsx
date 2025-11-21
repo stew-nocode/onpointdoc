@@ -1,13 +1,12 @@
 /**
  * Modal pour afficher l'analyse générée par N8N
  * 
- * Affiche le texte formaté (Markdown) avec un spinner pendant le chargement
+ * Affiche le texte formaté (Markdown) avec possibilité d'édition et de téléchargement
  */
 
 'use client';
 
-import { useEffect } from 'react';
-import { Loader2, X, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +15,11 @@ import {
   DialogTitle
 } from '@/ui/dialog';
 import { Button } from '@/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/ui/alert';
+import { downloadAnalysisFile } from '@/lib/utils/file-download';
+import { AnalysisLoadingState } from './analysis-loading-state';
+import { AnalysisErrorDisplay } from './analysis-error-display';
+import { AnalysisToolbar } from './analysis-toolbar';
+import { AnalysisContent } from './analysis-content';
 
 type AnalysisModalProps = {
   open: boolean;
@@ -25,6 +28,8 @@ type AnalysisModalProps = {
   error: string | null;
   analysis: string | null;
   title?: string;
+  context?: 'ticket' | 'company' | 'contact';
+  id?: string;
 };
 
 /**
@@ -36,6 +41,8 @@ type AnalysisModalProps = {
  * @param error - Message d'erreur (si présent)
  * @param analysis - Texte de l'analyse générée
  * @param title - Titre du modal (optionnel)
+ * @param context - Contexte de l'analyse (pour le nom du fichier)
+ * @param id - Identifiant de l'entité (pour le nom du fichier)
  */
 export function AnalysisModal({
   open,
@@ -43,13 +50,62 @@ export function AnalysisModal({
   isLoading,
   error,
   analysis,
-  title = 'Analyse générée'
+  title = 'Analyse générée',
+  context = 'ticket',
+  id = 'unknown'
 }: AnalysisModalProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
+
+  // Synchroniser le contenu édité avec l'analyse quand elle change
+  useEffect(() => {
+    if (analysis) {
+      setEditedContent(analysis);
+    }
+  }, [analysis]);
+
+  // Réinitialiser le mode édition quand le modal se ferme
+  useEffect(() => {
+    if (!open) {
+      setIsEditing(false);
+      if (analysis) {
+        setEditedContent(analysis);
+      }
+    }
+  }, [open, analysis]);
+
   // Empêcher la fermeture du modal pendant le chargement
   const handleOpenChange = (newOpen: boolean) => {
     if (!isLoading) {
       onOpenChange(newOpen);
     }
+  };
+
+  /**
+   * Gère le téléchargement de l'analyse
+   */
+  const handleDownload = () => {
+    const contentToDownload = isEditing ? editedContent : (analysis || '');
+    if (contentToDownload) {
+      downloadAnalysisFile(contentToDownload, context, id);
+    }
+  };
+
+  /**
+   * Sauvegarde les modifications et passe en mode lecture
+   */
+  const handleSave = () => {
+    setIsEditing(false);
+    // Le contenu édité est déjà dans editedContent
+    // Ici, on pourrait ajouter une logique pour sauvegarder côté serveur si nécessaire
+  };
+
+  /**
+   * Annule les modifications et revient au contenu original
+   */
+  const handleCancel = () => {
+    setEditedContent(analysis || '');
+    setIsEditing(false);
   };
 
   return (
@@ -64,42 +120,26 @@ export function AnalysisModal({
 
         <div className="space-y-4">
           {/* État de chargement */}
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-brand" />
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Génération de l&apos;analyse en cours...
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-500">
-                Cela peut prendre quelques secondes
-              </p>
-            </div>
-          )}
+          {isLoading && <AnalysisLoadingState />}
 
           {/* État d'erreur */}
-          {error && !isLoading && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erreur</AlertTitle>
-              <AlertDescription>
-                <div className="space-y-2">
-                  <p className="font-medium">{error.split('\n\n')[0]}</p>
-                  {error.includes('\n\n') && (
-                    <pre className="text-xs bg-slate-900/50 p-2 rounded overflow-x-auto">
-                      {error.split('\n\n').slice(1).join('\n\n')}
-                    </pre>
-                  )}
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
+          {error && !isLoading && <AnalysisErrorDisplay error={error} />}
 
           {/* Analyse générée */}
           {analysis && !isLoading && !error && (
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <div
-                className="whitespace-pre-wrap text-slate-700 dark:text-slate-300"
-                dangerouslySetInnerHTML={{ __html: formatAnalysis(analysis) }}
+            <div className="space-y-4">
+              <AnalysisToolbar
+                isEditing={isEditing}
+                onEdit={() => setIsEditing(true)}
+                onSave={handleSave}
+                onCancel={handleCancel}
+                onDownload={handleDownload}
+                hasContent={!!(analysis || editedContent)}
+              />
+              <AnalysisContent
+                isEditing={isEditing}
+                content={editedContent || analysis}
+                onContentChange={setEditedContent}
               />
             </div>
           )}
@@ -127,25 +167,4 @@ export function AnalysisModal({
   );
 }
 
-/**
- * Formate l'analyse pour l'affichage HTML
- * 
- * Pour l'instant, on fait un simple formatage basique.
- * Si N8N retourne du Markdown, on pourrait utiliser `react-markdown` ici.
- * 
- * @param text - Le texte de l'analyse
- * @returns Le texte formaté en HTML
- */
-function formatAnalysis(text: string): string {
-  // Échapper les caractères HTML pour la sécurité
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Formatage basique : convertir les sauts de ligne en <br>
-  const withBreaks = escaped.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-
-  return `<p>${withBreaks}</p>`;
-}
 

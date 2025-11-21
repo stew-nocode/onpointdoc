@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewDepartmentDialog } from '@/components/departments/new-department-dialog';
+import { NewDepartmentDialogLazy } from '@/components/departments/new-department-dialog-lazy';
 import { DepartmentsTableClient, type DepartmentRow } from '@/components/departments/departments-table-client';
 
 async function loadDepartments(): Promise<DepartmentRow[]> {
@@ -25,9 +25,9 @@ export default async function DepartmentsIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Départements</h1>
-        <NewDepartmentDialog>
+        <NewDepartmentDialogLazy>
           <Button>Nouveau département</Button>
-        </NewDepartmentDialog>
+        </NewDepartmentDialogLazy>
       </div>
 
       <Card>

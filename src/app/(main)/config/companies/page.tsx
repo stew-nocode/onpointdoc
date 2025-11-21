@@ -2,7 +2,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { NewCompanyDialog } from '@/components/companies/new-company-dialog';
+import { NewCompanyDialogLazy } from '@/components/companies/new-company-dialog-lazy';
 import { CompaniesTableClient, type CompanyRow } from '@/components/companies/companies-table-client';
 import type { Country } from '@/types/country';
 import type { BasicProfile } from '@/services/users';
@@ -89,9 +89,9 @@ export default async function CompaniesIndexPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Compagnies</h1>
-        <NewCompanyDialog>
+        <NewCompanyDialogLazy>
           <Button>Nouvelle compagnie</Button>
-        </NewCompanyDialog>
+        </NewCompanyDialogLazy>
       </div>
 
       <Card>
