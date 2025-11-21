@@ -33,3 +33,8 @@ export { useAnalysisGenerator } from './n8n/use-analysis-generator';
 // Hooks d'éditeurs
 export { useRichTextEditor } from './editors/use-rich-text-editor';
 
+// Hooks de tickets
+export { useTicketSelection } from './tickets/use-ticket-selection';
+export { useBulkActions } from './tickets/use-bulk-actions';
+export type { BulkActionResult } from './tickets/use-bulk-actions';
+

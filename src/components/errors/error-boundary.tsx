@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <CardContent className="space-y-4">
             {process.env.NODE_ENV === 'development' && error && (
               <div className="rounded-lg bg-slate-100 p-4 text-sm dark:bg-slate-800">
-                <p className="font-semibold">Détails de l'erreur :</p>
+                <p className="font-semibold">Détails de l&apos;erreur :</p>
                 <pre className="mt-2 overflow-auto">{error.stack}</pre>
               </div>
             )}
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 }}
                 variant="default"
               >
-                Retour à l'accueil
+                Retour à l&apos;accueil
               </Button>
             </div>
           </CardContent>

@@ -118,7 +118,7 @@ export function EditUserDialog({ userId, trigger }: Props) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Modifier l'utilisateur</DialogTitle>
+          <DialogTitle>Modifier l&apos;utilisateur</DialogTitle>
           <DialogDescription>Mise à jour du profil et des affectations.</DialogDescription>
         </DialogHeader>
         {isLoadingCompanies || isLoadingModules || isLoadingProfile || isLoadingUserModules ? (
@@ -260,18 +260,18 @@ export function EditUserDialog({ userId, trigger }: Props) {
                 <div className="flex flex-wrap gap-2 pt-1">
                   {selectedModuleIds
                     .map((id) => {
-                      const module = modules.find((m) => m.id === id);
-                      if (!module) return null;
+                      const moduleItem = modules.find((m) => m.id === id);
+                      if (!moduleItem) return null;
                       return (
                         <span
-                          key={module.id}
+                          key={moduleItem.id}
                           className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800"
                         >
-                          {module.name}
+                          {moduleItem.name}
                           <button
                             type="button"
                             className="rounded p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
-                            onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== module.id))}
+                            onClick={() => setSelectedModuleIds((prev) => prev.filter((v) => v !== moduleItem.id))}
                           >
                             ×
                           </button>

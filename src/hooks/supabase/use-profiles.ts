@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { useSupabaseQuery } from './use-supabase-query';
 import type { Profile } from '@/types/profile';
 
@@ -52,10 +53,13 @@ export function useProfiles(options: UseProfilesOptions = {}): UseProfilesResult
     asOptions = false
   } = options;
 
+  // Mémoriser orderBy pour éviter les re-renders inutiles
+  const orderBy = useMemo(() => ({ column: 'full_name', ascending: true } as const), []);
+
   const { data, error, isLoading, refetch } = useSupabaseQuery<Profile[]>({
     table: 'profiles',
     select: 'id, full_name, email',
-    orderBy: { column: 'full_name', ascending: true },
+    orderBy,
     limit,
     enabled
   });

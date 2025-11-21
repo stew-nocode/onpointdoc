@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Eye, Edit, Loader2 } from 'lucide-react';
+import { Eye, Edit, Loader2, CheckSquare2, Square } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
+import { Checkbox } from '@/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
@@ -19,12 +20,13 @@ import {
 } from './utils/ticket-display';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
-import { useAuth } from '@/hooks';
+import { useAuth, useTicketSelection } from '@/hooks';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnalysisButton } from '@/components/n8n/analysis-button';
 import { SortableTableHeader } from './sortable-table-header';
 import { parseTicketSort, DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
+import { BulkActionsBar } from './bulk-actions-bar';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -76,6 +78,23 @@ export function TicketsInfiniteScroll({
   
   // Vérifier les permissions pour l'édition (admin/manager)
   const canEdit = role === 'admin' || role === 'manager';
+
+  // Gestion de la sélection multiple
+  const {
+    selectedTicketIdsArray,
+    selectedCount,
+    toggleTicketSelection,
+    selectAllTickets,
+    clearSelection,
+    isTicketSelected,
+    areAllTicketsSelected,
+    areSomeTicketsSelected
+  } = useTicketSelection();
+
+  // Réinitialiser la sélection quand les filtres changent
+  useEffect(() => {
+    clearSelection();
+  }, [type, status, search, quickFilter, currentSort, currentSortDirection, clearSelection]);
 
   // Charger les colonnes visibles après le montage pour éviter l'erreur d'hydratation
   useEffect(() => {
@@ -239,6 +258,14 @@ export function TicketsInfiniteScroll({
   return (
     <TooltipProvider>
       <div className="space-y-3">
+        {/* Barre d'actions flottante pour les tickets sélectionnés */}
+        {selectedCount > 0 && (
+          <BulkActionsBar
+            selectedTicketIds={selectedTicketIdsArray}
+            tickets={tickets}
+            onClearSelection={clearSelection}
+          />
+        )}
         <div className="flex justify-end">
           <ColumnsConfigDialog onColumnsChange={setVisibleColumns} />
         </div>
@@ -246,6 +273,23 @@ export function TicketsInfiniteScroll({
           <table className="min-w-full text-left">
             <thead className="border-b border-slate-200 dark:border-slate-800">
               <tr>
+                {/* Colonne checkbox Select All */}
+                <th className="w-12 pb-2.5 pr-2">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={areAllTicketsSelected(tickets)}
+                      indeterminate={areSomeTicketsSelected(tickets)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          selectAllTickets(tickets);
+                        } else {
+                          clearSelection();
+                        }
+                      }}
+                      aria-label="Sélectionner tous les tickets"
+                    />
+                  </div>
+                </th>
                 {isColumnVisible('title') && (
                   <SortableTableHeader
                     column="title"
@@ -325,13 +369,23 @@ export function TicketsInfiniteScroll({
               </tr>
             </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {tickets.map((ticket) => (
-              <tr
-                key={ticket.id}
-                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-              >
-                {/* Titre avec tooltip */}
-                {isColumnVisible('title') && (
+                  {tickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      {/* Checkbox de sélection */}
+                      <td className="w-12 py-2.5 pr-2">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={isTicketSelected(ticket.id)}
+                            onCheckedChange={() => toggleTicketSelection(ticket.id)}
+                            aria-label={`Sélectionner le ticket ${ticket.title}`}
+                          />
+                        </div>
+                      </td>
+                      {/* Titre avec tooltip */}
+                      {isColumnVisible('title') && (
                   <td className="py-2.5 pr-4">
                     <Tooltip>
                       <TooltipTrigger asChild>

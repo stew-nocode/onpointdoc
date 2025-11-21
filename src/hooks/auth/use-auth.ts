@@ -87,7 +87,11 @@ export function useAuth(): AuthState {
   }, []);
 
   useEffect(() => {
-    refreshAuth();
+    // Utiliser setTimeout pour éviter l'appel synchrone de setState
+    const timer = setTimeout(() => {
+      refreshAuth();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [refreshAuth]);
 
   return state;

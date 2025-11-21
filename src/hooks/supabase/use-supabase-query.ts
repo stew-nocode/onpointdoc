@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 type UseSupabaseQueryOptions<T> = {
@@ -88,6 +88,9 @@ export function useSupabaseQuery<T = unknown>(
     refetch: async () => {} // Placeholder initial
   });
 
+  // Utiliser useRef pour stocker les dépendances précédentes et éviter les re-renders inutiles
+  const prevDepsRef = useRef<string>('');
+
   const executeQuery = useCallback(async () => {
     if (!enabled) {
       setState(prev => ({ ...prev, isLoading: false }));
@@ -105,7 +108,7 @@ export function useSupabaseQuery<T = unknown>(
         if (error) {
           throw new Error(error.message || 'Erreur Supabase');
         }
-        setState({ data: data as T, error: null, isLoading: false, refetch: executeQuery });
+        setState(prev => ({ ...prev, data: data as T, error: null, isLoading: false }));
         return;
       }
 
@@ -136,20 +139,38 @@ export function useSupabaseQuery<T = unknown>(
         throw new Error(error.message || 'Erreur Supabase');
       }
 
-      setState({ data: data as T, error: null, isLoading: false, refetch: executeQuery });
+      setState(prev => ({ ...prev, data: data as T, error: null, isLoading: false }));
     } catch (error) {
-      setState({
+      setState(prev => ({
+        ...prev,
         data: null,
         error: error instanceof Error ? error : new Error('Erreur inconnue'),
-        isLoading: false,
-        refetch: executeQuery
-      });
+        isLoading: false
+      }));
     }
   }, [enabled, table, select, queryFn, filters, orderBy, limit]);
 
   useEffect(() => {
+    // Créer une chaîne de dépendances pour comparaison
+    const currentDepsString = JSON.stringify({
+      enabled,
+      table,
+      select,
+      filters,
+      orderBy,
+      limit
+    });
+    
+    // Ne déclencher que si les dépendances ont réellement changé
+    if (prevDepsRef.current === currentDepsString) {
+      return;
+    }
+    prevDepsRef.current = currentDepsString;
+    
+    // Appeler executeQuery sans l'inclure dans les dépendances pour éviter les boucles infinies
     executeQuery();
-  }, [executeQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, table, select, limit]);
 
   return {
     ...state,

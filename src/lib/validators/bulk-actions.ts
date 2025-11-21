@@ -1,39 +1,50 @@
-/**
- * Schémas Zod pour la validation des actions en masse sur les tickets
- */
-
 import { z } from 'zod';
-import { TICKET_PRIORITIES } from '@/lib/constants/tickets';
+import { ticketPriorities } from './ticket';
+import { ASSISTANCE_LOCAL_STATUSES } from '@/lib/constants/tickets';
 
 /**
- * Schéma pour la mise à jour en masse du statut
- * Accepte tous les statuts (JIRA ou locaux) pour flexibilité
+ * Schéma pour les actions en masse sur les tickets
  */
-export const bulkUpdateStatusSchema = z.object({
-  ticketIds: z.array(z.string().uuid()).min(1, 'Au moins un ticket doit être sélectionné'),
-  status: z.string().min(1, 'Le statut est requis')
+export const bulkActionBaseSchema = z.object({
+  ticketIds: z.array(z.string().uuid()).min(1, 'Au moins un ticket doit être sélectionné')
 });
 
 /**
- * Schéma pour la mise à jour en masse de la priorité
+ * Schéma pour changer le statut en masse
  */
-export const bulkUpdatePrioritySchema = z.object({
-  ticketIds: z.array(z.string().uuid()).min(1, 'Au moins un ticket doit être sélectionné'),
-  priority: z.enum(['Critical', 'High', 'Medium', 'Low'] as [string, ...string[]])
+export const bulkUpdateStatusSchema = bulkActionBaseSchema.extend({
+  status: z.enum(ASSISTANCE_LOCAL_STATUSES, {
+    message: 'Statut invalide'
+  })
 });
 
-/**
- * Schéma pour la réassignation en masse
- */
-export const bulkReassignSchema = z.object({
-  ticketIds: z.array(z.string().uuid()).min(1, 'Au moins un ticket doit être sélectionné'),
-  assignedTo: z.string().uuid().nullable()
-});
-
-/**
- * Types TypeScript dérivés des schémas
- */
 export type BulkUpdateStatusInput = z.infer<typeof bulkUpdateStatusSchema>;
-export type BulkUpdatePriorityInput = z.infer<typeof bulkUpdatePrioritySchema>;
+
+/**
+ * Schéma pour réassigner en masse
+ */
+export const bulkReassignSchema = bulkActionBaseSchema.extend({
+  assignedTo: z.string().uuid('ID utilisateur invalide').nullable()
+});
+
 export type BulkReassignInput = z.infer<typeof bulkReassignSchema>;
 
+/**
+ * Schéma pour changer la priorité en masse
+ */
+export const bulkUpdatePrioritySchema = bulkActionBaseSchema.extend({
+  priority: z.enum(ticketPriorities, {
+    message: 'Priorité invalide'
+  })
+});
+
+export type BulkUpdatePriorityInput = z.infer<typeof bulkUpdatePrioritySchema>;
+
+/**
+ * Schéma pour l'export en masse
+ */
+export const bulkExportSchema = bulkActionBaseSchema.extend({
+  format: z.enum(['csv', 'excel']).default('csv')
+});
+
+export type BulkExportInput = z.infer<typeof bulkExportSchema>;
