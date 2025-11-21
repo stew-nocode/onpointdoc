@@ -5,6 +5,9 @@ import type { TicketsPaginatedResult, TicketWithRelations, SupabaseTicketRaw } f
 import { transformRelation } from '@/types/ticket-with-relations';
 import { getInitialStatus } from '@/lib/utils/ticket-status';
 import { createJiraIssue } from '@/services/jira/client';
+import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
+import { mapSortColumnToSupabase } from '@/lib/utils/ticket-sort';
+import { DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -248,9 +251,20 @@ export const listTicketsPaginated = async (
   limit: number = 25,
   search?: string,
   quickFilter?: QuickFilter,
-  currentProfileId?: string | null
+  currentProfileId?: string | null,
+  sortColumn?: TicketSortColumn,
+  sortDirection?: SortDirection
 ): Promise<TicketsPaginatedResult> => {
   const supabase = await createSupabaseServerClient();
+  
+  // Utiliser le tri fourni ou le tri par défaut
+  const sort = sortColumn && sortDirection
+    ? { column: sortColumn, direction: sortDirection }
+    : DEFAULT_TICKET_SORT;
+  
+  const supabaseColumn = mapSortColumnToSupabase(sort.column);
+  const ascending = sort.direction === 'asc';
+  
   let query = supabase
     .from('tickets')
     .select(`
@@ -273,7 +287,7 @@ export const listTicketsPaginated = async (
       product:products(id, name),
       module:modules(id, name)
     `, { count: 'exact' })
-    .order('created_at', { ascending: false })
+    .order(supabaseColumn, { ascending })
     .range(offset, offset + limit - 1);
 
   if (type) {

@@ -26,6 +26,8 @@ type TicketsPageProps = {
     status?: string;
     search?: string;
     quick?: QuickFilter;
+    sortColumn?: string;
+    sortDirection?: string;
   }>;
 };
 
@@ -34,7 +36,9 @@ async function loadInitialTickets(
   statusParam?: string,
   searchParam?: string,
   quickFilterParam?: QuickFilter,
-  currentProfileId?: string | null
+  currentProfileId?: string | null,
+  sortColumnParam?: string,
+  sortDirectionParam?: string
 ): Promise<TicketsPaginatedResult> {
   noStore();
   try {
@@ -46,6 +50,10 @@ async function loadInitialTickets(
     // Accepter tous les statuts (JIRA ou locaux) comme filtre valide
     const normalizedStatus = statusParam || undefined;
 
+    // Parser les paramètres de tri
+    const { parseTicketSort } = await import('@/types/ticket-sort');
+    const sort = parseTicketSort(sortColumnParam, sortDirectionParam);
+
     return await listTicketsPaginated(
       normalizedType,
       normalizedStatus,
@@ -53,7 +61,9 @@ async function loadInitialTickets(
       25,
       searchParam,
       quickFilterParam,
-      currentProfileId
+      currentProfileId,
+      sort.column,
+      sort.direction
     );
   } catch {
     return { tickets: [], hasMore: false, total: 0 };

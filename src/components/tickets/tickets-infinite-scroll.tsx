@@ -20,8 +20,11 @@ import {
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 import { useAuth } from '@/hooks';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnalysisButton } from '@/components/n8n/analysis-button';
+import { SortableTableHeader } from './sortable-table-header';
+import { parseTicketSort, DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
+import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -47,7 +50,16 @@ export function TicketsInfiniteScroll({
   currentProfileId
 }: TicketsInfiniteScrollProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { role } = useAuth();
+  
+  // Parser les paramètres de tri depuis l'URL
+  const sortColumnParam = searchParams.get('sortColumn') || undefined;
+  const sortDirectionParam = searchParams.get('sortDirection') || undefined;
+  const sort = parseTicketSort(sortColumnParam, sortDirectionParam);
+  
+  const [currentSort, setCurrentSort] = useState<TicketSortColumn>(sort.column);
+  const [currentSortDirection, setCurrentSortDirection] = useState<SortDirection>(sort.direction);
   const [tickets, setTickets] = useState<TicketWithRelations[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +81,27 @@ export function TicketsInfiniteScroll({
   useEffect(() => {
     setIsMounted(true);
     setVisibleColumns(getVisibleColumns());
-  }, []);
+    setCurrentSort(sort.column);
+    setCurrentSortDirection(sort.direction);
+  }, [sort.column, sort.direction]);
+
+  /**
+   * Handler pour le tri d'une colonne
+   * Met à jour l'URL avec les nouveaux paramètres de tri
+   * 
+   * @param column - Colonne à trier
+   * @param direction - Direction du tri
+   */
+  const handleSort = useCallback((column: TicketSortColumn, direction: SortDirection) => {
+    setCurrentSort(column);
+    setCurrentSortDirection(direction);
+    
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sortColumn', column);
+    params.set('sortDirection', direction);
+    
+    router.push(`/gestion/tickets?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   // Utiliser la fonction utilitaire pour mettre en surbrillance les termes recherchés
   const highlightSearchTerm = useCallback(
@@ -99,7 +131,9 @@ export function TicketsInfiniteScroll({
 
       const params = new URLSearchParams({
         offset: currentLength.toString(),
-        limit: ITEMS_PER_PAGE.toString()
+        limit: ITEMS_PER_PAGE.toString(),
+        sortColumn: currentSort,
+        sortDirection: currentSortDirection
       });
 
       if (type) params.set('type', type);
@@ -130,7 +164,7 @@ export function TicketsInfiniteScroll({
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, type, status, search, quickFilter, currentProfileId]);
+  }, [isLoading, hasMore, type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
 
   // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
   const initialTicketIdsString = initialTickets.map(t => t.id).join(',');
@@ -156,7 +190,7 @@ export function TicketsInfiniteScroll({
     });
     setHasMore(initialHasMore);
     setError(null);
-  }, [type, status, search, quickFilter, initialHasMore, initialTicketIds, initialTickets]);
+  }, [type, status, search, quickFilter, currentSort, currentSortDirection, initialHasMore, initialTicketIds, initialTickets]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -213,9 +247,13 @@ export function TicketsInfiniteScroll({
             <thead className="border-b border-slate-200 dark:border-slate-800">
               <tr>
                 {isColumnVisible('title') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Titre
-                  </th>
+                  <SortableTableHeader
+                    column="title"
+                    label="Titre"
+                    currentSortColumn={currentSort}
+                    currentSortDirection={currentSortDirection}
+                    onSort={handleSort}
+                  />
                 )}
                 {isColumnVisible('type') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -223,14 +261,22 @@ export function TicketsInfiniteScroll({
                   </th>
                 )}
                 {isColumnVisible('status') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Statut
-                  </th>
+                  <SortableTableHeader
+                    column="status"
+                    label="Statut"
+                    currentSortColumn={currentSort}
+                    currentSortDirection={currentSortDirection}
+                    onSort={handleSort}
+                  />
                 )}
                 {isColumnVisible('priority') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Priorité
-                  </th>
+                  <SortableTableHeader
+                    column="priority"
+                    label="Priorité"
+                    currentSortColumn={currentSort}
+                    currentSortDirection={currentSortDirection}
+                    onSort={handleSort}
+                  />
                 )}
                 {isColumnVisible('canal') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -253,9 +299,13 @@ export function TicketsInfiniteScroll({
                   </th>
                 )}
                 {isColumnVisible('created_at') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Créé le
-                  </th>
+                  <SortableTableHeader
+                    column="created_at"
+                    label="Créé le"
+                    currentSortColumn={currentSort}
+                    currentSortDirection={currentSortDirection}
+                    onSort={handleSort}
+                  />
                 )}
                 {isColumnVisible('reporter') && (
                   <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -263,9 +313,13 @@ export function TicketsInfiniteScroll({
                   </th>
                 )}
                 {isColumnVisible('assigned') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Assigné
-                  </th>
+                  <SortableTableHeader
+                    column="assigned_to"
+                    label="Assigné"
+                    currentSortColumn={currentSort}
+                    currentSortDirection={currentSortDirection}
+                    onSort={handleSort}
+                  />
                 )}
                 <th className="pb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" />
               </tr>

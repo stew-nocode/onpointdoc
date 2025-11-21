@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { ticketSortColumnSchema, sortDirectionSchema } from './ticket-sort';
 
 /**
  * Schéma de validation pour les paramètres de recherche de tickets
@@ -14,7 +15,9 @@ export const ticketsListParamsSchema = z.object({
   quick: z.enum(['mine', 'unassigned', 'overdue', 'to_validate', 'week', 'month']).optional(),
   currentProfileId: z.string().uuid().optional(),
   offset: z.coerce.number().int().min(0).default(0),
-  limit: z.coerce.number().int().min(1).max(100).default(25)
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  sortColumn: ticketSortColumnSchema.optional(),
+  sortDirection: sortDirectionSchema.optional()
 });
 
 export type TicketsListParams = z.infer<typeof ticketsListParamsSchema>;
