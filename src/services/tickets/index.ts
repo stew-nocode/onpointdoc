@@ -361,6 +361,61 @@ export function applyQuickFilter(
 }
 
 
+/**
+ * Valide un ticket en tant que manager (non bloquant, pour reporting)
+ * Met à jour le champ `validated_by_manager = true` dans Supabase
+ * 
+ * @param ticketId - UUID du ticket à valider
+ * @returns Le ticket mis à jour avec `validated_by_manager = true`
+ * @throws Error si le ticket n'est pas trouvé ou si l'utilisateur n'est pas manager
+ */
+export const validateTicket = async (ticketId: string) => {
+  const supabase = await createSupabaseServerClient();
+
+  // Vérifier que l'utilisateur est authentifié et est un manager
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Non authentifié');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, role')
+    .eq('auth_uid', user.id)
+    .single();
+
+  if (!profile) {
+    throw new Error('Profil utilisateur introuvable');
+  }
+
+  // Vérifier que l'utilisateur est un manager ou un admin
+  const isManager = profile.role === 'manager' || profile.role?.includes('manager');
+  const isAdmin = profile.role === 'admin';
+  if (!isManager && !isAdmin) {
+    throw new Error('Seuls les managers et administrateurs peuvent valider un ticket');
+  }
+
+  // Mettre à jour le champ validated_by_manager
+  const { data, error } = await supabase
+    .from('tickets')
+    .update({ validated_by_manager: true })
+    .eq('id', ticketId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Erreur lors de la validation du ticket: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error('Ticket non trouvé');
+  }
+
+  return data;
+};
+
 export async function countTicketsByStatus(type: TicketTypeFilter) {
   const supabase = await createSupabaseServerClient();
   

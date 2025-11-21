@@ -7,9 +7,11 @@ import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { TransferTicketButton } from '@/components/tickets/transfer-ticket-button';
+import { ValidateTicketButton } from '@/components/tickets/validate-ticket-button';
 import { TicketDescription } from '@/components/tickets/ticket-description';
 import { TicketEditForm } from '@/components/tickets/ticket-edit-form';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   listProducts,
   listModules,
@@ -56,6 +58,28 @@ async function loadFormData() {
   }
 }
 
+async function getCurrentUserRole() {
+  noStore();
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('auth_uid', user.id)
+      .single();
+
+    return profile?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 type TicketDetailPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ edit?: string }>;
@@ -69,9 +93,10 @@ export default async function TicketDetailPage({
   const { edit } = await searchParams;
   const isEditMode = edit === 'true';
   
-  const [ticket, formData] = await Promise.all([
+  const [ticket, formData, currentUserRole] = await Promise.all([
     loadTicket(id),
-    isEditMode ? loadFormData() : Promise.resolve(null)
+    isEditMode ? loadFormData() : Promise.resolve(null),
+    getCurrentUserRole()
   ]);
 
   if (!ticket) {
@@ -89,6 +114,14 @@ export default async function TicketDetailPage({
 
   const canTransfer =
     ticket.ticket_type === 'ASSISTANCE' && ticket.status === 'En_cours';
+
+  // Vérifier si l'utilisateur est un manager ou un admin (pour le bouton de validation)
+  const canValidate =
+    currentUserRole === 'manager' ||
+    currentUserRole?.includes('manager') ||
+    currentUserRole === 'admin';
+  
+  const isValidated = Boolean(ticket.validated_by_manager);
 
   // Si mode édition, afficher le formulaire d'édition
   if (isEditMode && formData) {
@@ -144,9 +177,14 @@ export default async function TicketDetailPage({
           </Link>
           <h1 className="mt-2 text-2xl font-bold">{ticket.title}</h1>
         </div>
-        {canTransfer && (
-          <TransferTicketButton onTransfer={handleTransfer} ticketId={id} />
-        )}
+        <div className="flex items-center gap-3">
+          {canTransfer && (
+            <TransferTicketButton onTransfer={handleTransfer} ticketId={id} />
+          )}
+          {canValidate && (
+            <ValidateTicketButton ticketId={id} isValidated={isValidated} />
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -263,6 +301,17 @@ export default async function TicketDetailPage({
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   {ticket.jira_issue_key}
                 </p>
+              </div>
+            )}
+
+            {isValidated && (
+              <div>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Statut de validation
+                </label>
+                <div className="mt-1">
+                  <Badge variant="success">Validé par un manager</Badge>
+                </div>
               </div>
             )}
 
