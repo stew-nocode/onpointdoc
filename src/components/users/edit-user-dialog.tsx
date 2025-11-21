@@ -154,27 +154,31 @@ export function EditUserDialog({ userId, trigger }: Props) {
                 <RadioGroup 
                   value={role} 
                   onValueChange={(v) => setRole(v as 'agent' | 'manager' | 'admin' | 'director')} 
-                  className="grid grid-cols-2 gap-2"
+                  className="grid grid-cols-2 sm:grid-cols-4 gap-2"
                 >
                   <RadioCard
                     value="agent"
                     label="Agent"
-                    icon={<User className="h-4 w-4" />}
+                    icon={<User className="h-3 w-3" />}
+                    variant="compact"
                   />
                   <RadioCard
                     value="manager"
                     label="Manager"
-                    icon={<Users className="h-4 w-4" />}
+                    icon={<Users className="h-3 w-3" />}
+                    variant="compact"
                   />
                   <RadioCard
                     value="admin"
                     label="Admin"
-                    icon={<Shield className="h-4 w-4" />}
+                    icon={<Shield className="h-3 w-3" />}
+                    variant="compact"
                   />
                   <RadioCard
                     value="director"
                     label="Directeur"
-                    icon={<Crown className="h-4 w-4" />}
+                    icon={<Crown className="h-3 w-3" />}
+                    variant="compact"
                   />
                 </RadioGroup>
               </div>
@@ -188,17 +192,20 @@ export function EditUserDialog({ userId, trigger }: Props) {
                   <RadioCard
                     value="Support"
                     label="Support"
-                    icon={<Headphones className="h-4 w-4" />}
+                    icon={<Headphones className="h-3 w-3" />}
+                    variant="compact"
                   />
                   <RadioCard
                     value="IT"
                     label="IT"
-                    icon={<Code className="h-4 w-4" />}
+                    icon={<Code className="h-3 w-3" />}
+                    variant="compact"
                   />
                   <RadioCard
                     value="Marketing"
                     label="Marketing"
-                    icon={<Megaphone className="h-4 w-4" />}
+                    icon={<Megaphone className="h-3 w-3" />}
+                    variant="compact"
                   />
                 </RadioGroup>
             </div>

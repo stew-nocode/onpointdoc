@@ -108,19 +108,19 @@ export default async function TicketDetailPage({
         <TicketEditForm
           ticketId={id}
           ticketData={{
-            title: ticket.title,
-            description: ticket.description || '',
-            ticket_type: ticket.ticket_type as 'BUG' | 'REQ' | 'ASSISTANCE',
-            status: ticket.status || 'Nouveau',
-            canal: ticket.canal || 'Whatsapp',
-            priority: ticket.priority || 'Medium',
-            customer_context: ticket.customer_context,
-            contact_user_id: ticket.contact_user_id,
-            bug_type: ticket.bug_type,
-            product_id: ticket.product_id,
-            module_id: ticket.module_id,
-            submodule_id: ticket.submodule_id,
-            feature_id: ticket.feature_id
+            title: String(ticket.title ?? ''),
+            description: String(ticket.description ?? ''),
+            ticket_type: (ticket.ticket_type ?? 'ASSISTANCE') as 'BUG' | 'REQ' | 'ASSISTANCE',
+            status: String(ticket.status ?? 'Nouveau'),
+            canal: (ticket.canal ?? 'Whatsapp') as 'Whatsapp' | 'Email' | 'Appel' | 'Autre',
+            priority: (ticket.priority ?? 'Medium') as 'Low' | 'Medium' | 'High' | 'Critical',
+            customer_context: ticket.customer_context ? String(ticket.customer_context) : null,
+            contact_user_id: ticket.contact_user_id ? String(ticket.contact_user_id) : null,
+            bug_type: ticket.bug_type ? String(ticket.bug_type) : null,
+            product_id: ticket.product_id ? String(ticket.product_id) : null,
+            module_id: ticket.module_id ? String(ticket.module_id) : null,
+            submodule_id: ticket.submodule_id ? String(ticket.submodule_id) : null,
+            feature_id: ticket.feature_id ? String(ticket.feature_id) : null
           }}
           products={formData.products}
           modules={formData.modules}

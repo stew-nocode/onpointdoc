@@ -1,0 +1,5 @@
+[33mead8aaf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrefactor/clean-code[m[33m, [m[1;31morigin/refactor/clean-code[m[33m)[m feat: Ajouter éditeur de texte riche (Tiptap) pour la description des tickets
+[33m4ac4306[m feat: Ajout de l'analyse IA via N8N avec bouton contextuel sur les tickets - Amélioration gestion d'erreurs et documentation complète
+[33mf6bbee5[m feat: Ajout de l'édition de tickets avec changement de statut pour ASSISTANCE - Phase Clean Code complétée
+[33m67b9f91[m fix: Améliorer highlightText pour éviter les erreurs avec regex - Simplification de la logique avec index pairs/impairs - Ajout de gestion d'erreur pour les regex invalides - Évite les problèmes avec regex.test() et lastIndex
+[33m39c0dc2[m fix: Déplacer ticket-display.tsx vers components/tickets/utils/

@@ -130,6 +130,35 @@ export const TicketForm = ({
 
   return (
     <form className="space-y-3 w-full" onSubmit={handleSubmit}>
+      {/* Type et Canal */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-2 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Type de ticket</label>
+          <RadioGroup
+            value={form.watch('type')}
+            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])}
+            className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
+          >
+            <RadioCard variant="compact" value="BUG" label="BUG" icon={<Bug className="h-3 w-3" />} />
+            <RadioCard variant="compact" value="REQ" label="Requête" icon={<FileText className="h-3 w-3" />} />
+            <RadioCard variant="compact" value="ASSISTANCE" label="Assistance" icon={<HelpCircle className="h-3 w-3" />} />
+          </RadioGroup>
+        </div>
+        <div className="grid gap-2 min-w-0">
+          <label className="text-sm font-medium text-slate-700">Canal de contact</label>
+          <RadioGroup
+            value={form.watch('channel')}
+            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"
+          >
+            <RadioCard variant="compact" value="Whatsapp" label="WhatsApp" icon={<MessageSquare className="h-3 w-3" />} />
+            <RadioCard variant="compact" value="Email" label="Email" icon={<Mail className="h-3 w-3" />} />
+            <RadioCard variant="compact" value="Appel" label="Appel" icon={<Phone className="h-3 w-3" />} />
+            <RadioCard variant="compact" value="Autre" label="Autre" icon={<MoreHorizontal className="h-3 w-3" />} />
+          </RadioGroup>
+        </div>
+      </div>
+
       {/* Titre */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Titre</label>
@@ -174,35 +203,6 @@ export const TicketForm = ({
         )}
       </div>
 
-      {/* Type et Canal */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="grid gap-2 min-w-0">
-          <label className="text-sm font-medium text-slate-700">Type de ticket</label>
-          <RadioGroup
-            value={form.watch('type')}
-            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])}
-            className="grid grid-cols-1 sm:grid-cols-3 w-full"
-          >
-            <RadioCard value="BUG" label="BUG" icon={<Bug className="h-3.5 w-3.5" />} />
-            <RadioCard value="REQ" label="Requête" icon={<FileText className="h-3.5 w-3.5" />} />
-            <RadioCard value="ASSISTANCE" label="Assistance" icon={<HelpCircle className="h-3.5 w-3.5" />} />
-          </RadioGroup>
-        </div>
-        <div className="grid gap-2 min-w-0">
-          <label className="text-sm font-medium text-slate-700">Canal de contact</label>
-          <RadioGroup
-            value={form.watch('channel')}
-            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])}
-            className="grid grid-cols-1 sm:grid-cols-4 w-full"
-          >
-            <RadioCard value="Whatsapp" label="WhatsApp" icon={<MessageSquare className="h-3.5 w-3.5" />} />
-            <RadioCard value="Email" label="Email" icon={<Mail className="h-3.5 w-3.5" />} />
-            <RadioCard value="Appel" label="Appel" icon={<Phone className="h-3.5 w-3.5" />} />
-            <RadioCard value="Autre" label="Autre" icon={<MoreHorizontal className="h-3.5 w-3.5" />} />
-          </RadioGroup>
-        </div>
-      </div>
-
       {/* Type de bug (conditionnel) */}
       {ticketType === 'BUG' && (
         <div className="grid gap-2 min-w-0">
@@ -239,14 +239,15 @@ export const TicketForm = ({
               form.setValue('productId', v);
               setSelectedProductId(v);
             }}
-            className="grid grid-cols-1 sm:grid-cols-3 w-full"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full"
           >
             {products.map((product) => (
               <RadioCard
                 key={product.id}
                 value={product.id}
                 label={product.name}
-                icon={<Shield className="h-3.5 w-3.5" />}
+                icon={<Shield className="h-3 w-3" />}
+                variant="compact"
               />
             ))}
           </RadioGroup>
@@ -307,12 +308,12 @@ export const TicketForm = ({
         <RadioGroup
           value={form.watch('priority')}
           onValueChange={(v) => form.setValue('priority', v as CreateTicketInput['priority'])}
-          className="grid grid-cols-1 sm:grid-cols-4 w-full"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"
         >
-          <RadioCard value="Low" label="Faible" icon={<Zap className="h-3.5 w-3.5" />} />
-          <RadioCard value="Medium" label="Moyenne" icon={<AlertCircle className="h-3.5 w-3.5" />} />
-          <RadioCard value="High" label="Élevée" icon={<AlertTriangle className="h-3.5 w-3.5" />} />
-          <RadioCard value="Critical" label="Critique" icon={<Shield className="h-3.5 w-3.5" />} />
+          <RadioCard variant="compact" value="Low" label="Faible" icon={<Zap className="h-3 w-3" />} />
+          <RadioCard variant="compact" value="Medium" label="Moyenne" icon={<AlertCircle className="h-3 w-3" />} />
+          <RadioCard variant="compact" value="High" label="Élevée" icon={<AlertTriangle className="h-3 w-3" />} />
+          <RadioCard variant="compact" value="Critical" label="Critique" icon={<Shield className="h-3 w-3" />} />
         </RadioGroup>
       </div>
 
