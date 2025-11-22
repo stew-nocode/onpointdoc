@@ -38,4 +38,4 @@ export { useRichTextEditor } from './editors/use-rich-text-editor';
 export { useTicketSelection } from './tickets/use-ticket-selection';
 export { useBulkActions } from './tickets/use-bulk-actions';
 export type { BulkActionResult } from './tickets/use-bulk-actions';
-
+export { useComments } from './tickets/use-comments';

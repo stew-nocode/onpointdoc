@@ -439,7 +439,6 @@ export async function syncJiraToSupabase(
     });
 
   if (syncError) {
-    console.error('Erreur lors de la mise à jour de jira_sync:', syncError);
     // Ne pas faire échouer la synchronisation si jira_sync échoue
   }
 
@@ -460,6 +459,15 @@ export async function syncJiraToSupabase(
         source: 'jira'
       });
     }
+  }
+
+  // 9. Télécharger les pièces jointes JIRA vers Supabase Storage
+  try {
+    const { downloadJiraAttachmentsToSupabase } = await import('@/services/jira/attachments/download');
+    await downloadJiraAttachmentsToSupabase(jiraData.key, ticketId, supabase);
+  } catch (attachmentError) {
+    // Ne pas faire échouer la synchronisation si le téléchargement des pièces jointes échoue
+    // L'erreur est silencieuse car les autres données ont été synchronisées avec succès
   }
 }
 

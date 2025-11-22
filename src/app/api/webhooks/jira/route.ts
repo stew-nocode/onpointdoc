@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
     
     // Filtrer uniquement les tickets du projet OD (ignorer OBCS et autres projets)
     if (jiraIssueKey && !jiraIssueKey.startsWith('OD-')) {
-      console.log(`[Webhook JIRA] Ticket ignoré (projet non OD): ${jiraIssueKey}`);
       return NextResponse.json({
         success: true,
         message: 'Ticket ignoré (projet non OD)',
@@ -224,12 +223,23 @@ export async function POST(request: NextRequest) {
 
         case 'comment_added':
           if (updates?.comment) {
-            await supabase.from('ticket_comments').insert({
-              ticket_id: ticket.id,
-              content: updates.comment.content,
-              origin: 'jira_comment',
-              user_id: null // Peut être mappé depuis JIRA si nécessaire
-            });
+            try {
+              const { syncJiraCommentToSupabase } = await import('@/services/jira/comments/sync');
+              await syncJiraCommentToSupabase(
+                ticket.id,
+                {
+                  id: updates.comment.id || '',
+                  body: updates.comment.content || '',
+                  author: updates.comment.author,
+                  created: updates.comment.created || new Date().toISOString(),
+                  attachments: updates.comment.attachments || []
+                },
+                jira_issue_key,
+                supabase
+              );
+            } catch (commentError) {
+              // Ne pas faire échouer le webhook si la synchronisation du commentaire échoue
+            }
           }
           break;
 

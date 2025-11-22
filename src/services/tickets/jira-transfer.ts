@@ -86,12 +86,19 @@ export const transferTicketToJira = async (ticketId: string) => {
         origin: 'supabase',
         last_synced_at: new Date().toISOString()
       });
+
+      // Upload des pièces jointes vers JIRA
+      try {
+        const { uploadTicketAttachmentsToJira } = await import('@/services/jira/attachments/upload');
+        await uploadTicketAttachmentsToJira(jiraResponse.jiraIssueKey, ticketId);
+      } catch (attachmentError) {
+        // Ne pas faire échouer le transfert si l'upload des pièces jointes échoue
+        // L'erreur est silencieuse car le ticket principal a été créé avec succès
+      }
     } else {
-      console.error('Erreur lors de la création du ticket JIRA:', jiraResponse.error);
       throw new Error(`Impossible de créer le ticket JIRA: ${jiraResponse.error || 'Erreur inconnue'}`);
     }
   } catch (error) {
-    console.error('Erreur lors de la création du ticket JIRA:', error);
     // Re-lancer l'erreur pour que l'utilisateur soit informé
     throw new Error(`Erreur lors du transfert vers JIRA: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
   }
