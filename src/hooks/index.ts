@@ -29,6 +29,7 @@ export { useTicketForm } from './forms/use-ticket-form';
 
 // Hooks N8N
 export { useAnalysisGenerator } from './n8n/use-analysis-generator';
+export { useTextReveal } from './n8n/use-text-reveal';
 
 // Hooks d'éditeurs
 export { useRichTextEditor } from './editors/use-rich-text-editor';

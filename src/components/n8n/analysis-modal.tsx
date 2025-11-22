@@ -15,11 +15,12 @@ import {
   DialogTitle
 } from '@/ui/dialog';
 import { Button } from '@/ui/button';
+import { Textarea } from '@/ui/textarea';
 import { downloadAnalysisFile } from '@/lib/utils/file-download';
 import { AnalysisLoadingState } from './analysis-loading-state';
 import { AnalysisErrorDisplay } from './analysis-error-display';
 import { AnalysisToolbar } from './analysis-toolbar';
-import { AnalysisContent } from './analysis-content';
+import { AnalysisChatMessage } from './analysis-chat-message';
 
 type AnalysisModalProps = {
   open: boolean;
@@ -125,22 +126,47 @@ export function AnalysisModal({
           {/* État d'erreur */}
           {error && !isLoading && <AnalysisErrorDisplay error={error} />}
 
-          {/* Analyse générée */}
+          {/* Analyse générée - Style chat IA */}
           {analysis && !isLoading && !error && (
             <div className="space-y-4">
-              <AnalysisToolbar
-                isEditing={isEditing}
-                onEdit={() => setIsEditing(true)}
-                onSave={handleSave}
-                onCancel={handleCancel}
-                onDownload={handleDownload}
-                hasContent={!!(analysis || editedContent)}
-              />
-              <AnalysisContent
-                isEditing={isEditing}
-                content={editedContent || analysis}
-                onContentChange={setEditedContent}
-              />
+              {!isEditing ? (
+                <>
+                  <AnalysisChatMessage
+                    text={analysis}
+                    speed={30}
+                    onRevealComplete={() => {
+                      // La révélation est terminée, on peut activer les boutons
+                    }}
+                  />
+                  <div className="pt-2">
+                    <AnalysisToolbar
+                      isEditing={isEditing}
+                      onEdit={() => setIsEditing(true)}
+                      onSave={handleSave}
+                      onCancel={handleCancel}
+                      onDownload={handleDownload}
+                      hasContent={!!analysis}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <AnalysisToolbar
+                    isEditing={isEditing}
+                    onEdit={() => setIsEditing(true)}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                    onDownload={handleDownload}
+                    hasContent={!!(analysis || editedContent)}
+                  />
+                  <Textarea
+                    value={editedContent || analysis}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditedContent(e.target.value)}
+                    className="min-h-[400px] font-mono text-sm"
+                    placeholder="Modifiez l'analyse..."
+                  />
+                </>
+              )}
             </div>
           )}
 
