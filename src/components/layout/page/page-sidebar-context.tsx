@@ -2,43 +2,45 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
-type SidebarContextType = {
+type PageSidebarContextType = {
   isOpen: boolean;
   toggle: () => void;
   open: () => void;
   close: () => void;
 };
 
-const SidebarContext = createContext<SidebarContextType | null>(null);
+const PageSidebarContext = createContext<PageSidebarContextType | null>(null);
 
 /**
- * Hook pour accéder au contexte de la sidebar de navigation
- *
+ * Hook pour accéder au contexte de la sidebar de page
+ * 
  * @returns État et fonctions de contrôle de la sidebar
  * @throws Erreur si utilisé en dehors du provider
  */
-export function useSidebar(): SidebarContextType {
-  const context = useContext(SidebarContext);
+export function usePageSidebar(): PageSidebarContextType {
+  const context = useContext(PageSidebarContext);
 
   if (!context) {
-    throw new Error('useSidebar must be used within SidebarProvider');
+    throw new Error('usePageSidebar must be used within PageSidebarProvider');
   }
 
   return context;
 }
 
-type SidebarProviderProps = {
+type PageSidebarProviderProps = {
   children: ReactNode;
 };
 
 /**
- * Provider pour le contexte de la sidebar de navigation
- *
+ * Provider pour le contexte de la sidebar de page
+ * 
  * Gère l'état d'ouverture/fermeture de la sidebar
  * et le partage avec tous les composants enfants
+ * 
+ * @param children - Composants enfants
  */
-export function SidebarProvider({ children }: SidebarProviderProps) {
-  const [isOpen, setIsOpen] = useState(false); // Sidebar fermée par défaut sur mobile
+export function PageSidebarProvider({ children }: PageSidebarProviderProps) {
+  const [isOpen, setIsOpen] = useState(false);
 
   /**
    * Ouvre la sidebar
@@ -62,10 +64,9 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   }, []);
 
   return (
-    <SidebarContext.Provider value={{ isOpen, toggle, open, close }}>
+    <PageSidebarContext.Provider value={{ isOpen, toggle, open, close }}>
       {children}
-    </SidebarContext.Provider>
+    </PageSidebarContext.Provider>
   );
 }
-
 

@@ -1,5 +1,4 @@
 import { unstable_noStore as noStore } from 'next/cache';
-
 import { createTicket, listTicketsPaginated } from '@/services/tickets';
 import type { TicketsPaginatedResult } from '@/types/ticket-with-relations';
 import {
@@ -12,7 +11,6 @@ import {
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
@@ -23,8 +21,7 @@ import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
 import { FiltersSidebarClient } from '@/components/tickets/filters/filters-sidebar-client';
-import { FiltersSidebarProvider } from '@/components/tickets/filters/filters-sidebar-context';
-import { FiltersContentWrapper } from '@/components/tickets/filters/filters-content-wrapper';
+import { PageLayoutWithFilters } from '@/components/layout/page';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -181,29 +178,19 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     }
 
     return (
-    <FiltersSidebarProvider>
-      {/* Sidebar des filtres avancés */}
-      <FiltersSidebarClient
-        users={contacts}
-        products={products}
-        modules={modules}
-      />
-
-      {/* Contenu principal - s'adapte selon l'état de la sidebar */}
-      <FiltersContentWrapper>
-        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Tickets
-              </p>
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                Gestion des tickets Support
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Cycle de vie : Nouveau → En cours → Transféré → Résolu
-              </p>
-            </div>
+      <PageLayoutWithFilters
+        sidebar={
+          <FiltersSidebarClient
+            users={contacts}
+            products={products}
+            modules={modules}
+          />
+        }
+        header={{
+          label: 'Tickets',
+          title: 'Gestion des tickets Support',
+          description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
+          action: (
             <CreateTicketDialogLazy
               products={products}
               modules={modules}
@@ -212,44 +199,35 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
               contacts={contacts}
               onSubmit={handleTicketSubmit}
             />
-          </div>
-
-          {/* Section KPIs */}
-          <TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />
-
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle>
-                  Tickets récents
-                  {initialTicketsData.total > 0 && (
-                    <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
-                      ({initialTicketsData.total} au total)
-                    </span>
-                  )}
-                </CardTitle>
-                <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />
-              </div>
-            </CardHeader>
-            <div className="px-6 pb-4">
-              <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
-            </div>
-            <CardContent className="overflow-x-auto">
-              <TicketsInfiniteScroll
-                initialTickets={initialTicketsData.tickets}
-                initialHasMore={initialTicketsData.hasMore}
-                initialTotal={initialTicketsData.total}
-                type={resolvedSearchParams?.type}
-                status={resolvedSearchParams?.status}
-                search={resolvedSearchParams?.search}
-                quickFilter={quickFilter}
-                currentProfileId={currentProfileId ?? undefined}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </FiltersContentWrapper>
-    </FiltersSidebarProvider>
+          )
+        }}
+        kpis={<TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />}
+        card={{
+          title: 'Tickets récents',
+          titleSuffix:
+            initialTicketsData.total > 0
+              ? `(${initialTicketsData.total} au total)`
+              : undefined,
+          search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
+          quickFilters: (
+            <TicketsQuickFilters
+              activeFilter={quickFilter}
+              currentProfileId={currentProfileId}
+            />
+          )
+        }}
+      >
+        <TicketsInfiniteScroll
+          initialTickets={initialTicketsData.tickets}
+          initialHasMore={initialTicketsData.hasMore}
+          initialTotal={initialTicketsData.total}
+          type={resolvedSearchParams?.type}
+          status={resolvedSearchParams?.status}
+          search={resolvedSearchParams?.search}
+          quickFilter={quickFilter}
+          currentProfileId={currentProfileId ?? undefined}
+        />
+      </PageLayoutWithFilters>
     );
   } catch (error: any) {
     console.error('Erreur lors du chargement de la page des tickets:', error);

@@ -130,3 +130,4 @@ export function ConfigurationMenu({ role, onLinkClick }: ConfigurationMenuProps)
   );
 }
 
+

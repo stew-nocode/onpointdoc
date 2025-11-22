@@ -33,3 +33,4 @@ export function TypesFilter({ selectedTypes, onTypesChange }: TypesFilterProps) 
   );
 }
 
+

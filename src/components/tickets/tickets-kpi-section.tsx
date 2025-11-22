@@ -2,7 +2,6 @@
 
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { SupportTicketKPIs } from '@/services/tickets/support-kpis';
-import type { IconId } from '@/lib/utils/icon-map';
 
 type TicketsKPISectionProps = {
   kpis: SupportTicketKPIs;
@@ -10,21 +9,40 @@ type TicketsKPISectionProps = {
 };
 
 /**
+ * Détermine si une tendance est positive selon son type
+ * 
+ * @param trendValue - Valeur de la tendance
+ * @param isDecreasingPositive - Si true, une diminution est positive (ex: retards)
+ * @returns true si la tendance est positive
+ */
+function isTrendPositive(trendValue: number, isDecreasingPositive = false): boolean {
+  return isDecreasingPositive ? trendValue <= 0 : trendValue >= 0;
+}
+
+/**
  * Section affichant les 4 KPIs pour les agents support
- * Affichée au-dessus du tableau des tickets en flex horizontal
+ * Affichée au-dessus du tableau des tickets en grille responsive
  * Client Component car utilise des icônes Lucide (composants React)
  */
 export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) {
   // Déterminer si les tendances sont positives (moins de retard = positif, plus de résolutions = positif, etc.)
-  const overdueTrendIsPositive = kpis.trends ? kpis.trends.myTicketsOverdueTrend <= 0 : true;
-  const assistanceTrendIsPositive = kpis.trends ? kpis.trends.assistanceCountTrend >= 0 : true;
-  const resolvedTrendIsPositive = kpis.trends ? kpis.trends.myTicketsResolvedTrend >= 0 : true;
-  const transferredTrendIsPositive = kpis.trends ? kpis.trends.bugAndReqTransferredTrend >= 0 : true;
+  const overdueTrendIsPositive = kpis.trends
+    ? isTrendPositive(kpis.trends.myTicketsOverdueTrend, true)
+    : true;
+  const assistanceTrendIsPositive = kpis.trends
+    ? isTrendPositive(kpis.trends.assistanceCountTrend, false)
+    : true;
+  const resolvedTrendIsPositive = kpis.trends
+    ? isTrendPositive(kpis.trends.myTicketsResolvedTrend, false)
+    : true;
+  const transferredTrendIsPositive = kpis.trends
+    ? isTrendPositive(kpis.trends.bugAndReqTransferredTrend, false)
+    : true;
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Mes tickets en retard */}
-      <div className="flex-1 min-w-[200px]">
+      <div className="w-full">
         <KPICard
           title="Mes tickets en retard"
           value={kpis.myTicketsOverdue}
@@ -45,7 +63,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
       </div>
       
       {/* Nombre d'ASSISTANCE ce mois */}
-      <div className="flex-1 min-w-[200px]">
+      <div className="w-full">
         <KPICard
           title="ASSISTANCE ce mois"
           value={kpis.assistanceCountThisMonth}
@@ -66,7 +84,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
       </div>
       
       {/* Mes tickets résolus ce mois */}
-      <div className="flex-1 min-w-[200px]">
+      <div className="w-full">
         <KPICard
           title="Mes tickets résolus"
           value={kpis.myTicketsResolvedThisMonth}
@@ -87,7 +105,7 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
       </div>
       
       {/* BUG et REQ transférés */}
-      <div className="flex-1 min-w-[200px]">
+      <div className="w-full">
         <KPICard
           title="BUG et REQ transférés"
           value={kpis.bugAndReqTransferred}
