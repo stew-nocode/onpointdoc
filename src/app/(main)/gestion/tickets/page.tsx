@@ -21,6 +21,10 @@ import { TicketsKPISection } from '@/components/tickets/tickets-kpi-section';
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
+import { FiltersSidebarClient } from '@/components/tickets/filters/filters-sidebar-client';
+import { FiltersSidebarProvider } from '@/components/tickets/filters/filters-sidebar-context';
+import { FiltersContentWrapper } from '@/components/tickets/filters/filters-content-wrapper';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -40,7 +44,8 @@ async function loadInitialTickets(
   quickFilterParam?: QuickFilter,
   currentProfileId?: string | null,
   sortColumnParam?: string,
-  sortDirectionParam?: string
+  sortDirectionParam?: string,
+  advancedFilters?: ReturnType<typeof parseAdvancedFiltersFromParams>
 ): Promise<TicketsPaginatedResult> {
   noStore();
   try {
@@ -65,7 +70,8 @@ async function loadInitialTickets(
       quickFilterParam,
       currentProfileId,
       sort.column,
-      sort.direction
+      sort.direction,
+      advancedFilters || undefined
     );
   } catch {
     return { tickets: [], hasMore: false, total: 0 };
@@ -128,6 +134,23 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   // Résoudre la Promise searchParams pour Next.js 15
   const resolvedSearchParams = await searchParams;
   const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
+  
+  // Parser les filtres avancés depuis les URL params
+  // Next.js 15 retourne les searchParams comme un objet, mais pour les valeurs multiples,
+  // il faut les extraire manuellement depuis l'URL
+  const allParams: Record<string, string | string[] | undefined> = {};
+  
+  // Pour les paramètres simples, utiliser directement
+  if (resolvedSearchParams?.type) allParams.type = resolvedSearchParams.type;
+  if (resolvedSearchParams?.status) allParams.status = resolvedSearchParams.status;
+  if (resolvedSearchParams?.search) allParams.search = resolvedSearchParams.search;
+  if (resolvedSearchParams?.quick) allParams.quick = resolvedSearchParams.quick;
+  
+  // Pour les paramètres de filtres avancés, on doit les extraire depuis l'URL directement
+  // car Next.js 15 ne les expose pas comme arrays dans searchParams
+  // On utilisera parseAdvancedFiltersFromParams côté client dans FiltersSidebarClient
+  const advancedFilters = null; // Sera géré côté client via FiltersSidebarClient
+  
   const currentProfileIdPromise = getCurrentUserProfileId();
   const productsPromise = loadProductsAndModules();
   const currentProfileId = await currentProfileIdPromise;
@@ -137,7 +160,10 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     resolvedSearchParams?.status,
     resolvedSearchParams?.search,
     quickFilter,
-    currentProfileId
+    currentProfileId,
+    resolvedSearchParams?.sortColumn,
+    resolvedSearchParams?.sortDirection,
+    null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
   );
   
   try {
@@ -155,63 +181,75 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     }
 
     return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Tickets
-          </p>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-            Gestion des tickets Support
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Cycle de vie : Nouveau → En cours → Transféré → Résolu
-          </p>
+    <FiltersSidebarProvider>
+      {/* Sidebar des filtres avancés */}
+      <FiltersSidebarClient
+        users={contacts}
+        products={products}
+        modules={modules}
+      />
+
+      {/* Contenu principal - s'adapte selon l'état de la sidebar */}
+      <FiltersContentWrapper>
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Tickets
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                Gestion des tickets Support
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Cycle de vie : Nouveau → En cours → Transféré → Résolu
+              </p>
+            </div>
+            <CreateTicketDialogLazy
+              products={products}
+              modules={modules}
+              submodules={submodules}
+              features={features}
+              contacts={contacts}
+              onSubmit={handleTicketSubmit}
+            />
+          </div>
+
+          {/* Section KPIs */}
+          <TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle>
+                  Tickets récents
+                  {initialTicketsData.total > 0 && (
+                    <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                      ({initialTicketsData.total} au total)
+                    </span>
+                  )}
+                </CardTitle>
+                <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />
+              </div>
+            </CardHeader>
+            <div className="px-6 pb-4">
+              <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
+            </div>
+            <CardContent className="overflow-x-auto">
+              <TicketsInfiniteScroll
+                initialTickets={initialTicketsData.tickets}
+                initialHasMore={initialTicketsData.hasMore}
+                initialTotal={initialTicketsData.total}
+                type={resolvedSearchParams?.type}
+                status={resolvedSearchParams?.status}
+                search={resolvedSearchParams?.search}
+                quickFilter={quickFilter}
+                currentProfileId={currentProfileId ?? undefined}
+              />
+            </CardContent>
+          </Card>
         </div>
-          <CreateTicketDialogLazy
-            products={products}
-            modules={modules}
-            submodules={submodules}
-            features={features}
-            contacts={contacts}
-            onSubmit={handleTicketSubmit}
-          />
-      </div>
-
-      {/* Section KPIs */}
-      <TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />
-
-        <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>
-              Tickets récents
-              {initialTicketsData.total > 0 && (
-                <span className="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
-                  ({initialTicketsData.total} au total)
-                </span>
-              )}
-            </CardTitle>
-            <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />
-          </div>
-        </CardHeader>
-          <div className="px-6 pb-4">
-            <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
-          </div>
-        <CardContent className="overflow-x-auto">
-          <TicketsInfiniteScroll
-            initialTickets={initialTicketsData.tickets}
-            initialHasMore={initialTicketsData.hasMore}
-            initialTotal={initialTicketsData.total}
-            type={resolvedSearchParams?.type}
-            status={resolvedSearchParams?.status}
-              search={resolvedSearchParams?.search}
-              quickFilter={quickFilter}
-              currentProfileId={currentProfileId ?? undefined}
-          />
-        </CardContent>
-      </Card>
-    </div>
+      </FiltersContentWrapper>
+    </FiltersSidebarProvider>
     );
   } catch (error: any) {
     console.error('Erreur lors du chargement de la page des tickets:', error);

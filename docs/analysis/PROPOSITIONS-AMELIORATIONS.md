@@ -41,7 +41,7 @@
 ### ⏳ Ce qui reste À FAIRE (~25 fonctionnalités)
 
 #### 🔴 Priorité Haute
-1. ⏳ **Commentaires sur tickets** - Service existe, UI à implémenter
+1. ✅ **Commentaires sur tickets** - UI complète implémentée avec synchronisation JIRA
 2. ⏳ **Édition rapide (inline)** - Édition directe dans le tableau
 3. ⏳ **Page Activités (complète)** - Actuellement page vide
 4. ⏳ **Page Tâches (complète)** - Actuellement page vide
@@ -457,18 +457,22 @@
 
 ---
 
-### 6.4. Commentaires sur tickets 🟡 **EN COURS**
+### 6.4. Commentaires sur tickets ✅ **FAIT**
 **Priorité** : 🔴 Haute  
 **Effort** : Moyen  
-**Statut** : 🟡 **SERVICE EXISTE** - UI à implémenter (2025-01-21)
+**Statut** : ✅ **IMPLÉMENTÉ COMPLET** (2025-01-21)
 
-- Section commentaires dans la page détail ticket
-- Ajout de commentaires
-- Mentions d'utilisateurs (@nom)
-- Pièces jointes dans les commentaires
-- Historique complet
+- ✅ Section commentaires dans la page détail ticket
+- ✅ Ajout de commentaires
+- ✅ Suppression de commentaires (auteur uniquement)
+- ✅ Pièces jointes dans les commentaires (upload/téléchargement)
+- ✅ Synchronisation bidirectionnelle JIRA (upload/téléchargement)
+- ✅ Affichage des commentaires JIRA avec badge
+- ✅ Formatage du contenu (Markdown via TicketDescription)
+- ⏳ Mentions d'utilisateurs (@nom) - À implémenter
+- ⏳ Historique complet - À améliorer (timeline existante)
 
-**État actuel** : Table `ticket_comments` existe mais pas d'UI
+**État actuel** : ✅ UI complète implémentée avec Clean Code strict
 
 ---
 
@@ -492,12 +496,16 @@
 ### 6.6. Pièces jointes améliorées 🟡 **PARTIELLEMENT FAIT**
 **Priorité** : 🟡 Moyenne  
 **Effort** : Moyen  
-**Statut** : 🟡 **UPLOAD FONCTIONNEL** - Galerie et prévisualisation à faire (2025-01-21)
+**Statut** : 🟡 **UPLOAD/TÉLÉCHARGEMENT FONCTIONNEL** - Galerie et prévisualisation à faire (2025-01-21)
 
-- Galerie de pièces jointes
-- Prévisualisation (images, PDF)
-- Téléchargement en lot
-- Gestion des permissions (qui peut voir/télécharger)
+- ✅ Upload de pièces jointes sur tickets
+- ✅ Upload de pièces jointes sur commentaires
+- ✅ Synchronisation bidirectionnelle JIRA (upload/téléchargement)
+- ✅ Téléchargement individuel
+- ✅ Gestion des permissions (RLS)
+- ⏳ Galerie de pièces jointes - À implémenter
+- ⏳ Prévisualisation (images, PDF) - À implémenter
+- ⏳ Téléchargement en lot - À implémenter
 
 ---
 

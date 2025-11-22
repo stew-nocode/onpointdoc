@@ -164,6 +164,31 @@ export function TicketsInfiniteScroll({
       if (quickFilter) params.set('quick', quickFilter);
       if (currentProfileId) params.set('currentProfileId', currentProfileId);
 
+      // Ajouter les filtres avancés depuis les URL params
+      const allSearchParams = new URLSearchParams(searchParams.toString());
+      const advancedFilterKeys = [
+        'types',
+        'statuses',
+        'priorities',
+        'assignedTo',
+        'products',
+        'modules',
+        'channels',
+        'createdAtPreset',
+        'createdAtStart',
+        'createdAtEnd',
+        'resolvedAtPreset',
+        'resolvedAtStart',
+        'resolvedAtEnd',
+        'origins',
+        'hasJiraSync'
+      ];
+
+      advancedFilterKeys.forEach((key) => {
+        const values = allSearchParams.getAll(key);
+        values.forEach((value) => params.append(key, value));
+      });
+
       const response = await fetch(`/api/tickets/list?${params.toString()}`);
       
       if (!response.ok) {

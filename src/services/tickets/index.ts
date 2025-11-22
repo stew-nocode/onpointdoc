@@ -8,6 +8,8 @@ import { createJiraIssue } from '@/services/jira/client';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
 import { mapSortColumnToSupabase } from '@/lib/utils/ticket-sort';
 import { DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
+import type { AdvancedFiltersInput } from '@/lib/validators/advanced-filters';
+import { applyAdvancedFilters } from './filters/advanced';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -253,7 +255,8 @@ export const listTicketsPaginated = async (
   quickFilter?: QuickFilter,
   currentProfileId?: string | null,
   sortColumn?: TicketSortColumn,
-  sortDirection?: SortDirection
+  sortDirection?: SortDirection,
+  advancedFilters?: AdvancedFiltersInput | null
 ): Promise<TicketsPaginatedResult> => {
   const supabase = await createSupabaseServerClient();
   
@@ -280,6 +283,7 @@ export const listTicketsPaginated = async (
       target_date,
       bug_type,
       created_at,
+      updated_at,
       created_by,
       created_user:profiles!tickets_created_by_fkey(id, full_name),
       assigned_to,
@@ -288,31 +292,58 @@ export const listTicketsPaginated = async (
       contact_user:profiles!tickets_contact_user_id_fkey(id, full_name, company_id),
       product:products(id, name),
       module:modules(id, name)
-    `, { count: 'exact' })
-    .order(supabaseColumn, { ascending })
-    .range(offset, offset + limit - 1);
+    `, { count: 'exact' });
 
-  if (type) {
+  // Appliquer les filtres simples (pour compatibilité)
+  if (type && !advancedFilters?.types?.length) {
     query = query.eq('ticket_type', type);
   }
-  if (status) {
+  if (status && !advancedFilters?.statuses?.length) {
     query = query.eq('status', status);
   }
 
   // Recherche textuelle dans titre, description et clé Jira
   if (search && search.trim().length > 0) {
     const searchTerm = `%${search.trim()}%`;
-    // Utiliser .or() avec la syntaxe correcte pour Supabase
-    // Format: "col1.op.val1,col2.op.val2" (sans guillemets autour des valeurs)
     query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
   }
 
+  // Appliquer les quick filters
   query = applyQuickFilter(query, quickFilter, { currentProfileId: currentProfileId ?? undefined });
+
+  // Appliquer les filtres avancés si fournis (AVANT .order() et .range())
+  if (advancedFilters) {
+    try {
+      query = applyAdvancedFilters(query, advancedFilters);
+    } catch (filterError) {
+      console.error('[ERROR] Erreur lors de l\'application des filtres avancés:', filterError);
+      if (filterError instanceof Error) {
+        console.error('[ERROR] Message:', filterError.message);
+        console.error('[ERROR] Stack:', filterError.stack);
+      }
+      throw filterError;
+    }
+  }
+
+  // Appliquer le tri et la pagination APRÈS tous les filtres
+  query = query.order(supabaseColumn, { ascending }).range(offset, offset + limit - 1);
 
   const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(error.message);
+    console.error('[ERROR] Erreur Supabase dans listTicketsPaginated:');
+    console.error('[ERROR] Erreur complète (stringified):', JSON.stringify(error, null, 2));
+    console.error('[ERROR] Code:', error.code);
+    console.error('[ERROR] Message:', error.message);
+    console.error('[ERROR] Details:', error.details);
+    console.error('[ERROR] Hint:', error.hint);
+    
+    // Créer un message d'erreur plus descriptif avec tous les détails
+    const errorMessage = error.message || 'Erreur Supabase inconnue';
+    const errorCode = error.code || 'UNKNOWN';
+    const fullErrorMessage = `Erreur Supabase (${errorCode}): ${errorMessage}${error.details ? ` | Details: ${error.details}` : ''}${error.hint ? ` | Hint: ${error.hint}` : ''}`;
+    
+    throw new Error(fullErrorMessage);
   }
 
   // Récupérer tous les company_id uniques depuis contact_user
