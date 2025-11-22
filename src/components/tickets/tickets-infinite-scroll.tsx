@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { Eye, Edit, Loader2, CheckSquare2, Square } from 'lucide-react';
+import { Eye, Edit, Loader2, CheckSquare2, Square, MessageSquare } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Checkbox } from '@/ui/checkbox';
@@ -27,6 +27,9 @@ import { SortableTableHeader } from './sortable-table-header';
 import { parseTicketSort, DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
 import { BulkActionsBar } from './bulk-actions-bar';
+import { TicketStatsTooltip } from './tooltips/ticket-stats-tooltip';
+import { UserStatsTooltip } from './tooltips/user-stats-tooltip';
+import { AddCommentDialog } from './add-comment-dialog';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -403,23 +406,13 @@ export function TicketsInfiniteScroll({
                           </Link>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-md">
-                        <p className="text-sm">{ticket.title}</p>
-                        {ticket.description && (() => {
-                          const descriptionText = parseADFToText(ticket.description);
-                          const truncatedText = descriptionText.length > 200 
-                            ? `${descriptionText.substring(0, 200)}...` 
-                            : descriptionText;
-                          return (
-                            <p className="text-xs text-slate-400 mt-1 line-clamp-3 whitespace-pre-wrap">
-                              {truncatedText}
-                            </p>
-                          );
-                        })()}
-                        {ticket.jira_issue_key && (
-                          <p className="text-xs text-slate-400 mt-1">Jira: {ticket.jira_issue_key}</p>
-                        )}
-                      </TooltipContent>
+                      <TicketStatsTooltip
+                        ticketId={ticket.id}
+                        createdAt={ticket.created_at}
+                        title={ticket.title}
+                        description={ticket.description}
+                        jiraIssueKey={ticket.jira_issue_key ?? null}
+                      />
                     </Tooltip>
                   </td>
                 )}
@@ -582,9 +575,10 @@ export function TicketsInfiniteScroll({
                             </span>
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Rapporteur: {ticket.created_user.full_name}</p>
-                        </TooltipContent>
+                        <UserStatsTooltip
+                          profileId={ticket.created_by ?? null}
+                          type="reporter"
+                        />
                       </Tooltip>
                     ) : (
                       <span className="text-xs text-slate-400">-</span>
@@ -609,9 +603,10 @@ export function TicketsInfiniteScroll({
                             </span>
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{ticket.assigned_user.full_name}</p>
-                        </TooltipContent>
+                        <UserStatsTooltip
+                          profileId={ticket.assigned_to ?? null}
+                          type="assigned"
+                        />
                       </Tooltip>
                     ) : (
                       <span className="text-xs text-slate-400">-</span>
@@ -663,6 +658,18 @@ export function TicketsInfiniteScroll({
                       id={ticket.id}
                       tooltip="Générer une analyse IA"
                     />
+
+                    {/* Ajouter un commentaire */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <AddCommentDialog ticketId={ticket.id} ticketTitle={ticket.title} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Ajouter un commentaire</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 </td>
               </tr>
