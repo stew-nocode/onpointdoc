@@ -13,9 +13,21 @@ type WorkloadKPICardProps = {
  * @param data - Données de charge (par équipe, total actif)
  */
 export function WorkloadKPICard({ data }: WorkloadKPICardProps) {
-  const supportTeam = data.byTeam.find((t) => t.team === 'support');
-  const itTeam = data.byTeam.find((t) => t.team === 'it');
-  const marketingTeam = data.byTeam.find((t) => t.team === 'marketing');
+  if (!data) {
+    return (
+      <KPICard
+        title="Tickets Actifs"
+        value="N/A"
+        description="Données non disponibles"
+        icon="briefcase"
+        variant="default"
+      />
+    );
+  }
+
+  const supportTeam = data.byTeam?.find((t) => t.team === 'support');
+  const itTeam = data.byTeam?.find((t) => t.team === 'it');
+  const marketingTeam = data.byTeam?.find((t) => t.team === 'marketing');
 
   return (
     <div className="space-y-4">

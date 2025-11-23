@@ -46,6 +46,19 @@ function transformMTTRData(data: MTTRData) {
  * @param data - Données MTTR avec répartition par produit
  */
 export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
+  if (!data || !data.byProduct) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Évolution MTTR</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-500">Aucune donnée disponible</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const chartData = transformMTTRData(data);
 
   return (

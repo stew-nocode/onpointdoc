@@ -13,6 +13,18 @@ type MTTRKPICardProps = {
  * @param data - Données MTTR (global, par produit, tendance)
  */
 export function MTTRKPICard({ data }: MTTRKPICardProps) {
+  if (!data) {
+    return (
+      <KPICard
+        title="MTTR Global"
+        value="N/A"
+        description="Données non disponibles"
+        icon="clock"
+        variant="default"
+      />
+    );
+  }
+
   const trendIsPositive = data.trend <= 0; // Moins de temps = positif
 
   return (

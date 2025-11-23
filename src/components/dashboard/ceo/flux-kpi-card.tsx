@@ -13,6 +13,27 @@ type FluxKPICardProps = {
  * @param data - Données de flux (ouverts, résolus, taux, tendances)
  */
 export function FluxKPICard({ data }: FluxKPICardProps) {
+  if (!data || !data.trend) {
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        <KPICard
+          title="Tickets Ouverts"
+          value="N/A"
+          description="Données non disponibles"
+          icon="plus-circle"
+          variant="default"
+        />
+        <KPICard
+          title="Tickets Résolus"
+          value="N/A"
+          description="Données non disponibles"
+          icon="check-circle-2"
+          variant="default"
+        />
+      </div>
+    );
+  }
+
   const openedTrendIsPositive = data.trend.openedTrend <= 0; // Moins d'ouverts = positif
   const resolvedTrendIsPositive = data.trend.resolvedTrend >= 0; // Plus de résolus = positif
 

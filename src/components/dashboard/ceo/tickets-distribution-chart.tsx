@@ -26,7 +26,7 @@ import {
 } from './charts/chart-constants';
 
 type TicketsDistributionChartProps = {
-  data: TicketFluxData;
+  data: TicketFluxData | null;
 };
 
 /**
@@ -46,6 +46,19 @@ function transformPieData(data: TicketFluxData) {
  * @param data - Données de flux avec répartition par produit
  */
 export function TicketsDistributionChart({ data }: TicketsDistributionChartProps) {
+  if (!data || !data.byProduct || !data.trend) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Distribution par Produit</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-500">Aucune donnée disponible</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const chartData = transformPieData(data);
   const totalOpened = data.opened;
 

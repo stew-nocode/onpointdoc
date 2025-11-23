@@ -14,6 +14,18 @@ type HealthKPICardProps = {
  * @param data - Données de santé (par produit, top modules)
  */
 export function HealthKPICard({ data }: HealthKPICardProps) {
+  if (!data || !data.byProduct) {
+    return (
+      <KPICard
+        title="Santé Produit"
+        value="N/A"
+        description="Données non disponibles"
+        icon="activity"
+        variant="default"
+      />
+    );
+  }
+
   const criticalProducts = data.byProduct.filter((p) => p.healthStatus === 'critical');
   const warningProducts = data.byProduct.filter((p) => p.healthStatus === 'warning');
   const goodProducts = data.byProduct.filter((p) => p.healthStatus === 'good');

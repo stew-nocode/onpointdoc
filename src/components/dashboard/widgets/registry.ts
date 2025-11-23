@@ -93,39 +93,72 @@ export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
 };
 
 /**
+ * Données par défaut pour éviter les erreurs quand les données sont manquantes
+ */
+const DEFAULT_MTTR_DATA = {
+  global: 0,
+  byProduct: [],
+  byType: [],
+  trend: 0,
+};
+
+const DEFAULT_FLUX_DATA = {
+  opened: 0,
+  resolved: 0,
+  resolutionRate: 0,
+  byProduct: [],
+  trend: {
+    openedTrend: 0,
+    resolvedTrend: 0,
+  },
+};
+
+const DEFAULT_WORKLOAD_DATA = {
+  byTeam: [],
+  byAgent: [],
+  totalActive: 0,
+};
+
+const DEFAULT_HEALTH_DATA = {
+  byProduct: [],
+  topBugModules: [],
+};
+
+/**
  * Mappe les données du dashboard aux props nécessaires pour chaque widget
+ * Retourne des données par défaut si les données sont manquantes pour éviter les erreurs
  */
 export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
   mttr: (data) => {
     if (data.strategic) return { data: data.strategic.mttr };
     if (data.team) return { data: data.team.mttr };
-    return { data: null };
+    return { data: DEFAULT_MTTR_DATA };
   },
   flux: (data) => {
     if (data.strategic) return { data: data.strategic.flux };
     if (data.team) return { data: data.team.flux };
-    return { data: null };
+    return { data: DEFAULT_FLUX_DATA };
   },
   workload: (data) => {
     if (data.strategic) return { data: data.strategic.workload };
     if (data.team) return { data: data.team.workload };
-    return { data: null };
+    return { data: DEFAULT_WORKLOAD_DATA };
   },
   health: (data) => {
     if (data.strategic) return { data: data.strategic.health };
     if (data.team) return { data: data.team.health };
-    return { data: null };
+    return { data: DEFAULT_HEALTH_DATA };
   },
-  alerts: (data) => ({ alerts: data.alerts }),
+  alerts: (data) => ({ alerts: data.alerts || [] }),
   mttrEvolution: (data) => {
     if (data.strategic) return { data: data.strategic.mttr };
     if (data.team) return { data: data.team.mttr };
-    return { data: null };
+    return { data: DEFAULT_MTTR_DATA };
   },
   ticketsDistribution: (data) => {
     if (data.strategic) return { data: data.strategic.flux };
     if (data.team) return { data: data.team.flux };
-    return { data: null };
+    return { data: DEFAULT_FLUX_DATA };
   },
   topBugsModules: (data) => {
     if (data.strategic) return { data: data.strategic.health.topBugModules };
