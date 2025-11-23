@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { Card, CardContent, CardHeader } from '@/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import type { MTTRData } from '@/types/dashboard';
 import { CustomTooltip } from './charts/custom-tooltip';
 import { MTTRAreaGradients } from './charts/chart-gradients';
