@@ -1,8 +1,12 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { DashboardRole, DashboardWidget } from '@/types/dashboard-widgets';
+import { DEFAULT_ROLE_WIDGETS } from './default-widgets';
+import { getCurrentUserProfileId } from '@/services/users/server';
 
 /**
  * Charge les widgets affectés à un rôle (configuration admin)
+ * 
+ * Si aucun widget n'est configuré en DB, retourne les widgets par défaut.
  * 
  * @param role - Rôle pour lequel charger les widgets
  * @returns Liste des widgets affectés au rôle
@@ -17,18 +21,22 @@ export async function getRoleWidgets(role: DashboardRole): Promise<DashboardWidg
       .eq('role', role)
       .eq('enabled', true);
 
-    if (error || !data) {
-      return [];
+    if (error || !data || data.length === 0) {
+      // Si aucun widget en DB, retourner les widgets par défaut
+      return DEFAULT_ROLE_WIDGETS[role] || [];
     }
 
     return data.map((item) => item.widget_id as DashboardWidget);
   } catch {
-    return [];
+    // En cas d'erreur, retourner les widgets par défaut
+    return DEFAULT_ROLE_WIDGETS[role] || [];
   }
 }
 
 /**
  * Charge toutes les configurations de widgets par rôle (admin uniquement)
+ * 
+ * Si aucun widget n'est configuré en DB, retourne les widgets par défaut.
  * 
  * @returns Toutes les configurations de widgets par rôle
  */
@@ -47,8 +55,14 @@ export async function getAllRoleWidgets(): Promise<Array<{
       .eq('enabled', true)
       .order('role', { ascending: true });
 
-    if (error || !data) {
-      return [];
+    // Si erreur ou données vides, retourner les widgets par défaut
+    if (error || !data || data.length === 0) {
+      return Object.entries(DEFAULT_ROLE_WIDGETS).map(([role, widgets]) => ({
+        role: role as DashboardRole,
+        widgets,
+        updatedAt: new Date().toISOString(),
+        updatedBy: null,
+      }));
     }
 
     // Grouper par rôle
@@ -66,9 +80,29 @@ export async function getAllRoleWidgets(): Promise<Array<{
       return acc;
     }, {} as Record<DashboardRole, { role: DashboardRole; widgets: DashboardWidget[]; updatedAt: string; updatedBy: string | null }>);
 
-    return Object.values(grouped);
+    // S'assurer que tous les rôles sont présents (utiliser les defaults si manquants)
+    const result = Object.entries(DEFAULT_ROLE_WIDGETS).map(([role, defaultWidgets]) => {
+      const roleKey = role as DashboardRole;
+      if (grouped[roleKey]) {
+        return grouped[roleKey];
+      }
+      return {
+        role: roleKey,
+        widgets: defaultWidgets,
+        updatedAt: new Date().toISOString(),
+        updatedBy: null,
+      };
+    });
+
+    return result;
   } catch {
-    return [];
+    // En cas d'erreur, retourner les widgets par défaut
+    return Object.entries(DEFAULT_ROLE_WIDGETS).map(([role, widgets]) => ({
+      role: role as DashboardRole,
+      widgets,
+      updatedAt: new Date().toISOString(),
+      updatedBy: null,
+    }));
   }
 }
 
