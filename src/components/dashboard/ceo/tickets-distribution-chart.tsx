@@ -8,7 +8,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Card, CardContent, CardHeader } from '@/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import type { TicketFluxData } from '@/types/dashboard';
 import { CustomTooltip } from './charts/custom-tooltip';
 import { CHART_COLORS, getChartColor } from './charts/chart-colors';
