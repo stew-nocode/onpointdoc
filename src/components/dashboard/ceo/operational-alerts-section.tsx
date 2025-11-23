@@ -2,9 +2,22 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Badge } from '@/ui/badge';
+import { ScrollArea } from '@/ui/scroll-area';
 import type { OperationalAlert } from '@/types/dashboard';
 import { AlertCircle, Clock, UserX, Calendar, Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/**
+ * Constantes pour le calcul de la hauteur scrollable
+ */
+const ALERT_ITEM_HEIGHT = 95; // Hauteur estimée d'un item (padding + contenu)
+const ITEMS_VISIBLE = 5; // Nombre d'items visibles
+const GAP_HEIGHT = 12; // Hauteur du gap entre items (space-y-3)
+
+/**
+ * Hauteur totale pour afficher exactement 5 items
+ */
+const SCROLLABLE_HEIGHT = ALERT_ITEM_HEIGHT * ITEMS_VISIBLE + GAP_HEIGHT * (ITEMS_VISIBLE - 1);
 
 type OperationalAlertsSectionProps = {
   alerts: OperationalAlert[];
@@ -35,11 +48,13 @@ export function OperationalAlertsSection({ alerts }: OperationalAlertsSectionPro
         <CardTitle className="text-sm font-semibold">Alertes Opérationnelles</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {alerts.map((alert) => (
-            <AlertItem key={alert.id} alert={alert} />
-          ))}
-        </div>
+        <ScrollArea style={{ height: `${SCROLLABLE_HEIGHT}px` }} className="w-full">
+          <div className="space-y-3 pr-4">
+            {alerts.map((alert) => (
+              <AlertItem key={alert.id} alert={alert} />
+            ))}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );

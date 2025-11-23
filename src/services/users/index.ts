@@ -1,8 +1,9 @@
 import { userCreateInternalSchema, type UserCreateInternalInput, userUpdateSchema, type UserUpdateInput } from '@/lib/validators/user';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-// Export BasicProfile type depuis server.ts (pas la fonction, elle est serveur uniquement)
+// Export BasicProfile type et listBasicProfiles depuis server.ts
 export type { BasicProfile } from './server';
+export { listBasicProfiles, getCurrentUserRole, getCurrentUserProfileId, getCurrentUserProfile } from './server';
 
 /**
  * Crée un utilisateur interne via l'API serveur (service role) et assigne les modules.

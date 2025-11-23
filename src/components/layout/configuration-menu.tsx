@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { ACTIVE_GRADIENT, INACTIVE_HOVER_STYLES } from '@/lib/constants/gradient-styles';
 import {
   Building2,
   Users,
@@ -40,10 +41,10 @@ export function ConfigurationMenu({ role, onLinkClick }: ConfigurationMenuProps)
             href="/config/companies"
             onClick={onLinkClick}
             className={cn(
-              'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+              'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
               pathname.startsWith('/config/companies')
-                ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                ? ACTIVE_GRADIENT
+                : INACTIVE_HOVER_STYLES
             )}
           >
             <Building2 className="h-4 w-4 opacity-80" />
@@ -125,6 +126,23 @@ export function ConfigurationMenu({ role, onLinkClick }: ConfigurationMenuProps)
             <span>Départements</span>
           </Link>
         </li>
+        {role === 'admin' && (
+          <li>
+            <Link
+              href="/config/dashboard"
+              onClick={onLinkClick}
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                pathname.startsWith('/config/dashboard')
+                  ? 'bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-foreground'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+              )}
+            >
+              <Sparkles className="h-4 w-4 opacity-80" />
+              <span>Dashboard</span>
+            </Link>
+          </li>
+        )}
       </ul>
     </div>
   );

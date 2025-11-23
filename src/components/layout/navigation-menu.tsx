@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Fragment } from 'react';
 import { cn } from '@/lib/utils';
 import { mainNav } from '@/lib/constants/navigation';
+import { ACTIVE_GRADIENT, INACTIVE_HOVER_STYLES } from '@/lib/constants/gradient-styles';
 import {
   LayoutDashboard,
   Ticket,
@@ -63,10 +64,10 @@ export function NavigationMenu({
               <li key={item.href}>
                 <div
                   className={cn(
-                    'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition',
+                    'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                     activeTickets
-                      ? 'bg-brand text-white dark:bg-brand dark:text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                      ? ACTIVE_GRADIENT
+                      : INACTIVE_HOVER_STYLES
                   )}
                 >
                   <Link
@@ -96,10 +97,10 @@ export function NavigationMenu({
                   href="/gestion/contacts"
                   onClick={onLinkClick}
                   className={cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                     pathname.startsWith('/gestion/contacts')
-                      ? 'bg-brand text-white dark:bg-brand dark:text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                      ? ACTIVE_GRADIENT
+                      : INACTIVE_HOVER_STYLES
                   )}
                 >
                   <Users className="h-4 w-4 opacity-80" />
@@ -116,10 +117,10 @@ export function NavigationMenu({
               href={item.href}
               onClick={onLinkClick}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-brand text-white dark:bg-brand dark:text-white'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                  ? ACTIVE_GRADIENT
+                  : INACTIVE_HOVER_STYLES
               )}
             >
               {Icon && <Icon className="h-4 w-4 opacity-80" />}
