@@ -19,5 +19,9 @@ export const WIDGET_LABELS: Record<DashboardWidget, string> = {
   workload: 'Charge de travail',
   health: 'Santé des produits',
   alerts: 'Alertes opérationnelles',
+  mttrEvolution: 'Évolution MTTR',
+  ticketsDistribution: 'Distribution des tickets',
+  topBugsModules: 'Top modules avec bugs',
+  workloadByAgent: 'Charge par agent',
 };
 

@@ -66,6 +66,30 @@ export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
     title: 'Alertes opérationnelles',
     description: 'Alertes critiques nécessitant une attention immédiate',
   },
+  mttrEvolution: {
+    component: MTTREvolutionChart,
+    layoutType: 'chart',
+    title: 'Évolution MTTR',
+    description: 'Tendance du temps moyen de résolution dans le temps',
+  },
+  ticketsDistribution: {
+    component: TicketsDistributionChart,
+    layoutType: 'chart',
+    title: 'Distribution des tickets',
+    description: 'Répartition des tickets par type (BUG/REQ/ASSISTANCE)',
+  },
+  topBugsModules: {
+    component: TopBugsModulesTable,
+    layoutType: 'table',
+    title: 'Top modules avec bugs',
+    description: 'Modules les plus affectés par des bugs avec taux et tendance',
+  },
+  workloadByAgent: {
+    component: WorkloadByAgentTable,
+    layoutType: 'table',
+    title: 'Charge par agent',
+    description: 'Détails de la charge de travail par agent',
+  },
 };
 
 /**
@@ -93,6 +117,26 @@ export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
     return { data: null };
   },
   alerts: (data) => ({ alerts: data.alerts }),
+  mttrEvolution: (data) => {
+    if (data.strategic) return { data: data.strategic.mttr };
+    if (data.team) return { data: data.team.mttr };
+    return { data: null };
+  },
+  ticketsDistribution: (data) => {
+    if (data.strategic) return { data: data.strategic.flux };
+    if (data.team) return { data: data.team.flux };
+    return { data: null };
+  },
+  topBugsModules: (data) => {
+    if (data.strategic) return { data: data.strategic.health.topBugModules };
+    if (data.team) return { data: data.team.health.topBugModules };
+    return { data: [] };
+  },
+  workloadByAgent: (data) => {
+    if (data.strategic) return { data: data.strategic.workload.byAgent };
+    if (data.team) return { data: data.team.workload.byAgent };
+    return { data: [] };
+  },
 };
 
 /**

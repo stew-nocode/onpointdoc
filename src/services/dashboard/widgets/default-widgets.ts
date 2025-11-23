@@ -6,10 +6,38 @@ import type { DashboardRole, DashboardWidget } from '@/types/dashboard-widgets';
  * Ces valeurs sont utilisées lors de l'initialisation ou en cas d'absence de configuration en DB
  */
 export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
-  direction: ['mttr', 'flux', 'workload', 'health', 'alerts'],
-  manager: ['mttr', 'flux', 'workload', 'health', 'alerts'],
+  direction: [
+    'mttr',
+    'flux',
+    'workload',
+    'health',
+    'mttrEvolution',
+    'ticketsDistribution',
+    'topBugsModules',
+    'workloadByAgent',
+    'alerts',
+  ],
+  manager: [
+    'mttr',
+    'flux',
+    'workload',
+    'mttrEvolution',
+    'ticketsDistribution',
+    'workloadByAgent',
+    'alerts',
+  ],
   agent: ['alerts'], // Agents voient uniquement les alertes par défaut
-  admin: ['mttr', 'flux', 'workload', 'health', 'alerts'], // Admin voit tout
+  admin: [
+    'mttr',
+    'flux',
+    'workload',
+    'health',
+    'mttrEvolution',
+    'ticketsDistribution',
+    'topBugsModules',
+    'workloadByAgent',
+    'alerts',
+  ], // Admin voit tout
 };
 
 /**
