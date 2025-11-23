@@ -15,6 +15,7 @@
 
 export { PageLayout } from './page-layout';
 export { PageLayoutWithFilters } from './page-layout-with-filters';
+export { PageLayoutWithDashboardFilters } from './page-layout-with-dashboard-filters';
 export { PageContent } from './page-content';
 export { PageHeader } from './page-header';
 export { PageKPISection } from './page-kpi-section';

@@ -10,6 +10,8 @@ import {
   GitBranch,
   Briefcase,
   AlertTriangle,
+  PlusCircle,
+  Activity,
   type LucideIcon
 } from 'lucide-react';
 
@@ -19,7 +21,9 @@ export type IconId =
   | 'check-circle-2'
   | 'git-branch'
   | 'briefcase'
-  | 'alert-triangle';
+  | 'alert-triangle'
+  | 'plus-circle'
+  | 'activity';
 
 export const ICON_MAP: Record<IconId, LucideIcon> = {
   clock: Clock,
@@ -27,7 +31,9 @@ export const ICON_MAP: Record<IconId, LucideIcon> = {
   'check-circle-2': CheckCircle2,
   'git-branch': GitBranch,
   briefcase: Briefcase,
-  'alert-triangle': AlertTriangle
+  'alert-triangle': AlertTriangle,
+  'plus-circle': PlusCircle,
+  activity: Activity
 };
 
 /**
