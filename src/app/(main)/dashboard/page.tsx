@@ -1,13 +1,14 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { PageLayoutWithDashboardFilters } from '@/components/layout/page';
-import { UnifiedDashboard } from '@/components/dashboard/unified-dashboard';
+import { UnifiedDashboardWithWidgets } from '@/components/dashboard/unified-dashboard-with-widgets';
+import { getUserDashboardConfig } from '@/services/dashboard/widgets';
 import { DashboardFiltersSidebarClient } from '@/components/dashboard/ceo/filters/dashboard-filters-sidebar-client';
 import { listProducts } from '@/services/products';
 import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
 import { getCurrentUserProfile } from '@/services/users/server';
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
-import { getDashboardConfiguration } from '@/services/dashboard/config';
 import type { UnifiedDashboardData } from '@/types/dashboard';
+import type { DashboardRole } from '@/types/dashboard-widgets';
 
 type DashboardPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -34,19 +35,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     return null;
   }
 
-  const dashboardRole = mapProfileRoleToDashboardRole(profile.role);
+  const dashboardRole = mapProfileRoleToDashboardRole(profile.role) as DashboardRole;
 
   const resolvedSearchParams = await searchParams;
   const params = resolvedSearchParams || {};
   const filters = parseDashboardFiltersFromParams(params);
   const period = filters?.period || 'month';
 
-  // Charger la configuration dashboard (DB ou defaults)
-  const dashboardConfig = await getDashboardConfiguration(
-    dashboardRole,
-    dashboardRole === 'manager' ? profile.id : undefined,
-    dashboardRole === 'agent' ? profile.id : undefined
-  );
+  // Charger la configuration des widgets (affectation par rôle + préférences utilisateur)
+  const widgetConfig = await getUserDashboardConfig(profile.id, dashboardRole);
 
   // Charger les données selon le rôle (directement via les services)
   const { getCEODashboardData } = await import('@/services/dashboard/ceo-kpis');
@@ -56,7 +53,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   let initialData: UnifiedDashboardData = {
     role: dashboardRole,
     alerts,
-    config: dashboardConfig,
     period,
     periodStart: new Date().toISOString(), // TODO: calculer selon période
     periodEnd: new Date().toISOString(),
@@ -143,13 +139,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         title: 'Indicateurs de performance'
       }}
     >
-      <UnifiedDashboard
+      <UnifiedDashboardWithWidgets
         role={dashboardRole}
+        profileId={profile.id}
         initialData={initialData}
         initialPeriod={period}
-        config={dashboardConfig}
-        teamId={dashboardRole === 'manager' ? profile.id : undefined}
-        agentId={dashboardRole === 'agent' ? profile.id : undefined}
+        initialWidgetConfig={widgetConfig}
       />
     </PageLayoutWithDashboardFilters>
   );

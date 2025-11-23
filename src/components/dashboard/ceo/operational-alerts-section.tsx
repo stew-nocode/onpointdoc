@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils';
 /**
  * Constantes pour le calcul de la hauteur scrollable
  */
-const ALERT_ITEM_HEIGHT = 95; // Hauteur estimée d'un item (padding + contenu)
+const ALERT_ITEM_HEIGHT = 65; // Hauteur estimée d'un item (padding + contenu) - Réduit
 const ITEMS_VISIBLE = 5; // Nombre d'items visibles
-const GAP_HEIGHT = 12; // Hauteur du gap entre items (space-y-3)
+const GAP_HEIGHT = 8; // Hauteur du gap entre items (space-y-2) - Réduit
 
 /**
  * Hauteur totale pour afficher exactement 5 items
@@ -49,7 +49,7 @@ export function OperationalAlertsSection({ alerts }: OperationalAlertsSectionPro
       </CardHeader>
       <CardContent>
         <ScrollArea style={{ height: `${SCROLLABLE_HEIGHT}px` }} className="w-full">
-          <div className="space-y-3 pr-4">
+          <div className="space-y-2 pr-4">
             {alerts.map((alert) => (
               <AlertItem key={alert.id} alert={alert} />
             ))}
@@ -70,20 +70,20 @@ function AlertItem({ alert }: { alert: OperationalAlert }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg border',
+        'flex items-start gap-2 p-2 rounded-lg border',
         'border-slate-200 dark:border-slate-700',
         'hover:bg-slate-50 dark:hover:bg-slate-900'
       )}
     >
-      <Icon className={cn('h-5 w-5 mt-0.5', priorityColor)} />
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-sm font-medium">{alert.title}</h4>
-          <Badge variant={alert.priority === 'high' ? 'danger' : 'outline'} className="text-xs">
-            {alert.priority}
+      <Icon className={cn('h-4 w-4 mt-0.5 flex-shrink-0', priorityColor)} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <h4 className="text-xs font-medium truncate">{alert.title}</h4>
+          <Badge variant={alert.priority === 'high' ? 'danger' : 'outline'} className="text-[10px] px-1.5 py-0 flex-shrink-0">
+            {alert.priority.toUpperCase()}
           </Badge>
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400">{alert.description}</p>
+        <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate">{alert.description}</p>
       </div>
     </div>
   );
