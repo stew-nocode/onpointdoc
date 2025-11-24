@@ -6,9 +6,9 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import useSWR from 'swr';
 import type { Profile } from '@/types/profile';
+import { fetchProfileById } from '@/services/fetchers';
 
 type UseProfileResult = {
   profile: Profile | null;
@@ -17,74 +17,34 @@ type UseProfileResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger un profil utilisateur spécifique depuis Supabase
- * 
- * @param userId - ID du profil à charger
- * @param options - Options de configuration
- * @returns Profil avec état de chargement
- * 
- * @example
- * const { profile, isLoading } = useProfile(userId);
- * if (isLoading) return <Loading />;
- * if (!profile) return <NotFound />;
- * return <div>{profile.full_name}</div>;
- */
 export function useProfile(
   userId: string | null | undefined,
   options: { enabled?: boolean } = {}
 ): UseProfileResult {
+  const enabled = options.enabled ?? true;
+  const shouldFetch = enabled && Boolean(userId);
+
   const {
-    enabled = true
-  } = options;
-
-  const [state, setState] = useState<UseProfileResult>({
-    profile: null,
-    isLoading: true,
-    error: null,
-    refetch: async () => {}
-  });
-
-  const fetchProfile = useCallback(async () => {
-    if (!userId || !enabled) {
-      setState(prev => ({ ...prev, isLoading: false }));
-      return;
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['profile', userId] : null,
+    () => fetchProfileById(userId as string),
+    {
+      revalidateOnFocus: false
     }
+  );
 
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Erreur Supabase');
-      }
-
-      setState({
-        profile: data as Profile,
-        isLoading: false,
-        error: null,
-        refetch: fetchProfile
-      });
-    } catch (error) {
-      setState({
-        profile: null,
-        isLoading: false,
-        error: error instanceof Error ? error : new Error('Erreur inconnue'),
-        refetch: fetchProfile
-      });
+  return {
+    profile: (data as Profile | null) ?? null,
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
     }
-  }, [userId, enabled]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  return state;
+  };
 }
 
