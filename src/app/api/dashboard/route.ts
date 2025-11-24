@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCEODashboardData } from '@/services/dashboard/ceo-kpis';
-import type { Period } from '@/types/dashboard';
+import type { Period, UnifiedDashboardData, CEODashboardData, TeamDashboardData, AgentDashboardData } from '@/types/dashboard';
+import type { DashboardRole } from '@/types/dashboard';
 import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
 import { getCurrentUserProfile } from '@/services/users/server';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const alerts = await getOperationalAlerts();
 
     // Charger les données selon le rôle
-    let responseData: any = {
+    const responseData: UnifiedDashboardData = {
       role: dashboardRole,
       alerts,
       period,
@@ -54,19 +55,34 @@ export async function GET(request: NextRequest) {
     } else if (dashboardRole === 'manager') {
       // Manager : données de l'équipe
       // TODO: Implémenter getTeamDashboardData
-      responseData.team = {
+      const teamData: TeamDashboardData = {
         teamId: profile.id, // Temporaire
         teamName: profile.department || 'Équipe',
-        // TODO: Charger les données de l'équipe
+        mttr: { global: 0, byProduct: [], byType: [], trend: 0 },
+        flux: { opened: 0, resolved: 0, resolutionRate: 0, byProduct: [], trend: { openedTrend: 0, resolvedTrend: 0 } },
+        workload: { byTeam: [], byAgent: [], totalActive: 0 },
+        health: { byProduct: [], topBugModules: [] },
+        alerts: [],
+        period,
+        periodStart: responseData.periodStart,
+        periodEnd: responseData.periodEnd,
       };
+      responseData.team = teamData;
     } else if (dashboardRole === 'agent') {
       // Agent : données personnelles
       // TODO: Implémenter getAgentDashboardData
-      responseData.personal = {
+      const personalData: AgentDashboardData = {
         agentId: profile.id,
         agentName: profile.full_name || 'Agent',
-        // TODO: Charger les données personnelles
+        myTickets: { active: 0, resolved: 0, pending: 0 },
+        myTasks: { todo: 0, inProgress: 0, done: 0, blocked: 0 },
+        myActivities: { upcoming: 0, completed: 0 },
+        alerts: [],
+        period,
+        periodStart: responseData.periodStart,
+        periodEnd: responseData.periodEnd,
       };
+      responseData.personal = personalData;
     }
 
     return NextResponse.json(responseData);

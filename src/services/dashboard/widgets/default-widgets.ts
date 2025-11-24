@@ -8,7 +8,8 @@ import type { DashboardRole, DashboardWidget } from '@/types/dashboard-widgets';
 export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
   direction: [
     'mttr',
-    'flux',
+    'tickets-ouverts',
+    'tickets-resolus',
     'workload',
     'health',
     'mttrEvolution',
@@ -19,7 +20,8 @@ export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
   ],
   manager: [
     'mttr',
-    'flux',
+    'tickets-ouverts',
+    'tickets-resolus',
     'workload',
     'mttrEvolution',
     'ticketsDistribution',
@@ -29,7 +31,8 @@ export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
   agent: ['alerts'], // Agents voient uniquement les alertes par défaut
   admin: [
     'mttr',
-    'flux',
+    'tickets-ouverts',
+    'tickets-resolus',
     'workload',
     'health',
     'mttrEvolution',

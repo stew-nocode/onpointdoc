@@ -3,6 +3,10 @@ import type { Period, ProductHealthData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
 import { getPeriodDates, getPreviousPeriodDates } from './period-utils';
 import { applyDashboardFilters } from './filter-utils';
+import { calculateTrend } from './utils/trend-calculation';
+import { extractProduct, extractModule, type SupabaseProductRelation, type SupabaseModuleRelation } from './utils/product-utils';
+import { HEALTH_THRESHOLD_GOOD, HEALTH_THRESHOLD_WARNING } from './constants/health-constants';
+import { MAX_TOP_BUG_MODULES } from './constants/limits';
 
 /**
  * Calcule la santé des produits (taux de BUGs par produit/module)
@@ -56,7 +60,7 @@ function calculateHealthByProduct(
   tickets: Array<{
     ticket_type: string;
     product_id: string | null;
-    product: { id: string; name: string } | { id: string; name: string }[] | null;
+    product: SupabaseProductRelation;
   }>
 ): ProductHealthData['byProduct'] {
   const productMap = new Map<
@@ -65,9 +69,10 @@ function calculateHealthByProduct(
   >();
 
   tickets.forEach((ticket) => {
-    if (!ticket.product_id || !ticket.product) return;
-    const product = Array.isArray(ticket.product) ? ticket.product[0] : ticket.product;
+    if (!ticket.product_id) return;
+    const product = extractProduct(ticket.product);
     if (!product) return;
+    
     const key = ticket.product_id;
     if (!productMap.has(key)) {
       productMap.set(key, {
@@ -88,10 +93,7 @@ function calculateHealthByProduct(
       ? Math.round((data.totalBugs / data.totalTickets) * 100)
       : 0;
 
-    let healthStatus: 'good' | 'warning' | 'critical';
-    if (bugRate < 20) healthStatus = 'good';
-    else if (bugRate < 40) healthStatus = 'warning';
-    else healthStatus = 'critical';
+    const healthStatus = calculateHealthStatus(bugRate);
 
     return {
       productId,
@@ -105,17 +107,66 @@ function calculateHealthByProduct(
 }
 
 /**
+ * Calcule le statut de santé d'un produit selon son taux de bugs
+ */
+function calculateHealthStatus(bugRate: number): 'good' | 'warning' | 'critical' {
+  if (bugRate < HEALTH_THRESHOLD_GOOD) return 'good';
+  if (bugRate < HEALTH_THRESHOLD_WARNING) return 'warning';
+  return 'critical';
+}
+
+/**
  * Calcule les top modules avec le plus de bugs
  */
 function calculateTopBugModules(
   currentTickets: Array<{
     ticket_type: string;
     module_id: string | null;
-    module: { id: string; name: string } | { id: string; name: string }[] | null;
-    product: { id: string; name: string } | { id: string; name: string }[] | null;
+    module: SupabaseModuleRelation;
+    product: SupabaseProductRelation;
   }>,
   prevTickets: Array<{ ticket_type: string; module_id: string | null }>
 ): ProductHealthData['topBugModules'] {
+  const moduleMap = buildModuleMap(currentTickets);
+  const prevBugCountByModule = buildPreviousBugCountMap(prevTickets);
+
+  return Array.from(moduleMap.entries())
+    .map(([moduleId, data]) => {
+      const bugRate = data.totalCount > 0
+        ? Math.round((data.bugCount / data.totalCount) * 100)
+        : 0;
+      const prevBugCount = prevBugCountByModule.get(moduleId) || 0;
+      const trendValue = calculateTrend(data.bugCount, prevBugCount);
+
+      return {
+        moduleId,
+        moduleName: data.moduleName,
+        productName: data.productName,
+        bugCount: data.bugCount,
+        bugRate,
+        trend: trendValue
+      };
+    })
+    .sort((a, b) => b.bugCount - a.bugCount)
+    .slice(0, MAX_TOP_BUG_MODULES);
+}
+
+/**
+ * Construit la map des modules à partir des tickets actuels
+ */
+function buildModuleMap(
+  tickets: Array<{
+    ticket_type: string;
+    module_id: string | null;
+    module: SupabaseModuleRelation;
+    product: SupabaseProductRelation;
+  }>
+): Map<string, {
+  moduleName: string;
+  productName: string;
+  bugCount: number;
+  totalCount: number;
+}> {
   const moduleMap = new Map<
     string,
     {
@@ -126,19 +177,13 @@ function calculateTopBugModules(
     }
   >();
 
-  currentTickets.forEach((ticket) => {
+  tickets.forEach((ticket) => {
     if (!ticket.module_id) return;
-    const module = ticket.module
-      ? Array.isArray(ticket.module)
-        ? ticket.module[0]
-        : ticket.module
-      : null;
-    const product = ticket.product
-      ? Array.isArray(ticket.product)
-        ? ticket.product[0]
-        : ticket.product
-      : null;
+    
+    const module = extractModule(ticket.module);
+    const product = extractProduct(ticket.product);
     if (!module || !product) return;
+    
     const key = ticket.module_id;
     if (!moduleMap.has(key)) {
       moduleMap.set(key, {
@@ -155,40 +200,24 @@ function calculateTopBugModules(
     }
   });
 
-  const prevBugCountByModule = new Map<string, number>();
-  prevTickets.forEach((ticket) => {
-    if (ticket.ticket_type === 'BUG' && ticket.module_id) {
-      const count = prevBugCountByModule.get(ticket.module_id) || 0;
-      prevBugCountByModule.set(ticket.module_id, count + 1);
-    }
-  });
-
-  return Array.from(moduleMap.entries())
-    .map(([moduleId, data]) => {
-      const bugRate = data.totalCount > 0
-        ? Math.round((data.bugCount / data.totalCount) * 100)
-        : 0;
-      const prevBugCount = prevBugCountByModule.get(moduleId) || 0;
-      const trend = calculateTrend(data.bugCount, prevBugCount);
-
-      return {
-        moduleId,
-        moduleName: data.moduleName,
-        productName: data.productName,
-        bugCount: data.bugCount,
-        bugRate,
-        trend
-      };
-    })
-    .sort((a, b) => b.bugCount - a.bugCount)
-    .slice(0, 10);
+  return moduleMap;
 }
 
 /**
- * Calcule la tendance
+ * Construit la map des bugs par module pour la période précédente
  */
-function calculateTrend(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
+function buildPreviousBugCountMap(
+  tickets: Array<{ ticket_type: string; module_id: string | null }>
+): Map<string, number> {
+  const bugCountByModule = new Map<string, number>();
+  
+  tickets.forEach((ticket) => {
+    if (ticket.ticket_type === 'BUG' && ticket.module_id) {
+      const count = bugCountByModule.get(ticket.module_id) || 0;
+      bugCountByModule.set(ticket.module_id, count + 1);
+    }
+  });
+  
+  return bugCountByModule;
 }
 

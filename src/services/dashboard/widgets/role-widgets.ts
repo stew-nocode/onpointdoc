@@ -1,7 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { DashboardRole, DashboardWidget } from '@/types/dashboard-widgets';
 import { DEFAULT_ROLE_WIDGETS } from './default-widgets';
-import { getCurrentUserProfileId } from '@/services/users/server';
 
 /**
  * Charge les widgets affectés à un rôle (configuration admin)

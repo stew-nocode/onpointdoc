@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
@@ -10,6 +10,7 @@ import { WidgetPreferencesDialog } from './user/widget-preferences-dialog';
 import { Loader2 } from 'lucide-react';
 import { useRealtimeDashboardData } from '@/hooks/dashboard/use-realtime-dashboard-data';
 import { useRealtimeWidgetConfig } from '@/hooks/dashboard/use-realtime-widget-config';
+import { usePerformanceMeasure, useRenderCount } from '@/hooks/performance';
 
 type UnifiedDashboardWithWidgetsProps = {
   role: DashboardRole;
@@ -44,10 +45,27 @@ export function UnifiedDashboardWithWidgets({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Mesures de performance (dev uniquement)
+  const { startMeasure, endMeasure } = usePerformanceMeasure({
+    name: 'DashboardRender',
+    measureRender: true,
+    logToConsole: process.env.NODE_ENV === 'development',
+  });
+  const renderCount = useRenderCount({
+    componentName: 'UnifiedDashboardWithWidgets',
+    warningThreshold: 5,
+  });
+
   /**
    * Charge les données pour une période donnée
    */
   const loadData = useCallback(async (selectedPeriod: Period) => {
+    // Mesure du temps de chargement (dev uniquement)
+    const loadStartTime = performance.now();
+    if (process.env.NODE_ENV === 'development') {
+      console.time('⏱️ DashboardDataLoad');
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -61,12 +79,21 @@ export function UnifiedDashboardWithWidgets({
       }
       const newData: UnifiedDashboardData = await response.json();
       setData(newData);
+
+      // Logger le temps de chargement (dev uniquement)
+      if (process.env.NODE_ENV === 'development') {
+        const loadDuration = performance.now() - loadStartTime;
+        console.timeEnd('⏱️ DashboardDataLoad');
+        const rating = loadDuration < 500 ? '✅' : loadDuration < 1000 ? '⚠️' : '❌';
+        console.log(`${rating} DashboardDataLoad: ${Math.round(loadDuration)}ms`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
       setError(errorMessage);
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement des données:', err);
+        console.timeEnd('⏱️ DashboardDataLoad');
       }
     } finally {
       setIsLoading(false);
@@ -104,27 +131,55 @@ export function UnifiedDashboardWithWidgets({
     [loadData]
   );
 
+  // Références stables pour les callbacks (évite les réabonnements)
+  const loadDataRef = useRef<((selectedPeriod: Period) => Promise<void>) | undefined>(undefined);
+  const loadWidgetConfigRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
+  // Mettre à jour les refs à chaque changement de fonction
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  useEffect(() => {
+    loadWidgetConfigRef.current = loadWidgetConfig;
+  }, [loadWidgetConfig]);
+
+  // Callbacks stables pour les hooks realtime (évite les réabonnements)
+  const stableOnDataChange = useCallback(() => {
+    loadDataRef.current?.(period);
+  }, [period]);
+
+  const stableOnConfigChange = useCallback(() => {
+    loadWidgetConfigRef.current?.();
+  }, []);
+
   // Écouter les changements temps réel des données
   useRealtimeDashboardData({
     period,
-    onDataChange: () => loadData(period),
+    onDataChange: stableOnDataChange,
   });
 
   // Écouter les changements temps réel de la configuration des widgets
   useRealtimeWidgetConfig({
     profileId,
     role,
-    onConfigChange: loadWidgetConfig,
+    onConfigChange: stableOnConfigChange,
   });
 
-  // Filtrer les alertes selon le rôle
-  const filteredAlerts = filterAlertsByRole(data.alerts, role);
+  // Filtrer les alertes selon le rôle (mémorisé pour éviter les recalculs)
+  const filteredAlerts = useMemo(
+    () => filterAlertsByRole(data.alerts, role),
+    [data.alerts, role]
+  );
 
-  // Mettre à jour les alertes dans les données si nécessaire
-  const dashboardDataWithFilteredAlerts = {
-    ...data,
-    alerts: filteredAlerts,
-  };
+  // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
+  const dashboardDataWithFilteredAlerts = useMemo(
+    () => ({
+      ...data,
+      alerts: filteredAlerts,
+    }),
+    [data, filteredAlerts]
+  );
 
   return (
     <div className="space-y-6">

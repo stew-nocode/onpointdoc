@@ -30,6 +30,15 @@ import { BulkActionsBar } from './bulk-actions-bar';
 import { TicketStatsTooltip } from './tooltips/ticket-stats-tooltip';
 import { UserStatsTooltip } from './tooltips/user-stats-tooltip';
 import { AddCommentDialog } from './add-comment-dialog';
+import { useRenderCount, usePerformanceMeasure } from '@/hooks/performance';
+import {
+  buildTicketListParams,
+} from './tickets-infinite-scroll/utils/filter-params-builder';
+import {
+  mergeTicketsWithoutDuplicates,
+  areTicketIdsEqual,
+} from './tickets-infinite-scroll/utils/tickets-state-updater';
+import { logTicketsLoadPerformance } from './tickets-infinite-scroll/utils/performance-logger';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -57,6 +66,13 @@ export function TicketsInfiniteScroll({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role } = useAuth();
+  
+  // Mesures de performance (dev uniquement)
+  const renderCount = useRenderCount({
+    componentName: 'TicketsInfiniteScroll',
+    warningThreshold: 10,
+    logToConsole: process.env.NODE_ENV === 'development',
+  });
   
   // Parser les paramètres de tri depuis l'URL
   const sortColumnParam = searchParams.get('sortColumn') || undefined;
@@ -94,36 +110,64 @@ export function TicketsInfiniteScroll({
     areSomeTicketsSelected
   } = useTicketSelection();
 
-  // Réinitialiser la sélection quand les filtres changent
+  /**
+   * Réinitialiser la sélection quand les filtres changent
+   * 
+   * Mémorisé pour éviter les re-renders inutiles.
+   */
+  const filterKey = useMemo(
+    () => `${type}-${status}-${search}-${quickFilter}-${currentSort}-${currentSortDirection}`,
+    [type, status, search, quickFilter, currentSort, currentSortDirection]
+  );
+
   useEffect(() => {
     clearSelection();
-  }, [type, status, search, quickFilter, currentSort, currentSortDirection, clearSelection]);
+  }, [filterKey, clearSelection]);
 
-  // Charger les colonnes visibles après le montage pour éviter l'erreur d'hydratation
+  /**
+   * Initialiser les colonnes visibles après le montage
+   * Une seule fois au montage pour éviter les re-renders.
+   */
   useEffect(() => {
     setIsMounted(true);
     setVisibleColumns(getVisibleColumns());
-    setCurrentSort(sort.column);
-    setCurrentSortDirection(sort.direction);
+  }, []);
+
+  /**
+   * Synchroniser le tri avec l'URL au montage uniquement
+   * Utilise une ref pour éviter les re-renders si le tri n'a pas changé
+   */
+  const sortInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!sortInitializedRef.current) {
+      setCurrentSort(sort.column);
+      setCurrentSortDirection(sort.direction);
+      sortInitializedRef.current = true;
+    }
   }, [sort.column, sort.direction]);
 
   /**
    * Handler pour le tri d'une colonne
    * Met à jour l'URL avec les nouveaux paramètres de tri
    * 
-   * @param column - Colonne à trier
-   * @param direction - Direction du tri
+   * Optimisé : useRef pour stabiliser searchParams et éviter les re-renders
    */
-  const handleSort = useCallback((column: TicketSortColumn, direction: SortDirection) => {
-    setCurrentSort(column);
-    setCurrentSortDirection(direction);
-    
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sortColumn', column);
-    params.set('sortDirection', direction);
-    
-    router.push(`/gestion/tickets?${params.toString()}`, { scroll: false });
-  }, [router, searchParams]);
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  const handleSort = useCallback(
+    (column: TicketSortColumn, direction: SortDirection) => {
+      setCurrentSort(column);
+      setCurrentSortDirection(direction);
+
+      const params = new URLSearchParams(searchParamsRef.current.toString());
+      params.set('sortColumn', column);
+      params.set('sortDirection', direction);
+
+      router.push(`/gestion/tickets?${params.toString()}`, { scroll: false });
+    },
+    [router]
+  );
 
   // Utiliser la fonction utilitaire pour mettre en surbrillance les termes recherchés
   const highlightSearchTerm = useCallback(
@@ -141,94 +185,120 @@ export function TicketsInfiniteScroll({
     router.push(`/gestion/tickets/${ticketId}?edit=true`);
   }, [router]);
 
+  /**
+   * Références stables pour les filtres (évite les re-créations de loadMore)
+   */
+  const filtersRef = useRef({
+    type,
+    status,
+    search,
+    quickFilter,
+    currentProfileId,
+    currentSort,
+    currentSortDirection,
+  });
+
+  // Mettre à jour les refs quand les filtres changent
+  useEffect(() => {
+    filtersRef.current = {
+      type,
+      status,
+      search,
+      quickFilter,
+      currentProfileId,
+      currentSort,
+      currentSortDirection,
+    };
+  }, [type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
+
+  /**
+   * Charge plus de tickets via l'API
+   * 
+   * Optimisé avec utilitaires extraits et refs stables pour respecter Clean Code.
+   */
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
+
+    // Mesure du temps de chargement (dev uniquement)
+    const loadStartTime = performance.now();
+    if (process.env.NODE_ENV === 'development') {
+      console.time('⏱️ TicketsLoadMore');
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Utiliser la ref pour obtenir la longueur actuelle de manière synchrone
       const currentLength = ticketsLengthRef.current;
+      const filters = filtersRef.current;
 
-      const params = new URLSearchParams({
-        offset: currentLength.toString(),
-        limit: ITEMS_PER_PAGE.toString(),
-        sortColumn: currentSort,
-        sortDirection: currentSortDirection
-      });
-
-      if (type) params.set('type', type);
-      if (status) params.set('status', status);
-      if (search) params.set('search', search);
-      if (quickFilter) params.set('quick', quickFilter);
-      if (currentProfileId) params.set('currentProfileId', currentProfileId);
-
-      // Ajouter les filtres avancés depuis les URL params
-      const allSearchParams = new URLSearchParams(searchParams.toString());
-      const advancedFilterKeys = [
-        'types',
-        'statuses',
-        'priorities',
-        'assignedTo',
-        'products',
-        'modules',
-        'channels',
-        'createdAtPreset',
-        'createdAtStart',
-        'createdAtEnd',
-        'resolvedAtPreset',
-        'resolvedAtStart',
-        'resolvedAtEnd',
-        'origins',
-        'hasJiraSync'
-      ];
-
-      advancedFilterKeys.forEach((key) => {
-        const values = allSearchParams.getAll(key);
-        values.forEach((value) => params.append(key, value));
-      });
+      // Construire les paramètres avec les utilitaires extraits
+      const params = buildTicketListParams(
+        currentLength,
+        ITEMS_PER_PAGE,
+        filters.currentSort,
+        filters.currentSortDirection,
+        filters.type,
+        filters.status,
+        filters.search,
+        filters.quickFilter,
+        filters.currentProfileId,
+        searchParamsRef.current
+      );
 
       const response = await fetch(`/api/tickets/list?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des tickets');
       }
 
       const data = await response.json();
-      
-      // Filtrer les doublons en utilisant l'ID comme clé unique
-      setTickets(prev => {
-        const existingIds = new Set(prev.map(t => t.id));
-        const newTickets = data.tickets.filter((t: TicketWithRelations) => !existingIds.has(t.id));
-        const updated = [...prev, ...newTickets];
+
+      // Fusionner les tickets avec les utilitaires extraits
+      setTickets((prev) => {
+        const updated = mergeTicketsWithoutDuplicates(prev, data.tickets);
         ticketsLengthRef.current = updated.length;
         return updated;
       });
+
       setHasMore(data.hasMore);
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement');
+
+      // Logger avec l'utilitaire centralisé
+      if (process.env.NODE_ENV === 'development') {
+        const loadDuration = performance.now() - loadStartTime;
+        console.timeEnd('⏱️ TicketsLoadMore');
+        logTicketsLoadPerformance(loadDuration, data.tickets.length);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur lors du chargement';
+      setError(message);
+      if (process.env.NODE_ENV === 'development') {
+        console.timeEnd('⏱️ TicketsLoadMore');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, hasMore, type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
+  }, [isLoading, hasMore]); // Dépendances minimales grâce aux refs
 
   // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
-  const initialTicketIdsString = initialTickets.map(t => t.id).join(',');
-  const initialTicketIds = useMemo(() => 
-    new Set(initialTickets.map(t => t.id)), 
+  const initialTicketIdsString = initialTickets.map((t) => t.id).join(',');
+  const initialTicketIds = useMemo(
+    () => new Set(initialTickets.map((t) => t.id)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [initialTicketIdsString]
   );
 
+  /**
+   * Réinitialiser les tickets quand les filtres changent
+   * 
+   * Utilise les utilitaires pour vérifier si les IDs sont identiques avant de réinitialiser.
+   */
   useEffect(() => {
-    // Réinitialiser quand les filtres changent
-    setTickets(prev => {
-      const currentIds = new Set(prev.map(t => t.id));
+    setTickets((prev) => {
+      const currentIds = new Set(prev.map((t) => t.id));
       
-      // Si les IDs sont identiques, ne pas réinitialiser
-      if (initialTicketIds.size === currentIds.size && 
-          Array.from(initialTicketIds).every(id => currentIds.has(id))) {
+      // Si les IDs sont identiques, ne pas réinitialiser (évite les re-renders)
+      if (areTicketIdsEqual(initialTicketIds, currentIds)) {
         return prev;
       }
       

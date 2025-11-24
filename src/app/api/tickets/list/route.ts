@@ -12,11 +12,16 @@ export type TicketStatusFilter = string; // Accepte tous les statuts (JIRA ou lo
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    console.log('[DEBUG] /api/tickets/list - Début de la requête');
+    // Logger uniquement en développement pour éviter de ralentir en production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] /api/tickets/list - Début de la requête');
+    }
     
     // Extraire et valider les paramètres avec Zod
     const searchParams = request.nextUrl.searchParams;
-    console.log('[DEBUG] SearchParams:', Object.fromEntries(searchParams.entries()));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] SearchParams:', Object.fromEntries(searchParams.entries()));
+    }
     
     const rawParams: Record<string, string | string[] | undefined> = {
       type: searchParams.get('type') || undefined,
@@ -29,7 +34,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       sortColumn: searchParams.get('sortColumn') || undefined,
       sortDirection: searchParams.get('sortDirection') || undefined
     };
-    console.log('[DEBUG] rawParams de base:', rawParams);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] rawParams de base:', rawParams);
+    }
 
     // Extraire les paramètres de filtres avancés (peuvent être multiples)
     const arrayFilterKeys = [
@@ -70,12 +77,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Extraire hasJiraSync comme booléen unique (pas un tableau)
     const hasJiraSyncValue = searchParams.get('hasJiraSync');
-    console.log('[DEBUG] hasJiraSyncValue:', hasJiraSyncValue);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] hasJiraSyncValue:', hasJiraSyncValue);
+    }
     if (hasJiraSyncValue !== null) {
       rawParams.hasJiraSync = hasJiraSyncValue;
     }
 
-    console.log('[DEBUG] rawParams complets après extraction:', rawParams);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] rawParams complets après extraction:', rawParams);
+    }
 
     // Séparer les paramètres de base des paramètres de filtres avancés
     // car ticketsListParamsSchema ne contient pas les filtres avancés
@@ -90,11 +101,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       sortColumn: rawParams.sortColumn,
       sortDirection: rawParams.sortDirection
     };
-    console.log('[DEBUG] baseParams pour validation Zod:', baseParams);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] baseParams pour validation Zod:', baseParams);
+    }
 
     // Valider les paramètres de base avec Zod (sans les filtres avancés)
     const validationResult = ticketsListParamsSchema.safeParse(baseParams);
-    console.log('[DEBUG] Validation Zod result:', validationResult.success);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] Validation Zod result:', validationResult.success);
+    }
     if (!validationResult.success) {
       return handleApiError(
         createError.validationError('Paramètres invalides', {
@@ -115,9 +130,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const sortDirection = params.sortDirection as SortDirection | undefined;
 
     // Parser les filtres avancés depuis rawParams (qui contient tous les paramètres)
-    console.log('[DEBUG] Début du parsing des filtres avancés');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] Début du parsing des filtres avancés');
+    }
     const advancedFilters = parseAdvancedFiltersFromParams(rawParams);
-    console.log('[DEBUG] Filtres avancés parsés:', advancedFilters ? JSON.stringify(advancedFilters, null, 2) : 'null');
+    if (process.env.NODE_ENV === 'development' && advancedFilters) {
+      console.log('[DEBUG] Filtres avancés parsés:', JSON.stringify(advancedFilters, null, 2));
+    }
 
     // Utiliser le service listTicketsPaginated pour une logique cohérente
     const result = await listTicketsPaginated(

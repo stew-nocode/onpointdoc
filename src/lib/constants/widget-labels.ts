@@ -15,7 +15,8 @@ export const ROLE_LABELS: Record<DashboardRole, string> = {
  */
 export const WIDGET_LABELS: Record<DashboardWidget, string> = {
   mttr: 'MTTR (Temps moyen de résolution)',
-  flux: 'Flux des tickets',
+  'tickets-ouverts': 'Tickets Ouverts',
+  'tickets-resolus': 'Tickets Résolus',
   workload: 'Charge de travail',
   health: 'Santé des produits',
   alerts: 'Alertes opérationnelles',

@@ -19,14 +19,14 @@ type WorkloadByAgentTableProps = {
 export function WorkloadByAgentTable({ data }: WorkloadByAgentTableProps) {
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-[420px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <SectionTitleWithDoc
             title="Charge par Agent"
             documentation={WORKLOAD_BY_AGENT_DOCUMENTATION}
           />
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex items-center justify-center">
           <p className="text-sm text-slate-500">Aucun agent avec des tickets</p>
         </CardContent>
       </Card>
@@ -34,15 +34,15 @@ export function WorkloadByAgentTable({ data }: WorkloadByAgentTableProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-[420px] flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <SectionTitleWithDoc
           title="Charge par Agent"
           documentation={WORKLOAD_BY_AGENT_DOCUMENTATION}
         />
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="flex-1 min-h-0 flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto flex-1">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">

@@ -1,8 +1,10 @@
 import type { DashboardWidget, WidgetLayoutType } from '@/types/dashboard-widgets';
 import type { ComponentType } from 'react';
 import type { UnifiedDashboardData } from '@/types/dashboard';
+import type { WidgetProps } from '@/types/dashboard-widget-props';
 import { MTTRKPICard } from '../ceo/mttr-kpi-card';
-import { FluxKPICard } from '../ceo/flux-kpi-card';
+import { TicketsOuvertsKPICard } from '../ceo/tickets-ouverts-kpi-card';
+import { TicketsResolusKPICard } from '../ceo/tickets-resolus-kpi-card';
 import { WorkloadKPICard } from '../ceo/workload-kpi-card';
 import { HealthKPICard } from '../ceo/health-kpi-card';
 import { MTTREvolutionChart } from '../ceo/mttr-evolution-chart';
@@ -13,6 +15,9 @@ import { OperationalAlertsSection } from '../ceo/operational-alerts-section';
 
 /**
  * Définition d'un widget avec son composant et son type de layout
+ * 
+ * Utilise ComponentType<any> car chaque widget a ses propres props spécifiques.
+ * La sécurité de type est assurée par les types spécifiques de chaque composant widget.
  */
 export type WidgetDefinition = {
   component: ComponentType<any>;
@@ -23,8 +28,11 @@ export type WidgetDefinition = {
 
 /**
  * Mapping des données aux widgets
+ * 
+ * Retourne un objet avec les props à passer au composant widget.
+ * Chaque mapper garantit le type correct via les types spécifiques des props.
  */
-type WidgetDataMapper = (data: UnifiedDashboardData) => any;
+type WidgetDataMapper = (data: UnifiedDashboardData) => WidgetProps;
 
 /**
  * Registry centralisé de tous les widgets disponibles
@@ -42,11 +50,17 @@ export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
     title: 'Temps moyen de résolution (MTTR)',
     description: 'Temps moyen nécessaire pour résoudre un ticket',
   },
-  flux: {
-    component: FluxKPICard,
+  'tickets-ouverts': {
+    component: TicketsOuvertsKPICard,
     layoutType: 'kpi',
-    title: 'Flux des tickets',
-    description: 'Tickets ouverts et résolus sur la période',
+    title: 'Tickets Ouverts',
+    description: 'Nombre de tickets créés sur la période',
+  },
+  'tickets-resolus': {
+    component: TicketsResolusKPICard,
+    layoutType: 'kpi',
+    title: 'Tickets Résolus',
+    description: 'Nombre de tickets résolus sur la période avec taux de résolution',
   },
   workload: {
     component: WorkloadKPICard,
@@ -134,7 +148,12 @@ export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
     if (data.team) return { data: data.team.mttr };
     return { data: DEFAULT_MTTR_DATA };
   },
-  flux: (data) => {
+  'tickets-ouverts': (data) => {
+    if (data.strategic) return { data: data.strategic.flux };
+    if (data.team) return { data: data.team.flux };
+    return { data: DEFAULT_FLUX_DATA };
+  },
+  'tickets-resolus': (data) => {
     if (data.strategic) return { data: data.strategic.flux };
     if (data.team) return { data: data.team.flux };
     return { data: DEFAULT_FLUX_DATA };
@@ -189,9 +208,12 @@ export function getWidgetDefinition(widgetId: DashboardWidget): WidgetDefinition
  * @param dashboardData - Données complètes du dashboard
  * @returns Props à passer au composant du widget
  */
-export function getWidgetProps(widgetId: DashboardWidget, dashboardData: UnifiedDashboardData): any {
+export function getWidgetProps(
+  widgetId: DashboardWidget,
+  dashboardData: UnifiedDashboardData
+): WidgetProps {
   const mapper = WIDGET_DATA_MAPPERS[widgetId];
-  if (!mapper) return {};
+  if (!mapper) return { alerts: [] };
   return mapper(dashboardData);
 }
 

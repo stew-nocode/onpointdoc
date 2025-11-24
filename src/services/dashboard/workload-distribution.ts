@@ -3,6 +3,7 @@ import type { Period, WorkloadData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
 import { getPeriodDates } from './period-utils';
 import { applyDashboardFilters, filterTicketsByTeam } from './filter-utils';
+import { extractProfileRole, extractProfile, type SupabaseProfileRoleRelation, type SupabaseProfileRelation } from './utils/profile-utils';
 
 /**
  * Calcule la répartition de la charge de travail par équipe et agent
@@ -55,10 +56,10 @@ export async function getWorkloadDistribution(period: Period, filters?: Partial<
  */
 function calculateWorkloadByTeam(
   activeTickets: Array<{
-    assigned_to_profile: { role: string } | { role: string }[] | null;
+    assigned_to_profile: SupabaseProfileRoleRelation;
   }>,
   resolvedTickets: Array<{
-    assigned_to_profile: { role: string } | { role: string }[] | null;
+    assigned_to_profile: SupabaseProfileRoleRelation;
   }>
 ): WorkloadData['byTeam'] {
   const teamMap = new Map<
@@ -67,12 +68,8 @@ function calculateWorkloadByTeam(
   >();
 
   activeTickets.forEach((ticket) => {
-    const profile = ticket.assigned_to_profile
-      ? Array.isArray(ticket.assigned_to_profile)
-        ? ticket.assigned_to_profile[0]
-        : ticket.assigned_to_profile
-      : null;
-    const team = getTeamFromRole(profile?.role);
+    const role = extractProfileRole(ticket.assigned_to_profile);
+    const team = getTeamFromRole(role);
     if (!teamMap.has(team)) {
       teamMap.set(team, { activeTickets: 0, resolvedThisPeriod: 0 });
     }
@@ -80,12 +77,8 @@ function calculateWorkloadByTeam(
   });
 
   resolvedTickets.forEach((ticket) => {
-    const profile = ticket.assigned_to_profile
-      ? Array.isArray(ticket.assigned_to_profile)
-        ? ticket.assigned_to_profile[0]
-        : ticket.assigned_to_profile
-      : null;
-    const team = getTeamFromRole(profile?.role);
+    const role = extractProfileRole(ticket.assigned_to_profile);
+    const team = getTeamFromRole(role);
     if (teamMap.has(team)) {
       teamMap.get(team)!.resolvedThisPeriod++;
     }
@@ -104,19 +97,35 @@ function calculateWorkloadByTeam(
 function calculateWorkloadByAgent(
   activeTickets: Array<{
     assigned_to: string | null;
-    assigned_to_profile:
-      | { id: string; full_name: string | null; role: string }
-      | { id: string; full_name: string | null; role: string }[]
-      | null;
+    assigned_to_profile: SupabaseProfileRelation;
   }>,
   resolvedTickets: Array<{
     assigned_to: string | null;
-    assigned_to_profile:
-      | { id: string; full_name: string | null; role: string }
-      | { id: string; full_name: string | null; role: string }[]
-      | null;
+    assigned_to_profile: SupabaseProfileRelation;
   }>
 ): WorkloadData['byAgent'] {
+  const agentMap = buildAgentMap(activeTickets, resolvedTickets);
+  return calculateWorkloadPercentages(agentMap);
+}
+
+/**
+ * Construit la map des agents avec leurs tickets actifs et résolus
+ */
+function buildAgentMap(
+  activeTickets: Array<{
+    assigned_to: string | null;
+    assigned_to_profile: SupabaseProfileRelation;
+  }>,
+  resolvedTickets: Array<{
+    assigned_to: string | null;
+    assigned_to_profile: SupabaseProfileRelation;
+  }>
+): Map<string, {
+  agentName: string;
+  team: string;
+  activeTickets: number;
+  resolvedThisPeriod: number;
+}> {
   const agentMap = new Map<
     string,
     {
@@ -128,11 +137,10 @@ function calculateWorkloadByAgent(
   >();
 
   activeTickets.forEach((ticket) => {
-    if (!ticket.assigned_to || !ticket.assigned_to_profile) return;
-    const profile = Array.isArray(ticket.assigned_to_profile)
-      ? ticket.assigned_to_profile[0]
-      : ticket.assigned_to_profile;
+    if (!ticket.assigned_to) return;
+    const profile = extractProfile(ticket.assigned_to_profile);
     if (!profile) return;
+    
     const agentId = ticket.assigned_to;
     if (!agentMap.has(agentId)) {
       agentMap.set(agentId, {
@@ -146,18 +154,34 @@ function calculateWorkloadByAgent(
   });
 
   resolvedTickets.forEach((ticket) => {
-    if (!ticket.assigned_to || !ticket.assigned_to_profile) return;
-    const profile = Array.isArray(ticket.assigned_to_profile)
-      ? ticket.assigned_to_profile[0]
-      : ticket.assigned_to_profile;
+    if (!ticket.assigned_to) return;
+    const profile = extractProfile(ticket.assigned_to_profile);
     if (!profile) return;
+    
     const agentId = ticket.assigned_to;
     if (agentMap.has(agentId)) {
       agentMap.get(agentId)!.resolvedThisPeriod++;
     }
   });
 
-  const maxActive = Math.max(...Array.from(agentMap.values()).map((a) => a.activeTickets), 1);
+  return agentMap;
+}
+
+/**
+ * Calcule les pourcentages de charge pour chaque agent
+ */
+function calculateWorkloadPercentages(
+  agentMap: Map<string, {
+    agentName: string;
+    team: string;
+    activeTickets: number;
+    resolvedThisPeriod: number;
+  }>
+): WorkloadData['byAgent'] {
+  const maxActive = Math.max(
+    ...Array.from(agentMap.values()).map((a) => a.activeTickets),
+    1
+  );
 
   return Array.from(agentMap.entries()).map(([agentId, data]) => ({
     agentId,

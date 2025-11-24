@@ -48,11 +48,11 @@ function transformPieData(data: TicketFluxData) {
 export function TicketsDistributionChart({ data }: TicketsDistributionChartProps) {
   if (!data || !data.byProduct || !data.trend) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-[420px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="text-sm font-semibold">Distribution par Produit</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex items-center justify-center">
           <p className="text-sm text-slate-500">Aucune donnée disponible</p>
         </CardContent>
       </Card>
@@ -63,8 +63,8 @@ export function TicketsDistributionChart({ data }: TicketsDistributionChartProps
   const totalOpened = data.opened;
 
   return (
-    <Card className="border-slate-200 shadow-none dark:border-slate-800">
-      <CardHeader className="pb-3">
+    <Card className="border-slate-200 shadow-none dark:border-slate-800 h-[420px] flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <SectionTitleWithDoc
           title="Distribution par Produit"
           documentation={DISTRIBUTION_TICKETS_DOCUMENTATION}
@@ -72,50 +72,52 @@ export function TicketsDistributionChart({ data }: TicketsDistributionChartProps
           <TrendIndicator trend={data.trend.openedTrend} isPositiveWhenNegative />
         </SectionTitleWithDoc>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={renderPieLabel}
-              outerRadius={PIE_OUTER_RADIUS}
-              innerRadius={PIE_INNER_RADIUS}
-              fill="#8884d8"
-              dataKey="value"
-              animationDuration={ANIMATION_DURATION}
-              animationEasing={ANIMATION_EASING}
-              stroke="none"
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  stroke="none"
-                  strokeWidth={0}
-                  className="transition-opacity hover:opacity-90"
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              content={
-                <CustomTooltip
-                  formatter={(value) => [`${value} tickets`, 'Ouverts']}
-                />
-              }
-            />
-            <Legend
-              verticalAlign="bottom"
-              height={PIE_LEGEND_HEIGHT}
-              iconType="circle"
-              wrapperStyle={{ fontSize: '12px', color: '#64748B' }}
-              className="dark:text-slate-400"
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="mt-4 flex items-center justify-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+      <CardContent className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderPieLabel}
+                outerRadius={PIE_OUTER_RADIUS}
+                innerRadius={PIE_INNER_RADIUS}
+                fill="#8884d8"
+                dataKey="value"
+                animationDuration={ANIMATION_DURATION}
+                animationEasing={ANIMATION_EASING}
+                stroke="none"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke="none"
+                    strokeWidth={0}
+                    className="transition-opacity hover:opacity-90"
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                content={
+                  <CustomTooltip
+                    formatter={(value) => [`${value} tickets`, 'Ouverts']}
+                  />
+                }
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={PIE_LEGEND_HEIGHT}
+                iconType="circle"
+                wrapperStyle={{ fontSize: '12px', color: '#64748B' }}
+                className="dark:text-slate-400"
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-4 flex-shrink-0 flex items-center justify-center gap-4 text-sm text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <div
               className="h-3 w-3 rounded-full"

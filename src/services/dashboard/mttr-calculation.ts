@@ -3,6 +3,8 @@ import type { Period, MTTRData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
 import { getPeriodDates, getPreviousPeriodDates } from './period-utils';
 import { applyDashboardFilters } from './filter-utils';
+import { calculateTrend } from './utils/trend-calculation';
+import { extractProduct, type SupabaseProductRelation } from './utils/product-utils';
 
 /**
  * Calcule le MTTR (Mean Time To Resolution) pour une période donnée
@@ -87,15 +89,16 @@ function calculateMTTRByProduct(
     created_at: string;
     resolved_at: string | null;
     product_id: string | null;
-    product: { id: string; name: string } | { id: string; name: string }[] | null;
+    product: SupabaseProductRelation;
   }>
 ): MTTRData['byProduct'] {
   const byProductMap = new Map<string, Array<{ created_at: string; resolved_at: string | null }>>();
 
   tickets.forEach((ticket) => {
-    if (!ticket.product_id || !ticket.product) return;
-    const product = Array.isArray(ticket.product) ? ticket.product[0] : ticket.product;
+    if (!ticket.product_id) return;
+    const product = extractProduct(ticket.product);
     if (!product) return;
+    
     const key = ticket.product_id;
     if (!byProductMap.has(key)) {
       byProductMap.set(key, []);
@@ -108,11 +111,7 @@ function calculateMTTRByProduct(
 
   return Array.from(byProductMap.entries()).map(([productId, productTickets]) => {
     const ticket = tickets.find((t) => t.product_id === productId);
-    const product = ticket?.product
-      ? Array.isArray(ticket.product)
-        ? ticket.product[0]
-        : ticket.product
-      : null;
+    const product = ticket ? extractProduct(ticket.product) : null;
     return {
       productId,
       productName: product?.name || 'Non défini',
@@ -158,15 +157,4 @@ function calculateMTTRByType(
     }));
 }
 
-/**
- * Calcule la tendance en pourcentage
- * 
- * @param current - Valeur actuelle
- * @param previous - Valeur précédente
- * @returns Pourcentage de variation
- */
-function calculateTrend(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
-}
 

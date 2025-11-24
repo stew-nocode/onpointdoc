@@ -15,12 +15,13 @@ import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialo
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 import { TicketsQuickFilters } from '@/components/tickets/tickets-quick-filters';
-import { TicketsKPISection } from '@/components/tickets/tickets-kpi-section';
+import { TicketsKPISectionLazy } from '@/components/tickets/tickets-kpi-section-lazy';
+import { TicketsPageClientWrapper } from '@/components/tickets/tickets-page-client-wrapper';
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
-import { FiltersSidebarClient } from '@/components/tickets/filters/filters-sidebar-client';
+import { FiltersSidebarClientLazy } from '@/components/tickets/filters/filters-sidebar-client-lazy';
 import { PageLayoutWithFilters } from '@/components/layout/page';
 
 type TicketsPageProps = {
@@ -34,6 +35,11 @@ type TicketsPageProps = {
   }>;
 };
 
+/**
+ * Charge les tickets initiaux pour la page
+ * 
+ * Optimisé : noStore() seulement ici pour éviter le cache des tickets (données temps réel)
+ */
 async function loadInitialTickets(
   typeParam?: string,
   statusParam?: string,
@@ -44,6 +50,7 @@ async function loadInitialTickets(
   sortDirectionParam?: string,
   advancedFilters?: ReturnType<typeof parseAdvancedFiltersFromParams>
 ): Promise<TicketsPaginatedResult> {
+  // noStore() uniquement pour les tickets (données temps réel)
   noStore();
   try {
     const normalizedType =
@@ -96,8 +103,15 @@ async function getCurrentUserProfileId() {
   }
 }
 
+/**
+ * Charge les produits et modules pour les formulaires
+ * 
+ * Optimisé : noStore() supprimé pour permettre le cache (données qui changent peu)
+ * Les produits/modules peuvent être mis en cache par Next.js pour améliorer le TTFB
+ */
 async function loadProductsAndModules() {
-  noStore();
+  // noStore() supprimé : ces données changent peu et peuvent être cachées
+  // Améliore le TTFB en permettant le cache Next.js
   try {
     // Récupérer les produits accessibles au département de l'utilisateur
     const departmentProducts = await listProductsForCurrentUserDepartment();
@@ -125,9 +139,13 @@ async function loadProductsAndModules() {
   }
 }
 
+/**
+ * Page principale de gestion des tickets
+ * 
+ * Optimisé : noStore() déplacé uniquement dans loadInitialTickets
+ * pour permettre le cache des données statiques (produits, modules)
+ */
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  noStore(); // S'assurer que la page n'est pas mise en cache
-  
   // Résoudre la Promise searchParams pour Next.js 15
   const resolvedSearchParams = await searchParams;
   const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
@@ -148,26 +166,27 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   // On utilisera parseAdvancedFiltersFromParams côté client dans FiltersSidebarClient
   const advancedFilters = null; // Sera géré côté client via FiltersSidebarClient
   
-  const currentProfileIdPromise = getCurrentUserProfileId();
-  const productsPromise = loadProductsAndModules();
-  const currentProfileId = await currentProfileIdPromise;
-  const kpisPromise = getSupportTicketKPIs(currentProfileId);
-  const initialTicketsPromise = loadInitialTickets(
-    resolvedSearchParams?.type,
-    resolvedSearchParams?.status,
-    resolvedSearchParams?.search,
-    quickFilter,
-    currentProfileId,
-    resolvedSearchParams?.sortColumn,
-    resolvedSearchParams?.sortDirection,
-    null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
-  );
-  
+  // Optimiser le parallélisme : démarrer toutes les requêtes en parallèle
+  // Le profileId est nécessaire pour les KPIs et tickets, donc on l'attend d'abord
+  const [currentProfileId, productsData] = await Promise.all([
+    getCurrentUserProfileId(),
+    loadProductsAndModules(), // Pas de dépendance, peut être en parallèle
+  ]);
+
+  // Ensuite, charger les tickets et KPIs en parallèle (dépendent de currentProfileId)
   try {
-    const [initialTicketsData, productsData, kpis] = await Promise.all([
-      initialTicketsPromise,
-      productsPromise,
-      kpisPromise
+    const [initialTicketsData, kpis] = await Promise.all([
+      loadInitialTickets(
+        resolvedSearchParams?.type,
+        resolvedSearchParams?.status,
+        resolvedSearchParams?.search,
+        quickFilter,
+        currentProfileId,
+        resolvedSearchParams?.sortColumn,
+        resolvedSearchParams?.sortDirection,
+        null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
+      ),
+      getSupportTicketKPIs(currentProfileId),
     ]);
     const { products, modules, submodules, features, contacts } = productsData;
 
@@ -178,56 +197,58 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     }
 
     return (
-      <PageLayoutWithFilters
-        sidebar={
-          <FiltersSidebarClient
-            users={contacts}
-            products={products}
-            modules={modules}
-          />
-        }
-        header={{
-          label: 'Tickets',
-          title: 'Gestion des tickets Support',
-          description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
-          action: (
-            <CreateTicketDialogLazy
+      <TicketsPageClientWrapper>
+        <PageLayoutWithFilters
+          sidebar={
+            <FiltersSidebarClientLazy
+              users={contacts}
               products={products}
               modules={modules}
-              submodules={submodules}
-              features={features}
-              contacts={contacts}
-              onSubmit={handleTicketSubmit}
             />
-          )
-        }}
-        kpis={<TicketsKPISection kpis={kpis} hasProfile={!!currentProfileId} />}
-        card={{
-          title: 'Tickets récents',
-          titleSuffix:
-            initialTicketsData.total > 0
-              ? `(${initialTicketsData.total} au total)`
-              : undefined,
-          search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
-          quickFilters: (
-            <TicketsQuickFilters
-              activeFilter={quickFilter}
-              currentProfileId={currentProfileId}
-            />
-          )
-        }}
-      >
-        <TicketsInfiniteScroll
-          initialTickets={initialTicketsData.tickets}
-          initialHasMore={initialTicketsData.hasMore}
-          initialTotal={initialTicketsData.total}
-          type={resolvedSearchParams?.type}
-          status={resolvedSearchParams?.status}
-          search={resolvedSearchParams?.search}
-          quickFilter={quickFilter}
-          currentProfileId={currentProfileId ?? undefined}
-        />
-      </PageLayoutWithFilters>
+          }
+          header={{
+            label: 'Tickets',
+            title: 'Gestion des tickets Support',
+            description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
+            action: (
+              <CreateTicketDialogLazy
+                products={products}
+                modules={modules}
+                submodules={submodules}
+                features={features}
+                contacts={contacts}
+                onSubmit={handleTicketSubmit}
+              />
+            )
+          }}
+          kpis={<TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />}
+          card={{
+            title: 'Tickets récents',
+            titleSuffix:
+              initialTicketsData.total > 0
+                ? `(${initialTicketsData.total} au total)`
+                : undefined,
+            search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
+            quickFilters: (
+              <TicketsQuickFilters
+                activeFilter={quickFilter}
+                currentProfileId={currentProfileId}
+              />
+            )
+          }}
+        >
+          <TicketsInfiniteScroll
+            initialTickets={initialTicketsData.tickets}
+            initialHasMore={initialTicketsData.hasMore}
+            initialTotal={initialTicketsData.total}
+            type={resolvedSearchParams?.type}
+            status={resolvedSearchParams?.status}
+            search={resolvedSearchParams?.search}
+            quickFilter={quickFilter}
+            currentProfileId={currentProfileId ?? undefined}
+          />
+        </PageLayoutWithFilters>
+      </TicketsPageClientWrapper>
     );
   } catch (error: any) {
     console.error('Erreur lors du chargement de la page des tickets:', error);

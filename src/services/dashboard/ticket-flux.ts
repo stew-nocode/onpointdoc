@@ -3,6 +3,8 @@ import type { Period, TicketFluxData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
 import { getPeriodDates, getPreviousPeriodDates } from './period-utils';
 import { applyDashboardFilters } from './filter-utils';
+import { calculateTrend } from './utils/trend-calculation';
+import { extractProduct, type SupabaseProductRelation } from './utils/product-utils';
 
 /**
  * Calcule le flux de tickets (ouverts vs résolus) pour une période
@@ -92,11 +94,11 @@ export async function getTicketFlux(period: Period, filters?: Partial<DashboardF
 function calculateFluxByProduct(
   openedTickets: Array<{
     product_id: string | null;
-    product: { id: string; name: string } | { id: string; name: string }[] | null;
+    product: SupabaseProductRelation;
   }>,
   resolvedTickets: Array<{
     product_id: string | null;
-    product: { id: string; name: string } | { id: string; name: string }[] | null;
+    product: SupabaseProductRelation;
   }>
 ): TicketFluxData['byProduct'] {
   const productMap = new Map<
@@ -105,9 +107,10 @@ function calculateFluxByProduct(
   >();
 
   openedTickets.forEach((ticket) => {
-    if (!ticket.product_id || !ticket.product) return;
-    const product = Array.isArray(ticket.product) ? ticket.product[0] : ticket.product;
+    if (!ticket.product_id) return;
+    const product = extractProduct(ticket.product);
     if (!product) return;
+    
     const key = ticket.product_id;
     if (!productMap.has(key)) {
       productMap.set(key, {
@@ -120,9 +123,10 @@ function calculateFluxByProduct(
   });
 
   resolvedTickets.forEach((ticket) => {
-    if (!ticket.product_id || !ticket.product) return;
-    const product = Array.isArray(ticket.product) ? ticket.product[0] : ticket.product;
+    if (!ticket.product_id) return;
+    const product = extractProduct(ticket.product);
     if (!product) return;
+    
     const key = ticket.product_id;
     if (productMap.has(key)) {
       productMap.get(key)!.resolved++;
@@ -137,11 +141,4 @@ function calculateFluxByProduct(
   }));
 }
 
-/**
- * Calcule la tendance en pourcentage
- */
-function calculateTrend(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
-}
 

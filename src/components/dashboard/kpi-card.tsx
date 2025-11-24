@@ -69,14 +69,14 @@ export function KPICard({
   ) : null;
 
   return (
-    <Card className={cn('transition-shadow hover:shadow-md', variantStyles[variant], className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+    <Card className={cn('transition-shadow hover:shadow-md flex flex-col min-w-0 w-full', variantStyles[variant], className)}>
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3 flex-shrink-0">
         <CardTitle className="text-[10px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
           {title}
         </CardTitle>
         <KPIIcon icon={icon} variant={variant} />
       </CardHeader>
-      <CardContent className="px-3 pb-3">
+      <CardContent className="px-3 pb-3 flex-1 flex flex-col justify-center">
         <div className="space-y-1">
           <div className="flex items-baseline justify-between">
             <div className="text-xl font-bold text-slate-900 dark:text-slate-100">

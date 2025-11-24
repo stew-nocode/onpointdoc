@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import type { DashboardWidget, WidgetLayoutType } from '@/types/dashboard-widgets';
@@ -12,6 +12,8 @@ type DashboardWidgetGridProps = {
   dashboardData: UnifiedDashboardData;
 };
 
+import type { WidgetProps } from '@/types/dashboard-widget-props';
+
 /**
  * Groupe de widgets par type de layout
  */
@@ -20,24 +22,27 @@ type WidgetGroup = {
   widgets: Array<{
     id: DashboardWidget;
     component: ComponentType<any>;
-    props: any;
+    props: WidgetProps;
   }>;
 };
 
 /**
  * Composant de grille responsive pour afficher les widgets
  * 
- * Organisation par type de layout pour optimiser l'utilisation de l'espace :
- * - KPIs : Grid 4 colonnes (1 KPI = 1 colonne)
- * - Charts : Grid 2 colonnes (1 Chart = 2 colonnes)
- * - Tables : Grid 2 colonnes (1 Table = 2 colonnes)
+ * Organisation par type de layout avec Flexbox pour optimiser l'utilisation de l'espace :
+ * - KPIs : Flexbox avec largeur minimale 280px (peut en avoir plusieurs par ligne)
+ * - Charts : Flexbox avec largeur minimale 400px (maximum 3 par ligne sur desktop standard)
+ * - Tables : Flexbox avec largeur minimale 400px (maximum 3 par ligne sur desktop standard)
  * - Full-width : Pleine largeur
  * 
+ * Tous les widgets ont des hauteurs fixes pour une présentation uniforme :
+ * - KPIs : 120px (hauteur fixe)
+ * - Charts : 420px (hauteur fixe)
+ * - Tables : 420px (hauteur fixe)
+ * 
  * Responsive :
- * - Mobile (< 640px) : 1 colonne pour tout
- * - Tablette (640px - 1024px) : 2 colonnes pour KPIs, 1 colonne pour charts/tables
- * - Desktop (1024px - 1280px) : 3 colonnes pour KPIs, 2 colonnes pour charts/tables
- * - Large Desktop (> 1280px) : 4 colonnes pour KPIs, 2 colonnes pour charts/tables
+ * - Mobile (< 640px) : 1 colonne pour tout (flex-basis: 100%)
+ * - Desktop (>= 640px) : Flexbox avec wrap automatique selon largeur minimale
  * 
  * @param widgets - Liste des widgets à afficher
  * @param dashboardData - Données complètes du dashboard
@@ -118,16 +123,43 @@ export function DashboardWidgetGrid({
 }
 
 /**
+ * Widget individuel mémorisé pour éviter les re-renders inutiles
+ * 
+ * Utilise React.memo avec comparaison shallow par défaut pour éviter les re-renders
+ * si les props n'ont pas changé.
+ */
+const MemoizedWidget = memo(
+  ({ component: WidgetComponent, props }: {
+    component: ComponentType<WidgetProps>;
+    props: WidgetProps;
+  }) => (
+    <div className="w-full h-full">
+      <WidgetComponent {...props} />
+    </div>
+  )
+);
+MemoizedWidget.displayName = 'MemoizedWidget';
+
+/**
  * Section pour les widgets KPI
- * Grid responsive : 1 colonne mobile, 2 tablette, 3 desktop, 4 large desktop
+ * 
+ * Utilise Flexbox pour :
+ * - Occuper toute la largeur disponible
+ * - Largeur minimale de 280px par KPI
+ * - Retour automatique à la ligne selon l'espace disponible
+ * - Répartition égale de l'espace par ligne
+ * - Adaptation automatique si des cartes sont désactivées
+ * - 1 colonne sur mobile (< 640px)
  */
 function KPIsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {widgets.map(({ id, component: WidgetComponent, props }) => (
-        <div key={id} className="w-full">
-          <WidgetComponent {...props} />
-        </div>
+    <div className="kpi-grid-responsive gap-4">
+      {widgets.map((widget) => (
+        <MemoizedWidget
+          key={widget.id}
+          component={widget.component}
+          props={widget.props}
+        />
       ))}
     </div>
   );
@@ -135,18 +167,27 @@ function KPIsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
 
 /**
  * Section pour les widgets Chart
- * Grid responsive : 1 colonne mobile, 1 colonne tablette, 2 colonnes desktop
- * Chaque chart prend 2 colonnes sur desktop
+ * 
+ * Utilise Flexbox pour :
+ * - Occuper toute la largeur disponible
+ * - Largeur minimale de 400px par Chart (permet maximum 3 par ligne sur desktop standard)
+ * - Retour automatique à la ligne selon l'espace disponible
+ * - Répartition égale de l'espace par ligne
+ * - Adaptation automatique si des widgets sont désactivés
+ * - Hauteur fixe de 420px pour tous les charts
+ * - 1 colonne sur mobile (< 640px)
  */
 function ChartsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
   if (widgets.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {widgets.map(({ id, component: WidgetComponent, props }) => (
-        <div key={id} className="w-full lg:col-span-1">
-          <WidgetComponent {...props} />
-        </div>
+    <div className="chart-grid-responsive gap-4">
+      {widgets.map((widget) => (
+        <MemoizedWidget
+          key={widget.id}
+          component={widget.component}
+          props={widget.props}
+        />
       ))}
     </div>
   );
@@ -154,18 +195,27 @@ function ChartsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
 
 /**
  * Section pour les widgets Table
- * Grid responsive : 1 colonne mobile, 1 colonne tablette, 2 colonnes desktop
- * Chaque table prend 2 colonnes sur desktop
+ * 
+ * Utilise Flexbox pour :
+ * - Occuper toute la largeur disponible
+ * - Largeur minimale de 400px par Table (permet maximum 3 par ligne sur desktop standard)
+ * - Retour automatique à la ligne selon l'espace disponible
+ * - Répartition égale de l'espace par ligne
+ * - Adaptation automatique si des widgets sont désactivés
+ * - Hauteur fixe de 420px pour toutes les tables
+ * - 1 colonne sur mobile (< 640px)
  */
 function TablesSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
   if (widgets.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {widgets.map(({ id, component: WidgetComponent, props }) => (
-        <div key={id} className="w-full lg:col-span-1">
-          <WidgetComponent {...props} />
-        </div>
+    <div className="table-grid-responsive gap-4">
+      {widgets.map((widget) => (
+        <MemoizedWidget
+          key={widget.id}
+          component={widget.component}
+          props={widget.props}
+        />
       ))}
     </div>
   );
@@ -180,10 +230,12 @@ function FullWidthSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
 
   return (
     <div className="space-y-4">
-      {widgets.map(({ id, component: WidgetComponent, props }) => (
-        <div key={id} className="w-full">
-          <WidgetComponent {...props} />
-        </div>
+      {widgets.map((widget) => (
+        <MemoizedWidget
+          key={widget.id}
+          component={widget.component}
+          props={widget.props}
+        />
       ))}
     </div>
   );

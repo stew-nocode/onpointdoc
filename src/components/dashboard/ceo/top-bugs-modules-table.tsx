@@ -20,14 +20,14 @@ type TopBugsModulesTableProps = {
 export function TopBugsModulesTable({ data }: TopBugsModulesTableProps) {
   if (data.length === 0) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-[420px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <SectionTitleWithDoc
             title="Top Modules avec BUGs"
             documentation={TOP_BUGS_MODULES_DOCUMENTATION}
           />
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex items-center justify-center">
           <p className="text-sm text-slate-500">Aucun module avec des bugs</p>
         </CardContent>
       </Card>
@@ -35,15 +35,15 @@ export function TopBugsModulesTable({ data }: TopBugsModulesTableProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-[420px] flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <SectionTitleWithDoc
           title="Top Modules avec BUGs"
           documentation={TOP_BUGS_MODULES_DOCUMENTATION}
         />
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="flex-1 min-h-0 flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto flex-1">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">

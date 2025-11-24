@@ -33,6 +33,94 @@
   }
 }
 
+/* Grille responsive pour les widgets Dashboard avec Flexbox */
+@layer components {
+  /**
+   * Conteneur Flexbox pour les widgets KPI
+   * 
+   * Utilise flex-wrap pour permettre le retour automatique à la ligne
+   * et flex: 1 pour une répartition égale de l'espace disponible
+   */
+  .kpi-grid-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /**
+   * Chaque carte KPI dans le conteneur Flexbox
+   * 
+   * flex: 1 1 280px signifie :
+   * - flex-grow: 1 (peut s'étendre pour occuper l'espace disponible)
+   * - flex-shrink: 1 (peut se rétrécir si nécessaire)
+   * - flex-basis: 280px (largeur de base minimale)
+   */
+  .kpi-grid-responsive > * {
+    flex: 1 1 280px;
+    min-width: 280px;
+  }
+
+  /**
+   * Conteneur Flexbox pour les widgets Chart
+   * 
+   * Permet un maximum de 3 charts par ligne sur desktop standard (1280px)
+   * Largeur minimale : 400px par chart
+   * Calcul : (1280px - 2*16px gaps) / 3 = ~416px → arrondi à 400px pour sécurité
+   */
+  .chart-grid-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /**
+   * Chaque widget Chart dans le conteneur Flexbox
+   * 
+   * flex: 1 1 400px signifie :
+   * - flex-grow: 1 (peut s'étendre pour occuper l'espace disponible)
+   * - flex-shrink: 1 (peut se rétrécir si nécessaire)
+   * - flex-basis: 400px (largeur de base minimale pour permettre max 3 par ligne)
+   */
+  .chart-grid-responsive > * {
+    flex: 1 1 400px;
+    min-width: 400px;
+  }
+
+  /**
+   * Conteneur Flexbox pour les widgets Table
+   * 
+   * Même logique que les Charts : maximum 3 tables par ligne
+   */
+  .table-grid-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  /**
+   * Chaque widget Table dans le conteneur Flexbox
+   * 
+   * flex: 1 1 400px signifie :
+   * - flex-grow: 1 (peut s'étendre pour occuper l'espace disponible)
+   * - flex-shrink: 1 (peut se rétrécir si nécessaire)
+   * - flex-basis: 400px (largeur de base minimale pour permettre max 3 par ligne)
+   */
+  .table-grid-responsive > * {
+    flex: 1 1 400px;
+    min-width: 400px;
+  }
+
+  /* Sur petits écrans (mobile), toutes les widgets prennent 100% de la largeur */
+  @media (max-width: 639px) {
+    .kpi-grid-responsive > *,
+    .chart-grid-responsive > *,
+    .table-grid-responsive > * {
+      flex-basis: 100%;
+      min-width: 100%;
+    }
+  }
+}
+
 /* Styles personnalisés pour les barres de scroll */
 /* Utilise la même couleur que les badges info (bg-status-info/15 = #3B82F6 à 15% d'opacité sur blanc) */
 /* Couleur calculée : #3B82F6 (RGB: 59, 130, 246) à 15% sur #FFFFFF = #E2ECFE */
@@ -51,12 +139,14 @@
   background: #94a3b8;
   border-radius: 6px;
   border: 2px solid #E2ECFE;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  /* Transition supprimée pour améliorer les performances lors du scroll */
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #3B82F6 !important;
   border-color: #3B82F6 !important;
+  /* Transition rapide uniquement au hover pour feedback utilisateur */
+  transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
 /* Support Firefox */
@@ -73,12 +163,14 @@
 .dark ::-webkit-scrollbar-thumb {
   background: #475569;
   border-color: #1e293b;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  /* Transition supprimée pour améliorer les performances lors du scroll */
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #3B82F6 !important;
   border-color: #3B82F6 !important;
+  /* Transition rapide uniquement au hover pour feedback utilisateur */
+  transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
 .dark * {
@@ -101,7 +193,7 @@ body {
   min-height: 100vh;
   background-color: #f9fafb;
   color: #1f2937;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Transition supprimée pour améliorer les performances (évite les saccades lors du scroll/clic) */
 }
 
 .dark body {

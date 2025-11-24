@@ -5,17 +5,20 @@ export type DashboardRole = 'direction' | 'manager' | 'agent' | 'admin';
 
 /**
  * Identifiants des widgets disponibles dans le dashboard
+ * 
+ * Chaque widget est indépendant et peut être activé/désactivé individuellement
  */
 export type DashboardWidget = 
-  | 'mttr'              // Temps moyen de résolution (KPI)
-  | 'flux'              // Flux d'ouverture/résolution (KPI)
-  | 'workload'          // Charge de travail (KPI)
-  | 'health'            // Santé des produits (KPI)
-  | 'alerts'            // Alertes opérationnelles (full-width)
-  | 'mttrEvolution'     // Évolution MTTR dans le temps (Chart)
-  | 'ticketsDistribution' // Distribution tickets par type (Chart)
-  | 'topBugsModules'    // Top modules avec bugs (Table)
-  | 'workloadByAgent';  // Charge par agent (Table)
+  | 'mttr'                  // Temps moyen de résolution (KPI)
+  | 'tickets-ouverts'       // Tickets ouverts sur la période (KPI)
+  | 'tickets-resolus'       // Tickets résolus sur la période (KPI)
+  | 'workload'              // Charge de travail (KPI)
+  | 'health'                // Santé des produits (KPI)
+  | 'alerts'                // Alertes opérationnelles (full-width)
+  | 'mttrEvolution'         // Évolution MTTR dans le temps (Chart)
+  | 'ticketsDistribution'   // Distribution tickets par type (Chart)
+  | 'topBugsModules'        // Top modules avec bugs (Table)
+  | 'workloadByAgent';      // Charge par agent (Table)
 
 /**
  * Type de layout pour chaque widget

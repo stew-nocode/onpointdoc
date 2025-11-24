@@ -48,11 +48,11 @@ function transformMTTRData(data: MTTRData) {
 export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
   if (!data || !data.byProduct) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-[420px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="text-sm font-semibold">Évolution MTTR</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex items-center justify-center">
           <p className="text-sm text-slate-500">Aucune donnée disponible</p>
         </CardContent>
       </Card>
@@ -62,8 +62,8 @@ export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
   const chartData = transformMTTRData(data);
 
   return (
-    <Card className="border-slate-200 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800">
-      <CardHeader className="pb-3">
+    <Card className="border-slate-200 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 h-[420px] flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <SectionTitleWithDoc
           title="MTTR par Produit"
           documentation={MTTR_EVOLUTION_DOCUMENTATION}
@@ -71,8 +71,8 @@ export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
           <TrendIndicator trend={data.trend} isPositiveWhenNegative />
         </SectionTitleWithDoc>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+      <CardContent className="flex-1 min-h-0">
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={CHART_MARGIN}>
             <MTTRAreaGradients />
             <CartesianGrid

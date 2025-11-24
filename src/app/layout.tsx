@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ErrorBoundary } from '@/components/errors/error-boundary';
+import { PerformanceMonitor } from '@/components/performance/performance-monitor';
 import { cn } from '@/lib/utils';
 
 import './globals.css';
@@ -23,6 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ErrorBoundary>
             {children}
             <Toaster />
+            {/* Performance Monitor - visible uniquement en développement */}
+            <PerformanceMonitor />
           </ErrorBoundary>
         </ThemeProvider>
       </body>
