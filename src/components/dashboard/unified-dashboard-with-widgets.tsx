@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import useSWR from 'swr';
+import { useSearchParams } from 'next/navigation';
 import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
@@ -10,7 +12,7 @@ import { WidgetPreferencesDialog } from './user/widget-preferences-dialog';
 import { Loader2 } from 'lucide-react';
 import { useRealtimeDashboardData } from '@/hooks/dashboard/use-realtime-dashboard-data';
 import { useRealtimeWidgetConfig } from '@/hooks/dashboard/use-realtime-widget-config';
-import { usePerformanceMeasure, useRenderCount } from '@/hooks/performance';
+import { fetchUnifiedDashboardData, fetchDashboardWidgetConfig } from '@/services/dashboard/fetchers';
 
 type UnifiedDashboardWithWidgetsProps = {
   role: DashboardRole;
@@ -40,116 +42,82 @@ export function UnifiedDashboardWithWidgets({
   initialWidgetConfig,
 }: UnifiedDashboardWithWidgetsProps) {
   const [period, setPeriod] = useState<Period>(initialPeriod);
-  const [data, setData] = useState<UnifiedDashboardData>(initialData);
-  const [widgetConfig, setWidgetConfig] = useState<UserDashboardConfig>(initialWidgetConfig);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const serializedFilters = useMemo(() => searchParams.toString(), [searchParams]);
 
-  // Mesures de performance (dev uniquement)
-  const { startMeasure, endMeasure } = usePerformanceMeasure({
-    name: 'DashboardRender',
-    measureRender: true,
-    logToConsole: process.env.NODE_ENV === 'development',
-  });
-  const renderCount = useRenderCount({
-    componentName: 'UnifiedDashboardWithWidgets',
-    warningThreshold: 5,
-  });
-
-  /**
-   * Charge les données pour une période donnée
-   */
-  const loadData = useCallback(async (selectedPeriod: Period) => {
-    // Mesure du temps de chargement (dev uniquement)
-    const loadStartTime = performance.now();
-    if (process.env.NODE_ENV === 'development') {
-      console.time('⏱️ DashboardDataLoad');
+  const {
+    data: dashboardData,
+    error: dashboardError,
+    isValidating: isDashboardValidating,
+    mutate: mutateDashboard
+  } = useSWR(
+    ['dashboard-data', period, serializedFilters],
+    () => fetchUnifiedDashboardData({ period, serializedFilters }),
+    {
+      fallbackData: initialData,
+      revalidateOnFocus: false,
+      revalidateOnMount: false
     }
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
-      params.set('period', selectedPeriod);
-
-      const response = await fetch(`/api/dashboard?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement des données');
-      }
-      const newData: UnifiedDashboardData = await response.json();
-      setData(newData);
-
-      // Logger le temps de chargement (dev uniquement)
-      if (process.env.NODE_ENV === 'development') {
-        const loadDuration = performance.now() - loadStartTime;
-        console.timeEnd('⏱️ DashboardDataLoad');
-        const rating = loadDuration < 500 ? '✅' : loadDuration < 1000 ? '⚠️' : '❌';
-        console.log(`${rating} DashboardDataLoad: ${Math.round(loadDuration)}ms`);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
-      setError(errorMessage);
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[Dashboard] Erreur lors du chargement des données:', err);
-        console.timeEnd('⏱️ DashboardDataLoad');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Charge la configuration des widgets depuis l'API
-   */
-  const loadWidgetConfig = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/dashboard/widgets/config?profileId=${profileId}&role=${role}`);
-      if (!response.ok) {
-        return;
-      }
-      const config: UserDashboardConfig = await response.json();
-      setWidgetConfig(config);
-    } catch (err) {
-      // Ignorer les erreurs silencieusement
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[Dashboard] Erreur lors du chargement de la config widgets:', err);
-      }
-    }
-  }, [profileId, role]);
-
-  /**
-   * Gère le changement de période
-   */
-  const handlePeriodChange = useCallback(
-    (newPeriod: Period) => {
-      setPeriod(newPeriod);
-      loadData(newPeriod);
-    },
-    [loadData]
   );
 
-  // Références stables pour les callbacks (évite les réabonnements)
-  const loadDataRef = useRef<((selectedPeriod: Period) => Promise<void>) | undefined>(undefined);
-  const loadWidgetConfigRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const {
+    data: widgetConfig,
+    mutate: mutateWidgetConfig
+  } = useSWR(
+    ['dashboard-widget-config', profileId, role],
+    () => fetchDashboardWidgetConfig({ profileId, role }),
+    {
+      fallbackData: initialWidgetConfig,
+      revalidateOnFocus: false,
+      revalidateOnMount: false
+    }
+  );
 
-  // Mettre à jour les refs à chaque changement de fonction
+  const handlePeriodChange = useCallback((newPeriod: Period) => {
+    setPeriod(newPeriod);
+  }, []);
+
+  const dashboardRefreshTimeout = useRef<number | null>(null);
+  const widgetConfigRefreshTimeout = useRef<number | null>(null);
+
+  const scheduleDashboardRefresh = useCallback(() => {
+    if (dashboardRefreshTimeout.current !== null) {
+      return;
+    }
+    dashboardRefreshTimeout.current = window.setTimeout(() => {
+      mutateDashboard();
+      dashboardRefreshTimeout.current = null;
+    }, 500);
+  }, [mutateDashboard]);
+
+  const scheduleWidgetConfigRefresh = useCallback(() => {
+    if (widgetConfigRefreshTimeout.current !== null) {
+      return;
+    }
+    widgetConfigRefreshTimeout.current = window.setTimeout(() => {
+      mutateWidgetConfig();
+      widgetConfigRefreshTimeout.current = null;
+    }, 500);
+  }, [mutateWidgetConfig]);
+
   useEffect(() => {
-    loadDataRef.current = loadData;
-  }, [loadData]);
+    return () => {
+      if (dashboardRefreshTimeout.current !== null) {
+        clearTimeout(dashboardRefreshTimeout.current);
+      }
+      if (widgetConfigRefreshTimeout.current !== null) {
+        clearTimeout(widgetConfigRefreshTimeout.current);
+      }
+    };
+  }, []);
 
-  useEffect(() => {
-    loadWidgetConfigRef.current = loadWidgetConfig;
-  }, [loadWidgetConfig]);
-
-  // Callbacks stables pour les hooks realtime (évite les réabonnements)
   const stableOnDataChange = useCallback(() => {
-    loadDataRef.current?.(period);
-  }, [period]);
+    scheduleDashboardRefresh();
+  }, [scheduleDashboardRefresh]);
 
   const stableOnConfigChange = useCallback(() => {
-    loadWidgetConfigRef.current?.();
-  }, []);
+    scheduleWidgetConfigRefresh();
+  }, [scheduleWidgetConfigRefresh]);
 
   // Écouter les changements temps réel des données
   useRealtimeDashboardData({
@@ -164,25 +132,36 @@ export function UnifiedDashboardWithWidgets({
     onConfigChange: stableOnConfigChange,
   });
 
+  const baseDashboardData = dashboardData ?? initialData;
+
   // Filtrer les alertes selon le rôle (mémorisé pour éviter les recalculs)
   const filteredAlerts = useMemo(
-    () => filterAlertsByRole(data.alerts, role),
-    [data.alerts, role]
+    () => filterAlertsByRole(baseDashboardData.alerts, role),
+    [baseDashboardData, role]
   );
 
   // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
   const dashboardDataWithFilteredAlerts = useMemo(
     () => ({
-      ...data,
+      ...baseDashboardData,
       alerts: filteredAlerts,
     }),
-    [data, filteredAlerts]
+    [baseDashboardData, filteredAlerts]
   );
+
+  const isLoading = isDashboardValidating;
+  const error = dashboardError ? dashboardError.message : null;
+  const currentWidgetConfig = widgetConfig ?? initialWidgetConfig;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
+        <WidgetPreferencesDialog
+          widgetConfig={currentWidgetConfig}
+          onUpdate={async () => {
+            await mutateWidgetConfig();
+          }}
+        />
         <div className="flex items-center gap-3">
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
           <PeriodSelector value={period} onChange={handlePeriodChange} />
@@ -196,9 +175,9 @@ export function UnifiedDashboardWithWidgets({
       )}
 
       {/* Affichage des widgets via DashboardWidgetGrid */}
-      {widgetConfig.visibleWidgets.length > 0 ? (
+      {currentWidgetConfig.visibleWidgets.length > 0 ? (
         <DashboardWidgetGrid
-          widgets={widgetConfig.visibleWidgets}
+          widgets={currentWidgetConfig.visibleWidgets}
           dashboardData={dashboardDataWithFilteredAlerts}
         />
       ) : (

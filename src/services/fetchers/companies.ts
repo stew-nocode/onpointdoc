@@ -22,7 +22,7 @@ export async function fetchCompanyById(
   const supabase = getSupabaseBrowserClient(options.client);
   const { data, error } = await supabase
     .from('companies')
-    .select('*')
+    .select('id, name, country_id, focal_user_id')
     .eq('id', companyId)
     .single();
 
@@ -45,7 +45,7 @@ export async function fetchCompanies(
   const supabase = getSupabaseBrowserClient(options.client);
   let query = supabase
     .from('companies')
-    .select('*')
+    .select('id, name, country_id, focal_user_id')
     .order('name', { ascending: true });
 
   if (options.search) {

@@ -22,7 +22,7 @@ export async function fetchProfileById(
   const supabase = getSupabaseBrowserClient(options.client);
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, auth_uid, email, full_name, role, company_id, is_active, department, job_title')
     .eq('id', profileId)
     .single();
 
@@ -48,7 +48,7 @@ export async function fetchProfilesByIds(
   const supabase = getSupabaseBrowserClient(options.client);
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, auth_uid, email, full_name, role, company_id, is_active, department, job_title')
     .in('id', profileIds);
 
   if (error) {
