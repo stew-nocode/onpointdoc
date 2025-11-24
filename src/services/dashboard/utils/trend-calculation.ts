@@ -21,3 +21,4 @@ export function calculateTrend(current: number, previous: number): number {
   return Math.round(((current - previous) / previous) * 100);
 }
 
+

@@ -9,15 +9,19 @@
  * - Temps de chargement custom
  * 
  * Visible uniquement en mode développement
+ * 
+ * Optimisé avec memoization pour réduire les re-renders.
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useWebVitals, useRenderCount } from '@/hooks/performance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
 import { X, Maximize2, Minimize2, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MetricList } from './performance-monitor/utils/metric-list';
+import type { WebVitalMetric } from '@/hooks/performance/use-web-vitals';
 
 type PerformanceMonitorProps = {
   /** Si true, le monitor est visible par défaut */
@@ -29,11 +33,15 @@ type PerformanceMonitorProps = {
  * 
  * Affiche un overlay flottant avec les métriques de performance
  * Visible uniquement en développement (NODE_ENV === 'development')
+ * 
+ * Optimisé avec memoization pour réduire les re-renders :
+ * - useMemo pour les métriques calculées
+ * - useCallback pour les handlers
+ * - Composants enfants memoizés
  */
-export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonitorProps) {
+function PerformanceMonitorComponent({ defaultVisible = false }: PerformanceMonitorProps) {
   const [isVisible, setIsVisible] = useState(defaultVisible);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const webVitals = useWebVitals();
   const monitorRenderCount = useRenderCount({
     componentName: 'PerformanceMonitor',
@@ -45,46 +53,38 @@ export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonito
     return null;
   }
 
-  // Récupérer toutes les métriques non nulles
-  const metrics = Object.entries(webVitals)
-    .map(([key, value]) => value && { key, ...value })
-    .filter((m): m is NonNullable<typeof m> => m !== null);
+  /**
+   * Calculer les métriques disponibles (memoizé pour éviter les recalculs)
+   * 
+   * Ne recalcule que si webVitals change (référence).
+   */
+  const metrics = useMemo(() => {
+    return Object.entries(webVitals)
+      .map(([, value]) => value)
+      .filter((m): m is WebVitalMetric => m !== null);
+  }, [webVitals]);
 
-  const getRatingColor = (rating: 'good' | 'needs-improvement' | 'poor') => {
-    switch (rating) {
-      case 'good':
-        return 'bg-green-500';
-      case 'needs-improvement':
-        return 'bg-yellow-500';
-      case 'poor':
-        return 'bg-red-500';
-    }
-  };
+  /**
+   * Handlers stabilisés avec useCallback pour éviter les re-renders enfants
+   */
+  const handleOpen = useCallback(() => {
+    setIsVisible(true);
+  }, []);
 
-  const getRatingBadge = (rating: 'good' | 'needs-improvement' | 'poor') => {
-    switch (rating) {
-      case 'good':
-        return 'success';
-      case 'needs-improvement':
-        return 'warning';
-      case 'poor':
-        return 'danger';
-    }
-  };
+  const handleClose = useCallback(() => {
+    setIsVisible(false);
+  }, []);
 
-  const formatValue = (name: string, value: number): string => {
-    if (name === 'CLS') {
-      return value.toFixed(3);
-    }
-    return `${Math.round(value)}ms`;
-  };
+  const handleToggleMinimize = useCallback(() => {
+    setIsMinimized((prev) => !prev);
+  }, []);
 
   return (
     <>
       {/* Bouton flottant pour ouvrir/fermer */}
       {!isVisible && (
         <button
-          onClick={() => setIsVisible(true)}
+          onClick={handleOpen}
           className="fixed bottom-4 right-4 z-[9999] flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 hover:scale-110"
           aria-label="Ouvrir le monitor de performance"
           title="Performance Monitor"
@@ -115,7 +115,7 @@ export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonito
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => setIsMinimized(!isMinimized)}
+                  onClick={handleToggleMinimize}
                   aria-label={isMinimized ? 'Maximiser' : 'Minimiser'}
                 >
                   {isMinimized ? (
@@ -128,7 +128,7 @@ export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonito
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => setIsVisible(false)}
+                  onClick={handleClose}
                   aria-label="Fermer"
                 >
                   <X className="h-3 w-3" />
@@ -143,47 +143,7 @@ export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonito
                   <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     Core Web Vitals
                   </h3>
-                  {metrics.length === 0 ? (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Chargement des métriques...
-                    </p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {metrics.map((metric) => (
-                        <div
-                          key={metric.id}
-                          className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-900"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={cn(
-                                'h-2 w-2 rounded-full',
-                                getRatingColor(metric.rating)
-                              )}
-                            />
-                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                              {metric.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-600 dark:text-slate-400">
-                              {formatValue(metric.name, metric.value)}
-                            </span>
-                            <Badge
-                              variant={getRatingBadge(metric.rating) as any}
-                              className="text-[10px] px-1.5 py-0"
-                            >
-                              {metric.rating === 'good'
-                                ? '✓'
-                                : metric.rating === 'needs-improvement'
-                                  ? '!'
-                                  : '✗'}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <MetricList metrics={metrics} />
                 </div>
 
                 {/* Informations générales */}
@@ -218,3 +178,14 @@ export function PerformanceMonitor({ defaultVisible = false }: PerformanceMonito
   );
 }
 
+/**
+ * Composant exporté avec memoization pour éviter les re-renders inutiles
+ * 
+ * Ne se re-rend que si defaultVisible change.
+ */
+export const PerformanceMonitor = React.memo(PerformanceMonitorComponent, (prevProps, nextProps) => {
+  // Ne re-rendre que si defaultVisible change
+  return prevProps.defaultVisible === nextProps.defaultVisible;
+});
+
+PerformanceMonitor.displayName = 'PerformanceMonitor';

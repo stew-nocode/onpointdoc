@@ -8,3 +8,4 @@ export default function GestionPage() {
   redirect('/gestion/tickets');
 }
 
+

@@ -29,6 +29,18 @@ type UsePerformanceMeasureOptions = {
 };
 
 /**
+ * Log le résultat de la performance dans la console
+ * 
+ * Fonction extraite pour respecter Clean Code (SRP)
+ */
+function logPerformanceResult(name: string, duration: number, logToConsole: boolean): void {
+  if (!logToConsole) return;
+
+  const rating = duration < 100 ? '✅' : duration < 500 ? '⚠️' : '❌';
+  console.log(`${rating} ${name}: ${Math.round(duration)}ms`);
+}
+
+/**
  * Hook pour mesurer les performances custom
  * 
  * @param options - Options de configuration
@@ -55,7 +67,17 @@ export function usePerformanceMeasure({
   logToConsole = process.env.NODE_ENV === 'development',
 }: UsePerformanceMeasureOptions) {
   const measureRef = useRef<PerformanceMeasure | null>(null);
-  const renderStartTime = useRef<number | null>(null);
+  const renderMeasureRef = useRef<{ startTime: number } | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  const logToConsoleRef = useRef(logToConsole);
+  const nameRef = useRef(name);
+
+  // Mettre à jour les refs si les valeurs changent
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    logToConsoleRef.current = logToConsole;
+    nameRef.current = name;
+  }, [onComplete, logToConsole, name]);
 
   /**
    * Démarre une mesure
@@ -63,7 +85,7 @@ export function usePerformanceMeasure({
   const startMeasure = useCallback(() => {
     const startTime = performance.now();
     measureRef.current = {
-      name,
+      name: nameRef.current,
       startTime,
       endTime: null,
       duration: null,
@@ -71,21 +93,25 @@ export function usePerformanceMeasure({
 
     // Marquer dans Performance API
     if (typeof window !== 'undefined' && 'performance' in window) {
-      performance.mark(`${name}-start`);
+      try {
+        performance.mark(`${nameRef.current}-start`);
+      } catch {
+        // Ignorer les erreurs de performance API
+      }
     }
 
-    if (logToConsole) {
-      console.time(`⏱️ ${name}`);
+    if (logToConsoleRef.current) {
+      console.time(`⏱️ ${nameRef.current}`);
     }
-  }, [name, logToConsole]);
+  }, []); // Pas de dépendances - utilise des refs
 
   /**
    * Arrête une mesure et calcule la durée
    */
   const endMeasure = useCallback(() => {
     if (!measureRef.current) {
-      if (logToConsole) {
-        console.warn(`[usePerformanceMeasure] No measure started for "${name}"`);
+      if (logToConsoleRef.current) {
+        console.warn(`[usePerformanceMeasure] No measure started for "${nameRef.current}"`);
       }
       return null;
     }
@@ -99,27 +125,26 @@ export function usePerformanceMeasure({
     // Mesurer dans Performance API
     if (typeof window !== 'undefined' && 'performance' in window) {
       try {
-        performance.mark(`${name}-end`);
-        performance.measure(name, `${name}-start`, `${name}-end`);
-      } catch (error) {
+        performance.mark(`${nameRef.current}-end`);
+        performance.measure(nameRef.current, `${nameRef.current}-start`, `${nameRef.current}-end`);
+      } catch {
         // Ignorer si les marks n'existent pas
       }
     }
 
-    if (logToConsole) {
-      console.timeEnd(`⏱️ ${name}`);
-      const rating = duration < 100 ? '✅' : duration < 500 ? '⚠️' : '❌';
-      console.log(`${rating} ${name}: ${Math.round(duration)}ms`);
+    if (logToConsoleRef.current) {
+      console.timeEnd(`⏱️ ${nameRef.current}`);
+      logPerformanceResult(nameRef.current, duration, logToConsoleRef.current);
     }
 
-    if (onComplete) {
-      onComplete(duration);
+    if (onCompleteRef.current) {
+      onCompleteRef.current(duration);
     }
 
     const result = duration;
     measureRef.current = null;
     return result;
-  }, [name, onComplete, logToConsole]);
+  }, []); // Pas de dépendances - utilise des refs
 
   /**
    * Mesure le temps d'exécution d'une fonction
@@ -142,19 +167,58 @@ export function usePerformanceMeasure({
     [startMeasure, endMeasure]
   );
 
-  // Mesurer automatiquement le temps de rendu si demandé
+  /**
+   * Mesure le temps de rendu du composant
+   * 
+   * Utilise un useEffect séparé pour éviter les boucles infinies.
+   * La mesure commence au montage et se termine au démontage.
+   */
   useEffect(() => {
     if (!measureRender) return;
 
-    renderStartTime.current = performance.now();
-    startMeasure();
+    const startTime = performance.now();
+    renderMeasureRef.current = { startTime };
+
+    if (logToConsoleRef.current) {
+      console.time(`⏱️ ${nameRef.current}`);
+    }
+
+    if (typeof window !== 'undefined' && 'performance' in window) {
+      try {
+        performance.mark(`${nameRef.current}-start`);
+      } catch {
+        // Ignorer les erreurs
+      }
+    }
 
     return () => {
-      if (renderStartTime.current !== null) {
-        endMeasure();
+      if (renderMeasureRef.current) {
+        const endTime = performance.now();
+        const duration = endTime - renderMeasureRef.current.startTime;
+
+        if (logToConsoleRef.current) {
+          console.timeEnd(`⏱️ ${nameRef.current}`);
+          logPerformanceResult(nameRef.current, duration, logToConsoleRef.current);
+        }
+
+        if (onCompleteRef.current) {
+          onCompleteRef.current(duration);
+        }
+
+        if (typeof window !== 'undefined' && 'performance' in window) {
+          try {
+            performance.mark(`${nameRef.current}-end`);
+            performance.measure(nameRef.current, `${nameRef.current}-start`, `${nameRef.current}-end`);
+          } catch {
+            // Ignorer les erreurs
+          }
+        }
+
+        renderMeasureRef.current = null;
       }
     };
-  }, [measureRender, startMeasure, endMeasure]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [measureRender]); // Seulement measureRender - pas de dépendances aux callbacks
 
   return {
     startMeasure,
@@ -190,7 +254,7 @@ export function measureExecution<T>(name: string, fn: () => T | Promise<T>): [T,
           const duration = performance.now() - startTime;
           if (process.env.NODE_ENV === 'development') {
             console.timeEnd(`⏱️ ${name}`);
-            console.log(`✅ ${name}: ${Math.round(duration)}ms`);
+            logPerformanceResult(name, duration, true);
           }
           return duration;
         }),
@@ -200,7 +264,7 @@ export function measureExecution<T>(name: string, fn: () => T | Promise<T>): [T,
     const duration = performance.now() - startTime;
     if (process.env.NODE_ENV === 'development') {
       console.timeEnd(`⏱️ ${name}`);
-      console.log(`✅ ${name}: ${Math.round(duration)}ms`);
+      logPerformanceResult(name, duration, true);
     }
 
     return [result, duration] as [T, number];
@@ -213,4 +277,3 @@ export function measureExecution<T>(name: string, fn: () => T | Promise<T>): [T,
     throw error;
   }
 }
-

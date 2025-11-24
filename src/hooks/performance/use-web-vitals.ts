@@ -9,7 +9,7 @@
  * - TTFB (Time to First Byte) - Temps jusqu'à la première réponse serveur
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 export type WebVitalMetric = {
   name: string;
@@ -85,6 +85,52 @@ export function useWebVitals() {
     TTFB: null,
   });
 
+  // Ref pour stocker les métriques actuelles (pour comparaison dans updateMetric)
+  const metricsRef = useRef(metrics);
+  metricsRef.current = metrics;
+
+  /**
+   * Mettre à jour une métrique seulement si la valeur a changé
+   * Évite les re-renders inutiles si la valeur est identique
+   * 
+   * Utilise une ref pour comparer sans dépendre de l'état dans le callback.
+   */
+  const updateMetric = useCallback((
+    key: keyof WebVitalsState,
+    newMetric: WebVitalMetric | null
+  ) => {
+    setMetrics((prev) => {
+      const current = prev[key];
+      
+      // Si la métrique est identique, ne pas mettre à jour
+      if (current && newMetric) {
+        // Comparer par ID d'abord (plus rapide)
+        if (current.id === newMetric.id) {
+          return prev; // Pas de changement
+        }
+        
+        // Comparer par nom et valeur (tolérance de 1ms)
+        if (
+          current.name === newMetric.name &&
+          Math.abs(current.value - newMetric.value) < 1
+        ) {
+          return prev; // Pas de changement significatif
+        }
+      }
+      
+      // Si on passe de null à null, ne pas mettre à jour
+      if (!current && !newMetric) {
+        return prev;
+      }
+
+      // Mettre à jour seulement si nécessaire
+      return {
+        ...prev,
+        [key]: newMetric,
+      };
+    });
+  }, []); // Pas de dépendances car utilise setMetrics qui est stable
+
   useEffect(() => {
     // Charger la bibliothèque web-vitals dynamiquement (si disponible)
     const loadWebVitals = async () => {
@@ -98,20 +144,14 @@ export function useWebVitals() {
           const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
           if (navigation) {
             const ttfb = navigation.responseStart - navigation.requestStart;
-            setMetrics((prev) => ({
-              ...prev,
-              TTFB: formatMetric('TTFB', ttfb),
-            }));
+            updateMetric('TTFB', formatMetric('TTFB', ttfb));
           }
 
           // Mesurer FCP
           const paintEntries = performance.getEntriesByType('paint');
           const fcpEntry = paintEntries.find((entry) => entry.name === 'first-contentful-paint');
           if (fcpEntry) {
-            setMetrics((prev) => ({
-              ...prev,
-              FCP: formatMetric('FCP', fcpEntry.startTime),
-            }));
+            updateMetric('FCP', formatMetric('FCP', fcpEntry.startTime));
           }
         }
 
@@ -122,10 +162,7 @@ export function useWebVitals() {
               const entries = list.getEntries();
               const lastEntry = entries[entries.length - 1] as any;
               if (lastEntry) {
-                setMetrics((prev) => ({
-                  ...prev,
-                  LCP: formatMetric('LCP', lastEntry.renderTime || lastEntry.loadTime),
-                }));
+                updateMetric('LCP', formatMetric('LCP', lastEntry.renderTime || lastEntry.loadTime));
               }
             });
             lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
@@ -138,10 +175,7 @@ export function useWebVitals() {
                   clsValue += (entry as any).value;
                 }
               }
-              setMetrics((prev) => ({
-                ...prev,
-                CLS: formatMetric('CLS', clsValue),
-              }));
+              updateMetric('CLS', formatMetric('CLS', clsValue));
             });
             clsObserver.observe({ entryTypes: ['layout-shift'] });
 
@@ -149,10 +183,7 @@ export function useWebVitals() {
             const fidObserver = new PerformanceObserver((list) => {
               for (const entry of list.getEntries()) {
                 const fid = (entry as any).processingStart - entry.startTime;
-                setMetrics((prev) => ({
-                  ...prev,
-                  FID: formatMetric('FID', fid),
-                }));
+                updateMetric('FID', formatMetric('FID', fid));
               }
             });
             fidObserver.observe({ entryTypes: ['first-input'] });
@@ -161,10 +192,7 @@ export function useWebVitals() {
             const inpObserver = new PerformanceObserver((list) => {
               for (const entry of list.getEntries()) {
                 const inp = (entry as any).duration;
-                setMetrics((prev) => ({
-                  ...prev,
-                  INP: formatMetric('INP', inp),
-                }));
+                updateMetric('INP', formatMetric('INP', inp));
               }
             });
             inpObserver.observe({ entryTypes: ['event'] });
@@ -213,4 +241,5 @@ export function useWebVitals() {
 
   return metrics;
 }
+
 

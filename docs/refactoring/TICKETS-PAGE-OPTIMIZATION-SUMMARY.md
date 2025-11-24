@@ -172,3 +172,4 @@ Une fois les optimisations appliquées, re-mesurer pour vérifier :
 
 **Note** : Toutes les optimisations respectent les principes Clean Code et maintiennent la lisibilité du code.
 
+

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Eye, Edit, Loader2, CheckSquare2, Square, MessageSquare } from 'lucide-react';
 import { Badge } from '@/ui/badge';
@@ -36,9 +36,10 @@ import {
 } from './tickets-infinite-scroll/utils/filter-params-builder';
 import {
   mergeTicketsWithoutDuplicates,
-  areTicketIdsEqual,
 } from './tickets-infinite-scroll/utils/tickets-state-updater';
+import { areTicketIdsEqual } from './tickets-infinite-scroll/utils/tickets-reset';
 import { logTicketsLoadPerformance } from './tickets-infinite-scroll/utils/performance-logger';
+import { LoadMoreButton } from './tickets-infinite-scroll/load-more-button';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -53,7 +54,12 @@ type TicketsInfiniteScrollProps = {
 
 const ITEMS_PER_PAGE = 25;
 
-export function TicketsInfiniteScroll({
+/**
+ * Composant TicketsInfiniteScroll - Version interne non memoizée
+ * 
+ * Logique principale du composant.
+ */
+function TicketsInfiniteScrollComponent({
   initialTickets,
   initialHasMore,
   initialTotal,
@@ -67,6 +73,10 @@ export function TicketsInfiniteScroll({
   const searchParams = useSearchParams();
   const { role } = useAuth();
   
+  // Stabiliser searchParams avec une ref pour éviter les re-renders
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+  
   // Mesures de performance (dev uniquement)
   const renderCount = useRenderCount({
     componentName: 'TicketsInfiniteScroll',
@@ -74,10 +84,12 @@ export function TicketsInfiniteScroll({
     logToConsole: process.env.NODE_ENV === 'development',
   });
   
-  // Parser les paramètres de tri depuis l'URL
-  const sortColumnParam = searchParams.get('sortColumn') || undefined;
-  const sortDirectionParam = searchParams.get('sortDirection') || undefined;
-  const sort = parseTicketSort(sortColumnParam, sortDirectionParam);
+  // Parser les paramètres de tri depuis l'URL (memoizé pour éviter les recalculs)
+  const sort = useMemo(() => {
+    const sortColumnParam = searchParamsRef.current.get('sortColumn') || undefined;
+    const sortDirectionParam = searchParamsRef.current.get('sortDirection') || undefined;
+    return parseTicketSort(sortColumnParam, sortDirectionParam);
+  }, [searchParams]); // Seulement si searchParams change (référence)
   
   const [currentSort, setCurrentSort] = useState<TicketSortColumn>(sort.column);
   const [currentSortDirection, setCurrentSortDirection] = useState<SortDirection>(sort.direction);
@@ -85,8 +97,11 @@ export function TicketsInfiniteScroll({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const observerTarget = useRef<HTMLDivElement>(null);
   const ticketsLengthRef = useRef(initialTickets.length);
+  
+  // Refs pour stabiliser les valeurs utilisées dans loadMore (évite les re-renders)
+  const isLoadingRef = useRef(false);
+  const hasMoreRef = useRef(hasMore);
   // Initialiser avec toutes les colonnes par défaut pour éviter l'erreur d'hydratation
   // Les préférences seront chargées après le montage côté client uniquement
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
@@ -110,6 +125,10 @@ export function TicketsInfiniteScroll({
     areSomeTicketsSelected
   } = useTicketSelection();
 
+  // Stabiliser clearSelection avec une ref pour éviter les dépendances dans useEffect
+  const clearSelectionRef = useRef(clearSelection);
+  clearSelectionRef.current = clearSelection;
+
   /**
    * Réinitialiser la sélection quand les filtres changent
    * 
@@ -120,9 +139,11 @@ export function TicketsInfiniteScroll({
     [type, status, search, quickFilter, currentSort, currentSortDirection]
   );
 
+  // Réinitialiser la sélection quand les filtres changent
+  // Utilise une ref pour éviter la dépendance à clearSelection
   useEffect(() => {
-    clearSelection();
-  }, [filterKey, clearSelection]);
+    clearSelectionRef.current();
+  }, [filterKey]); // Pas de dépendance à clearSelection
 
   /**
    * Initialiser les colonnes visibles après le montage
@@ -150,11 +171,8 @@ export function TicketsInfiniteScroll({
    * Handler pour le tri d'une colonne
    * Met à jour l'URL avec les nouveaux paramètres de tri
    * 
-   * Optimisé : useRef pour stabiliser searchParams et éviter les re-renders
+   * Optimisé : utilise searchParamsRef déjà défini plus haut
    */
-  const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
-
   const handleSort = useCallback(
     (column: TicketSortColumn, direction: SortDirection) => {
       setCurrentSort(column);
@@ -211,13 +229,27 @@ export function TicketsInfiniteScroll({
     };
   }, [type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
 
+  // Mettre à jour les refs pour isLoading et hasMore (évite les re-créations de loadMore)
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
   /**
    * Charge plus de tickets via l'API
    * 
    * Optimisé avec utilitaires extraits et refs stables pour respecter Clean Code.
+   * Utilise des refs pour isLoading et hasMore pour éviter les re-créations de la fonction.
    */
-  const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+  const loadMoreRef = useRef<() => Promise<void>>();
+  
+  // Mettre à jour la fonction loadMore dans la ref
+  loadMoreRef.current = async () => {
+    // Utiliser les refs pour éviter les dépendances
+    if (isLoadingRef.current || !hasMoreRef.current) return;
 
     // Mesure du temps de chargement (dev uniquement)
     const loadStartTime = performance.now();
@@ -225,6 +257,7 @@ export function TicketsInfiniteScroll({
       console.time('⏱️ TicketsLoadMore');
     }
 
+    isLoadingRef.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -255,13 +288,28 @@ export function TicketsInfiniteScroll({
       const data = await response.json();
 
       // Fusionner les tickets avec les utilitaires extraits
+      // Optimisation : vérifier s'il y a vraiment de nouveaux tickets avant de mettre à jour l'état
       setTickets((prev) => {
+        // Vérifier rapidement si les nouveaux tickets existent déjà
+        const existingIds = new Set(prev.map((t) => t.id));
+        const trulyNewTickets = data.tickets.filter((t: TicketWithRelations) => !existingIds.has(t.id));
+        
+        // Si aucun nouveau ticket, ne pas déclencher de re-render
+        if (trulyNewTickets.length === 0) {
+          return prev;
+        }
+        
+        // Fusionner uniquement les nouveaux tickets
         const updated = mergeTicketsWithoutDuplicates(prev, data.tickets);
         ticketsLengthRef.current = updated.length;
         return updated;
       });
 
-      setHasMore(data.hasMore);
+      // Mettre à jour hasMore seulement si la valeur a changé
+      if (hasMoreRef.current !== data.hasMore) {
+        hasMoreRef.current = data.hasMore;
+        setHasMore(data.hasMore);
+      }
 
       // Logger avec l'utilitaire centralisé
       if (process.env.NODE_ENV === 'development') {
@@ -276,60 +324,45 @@ export function TicketsInfiniteScroll({
         console.timeEnd('⏱️ TicketsLoadMore');
       }
     } finally {
+      isLoadingRef.current = false;
       setIsLoading(false);
     }
-  }, [isLoading, hasMore]); // Dépendances minimales grâce aux refs
+  };
 
-  // Mémoriser les IDs des tickets initiaux pour éviter les réinitialisations inutiles
-  const initialTicketIdsString = initialTickets.map((t) => t.id).join(',');
-  const initialTicketIds = useMemo(
-    () => new Set(initialTickets.map((t) => t.id)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [initialTicketIdsString]
-  );
+  // Fonction wrapper stable pour compatibilité
+  const loadMore = useCallback(() => {
+    loadMoreRef.current?.();
+  }, []); // Pas de dépendances - utilise toujours la version actuelle dans la ref
+
+  // Référence stable pour les tickets initiaux (évite les re-renders)
+  const initialTicketsRef = useRef(initialTickets);
+  const initialHasMoreRef = useRef(initialHasMore);
+
+  // Mettre à jour les refs quand les props changent (sans déclencher de re-render)
+  useEffect(() => {
+    initialTicketsRef.current = initialTickets;
+    initialHasMoreRef.current = initialHasMore;
+  }, [initialTickets, initialHasMore]);
 
   /**
    * Réinitialiser les tickets quand les filtres changent
    * 
-   * Utilise les utilitaires pour vérifier si les IDs sont identiques avant de réinitialiser.
+   * Utilise une comparaison par IDs pour éviter les re-renders inutiles.
    */
   useEffect(() => {
     setTickets((prev) => {
-      const currentIds = new Set(prev.map((t) => t.id));
-      
-      // Si les IDs sont identiques, ne pas réinitialiser (évite les re-renders)
-      if (areTicketIdsEqual(initialTicketIds, currentIds)) {
+      // Comparer par IDs uniquement (évite les re-renders si contenu identique)
+      if (areTicketIdsEqual(prev, initialTicketsRef.current)) {
         return prev;
       }
-      
-      ticketsLengthRef.current = initialTickets.length;
-      return initialTickets;
+
+      ticketsLengthRef.current = initialTicketsRef.current.length;
+      return initialTicketsRef.current;
     });
-    setHasMore(initialHasMore);
+    setHasMore(initialHasMoreRef.current);
     setError(null);
-  }, [type, status, search, quickFilter, currentSort, currentSortDirection, initialHasMore, initialTicketIds, initialTickets]);
+  }, [type, status, search, quickFilter, currentSort, currentSortDirection]); // Pas de dépendance aux tickets
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasMore, isLoading, loadMore]);
 
   if (tickets.length === 0 && !isLoading) {
     return (
@@ -773,35 +806,85 @@ export function TicketsInfiniteScroll({
         </table>
       </div>
 
-      {/* Zone de declenchement pour l'infinite scroll */}
-      <div ref={observerTarget} className="h-10 flex items-center justify-center py-4">
-        {isLoading && (
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Chargement...</span>
-          </div>
-        )}
-        {error && (
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm text-status-danger">{error}</p>
-            <Button size="sm" onClick={() => loadMore()}>
-              Réessayer
-            </Button>
-          </div>
-        )}
-        {hasMore && !isLoading && !error && (
-          <Button variant="outline" size="sm" onClick={() => loadMore()}>
-            Charger plus
+      {/* Message d'erreur */}
+      {error && (
+        <div className="flex flex-col items-center gap-2 py-6">
+          <p className="text-sm text-status-danger">{error}</p>
+          <Button size="sm" onClick={() => loadMore()}>
+            Réessayer
           </Button>
-        )}
-        {!hasMore && !isLoading && tickets.length > 0 && (
+        </div>
+      )}
+
+      {/* Bouton "Voir plus" */}
+      {!error && (
+        <LoadMoreButton
+          onLoadMore={loadMore}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          label="Voir plus"
+        />
+      )}
+
+      {/* Message de fin de liste */}
+      {!hasMore && !isLoading && tickets.length > 0 && (
+        <div className="py-6 text-center">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Tous les tickets ont été chargés ({tickets.length} sur {initialTotal})
           </p>
-        )}
-      </div>
+        </div>
+      )}
       </div>
     </TooltipProvider>
   );
 }
+
+/**
+ * Composant exporté avec memoization pour éviter les re-renders inutiles
+ * 
+ * Ne se re-rend que si les props changent réellement.
+ * Utilise une comparaison personnalisée pour éviter les re-renders si les arrays
+ * initialTickets ont les mêmes IDs même si la référence change.
+ */
+export const TicketsInfiniteScroll = React.memo(
+  TicketsInfiniteScrollComponent,
+  (prevProps, nextProps) => {
+    // Comparer les props primitives
+    if (
+      prevProps.initialHasMore !== nextProps.initialHasMore ||
+      prevProps.initialTotal !== nextProps.initialTotal ||
+      prevProps.type !== nextProps.type ||
+      prevProps.status !== nextProps.status ||
+      prevProps.search !== nextProps.search ||
+      prevProps.quickFilter !== nextProps.quickFilter ||
+      prevProps.currentProfileId !== nextProps.currentProfileId
+    ) {
+      return false; // Props différentes = re-render
+    }
+
+    // Comparer initialTickets par IDs uniquement (évite les re-renders si contenu identique)
+    if (prevProps.initialTickets.length !== nextProps.initialTickets.length) {
+      return false; // Longueur différente = re-render
+    }
+
+    const prevIds = new Set(prevProps.initialTickets.map((t) => t.id));
+    const nextIds = new Set(nextProps.initialTickets.map((t) => t.id));
+
+    // Si les IDs sont identiques, pas de re-render
+    if (prevIds.size !== nextIds.size) {
+      return false;
+    }
+
+    for (const id of prevIds) {
+      if (!nextIds.has(id)) {
+        return false; // IDs différents = re-render
+      }
+    }
+
+    // Props identiques = pas de re-render
+    return true;
+  }
+);
+
+TicketsInfiniteScroll.displayName = 'TicketsInfiniteScroll';
 

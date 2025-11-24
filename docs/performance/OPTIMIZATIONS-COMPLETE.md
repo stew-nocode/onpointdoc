@@ -119,3 +119,4 @@ Toutes les optimisations respectent les principes Clean Code :
 
 **Note** : Les optimisations sont prêtes. Il reste à appliquer la migration DB pour voir l'impact complet sur les performances.
 
+

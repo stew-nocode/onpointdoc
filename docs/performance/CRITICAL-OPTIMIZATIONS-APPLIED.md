@@ -94,3 +94,4 @@ CREATE INDEX IF NOT EXISTS idx_tickets_created_by ON tickets(created_by);
 
 **Note** : Ces optimisations doivent être appliquées immédiatement pour améliorer significativement les performances.
 
+

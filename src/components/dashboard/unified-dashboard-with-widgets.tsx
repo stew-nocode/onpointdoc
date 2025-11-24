@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
@@ -32,7 +32,12 @@ type UnifiedDashboardWithWidgetsProps = {
  * @param initialPeriod - Période initiale
  * @param initialWidgetConfig - Configuration initiale des widgets (chargée côté serveur)
  */
-export function UnifiedDashboardWithWidgets({
+/**
+ * Composant Dashboard - Version interne non memoizée
+ * 
+ * Logique principale du composant.
+ */
+function UnifiedDashboardWithWidgetsComponent({
   role,
   profileId,
   initialData,
@@ -134,6 +139,7 @@ export function UnifiedDashboardWithWidgets({
   // Références stables pour les callbacks (évite les réabonnements)
   const loadDataRef = useRef<((selectedPeriod: Period) => Promise<void>) | undefined>(undefined);
   const loadWidgetConfigRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const periodRef = useRef<Period>(period);
 
   // Mettre à jour les refs à chaque changement de fonction
   useEffect(() => {
@@ -144,10 +150,16 @@ export function UnifiedDashboardWithWidgets({
     loadWidgetConfigRef.current = loadWidgetConfig;
   }, [loadWidgetConfig]);
 
-  // Callbacks stables pour les hooks realtime (évite les réabonnements)
-  const stableOnDataChange = useCallback(() => {
-    loadDataRef.current?.(period);
+  // Mettre à jour periodRef quand period change
+  useEffect(() => {
+    periodRef.current = period;
   }, [period]);
+
+  // Callbacks stables pour les hooks realtime (évite les réabonnements)
+  // Utilise periodRef pour éviter la dépendance à period
+  const stableOnDataChange = useCallback(() => {
+    loadDataRef.current?.(periodRef.current);
+  }, []); // Pas de dépendance à period
 
   const stableOnConfigChange = useCallback(() => {
     loadWidgetConfigRef.current?.();
@@ -173,13 +185,23 @@ export function UnifiedDashboardWithWidgets({
   );
 
   // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
-  const dashboardDataWithFilteredAlerts = useMemo(
-    () => ({
+  // Comparaison fine : ne recréer que si les propriétés essentielles changent
+  const dashboardDataWithFilteredAlerts = useMemo(() => {
+    return {
       ...data,
       alerts: filteredAlerts,
-    }),
-    [data, filteredAlerts]
-  );
+    };
+  }, [
+    data.role,
+    data.strategic,
+    data.team,
+    data.personal,
+    data.config,
+    data.period,
+    data.periodStart,
+    data.periodEnd,
+    filteredAlerts,
+  ]); // Dépendances granulaires au lieu de l'objet complet
 
   return (
     <div className="space-y-6">
@@ -211,4 +233,39 @@ export function UnifiedDashboardWithWidgets({
     </div>
   );
 }
+
+/**
+ * Composant exporté avec memoization pour éviter les re-renders inutiles
+ * 
+ * Ne se re-rend que si les props changent réellement.
+ */
+export const UnifiedDashboardWithWidgets = React.memo(
+  UnifiedDashboardWithWidgetsComponent,
+  (prevProps, nextProps) => {
+    // Comparer les props primitives
+    if (
+      prevProps.role !== nextProps.role ||
+      prevProps.profileId !== nextProps.profileId ||
+      prevProps.initialPeriod !== nextProps.initialPeriod
+    ) {
+      return false; // Props différentes = re-render
+    }
+
+    // Comparer initialData par référence (si l'objet change, re-render)
+    // On pourrait optimiser davantage en comparant les propriétés individuelles
+    if (prevProps.initialData !== nextProps.initialData) {
+      return false;
+    }
+
+    // Comparer initialWidgetConfig par référence
+    if (prevProps.initialWidgetConfig !== nextProps.initialWidgetConfig) {
+      return false;
+    }
+
+    // Props identiques = pas de re-render
+    return true;
+  }
+);
+
+UnifiedDashboardWithWidgets.displayName = 'UnifiedDashboardWithWidgets';
 

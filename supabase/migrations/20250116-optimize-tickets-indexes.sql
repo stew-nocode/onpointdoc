@@ -51,3 +51,4 @@ COMMENT ON INDEX idx_tickets_type_status IS 'Index composé pour optimiser les f
 COMMENT ON INDEX idx_tickets_title_trgm IS 'Optimise la recherche textuelle dans les titres (ILIKE)';
 COMMENT ON INDEX idx_tickets_description_trgm IS 'Optimise la recherche textuelle dans les descriptions (ILIKE)';
 
+

@@ -243,3 +243,4 @@ Le composant se re-rend 10 fois. Causes probables :
 
 **Note** : Ce rapport a été généré automatiquement à partir des métriques capturées en temps réel. Pour des mesures plus précises, utiliser le Performance Monitor (bouton 📊) ou React DevTools Profiler.
 
+

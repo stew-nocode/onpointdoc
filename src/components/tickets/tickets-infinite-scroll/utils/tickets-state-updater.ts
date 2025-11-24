@@ -22,14 +22,5 @@ export function mergeTicketsWithoutDuplicates(
   return [...existingTickets, ...uniqueNewTickets];
 }
 
-/**
- * Vérifie si deux ensembles d'IDs de tickets sont identiques
- */
-export function areTicketIdsEqual(
-  ids1: Set<string>,
-  ids2: Set<string>
-): boolean {
-  if (ids1.size !== ids2.size) return false;
-  return Array.from(ids1).every((id) => ids2.has(id));
-}
+
 

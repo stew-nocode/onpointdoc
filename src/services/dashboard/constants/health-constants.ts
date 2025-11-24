@@ -14,3 +14,4 @@ export const HEALTH_THRESHOLD_GOOD = 20;
  */
 export const HEALTH_THRESHOLD_WARNING = 40;
 
+

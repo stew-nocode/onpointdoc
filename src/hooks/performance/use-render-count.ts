@@ -73,6 +73,8 @@ export function useRenderCount({
         );
       }
     }
+    // Pas de dépendances : s'exécute après chaque render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return renderCountRef.current;
@@ -126,4 +128,5 @@ export function usePropsComparison<T extends Record<string, any>>(
     hasChanges: Object.keys(changedPropsRef.current).length > 0,
   };
 }
+
 
