@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -58,29 +58,15 @@ export function AnalysisModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
 
-  // Synchroniser le contenu édité avec l'analyse quand elle change
-  useEffect(() => {
-    if (analysis) {
-      setEditedContent(analysis);
-    }
-  }, [analysis]);
-
-  // Réinitialiser le mode édition quand le modal se ferme
-  useEffect(() => {
-    if (!open) {
-      setIsEditing(false);
-      if (analysis) {
-        setEditedContent(analysis);
-      }
-    }
-  }, [open, analysis]);
-
   // Empêcher la fermeture du modal pendant le chargement
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!isLoading) {
-      onOpenChange(newOpen);
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (isLoading) return;
+    if (!newOpen) {
+      setIsEditing(false);
+      setEditedContent('');
     }
-  };
+    onOpenChange(newOpen);
+  }, [isLoading, onOpenChange]);
 
   /**
    * Gère le téléchargement de l'analyse
@@ -107,6 +93,11 @@ export function AnalysisModal({
   const handleCancel = () => {
     setEditedContent(analysis || '');
     setIsEditing(false);
+  };
+
+  const handleStartEdit = () => {
+    setEditedContent(analysis || '');
+    setIsEditing(true);
   };
 
   return (
@@ -141,7 +132,7 @@ export function AnalysisModal({
                   <div className="pt-2">
                     <AnalysisToolbar
                       isEditing={isEditing}
-                      onEdit={() => setIsEditing(true)}
+                    onEdit={handleStartEdit}
                       onSave={handleSave}
                       onCancel={handleCancel}
                       onDownload={handleDownload}
@@ -153,14 +144,14 @@ export function AnalysisModal({
                 <>
                   <AnalysisToolbar
                     isEditing={isEditing}
-                    onEdit={() => setIsEditing(true)}
+                    onEdit={handleStartEdit}
                     onSave={handleSave}
                     onCancel={handleCancel}
                     onDownload={handleDownload}
                     hasContent={!!(analysis || editedContent)}
                   />
                   <Textarea
-                    value={editedContent || analysis}
+                    value={editedContent}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditedContent(e.target.value)}
                     className="min-h-[400px] font-mono text-sm"
                     placeholder="Modifiez l'analyse..."

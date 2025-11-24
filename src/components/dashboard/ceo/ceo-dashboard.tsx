@@ -52,7 +52,6 @@ export function CEODashboard({ initialData, initialPeriod }: CEODashboardProps) 
       setError(errorMessage);
       // Logger uniquement en développement
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement des données:', err);
       }
     } finally {

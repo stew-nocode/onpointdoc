@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { createElement, useMemo } from 'react';
 import { type LucideIcon } from 'lucide-react';
 import { getIconById, type IconId } from '@/lib/utils/icon-map';
 import { cn } from '@/lib/utils';
@@ -30,18 +30,19 @@ const iconStyles = {
  * Utilise useMemo pour éviter la création de composant pendant le render
  */
 export function KPIIcon({ icon, variant, className }: KPIIconProps) {
-  // Résoudre l'icône avec useMemo pour éviter la création de composant pendant le render
-  const IconComponent: LucideIcon | undefined = useMemo(() => {
+  const resolvedIcon = useMemo<LucideIcon | undefined>(() => {
     if (typeof icon === 'string') {
       return getIconById(icon);
     }
     return icon;
   }, [icon]);
 
-  if (!IconComponent) {
+  if (!resolvedIcon) {
     return null;
   }
 
-  return <IconComponent className={cn('h-3 w-3', iconStyles[variant], className)} />;
+  return createElement(resolvedIcon, {
+    className: cn('h-3 w-3', iconStyles[variant], className)
+  });
 }
 

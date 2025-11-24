@@ -9,7 +9,7 @@
  * - TTFB (Time to First Byte) - Temps jusqu'à la première réponse serveur
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export type WebVitalMetric = {
   name: string;
@@ -189,27 +189,30 @@ export function useWebVitals() {
     };
 
     loadWebVitals();
-
-    // Logger les métriques en développement
-    if (process.env.NODE_ENV === 'development') {
-      const logInterval = setInterval(() => {
-        const hasMetrics = Object.values(metrics).some((m) => m !== null);
-        if (hasMetrics) {
-          console.group('📊 Web Vitals');
-          Object.entries(metrics).forEach(([key, metric]) => {
-            if (metric) {
-              const icon = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
-              console.log(`${icon} ${metric.name}: ${metric.value}ms (${metric.rating})`);
-            }
-          });
-          console.groupEnd();
-          clearInterval(logInterval);
-        }
-      }, 1000);
-
-      return () => clearInterval(logInterval);
-    }
   }, []);
+
+  const hasLoggedRef = useRef(false);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development' || hasLoggedRef.current) {
+      return;
+    }
+
+    const hasMetrics = Object.values(metrics).some((m) => m !== null);
+    if (!hasMetrics) {
+      return;
+    }
+
+    hasLoggedRef.current = true;
+    console.group('📊 Web Vitals');
+    Object.entries(metrics).forEach(([key, metric]) => {
+      if (metric) {
+        const icon = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
+        console.log(`${icon} ${metric.name}: ${metric.value}ms (${metric.rating})`);
+      }
+    });
+    console.groupEnd();
+  }, [metrics]);
 
   return metrics;
 }

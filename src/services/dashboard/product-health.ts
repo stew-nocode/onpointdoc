@@ -180,15 +180,15 @@ function buildModuleMap(
   tickets.forEach((ticket) => {
     if (!ticket.module_id) return;
     
-    const module = extractModule(ticket.module);
-    const product = extractProduct(ticket.product);
-    if (!module || !product) return;
+    const moduleInfo = extractModule(ticket.module);
+    const productInfo = extractProduct(ticket.product);
+    if (!moduleInfo || !productInfo) return;
     
     const key = ticket.module_id;
     if (!moduleMap.has(key)) {
       moduleMap.set(key, {
-        moduleName: module.name,
-        productName: product.name,
+        moduleName: moduleInfo.name,
+        productName: productInfo.name,
         bugCount: 0,
         totalCount: 0
       });

@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Badge } from '@/ui/badge';
 import { ScrollArea } from '@/ui/scroll-area';
 import type { OperationalAlert } from '@/types/dashboard';
-import { AlertCircle, Clock, UserX, Calendar, Ban } from 'lucide-react';
+import { createElement } from 'react';
+import { AlertCircle, Clock, UserX, Calendar, Ban, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -60,11 +61,18 @@ export function OperationalAlertsSection({ alerts }: OperationalAlertsSectionPro
   );
 }
 
+const ALERT_ICON_MAP: Record<OperationalAlert['type'], LucideIcon> = {
+  overdue_critical: Clock,
+  unassigned_long: UserX,
+  upcoming_activity: Calendar,
+  blocked_task: Ban
+};
+
 /**
  * Item d'alerte
  */
 function AlertItem({ alert }: { alert: OperationalAlert }) {
-  const Icon = getAlertIcon(alert.type);
+  const IconComponent = ALERT_ICON_MAP[alert.type] || AlertCircle;
   const priorityColor = getPriorityColor(alert.priority);
 
   return (
@@ -75,7 +83,9 @@ function AlertItem({ alert }: { alert: OperationalAlert }) {
         'hover:bg-slate-50 dark:hover:bg-slate-900'
       )}
     >
-      <Icon className={cn('h-4 w-4 mt-0.5 flex-shrink-0', priorityColor)} />
+      {createElement(IconComponent, {
+        className: cn('h-4 w-4 mt-0.5 flex-shrink-0', priorityColor)
+      })}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <h4 className="text-xs font-medium truncate">{alert.title}</h4>
@@ -87,24 +97,6 @@ function AlertItem({ alert }: { alert: OperationalAlert }) {
       </div>
     </div>
   );
-}
-
-/**
- * Retourne l'icône selon le type d'alerte
- */
-function getAlertIcon(type: OperationalAlert['type']) {
-  switch (type) {
-    case 'overdue_critical':
-      return Clock;
-    case 'unassigned_long':
-      return UserX;
-    case 'upcoming_activity':
-      return Calendar;
-    case 'blocked_task':
-      return Ban;
-    default:
-      return AlertCircle;
-  }
 }
 
 /**

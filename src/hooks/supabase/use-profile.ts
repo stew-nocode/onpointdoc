@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/profile';
 
@@ -45,7 +45,7 @@ export function useProfile(
     refetch: async () => {}
   });
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!userId || !enabled) {
       setState(prev => ({ ...prev, isLoading: false }));
       return;
@@ -79,11 +79,11 @@ export function useProfile(
         refetch: fetchProfile
       });
     }
-  };
+  }, [userId, enabled]);
 
   useEffect(() => {
     fetchProfile();
-  }, [userId, enabled]);
+  }, [fetchProfile]);
 
   return state;
 }

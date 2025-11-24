@@ -91,7 +91,6 @@ export function UnifiedDashboardWithWidgets({
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
       setError(errorMessage);
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement des données:', err);
         console.timeEnd('⏱️ DashboardDataLoad');
       }
@@ -114,7 +113,6 @@ export function UnifiedDashboardWithWidgets({
     } catch (err) {
       // Ignorer les erreurs silencieusement
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement de la config widgets:', err);
       }
     }

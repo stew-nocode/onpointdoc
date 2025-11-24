@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { Loader2 } from 'lucide-react';
 import { TooltipContent } from '@/ui/tooltip';
 import { StatItem } from './utils/stat-item';
@@ -113,29 +113,15 @@ function AssignedStats({ stats }: { stats: UserTicketStats }) {
  * - Assigned : tickets assignés, en cours, résolus, en retard, taux de résolution
  */
 export function UserStatsTooltip({ profileId, type }: UserStatsTooltipProps) {
-  const [stats, setStats] = useState<UserTicketStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!profileId) {
-      setIsLoading(false);
-      return;
+  const shouldFetch = Boolean(profileId);
+  const { data: stats, isLoading } = useSWR<UserTicketStats | null>(
+    shouldFetch ? ['user-stats', profileId, type] : null,
+    () => fetchUserStats(profileId as string, type),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false
     }
-
-    loadStats();
-  }, [profileId, type]);
-
-  /**
-   * Charge les statistiques de l'utilisateur
-   */
-  async function loadStats(): Promise<void> {
-    if (!profileId) return;
-
-    setIsLoading(true);
-    const loadedStats = await fetchUserStats(profileId, type);
-    setStats(loadedStats);
-    setIsLoading(false);
-  }
+  );
 
   if (!profileId) {
     return <ErrorState message="Utilisateur non défini" />;

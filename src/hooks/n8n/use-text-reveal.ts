@@ -105,11 +105,11 @@ export function useTextReveal(
    * @param currentIndex - Index de la partie actuelle
    * @param currentText - Texte actuellement révélé
    */
-  const revealNext = useCallback((
+  const revealNext = useCallback(function revealNextInternal(
     parts: string[],
     currentIndex: number,
     currentText: string
-  ) => {
+  ) {
     if (currentIndex >= parts.length) {
       finishReveal();
       return;
@@ -123,7 +123,7 @@ export function useTextReveal(
 
     // Continuer avec la prochaine partie ou terminer
     if (nextIndex < parts.length) {
-      setTimeout(() => revealNext(parts, nextIndex, newText), speed);
+      setTimeout(() => revealNextInternal(parts, nextIndex, newText), speed);
     } else {
       finishReveal();
     }

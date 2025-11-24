@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { Loader2 } from 'lucide-react';
 import { TooltipContent } from '@/ui/tooltip';
 import { StatItem } from './utils/stat-item';
@@ -140,22 +140,14 @@ export function TicketStatsTooltip({
   description,
   jiraIssueKey
 }: TicketStatsTooltipProps) {
-  const [stats, setStats] = useState<TicketStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadStats();
-  }, [ticketId]);
-
-  /**
-   * Charge les statistiques du ticket
-   */
-  async function loadStats(): Promise<void> {
-    setIsLoading(true);
-    const loadedStats = await fetchTicketStats(ticketId);
-    setStats(loadedStats);
-    setIsLoading(false);
-  }
+  const { data: stats, isLoading } = useSWR<TicketStats | null>(
+    ['ticket-stats', ticketId],
+    () => fetchTicketStats(ticketId),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false
+    }
+  );
 
   const formattedDescription = formatDescription(description);
 

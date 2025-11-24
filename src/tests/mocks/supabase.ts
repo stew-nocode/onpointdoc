@@ -139,8 +139,7 @@ export function setupMockSupabaseForTest(mockSupabase: ReturnType<typeof createM
   return {
     // Configurer le résultat d'une requête sur une table
     setTableResult: (table: string, result: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockSupabase as any)._setTableResult(table, result);
+      mockSupabase._setTableResult(table, result);
     },
     // Configurer auth.getUser
     setAuthUser: (user: { id: string; email: string } | null) => {
