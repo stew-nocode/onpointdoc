@@ -1,10 +1,27 @@
 'use client';
 
+'use client';
+
+import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import { MTTREvolutionChart } from './mttr-evolution-chart';
-import { TicketsDistributionChart } from './tickets-distribution-chart';
 import type { CEODashboardData } from '@/types/dashboard';
 import { AnalyticsCardSkeleton } from '../shared/analytics-card-skeleton';
+
+const LazyMTTREvolutionChart = dynamic(
+  () => import('./mttr-evolution-chart').then((mod) => ({ default: mod.MTTREvolutionChart })),
+  {
+    ssr: false,
+    suspense: true
+  }
+);
+
+const LazyTicketsDistributionChart = dynamic(
+  () => import('./tickets-distribution-chart').then((mod) => ({ default: mod.TicketsDistributionChart })),
+  {
+    ssr: false,
+    suspense: true
+  }
+);
 
 type CEOChartsSectionProps = {
   data: CEODashboardData;
@@ -19,10 +36,10 @@ export function CEOChartsSection({ data }: CEOChartsSectionProps) {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Suspense fallback={<AnalyticsCardSkeleton />}>
-        <MTTREvolutionChart data={data.mttr} />
+        <LazyMTTREvolutionChart data={data.mttr} />
       </Suspense>
       <Suspense fallback={<AnalyticsCardSkeleton />}>
-        <TicketsDistributionChart data={data.flux} />
+        <LazyTicketsDistributionChart data={data.flux} />
       </Suspense>
     </div>
   );
