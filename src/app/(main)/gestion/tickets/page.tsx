@@ -11,6 +11,8 @@ import {
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
+import { Suspense } from 'react';
+import { Button } from '@/ui/button';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
@@ -23,6 +25,9 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
 import { FiltersSidebarClientLazy } from '@/components/tickets/filters/filters-sidebar-client-lazy';
 import { PageLayoutWithFilters } from '@/components/layout/page';
+import { FiltersSidebarSkeleton } from '@/components/tickets/skeletons/filters-sidebar-skeleton';
+import { TicketsListSkeleton } from '@/components/tickets/skeletons/tickets-list-skeleton';
+import { TicketsKPIsSkeleton } from '@/components/tickets/skeletons/tickets-kpis-skeleton';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -146,122 +151,169 @@ async function loadProductsAndModules() {
  * pour permettre le cache des données statiques (produits, modules)
  */
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  // Résoudre la Promise searchParams pour Next.js 15
   const resolvedSearchParams = await searchParams;
   const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
-  
-  // Parser les filtres avancés depuis les URL params
-  // Next.js 15 retourne les searchParams comme un objet, mais pour les valeurs multiples,
-  // il faut les extraire manuellement depuis l'URL
-  const allParams: Record<string, string | string[] | undefined> = {};
-  
-  // Pour les paramètres simples, utiliser directement
-  if (resolvedSearchParams?.type) allParams.type = resolvedSearchParams.type;
-  if (resolvedSearchParams?.status) allParams.status = resolvedSearchParams.status;
-  if (resolvedSearchParams?.search) allParams.search = resolvedSearchParams.search;
-  if (resolvedSearchParams?.quick) allParams.quick = resolvedSearchParams.quick;
-  
-  // Pour les paramètres de filtres avancés, on doit les extraire depuis l'URL directement
-  // car Next.js 15 ne les expose pas comme arrays dans searchParams
-  // On utilisera parseAdvancedFiltersFromParams côté client dans FiltersSidebarClient
-  const advancedFilters = null; // Sera géré côté client via FiltersSidebarClient
-  
-  // Optimiser le parallélisme : démarrer toutes les requêtes en parallèle
-  // Le profileId est nécessaire pour les KPIs et tickets, donc on l'attend d'abord
-  const [currentProfileId, productsData] = await Promise.all([
-    getCurrentUserProfileId(),
-    loadProductsAndModules(), // Pas de dépendance, peut être en parallèle
-  ]);
 
-  // Ensuite, charger les tickets et KPIs en parallèle (dépendent de currentProfileId)
-  try {
-    const [initialTicketsData, kpis] = await Promise.all([
-      loadInitialTickets(
-        resolvedSearchParams?.type,
-        resolvedSearchParams?.status,
-        resolvedSearchParams?.search,
-        quickFilter,
-        currentProfileId,
-        resolvedSearchParams?.sortColumn,
-        resolvedSearchParams?.sortDirection,
-        null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
-      ),
-      getSupportTicketKPIs(currentProfileId),
-    ]);
-    const { products, modules, submodules, features, contacts } = productsData;
+  // TODO: Les filtres avancés seront réintégrés via la sidebar (côté client)
+  const advancedFilters = null;
 
-    async function handleTicketSubmit(values: CreateTicketInput) {
-      'use server';
-      const created = await createTicket(values);
-      return created?.id as string;
-    }
+  const filtersDataPromise = loadProductsAndModules();
+  const currentProfileId = await getCurrentUserProfileId();
 
-    return (
-      <TicketsPageClientWrapper>
-        <PageLayoutWithFilters
-          sidebar={
-            <FiltersSidebarClientLazy
-              users={contacts}
-              products={products}
-              modules={modules}
-            />
-          }
-          header={{
-            label: 'Tickets',
-            title: 'Gestion des tickets Support',
-            description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
-            action: (
-              <CreateTicketDialogLazy
-                products={products}
-                modules={modules}
-                submodules={submodules}
-                features={features}
-                contacts={contacts}
-                onSubmit={handleTicketSubmit}
-              />
-            )
-          }}
-          kpis={<TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />}
-          card={{
-            title: 'Tickets récents',
-            titleSuffix:
-              initialTicketsData.total > 0
-                ? `(${initialTicketsData.total} au total)`
-                : undefined,
-            search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
-            quickFilters: (
-              <TicketsQuickFilters
-                activeFilter={quickFilter}
-                currentProfileId={currentProfileId}
-              />
-            )
-          }}
-        >
-          <TicketsInfiniteScroll
-            initialTickets={initialTicketsData.tickets}
-            initialHasMore={initialTicketsData.hasMore}
-            initialTotal={initialTicketsData.total}
+  const ticketsPromise = loadInitialTickets(
+    resolvedSearchParams?.type,
+    resolvedSearchParams?.status,
+    resolvedSearchParams?.search,
+    quickFilter,
+    currentProfileId,
+    resolvedSearchParams?.sortColumn,
+    resolvedSearchParams?.sortDirection,
+    advancedFilters
+  );
+
+  const kpisPromise = getSupportTicketKPIs(currentProfileId).catch(() => null);
+
+  async function handleTicketSubmit(values: CreateTicketInput) {
+    'use server';
+    const created = await createTicket(values);
+    return created?.id as string;
+  }
+
+  return (
+    <TicketsPageClientWrapper>
+      <PageLayoutWithFilters
+        sidebar={
+          <Suspense fallback={<FiltersSidebarSkeleton />}>
+            {/* @ts-expect-error Async Server Component */}
+            <TicketsFiltersSidebar dataPromise={filtersDataPromise} />
+          </Suspense>
+        }
+        header={{
+          label: 'Tickets',
+          title: 'Gestion des tickets Support',
+          description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
+          action: (
+            <Suspense fallback={<Button size="sm" variant="default" disabled>Préparation…</Button>}>
+              {/* @ts-expect-error Async Server Component */}
+              <CreateTicketAction dataPromise={filtersDataPromise} onSubmit={handleTicketSubmit} />
+            </Suspense>
+          )
+        }}
+        kpis={
+          <Suspense fallback={<TicketsKPIsSkeleton />}>
+            {/* @ts-expect-error Async Server Component */}
+            <TicketsKPIsSection promise={kpisPromise} hasProfile={!!currentProfileId} />
+          </Suspense>
+        }
+        card={{
+          title: 'Tickets récents',
+          titleSuffix: (
+            <Suspense fallback={<span className="text-sm text-slate-500">(chargement…)</span>}>
+              {/* @ts-expect-error Async Server Component */}
+              <TicketsTotalCount promise={ticketsPromise} />
+            </Suspense>
+          ),
+          search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
+          quickFilters: (
+            <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
+          )
+        }}
+      >
+        <Suspense fallback={<TicketsListSkeleton />}>
+          {/* @ts-expect-error Async Server Component */}
+          <TicketsListSection
+            promise={ticketsPromise}
             type={resolvedSearchParams?.type}
             status={resolvedSearchParams?.status}
             search={resolvedSearchParams?.search}
             quickFilter={quickFilter}
             currentProfileId={currentProfileId ?? undefined}
           />
-        </PageLayoutWithFilters>
-      </TicketsPageClientWrapper>
-    );
-  } catch (error: any) {
-    console.error('Erreur lors du chargement de la page des tickets:', error);
-    return (
-      <div className="space-y-6">
-        <div className="rounded-lg border border-status-danger bg-status-danger/10 p-4 text-status-danger">
-          <p className="font-semibold">Erreur lors du chargement</p>
-          <p className="text-sm">
-            {error?.message || 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.'}
-          </p>
-        </div>
-      </div>
-    );
+        </Suspense>
+      </PageLayoutWithFilters>
+    </TicketsPageClientWrapper>
+  );
+}
+
+type ProductsModulesData = Awaited<ReturnType<typeof loadProductsAndModules>>;
+type KPIsData = Awaited<ReturnType<typeof getSupportTicketKPIs>>;
+
+async function TicketsFiltersSidebar({ dataPromise }: { dataPromise: Promise<ProductsModulesData> }) {
+  const { products, modules, contacts } = await dataPromise;
+  return <FiltersSidebarClientLazy users={contacts} products={products} modules={modules} />;
+}
+
+async function CreateTicketAction({
+  dataPromise,
+  onSubmit
+}: {
+  dataPromise: Promise<ProductsModulesData>;
+  onSubmit: (values: CreateTicketInput) => Promise<string | undefined>;
+}) {
+  const { products, modules, submodules, features, contacts } = await dataPromise;
+  return (
+    <CreateTicketDialogLazy
+      products={products}
+      modules={modules}
+      submodules={submodules}
+      features={features}
+      contacts={contacts}
+      onSubmit={onSubmit}
+    />
+  );
+}
+
+async function TicketsKPIsSection({
+  promise,
+  hasProfile
+}: {
+  promise: Promise<KPIsData | null>;
+  hasProfile: boolean;
+}) {
+  const kpis = await promise;
+  if (!kpis) {
+    return null;
   }
+
+  return <TicketsKPISectionLazy kpis={kpis} hasProfile={hasProfile} />;
+}
+
+async function TicketsTotalCount({ promise }: { promise: Promise<TicketsPaginatedResult> }) {
+  const data = await promise;
+  if (!data.total) {
+    return null;
+  }
+
+  return <span>{`(${data.total} au total)`}</span>;
+}
+
+async function TicketsListSection({
+  promise,
+  type,
+  status,
+  search,
+  quickFilter,
+  currentProfileId
+}: {
+  promise: Promise<TicketsPaginatedResult>;
+  type?: string;
+  status?: string;
+  search?: string;
+  quickFilter?: QuickFilter;
+  currentProfileId?: string;
+}) {
+  const data = await promise;
+  return (
+    <TicketsInfiniteScroll
+      initialTickets={data.tickets}
+      initialHasMore={data.hasMore}
+      initialTotal={data.total}
+      type={type}
+      status={status}
+      search={search}
+      quickFilter={quickFilter}
+      currentProfileId={currentProfileId}
+    />
+  );
 }
 
