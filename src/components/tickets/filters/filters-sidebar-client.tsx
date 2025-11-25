@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { FiltersSidebar } from './filters-sidebar';
 import { FiltersToggleButton } from './filters-toggle-button';
@@ -74,27 +74,11 @@ export function FiltersSidebarClient({
   /**
    * Parse les filtres depuis les URL params
    */
-  const parsedFilters = parseAdvancedFiltersFromParams(
-    Object.fromEntries(searchParams.entries())
-  );
-
-  const [filters, setFilters] = useState<AdvancedFiltersInput>(
-    parsedFilters || buildEmptyFilters()
-  );
-
-  /**
-   * Met à jour les filtres depuis l'URL au changement de params
-   */
-  useEffect(() => {
-    const newFilters = parseAdvancedFiltersFromParams(
+  const filters = useMemo<AdvancedFiltersInput>(() => {
+    const parsed = parseAdvancedFiltersFromParams(
       Object.fromEntries(searchParams.entries())
     );
-
-    if (newFilters) {
-      setFilters(newFilters);
-    } else {
-      setFilters(buildEmptyFilters());
-    }
+    return parsed || buildEmptyFilters();
   }, [searchParams]);
 
   /**
@@ -154,7 +138,6 @@ export function FiltersSidebarClient({
    */
   const handleFiltersChange = useCallback(
     (newFilters: AdvancedFiltersInput) => {
-      setFilters(newFilters);
       updateUrlWithFilters(newFilters);
     },
     [updateUrlWithFilters]

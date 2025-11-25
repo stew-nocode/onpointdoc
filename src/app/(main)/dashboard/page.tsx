@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import { Suspense } from 'react';
 import { PageLayoutWithDashboardFilters } from '@/components/layout/page';
 import { UnifiedDashboardWithWidgets } from '@/components/dashboard/unified-dashboard-with-widgets';
 import { getUserDashboardConfig } from '@/services/dashboard/widgets';
@@ -9,6 +10,8 @@ import { getCurrentUserProfile } from '@/services/users/server';
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole } from '@/types/dashboard-widgets';
+import { SWRConfig, unstable_serialize } from 'swr';
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
 
 type DashboardPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -39,6 +42,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const resolvedSearchParams = await searchParams;
   const params = resolvedSearchParams || {};
+  const serializedFilters = (() => {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((val) => {
+          if (typeof val === 'string') {
+            search.append(key, val);
+          }
+        });
+      } else if (typeof value === 'string') {
+        search.append(key, value);
+      }
+    });
+    return search.toString();
+  })();
   const filters = parseDashboardFiltersFromParams(params);
   const period = filters?.period || 'month';
 
@@ -131,21 +149,35 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const headerConfig = headerConfigs[dashboardRole] || headerConfigs.agent;
 
+  const fallbackKeyData = unstable_serialize(['dashboard-data', period, serializedFilters]);
+  const fallbackKeyWidgets = unstable_serialize(['dashboard-widget-config', profile.id, dashboardRole]);
+
   return (
-    <PageLayoutWithDashboardFilters
-      sidebar={<DashboardFiltersSidebarClient products={products.map(p => ({ id: p.id, name: p.name }))} />}
-      header={headerConfig}
-      card={{
-        title: 'Indicateurs de performance'
+    <SWRConfig
+      value={{
+        fallback: {
+          [fallbackKeyData]: initialData,
+          [fallbackKeyWidgets]: widgetConfig
+        }
       }}
     >
-      <UnifiedDashboardWithWidgets
-        role={dashboardRole}
-        profileId={profile.id}
-        initialData={initialData}
-        initialPeriod={period}
-        initialWidgetConfig={widgetConfig}
-      />
-    </PageLayoutWithDashboardFilters>
+      <PageLayoutWithDashboardFilters
+        sidebar={<DashboardFiltersSidebarClient products={products.map(p => ({ id: p.id, name: p.name }))} />}
+        header={headerConfig}
+        card={{
+          title: 'Indicateurs de performance'
+        }}
+      >
+        <Suspense fallback={<DashboardSkeleton />}>
+          <UnifiedDashboardWithWidgets
+            role={dashboardRole}
+            profileId={profile.id}
+            initialData={initialData}
+            initialPeriod={period}
+            initialWidgetConfig={widgetConfig}
+          />
+        </Suspense>
+      </PageLayoutWithDashboardFilters>
+    </SWRConfig>
   );
 }

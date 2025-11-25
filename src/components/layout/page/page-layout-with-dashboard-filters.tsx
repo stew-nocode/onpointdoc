@@ -1,6 +1,4 @@
-'use client';
-
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { PageContent } from './page-content';
 import { DashboardFiltersSidebarProvider } from '@/components/dashboard/ceo/filters/dashboard-filters-sidebar-context';
 import { DashboardFiltersContentWrapper } from '@/components/dashboard/ceo/filters/dashboard-filters-content-wrapper';

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { WorkloadData } from '@/types/dashboard';
 
@@ -12,7 +13,7 @@ type WorkloadKPICardProps = {
  * 
  * @param data - Données de charge (par équipe, total actif)
  */
-export function WorkloadKPICard({ data }: WorkloadKPICardProps) {
+export const WorkloadKPICard = memo(function WorkloadKPICard({ data }: WorkloadKPICardProps) {
   if (!data) {
     return (
       <KPICard
@@ -34,5 +35,5 @@ export function WorkloadKPICard({ data }: WorkloadKPICardProps) {
       variant="default"
     />
   );
-}
+});
 

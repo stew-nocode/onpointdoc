@@ -122,10 +122,15 @@ export function CompaniesTableClient({ rows, countries, users }: Props) {
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <div className="grid gap-1">
-            <label className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <label
+              htmlFor="companies-search-input"
+              className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            >
               Recherche
             </label>
             <input
+              id="companies-search-input"
+              name="companies-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Nom de l'entreprise…"
@@ -133,10 +138,15 @@ export function CompaniesTableClient({ rows, countries, users }: Props) {
             />
           </div>
           <div className="grid gap-1">
-            <label className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <label
+              htmlFor="companies-country-filter"
+              className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            >
               Pays
             </label>
             <select
+              id="companies-country-filter"
+              name="companies-country-filter"
               value={countryFilter}
               onChange={(e) => setCountryFilter(e.target.value)}
               className="rounded-lg border border-slate-200 px-2 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"

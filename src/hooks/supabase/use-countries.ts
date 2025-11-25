@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useSupabaseQuery } from './use-supabase-query';
+import useSWR from 'swr';
 import type { Country } from '@/types/country';
+import { fetchCountries } from '@/services/fetchers';
 
 type UseCountriesResult = {
   countries: Country[];
@@ -16,30 +17,28 @@ type UseCountriesResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger la liste des pays depuis Supabase
- * 
- * @param options - Options de configuration
- * @returns Liste des pays avec état de chargement
- * 
- * @example
- * const { countries, isLoading } = useCountries();
- * if (isLoading) return <Loading />;
- * return <Select options={countries.map(c => ({ value: c.id, label: c.name }))} />;
- */
 export function useCountries(options: { enabled?: boolean } = {}): UseCountriesResult {
-  const { data, error, isLoading, refetch } = useSupabaseQuery<Country[]>({
-    table: 'countries',
-    select: 'id, name',
-    orderBy: { column: 'name', ascending: true },
-    enabled: options.enabled ?? true
-  });
+  const shouldFetch = options.enabled ?? true;
+
+  const {
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['countries'] : null,
+    () => fetchCountries(),
+    { revalidateOnFocus: false }
+  );
 
   return {
-    countries: data ?? [],
-    isLoading,
-    error,
-    refetch
+    countries: (data as Country[] | undefined) ?? [],
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
+    }
   };
 }
 

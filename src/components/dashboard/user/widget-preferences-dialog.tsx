@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -31,12 +31,12 @@ export function WidgetPreferencesDialog({
   const [hiddenWidgets, setHiddenWidgets] = useState<DashboardWidget[]>(widgetConfig.hiddenWidgets);
   const { isLoading, handleSave: savePreferences } = useWidgetPreferencesSave();
 
-  // Synchroniser avec la config initiale quand le dialog s'ouvre
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) {
       setHiddenWidgets(widgetConfig.hiddenWidgets);
     }
-  }, [open, widgetConfig.hiddenWidgets]);
+  }, [widgetConfig.hiddenWidgets]);
 
   /**
    * Toggle un widget (masquer/afficher)
@@ -60,7 +60,7 @@ export function WidgetPreferencesDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings className="h-4 w-4 mr-2" />

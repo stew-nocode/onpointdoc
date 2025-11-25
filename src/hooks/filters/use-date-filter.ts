@@ -1,12 +1,59 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer, useCallback } from 'react';
 import type { DateFilter } from '@/types/advanced-filters';
 
 type UseDateFilterOptions = {
   dateFilter: DateFilter | null;
   onDateFilterChange: (filter: DateFilter | null) => void;
 };
+
+type DateFilterState = {
+  preset: DateFilter['preset'];
+  startDate: string;
+  endDate: string;
+};
+
+type DateFilterAction =
+  | { type: 'sync'; payload: DateFilter | null }
+  | { type: 'setPreset'; payload: DateFilter['preset'] }
+  | { type: 'setStartDate'; payload: string }
+  | { type: 'setEndDate'; payload: string }
+  | { type: 'reset' };
+
+function buildStateFromFilter(filter: DateFilter | null): DateFilterState {
+  return {
+    preset: filter?.preset || null,
+    startDate: filter?.range?.start || '',
+    endDate: filter?.range?.end || ''
+  };
+}
+
+function reducer(state: DateFilterState, action: DateFilterAction): DateFilterState {
+  switch (action.type) {
+    case 'sync':
+      return buildStateFromFilter(action.payload);
+    case 'setPreset':
+      return {
+        ...state,
+        preset: action.payload
+      };
+    case 'setStartDate':
+      return {
+        ...state,
+        startDate: action.payload
+      };
+    case 'setEndDate':
+      return {
+        ...state,
+        endDate: action.payload
+      };
+    case 'reset':
+      return buildStateFromFilter(null);
+    default:
+      return state;
+  }
+}
 
 /**
  * Hook pour gérer l'état et la logique d'un filtre de date
@@ -20,21 +67,26 @@ export function useDateFilter({
   onDateFilterChange
 }: UseDateFilterOptions) {
   const [open, setOpen] = useState(false);
-  const [preset, setPreset] = useState<DateFilter['preset']>(dateFilter?.preset || null);
-  const [startDate, setStartDate] = useState<string>(dateFilter?.range?.start || '');
-  const [endDate, setEndDate] = useState<string>(dateFilter?.range?.end || '');
+  const [state, dispatch] = useReducer(reducer, dateFilter, buildStateFromFilter);
+  const { preset, startDate, endDate } = state;
 
   useEffect(() => {
-    setPreset(dateFilter?.preset || null);
-    setStartDate(dateFilter?.range?.start || '');
-    setEndDate(dateFilter?.range?.end || '');
+    dispatch({ type: 'sync', payload: dateFilter });
   }, [dateFilter]);
+
+  const handleStartDateChange = useCallback((value: string) => {
+    dispatch({ type: 'setStartDate', payload: value });
+  }, []);
+
+  const handleEndDateChange = useCallback((value: string) => {
+    dispatch({ type: 'setEndDate', payload: value });
+  }, []);
 
   /**
    * Applique un preset
    */
   function applyPreset(selectedPreset: 'today' | 'this_week' | 'this_month' | 'custom'): void {
-    setPreset(selectedPreset);
+    dispatch({ type: 'setPreset', payload: selectedPreset });
 
     if (selectedPreset === 'custom') {
       return;
@@ -71,9 +123,7 @@ export function useDateFilter({
    * Efface le filtre
    */
   function clearFilter(): void {
-    setPreset(null);
-    setStartDate('');
-    setEndDate('');
+    dispatch({ type: 'reset' });
     onDateFilterChange(null);
     setOpen(false);
   }
@@ -84,8 +134,8 @@ export function useDateFilter({
     preset,
     startDate,
     endDate,
-    setStartDate,
-    setEndDate,
+    setStartDate: handleStartDateChange,
+    setEndDate: handleEndDateChange,
     applyPreset,
     applyCustomRange,
     clearFilter

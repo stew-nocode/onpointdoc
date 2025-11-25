@@ -140,8 +140,8 @@ export function transformTicket(
   // Transformer les autres relations
   const createdUser = transformSimpleRelation(ticket.created_user);
   const assignedUser = transformSimpleRelation(ticket.assigned_user);
-  const product = transformSimpleRelation(ticket.product);
-  const module = transformSimpleRelation(ticket.module);
+  const productRelation = transformSimpleRelation(ticket.product);
+  const moduleRelation = transformSimpleRelation(ticket.module);
   
   // Créer le ticket transformé directement (pas de JSON.parse/stringify)
   return {
@@ -165,8 +165,8 @@ export function transformTicket(
     assigned_user: assignedUser as TicketWithRelations['assigned_user'],
     contact_user: contactUser as TicketWithRelations['contact_user'],
     company,
-    product: product as TicketWithRelations['product'],
-    module: module as TicketWithRelations['module'],
+    product: productRelation as TicketWithRelations['product'],
+    module: moduleRelation as TicketWithRelations['module'],
   } satisfies TicketWithRelations;
 }
 

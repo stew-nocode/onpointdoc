@@ -1,7 +1,7 @@
-'use client';
-
-import { ReactNode } from 'react';
-import { PageContent } from './page-content';
+import type { ReactNode } from 'react';
+import { PageHeader } from './page-header';
+import { PageKPISection } from './page-kpi-section';
+import { PageCard } from './page-card';
 import { FiltersSidebarProvider } from '@/components/tickets/filters/filters-sidebar-context';
 import { FiltersContentWrapper } from '@/components/tickets/filters/filters-content-wrapper';
 import type { PageHeaderConfig, PageCardConfig } from './types';
@@ -32,17 +32,33 @@ export function PageLayoutWithFilters({
   card,
   children
 }: PageLayoutWithFiltersProps) {
-  const content = (
-    <PageContent header={header} kpis={kpis} card={card}>
-      {children}
-    </PageContent>
-  );
-
   return (
-    <FiltersSidebarProvider>
-      {sidebar}
-      <FiltersContentWrapper>{content}</FiltersContentWrapper>
-    </FiltersSidebarProvider>
+    <>
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <PageHeader
+          label={header.label}
+          title={header.title}
+          description={header.description}
+          action={header.action}
+        />
+      </div>
+      <FiltersSidebarProvider>
+        {sidebar}
+        <FiltersContentWrapper>
+          <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            {kpis && <PageKPISection>{kpis}</PageKPISection>}
+            <PageCard
+              title={card.title}
+              titleSuffix={card.titleSuffix}
+              search={card.search}
+              quickFilters={card.quickFilters}
+            >
+              {children}
+            </PageCard>
+          </div>
+        </FiltersContentWrapper>
+      </FiltersSidebarProvider>
+    </>
   );
 }
 

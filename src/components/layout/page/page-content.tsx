@@ -1,6 +1,4 @@
-'use client';
-
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { PageHeader } from './page-header';
 import { PageKPISection } from './page-kpi-section';
 import { PageCard } from './page-card';

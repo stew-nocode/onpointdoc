@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DashboardFiltersSidebar } from './dashboard-filters-sidebar';
 import { DashboardFiltersToggleButton } from './dashboard-filters-toggle-button';
@@ -36,27 +36,11 @@ function DashboardFiltersSidebarClientInner({
   /**
    * Parse les filtres depuis les URL params
    */
-  const parsedFilters = parseDashboardFiltersFromParams(
-    Object.fromEntries(searchParams.entries())
-  );
-
-  const [filters, setFilters] = useState<DashboardFiltersInput>(
-    parsedFilters || buildDefaultDashboardFilters()
-  );
-
-  /**
-   * Met à jour les filtres depuis l'URL au changement de params
-   */
-  useEffect(() => {
-    const newFilters = parseDashboardFiltersFromParams(
+  const filters = useMemo<DashboardFiltersInput>(() => {
+    const parsed = parseDashboardFiltersFromParams(
       Object.fromEntries(searchParams.entries())
     );
-
-    if (newFilters) {
-      setFilters(newFilters);
-    } else {
-      setFilters(buildDefaultDashboardFilters());
-    }
+    return parsed || buildDefaultDashboardFilters();
   }, [searchParams]);
 
   /**
@@ -88,7 +72,6 @@ function DashboardFiltersSidebarClientInner({
    */
   const handleFiltersChange = useCallback(
     (newFilters: DashboardFiltersInput) => {
-      setFilters(newFilters);
       updateUrlWithFilters(newFilters);
     },
     [updateUrlWithFilters]

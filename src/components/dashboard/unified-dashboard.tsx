@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 import type { Period, UnifiedDashboardData, DashboardRole, DashboardConfig } from '@/types/dashboard';
 import { getDefaultDashboardConfig } from '@/services/dashboard/default-config';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
@@ -11,6 +12,8 @@ import { CEOTablesSection } from './ceo/ceo-tables-section';
 import { OperationalAlertsSection } from './ceo/operational-alerts-section';
 import { PeriodSelector } from './ceo/period-selector';
 import { Loader2 } from 'lucide-react';
+import { useRealtimeDashboardData } from '@/hooks/dashboard/use-realtime-dashboard-data';
+import { fetchUnifiedDashboardData } from '@/services/dashboard/fetchers';
 
 type UnifiedDashboardProps = {
   role: DashboardRole;
@@ -44,117 +47,47 @@ export function UnifiedDashboard({
   config: configProp
 }: UnifiedDashboardProps) {
   const [period, setPeriod] = useState<Period>(initialPeriod);
-  const [data, setData] = useState<UnifiedDashboardData>(initialData);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const serializedFilters = useMemo(() => searchParams.toString(), [searchParams]);
+
+  const {
+    data: dashboardData,
+    error: dashboardError,
+    isValidating,
+    mutate: mutateDashboard
+  } = useSWR(
+    ['dashboard-data', period, serializedFilters],
+    () => fetchUnifiedDashboardData({ period, serializedFilters }),
+    {
+      fallbackData: initialData,
+      revalidateOnFocus: false,
+      revalidateOnMount: false,
+      suspense: true
+    }
+  );
+
+  const baseDashboardData = dashboardData ?? initialData;
 
   // Utiliser la config passée en props (chargée côté serveur depuis la DB)
   // Fallback sur les defaults si pas de config custom
-  const config = configProp || initialData.config || getDefaultDashboardConfig(role, teamId, agentId);
+  const config = configProp || baseDashboardData.config || getDefaultDashboardConfig(role, teamId, agentId);
 
-  /**
-   * Charge les données pour une période donnée
-   */
-  const loadData = useCallback(async (selectedPeriod: Period) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Construire l'URL avec les paramètres de filtres depuis l'URL actuelle
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
-      params.set('period', selectedPeriod);
-
-      const response = await fetch(`/api/dashboard?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement des données');
-      }
-      const newData: UnifiedDashboardData = await response.json();
-      setData(newData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
-      setError(errorMessage);
-      // Logger uniquement en développement
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('[Dashboard] Erreur lors du chargement des données:', err);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+  const handlePeriodChange = useCallback((newPeriod: Period) => {
+    setPeriod(newPeriod);
   }, []);
 
-  /**
-   * Gère le changement de période
-   */
-  const handlePeriodChange = useCallback(
-    (newPeriod: Period) => {
-      setPeriod(newPeriod);
-      loadData(newPeriod);
-    },
-    [loadData]
-  );
-
-  /**
-   * Configuration du temps réel Supabase
-   */
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-
-    // Écouter les changements sur les tables pertinentes
-    const ticketsChannel = supabase
-      .channel('unified-dashboard-tickets')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tickets'
-        },
-        () => {
-          loadData(period);
-        }
-      )
-      .subscribe();
-
-    const activitiesChannel = supabase
-      .channel('unified-dashboard-activities')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'activities'
-        },
-        () => {
-          loadData(period);
-        }
-      )
-      .subscribe();
-
-    const tasksChannel = supabase
-      .channel('unified-dashboard-tasks')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tasks'
-        },
-        () => {
-          loadData(period);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(ticketsChannel);
-      supabase.removeChannel(activitiesChannel);
-      supabase.removeChannel(tasksChannel);
-    };
-  }, [period, loadData]);
+  useRealtimeDashboardData({
+    period,
+    onDataChange: () => {
+      mutateDashboard();
+    }
+  });
 
   // Filtrer les alertes selon le rôle
-  const filteredAlerts = filterAlertsByRole(data.alerts, role);
+  const filteredAlerts = filterAlertsByRole(baseDashboardData.alerts, role);
+
+  const isLoading = isValidating && !dashboardData;
+  const error = dashboardError ? dashboardError.message : null;
 
   return (
     <div className="space-y-6">
@@ -170,12 +103,12 @@ export function UnifiedDashboard({
       )}
 
       {/* Section KPIs Stratégiques (Direction uniquement) */}
-      {config.visibleSections.strategicKPIs && data.strategic && (
-        <CEOKPIsSection data={data.strategic} />
+      {config.visibleSections.strategicKPIs && baseDashboardData.strategic && (
+        <CEOKPIsSection data={baseDashboardData.strategic} />
       )}
 
       {/* Section KPIs Équipe (Manager uniquement) */}
-      {config.visibleSections.teamKPIs && data.team && (
+      {config.visibleSections.teamKPIs && baseDashboardData.team && (
         <div>
           {/* TODO: Créer TeamKPIsSection */}
           <p className="text-sm text-slate-500">KPIs Équipe - À implémenter</p>
@@ -183,7 +116,7 @@ export function UnifiedDashboard({
       )}
 
       {/* Section KPIs Personnels (Agent uniquement) */}
-      {config.visibleSections.personalKPIs && data.personal && (
+      {config.visibleSections.personalKPIs && baseDashboardData.personal && (
         <div>
           {/* TODO: Créer PersonalKPIsSection */}
           <p className="text-sm text-slate-500">KPIs Personnels - À implémenter</p>
@@ -191,12 +124,12 @@ export function UnifiedDashboard({
       )}
 
       {/* Section Graphiques Stratégiques (Direction) */}
-      {config.visibleSections.strategicCharts && data.strategic && (
-        <CEOChartsSection data={data.strategic} />
+      {config.visibleSections.strategicCharts && baseDashboardData.strategic && (
+        <CEOChartsSection data={baseDashboardData.strategic} />
       )}
 
       {/* Section Graphiques Équipe (Manager + Direction) */}
-      {config.visibleSections.teamCharts && data.team && (
+      {config.visibleSections.teamCharts && baseDashboardData.team && (
         <div>
           {/* TODO: Créer TeamChartsSection */}
           <p className="text-sm text-slate-500">Graphiques Équipe - À implémenter</p>
@@ -204,7 +137,7 @@ export function UnifiedDashboard({
       )}
 
       {/* Section Graphiques Personnels (Agent) */}
-      {config.visibleSections.personalCharts && data.personal && (
+      {config.visibleSections.personalCharts && baseDashboardData.personal && (
         <div>
           {/* TODO: Créer PersonalChartsSection */}
           <p className="text-sm text-slate-500">Graphiques Personnels - À implémenter</p>
@@ -212,12 +145,12 @@ export function UnifiedDashboard({
       )}
 
       {/* Section Tables Stratégiques (Direction) */}
-      {config.visibleSections.strategicTables && data.strategic && (
-        <CEOTablesSection data={data.strategic} />
+      {config.visibleSections.strategicTables && baseDashboardData.strategic && (
+        <CEOTablesSection data={baseDashboardData.strategic} />
       )}
 
       {/* Section Tables Équipe (Manager + Direction) */}
-      {config.visibleSections.teamTables && data.team && (
+      {config.visibleSections.teamTables && baseDashboardData.team && (
         <div>
           {/* TODO: Créer TeamTablesSection */}
           <p className="text-sm text-slate-500">Tables Équipe - À implémenter</p>

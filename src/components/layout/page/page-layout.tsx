@@ -1,5 +1,3 @@
-'use client';
-
 import { ReactNode } from 'react';
 import { PageContent } from './page-content';
 import { PageSidebarWrapper } from './page-sidebar-wrapper';

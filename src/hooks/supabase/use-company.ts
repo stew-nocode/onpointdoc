@@ -6,9 +6,9 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import useSWR from 'swr';
 import type { Company } from '@/types/company';
+import { fetchCompanyById } from '@/services/fetchers';
 
 type UseCompanyResult = {
   company: Company | null;
@@ -17,75 +17,32 @@ type UseCompanyResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger une entreprise spécifique depuis Supabase
- * 
- * @param companyId - ID de l'entreprise à charger
- * @param options - Options de configuration
- * @returns Entreprise avec état de chargement
- * 
- * @example
- * const { company, isLoading } = useCompany(companyId);
- * if (isLoading) return <Loading />;
- * if (!company) return <NotFound />;
- * return <div>{company.name}</div>;
- */
 export function useCompany(
   companyId: string | null | undefined,
   options: { enabled?: boolean } = {}
 ): UseCompanyResult {
+  const enabled = options.enabled ?? true;
+  const shouldFetch = enabled && Boolean(companyId);
+
   const {
-    enabled = true
-  } = options;
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['company', companyId] : null,
+    () => fetchCompanyById(companyId as string),
+    { revalidateOnFocus: false }
+  );
 
-  const [state, setState] = useState<UseCompanyResult>({
-    company: null,
-    isLoading: true,
-    error: null,
-    refetch: async () => {}
-  });
-
-  const fetchCompany = async () => {
-    if (!companyId || !enabled) {
-      setState(prev => ({ ...prev, isLoading: false }));
-      return;
-    }
-
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', companyId)
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Erreur Supabase');
-      }
-
-      setState({
-        company: data as Company,
-        isLoading: false,
-        error: null,
-        refetch: fetchCompany
-      });
-    } catch (error) {
-      setState({
-        company: null,
-        isLoading: false,
-        error: error instanceof Error ? error : new Error('Erreur inconnue'),
-        refetch: fetchCompany
-      });
+  return {
+    company: (data as Company | null) ?? null,
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
     }
   };
-
-  useEffect(() => {
-    fetchCompany();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, enabled]);
-
-  return state;
 }
 

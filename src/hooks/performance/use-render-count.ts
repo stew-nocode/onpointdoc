@@ -5,7 +5,7 @@
  * et optimiser les performances.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type UseRenderCountOptions = {
   /** Nom du composant (affiché dans les logs) */
@@ -76,54 +76,5 @@ export function useRenderCount({
   });
 
   return renderCountRef.current;
-}
-
-/**
- * Hook pour comparer les props et détecter les changements
- * Utile pour comprendre pourquoi un composant se re-rend
- * 
- * @param props - Props du composant
- * @param componentName - Nom du composant
- * @returns Props qui ont changé depuis le dernier render
- */
-export function usePropsComparison<T extends Record<string, any>>(
-  props: T,
-  componentName?: string
-): {
-  changedProps: Partial<T>;
-  hasChanges: boolean;
-} {
-  const prevPropsRef = useRef<T | null>(null);
-  const changedPropsRef = useRef<Partial<T>>({});
-
-  if (prevPropsRef.current !== null) {
-    changedPropsRef.current = {};
-    const prevProps = prevPropsRef.current;
-
-    // Comparer chaque prop
-    Object.keys(props).forEach((key) => {
-      if (prevProps[key] !== props[key]) {
-        changedPropsRef.current[key as keyof T] = props[key];
-
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            `🔄 [Props Change] ${componentName || 'Component'}.${key}:`,
-            prevProps[key],
-            '→',
-            props[key]
-          );
-        }
-      }
-    });
-
-    prevPropsRef.current = props;
-  } else {
-    prevPropsRef.current = props;
-  }
-
-  return {
-    changedProps: changedPropsRef.current,
-    hasChanges: Object.keys(changedPropsRef.current).length > 0,
-  };
 }
 

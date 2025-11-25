@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { MTTRData } from '@/types/dashboard';
 
@@ -12,7 +13,7 @@ type MTTRKPICardProps = {
  * 
  * @param data - Données MTTR (global, par produit, tendance)
  */
-export function MTTRKPICard({ data }: MTTRKPICardProps) {
+export const MTTRKPICard = memo(function MTTRKPICard({ data }: MTTRKPICardProps) {
   if (!data) {
     return (
       <KPICard
@@ -45,5 +46,5 @@ export function MTTRKPICard({ data }: MTTRKPICardProps) {
       }
     />
   );
-}
+});
 

@@ -21,6 +21,7 @@ import {
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 import { useAuth, useTicketSelection } from '@/hooks';
+import { useTicketStatsPrefetch, useUserStatsPrefetch } from '@/hooks/tickets/use-stats-prefetch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnalysisButton } from '@/components/n8n/analysis-button';
 import { SortableTableHeader } from './sortable-table-header';
@@ -66,6 +67,8 @@ export function TicketsInfiniteScroll({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { role } = useAuth();
+  const prefetchTicketStats = useTicketStatsPrefetch();
+  const prefetchUserStats = useUserStatsPrefetch();
   
   // Mesures de performance (dev uniquement)
   const renderCount = useRenderCount({
@@ -492,7 +495,10 @@ export function TicketsInfiniteScroll({
                   <td className="py-2.5 pr-4">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className="flex items-center gap-2 min-w-0"
+                          onMouseEnter={() => prefetchTicketStats(ticket.id)}
+                        >
                           <Link
                             href={`/gestion/tickets/${ticket.id}`}
                             className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
@@ -659,7 +665,10 @@ export function TicketsInfiniteScroll({
                     {ticket.created_user?.full_name ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
+                          <div
+                            className="flex items-center gap-1.5"
+                            onMouseEnter={() => prefetchUserStats(ticket.created_by ?? null, 'reporter')}
+                          >
                             <div
                               className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.created_user.full_name)}`}
                             >
@@ -687,7 +696,10 @@ export function TicketsInfiniteScroll({
                     {ticket.assigned_user?.full_name ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
+                          <div
+                            className="flex items-center gap-1.5"
+                            onMouseEnter={() => prefetchUserStats(ticket.assigned_to ?? null, 'assigned')}
+                          >
                             <div
                               className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.assigned_user.full_name)}`}
                             >

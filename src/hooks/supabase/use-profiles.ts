@@ -6,9 +6,9 @@
 
 'use client';
 
-import { useMemo } from 'react';
-import { useSupabaseQuery } from './use-supabase-query';
+import useSWR from 'swr';
 import type { Profile } from '@/types/profile';
+import { fetchProfilesList } from '@/services/fetchers';
 
 type ProfileOption = {
   id: string;
@@ -16,11 +16,8 @@ type ProfileOption = {
 };
 
 type UseProfilesOptions = {
-  /** Nombre maximum de profils à charger (défaut: 200) */
   limit?: number;
-  /** Condition de chargement (défaut: true) */
   enabled?: boolean;
-  /** Formater les profils en options pour Select/Combobox (défaut: false) */
   asOptions?: boolean;
 };
 
@@ -32,20 +29,6 @@ type UseProfilesResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger la liste des profils utilisateurs depuis Supabase
- * 
- * @param options - Options de configuration
- * @returns Liste des profils avec état de chargement
- * 
- * @example
- * // Charger les profils bruts
- * const { profiles, isLoading } = useProfiles({ limit: 100 });
- * 
- * // Charger les profils formatés en options
- * const { profileOptions, isLoading } = useProfiles({ asOptions: true });
- * return <Combobox options={profileOptions} />;
- */
 export function useProfiles(options: UseProfilesOptions = {}): UseProfilesResult {
   const {
     limit = 200,
@@ -53,20 +36,21 @@ export function useProfiles(options: UseProfilesOptions = {}): UseProfilesResult
     asOptions = false
   } = options;
 
-  // Mémoriser orderBy pour éviter les re-renders inutiles
-  const orderBy = useMemo(() => ({ column: 'full_name', ascending: true } as const), []);
+  const shouldFetch = enabled;
 
-  const { data, error, isLoading, refetch } = useSupabaseQuery<Profile[]>({
-    table: 'profiles',
-    select: 'id, full_name, email',
-    orderBy,
-    limit,
-    enabled
-  });
+  const {
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['profiles', limit] : null,
+    () => fetchProfilesList({ limit }),
+    { revalidateOnFocus: false }
+  );
 
-  const profiles = data ?? [];
-  
-  // Formater les profils en options si demandé
+  const profiles = (data as Profile[] | undefined) ?? [];
+
   const profileOptions: ProfileOption[] = asOptions
     ? profiles.map((profile) => ({
         id: profile.id,
@@ -77,9 +61,12 @@ export function useProfiles(options: UseProfilesOptions = {}): UseProfilesResult
   return {
     profiles,
     profileOptions,
-    isLoading,
-    error,
-    refetch
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
+    }
   };
 }
 

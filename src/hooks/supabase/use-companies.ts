@@ -6,12 +6,19 @@
 
 'use client';
 
-import { useSupabaseQuery } from './use-supabase-query';
+import useSWR from 'swr';
 import type { Company } from '@/types/company';
+import { fetchCompanies } from '@/services/fetchers';
 
 type CompanyOption = {
   id: string;
   name: string;
+};
+
+type UseCompaniesOptions = {
+  enabled?: boolean;
+  search?: string;
+  limit?: number;
 };
 
 type UseCompaniesResult = {
@@ -22,33 +29,32 @@ type UseCompaniesResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger la liste des entreprises depuis Supabase
- * 
- * @param options - Options de configuration
- * @returns Liste des entreprises avec état de chargement
- * 
- * @example
- * const { companies, isLoading } = useCompanies();
- * if (isLoading) return <Loading />;
- * return <Combobox options={companies.map(c => ({ value: c.id, label: c.name }))} />;
- */
-export function useCompanies(options: { enabled?: boolean } = {}): UseCompaniesResult {
-  const { data, error, isLoading, refetch } = useSupabaseQuery<Company[]>({
-    table: 'companies',
-    select: 'id, name',
-    orderBy: { column: 'name', ascending: true },
-    enabled: options.enabled ?? true
-  });
+export function useCompanies(options: UseCompaniesOptions = {}): UseCompaniesResult {
+  const { enabled = true, search, limit } = options;
+  const shouldFetch = enabled;
 
-  const companies = data ?? [];
+  const {
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['companies', search ?? '', limit ?? 'all'] : null,
+    () => fetchCompanies({ search, limit }),
+    { revalidateOnFocus: false }
+  );
+
+  const companies = (data as Company[] | undefined) ?? [];
 
   return {
     companies,
     companyOptions: companies.map((c) => ({ id: c.id, name: c.name })),
-    isLoading,
-    error,
-    refetch
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
+    }
   };
 }
 

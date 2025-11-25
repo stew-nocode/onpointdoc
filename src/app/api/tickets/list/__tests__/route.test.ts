@@ -13,12 +13,11 @@ import {
   setupMockSupabaseForTest,
   createMockSupabaseResponse
 } from '@/tests/mocks/supabase';
-import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-// Mock Supabase client
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn()
+// Mock Supabase client utilitaire
+vi.mock('@/lib/supabase/server', () => ({
+  createSupabaseServerClient: vi.fn()
 }));
 
 describe('API Route: /api/tickets/list', () => {
@@ -28,7 +27,9 @@ describe('API Route: /api/tickets/list', () => {
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
     testHelpers = setupMockSupabaseForTest(mockSupabase);
-    vi.mocked(createClient).mockReturnValue(mockSupabase as unknown as ReturnType<typeof createClient>);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      mockSupabase as Awaited<ReturnType<typeof createSupabaseServerClient>>
+    );
   });
 
   it('devrait retourner une liste de tickets', async () => {
@@ -104,8 +105,8 @@ describe('API Route: /api/tickets/list', () => {
     
     const request = createMockRequest('http://localhost:3000/api/tickets/list');
     
-    // Mock createClient pour retourner une erreur de configuration
-    vi.mocked(createClient).mockImplementationOnce(() => {
+    // Mock du client pour simuler une configuration manquante
+    vi.mocked(createSupabaseServerClient).mockImplementationOnce(async () => {
       throw new Error('Configuration Supabase manquante');
     });
 
