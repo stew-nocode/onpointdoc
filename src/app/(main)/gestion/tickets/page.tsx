@@ -27,6 +27,7 @@ import { PageLayoutWithFilters } from '@/components/layout/page';
 import { FiltersSidebarSkeleton } from '@/components/tickets/skeletons/filters-sidebar-skeleton';
 import { TicketsListSkeleton } from '@/components/tickets/skeletons/tickets-list-skeleton';
 import { TicketsKPIsSkeleton } from '@/components/tickets/skeletons/tickets-kpis-skeleton';
+import { TicketsQuickFiltersSkeleton } from '@/components/tickets/skeletons/tickets-quick-filters-skeleton';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -157,20 +158,28 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const advancedFilters = null;
 
   const filtersDataPromise = loadProductsAndModules();
-  const currentProfileId = await getCurrentUserProfileId();
+  const currentProfilePromise = getCurrentUserProfileId();
 
-  const ticketsPromise = loadInitialTickets(
-    resolvedSearchParams?.type,
-    resolvedSearchParams?.status,
-    resolvedSearchParams?.search,
-    quickFilter,
-    currentProfileId,
-    resolvedSearchParams?.sortColumn,
-    resolvedSearchParams?.sortDirection,
-    advancedFilters
+  const ticketsPromise = currentProfilePromise.then((profileId) =>
+    loadInitialTickets(
+      resolvedSearchParams?.type,
+      resolvedSearchParams?.status,
+      resolvedSearchParams?.search,
+      quickFilter,
+      profileId,
+      resolvedSearchParams?.sortColumn,
+      resolvedSearchParams?.sortDirection,
+      advancedFilters
+    )
   );
 
-  const kpisPromise = getSupportTicketKPIs(currentProfileId).catch(() => null);
+  const kpisPromise = currentProfilePromise.then(async (profileId) => {
+    try {
+      return await getSupportTicketKPIs(profileId);
+    } catch {
+      return null;
+    }
+  });
 
   async function handleTicketSubmit(values: CreateTicketInput) {
     'use server';
@@ -200,7 +209,10 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         kpis={
           <Suspense fallback={<TicketsKPIsSkeleton />}>
             {/* @ts-expect-error Async Server Component */}
-            <TicketsKPIsSection promise={kpisPromise} hasProfile={!!currentProfileId} />
+            <TicketsKPIsSection
+              kpisPromise={kpisPromise}
+              profilePromise={currentProfilePromise}
+            />
           </Suspense>
         }
         card={{
@@ -213,7 +225,13 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           ),
           search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
           quickFilters: (
-            <TicketsQuickFilters activeFilter={quickFilter} currentProfileId={currentProfileId} />
+            <Suspense fallback={<TicketsQuickFiltersSkeleton />}>
+              {/* @ts-expect-error Async Server Component */}
+              <TicketsQuickFiltersSection
+                activeFilter={quickFilter}
+                profilePromise={currentProfilePromise}
+              />
+            </Suspense>
           )
         }}
       >
@@ -225,7 +243,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             status={resolvedSearchParams?.status}
             search={resolvedSearchParams?.search}
             quickFilter={quickFilter}
-            currentProfileId={currentProfileId ?? undefined}
+            profilePromise={currentProfilePromise}
           />
         </Suspense>
       </PageLayoutWithFilters>
@@ -261,18 +279,18 @@ async function CreateTicketAction({
 }
 
 async function TicketsKPIsSection({
-  promise,
-  hasProfile
+  kpisPromise,
+  profilePromise
 }: {
-  promise: Promise<KPIsData | null>;
-  hasProfile: boolean;
+  kpisPromise: Promise<KPIsData | null>;
+  profilePromise: Promise<string | null>;
 }) {
-  const kpis = await promise;
+  const [kpis, profileId] = await Promise.all([kpisPromise, profilePromise]);
   if (!kpis) {
     return null;
   }
 
-  return <TicketsKPISectionLazy kpis={kpis} hasProfile={hasProfile} />;
+  return <TicketsKPISectionLazy kpis={kpis} hasProfile={Boolean(profileId)} />;
 }
 
 async function TicketsTotalCount({ promise }: { promise: Promise<TicketsPaginatedResult> }) {
@@ -290,16 +308,16 @@ async function TicketsListSection({
   status,
   search,
   quickFilter,
-  currentProfileId
+  profilePromise
 }: {
   promise: Promise<TicketsPaginatedResult>;
   type?: string;
   status?: string;
   search?: string;
   quickFilter?: QuickFilter;
-  currentProfileId?: string;
+  profilePromise: Promise<string | null>;
 }) {
-  const data = await promise;
+  const [data, currentProfileId] = await Promise.all([promise, profilePromise]);
   return (
     <TicketsInfiniteScroll
       initialTickets={data.tickets}
@@ -309,8 +327,19 @@ async function TicketsListSection({
       status={status}
       search={search}
       quickFilter={quickFilter}
-      currentProfileId={currentProfileId}
+      currentProfileId={currentProfileId ?? undefined}
     />
   );
+}
+
+async function TicketsQuickFiltersSection({
+  activeFilter,
+  profilePromise
+}: {
+  activeFilter?: QuickFilter;
+  profilePromise: Promise<string | null>;
+}) {
+  const profileId = await profilePromise;
+  return <TicketsQuickFilters activeFilter={activeFilter} currentProfileId={profileId ?? undefined} />;
 }
 
