@@ -134,11 +134,36 @@ async function loadTicketStatsWithClient(
   };
 }
 
+async function loadTicketStatsFromSummary(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  ticketId: string
+): Promise<TicketStats | null> {
+  const { data, error } = await supabase
+    .from('ticket_stats_summary')
+    .select('ticket_id, comments_count, attachments_count, status_changes_count, last_update_date, created_at')
+    .eq('ticket_id', ticketId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    commentsCount: data.comments_count ?? 0,
+    attachmentsCount: data.attachments_count ?? 0,
+    statusChangesCount: data.status_changes_count ?? 0,
+    lastUpdateDate: data.last_update_date ?? null,
+    ageInDays: calculateAgeInDays(data.created_at ?? null)
+  };
+}
+
 export async function loadTicketStats(
   ticketId: string,
   createdAt: string | null
 ): Promise<TicketStats> {
   const supabase = await createSupabaseServerClient();
+  const summaryStats = await loadTicketStatsFromSummary(supabase, ticketId);
+  if (summaryStats) return summaryStats;
   return loadTicketStatsWithClient(supabase, ticketId, createdAt);
 }
 
@@ -151,29 +176,57 @@ export async function loadTicketStatsBatch(
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: ticketsMeta } = await supabase
-    .from('tickets')
-    .select('id, created_at')
-    .in('id', ticketIds);
+  const result: Record<string, TicketStats> = {};
 
-  const createdAtMap = new Map<string, string | null>();
-  (ticketsMeta ?? []).forEach((ticket) => {
-    if (ticket && 'id' in ticket) {
-      createdAtMap.set(String(ticket.id), ticket.created_at || null);
-    }
+  const { data: summaryRows } = await supabase
+    .from('ticket_stats_summary')
+    .select('ticket_id, comments_count, attachments_count, status_changes_count, last_update_date, created_at')
+    .in('ticket_id', ticketIds);
+
+  const missingIds = new Set(ticketIds);
+
+  (summaryRows ?? []).forEach((row) => {
+    if (!row || !row.ticket_id) return;
+    result[row.ticket_id] = {
+      commentsCount: row.comments_count ?? 0,
+      attachmentsCount: row.attachments_count ?? 0,
+      statusChangesCount: row.status_changes_count ?? 0,
+      lastUpdateDate: row.last_update_date ?? null,
+      ageInDays: calculateAgeInDays(row.created_at ?? null)
+    };
+    missingIds.delete(row.ticket_id);
   });
 
-  const entries = await Promise.all(
-    ticketIds.map(async (ticketId) => {
-      const stats = await loadTicketStatsWithClient(
-        supabase,
-        ticketId,
-        createdAtMap.get(ticketId) ?? null
-      );
-      return [ticketId, stats] as const;
-    })
-  );
+  if (missingIds.size > 0) {
+    const missingArray = Array.from(missingIds);
+    const { data: ticketsMeta } = await supabase
+      .from('tickets')
+      .select('id, created_at')
+      .in('id', missingArray);
 
-  return Object.fromEntries(entries);
+    const createdAtMap = new Map<string, string | null>();
+    (ticketsMeta ?? []).forEach((ticket) => {
+      if (ticket && 'id' in ticket) {
+        createdAtMap.set(String(ticket.id), ticket.created_at || null);
+      }
+    });
+
+    const fallbackEntries = await Promise.all(
+      missingArray.map(async (ticketId) => {
+        const stats = await loadTicketStatsWithClient(
+          supabase,
+          ticketId,
+          createdAtMap.get(ticketId) ?? null
+        );
+        return [ticketId, stats] as const;
+      })
+    );
+
+    fallbackEntries.forEach(([ticketId, stats]) => {
+      result[ticketId] = stats;
+    });
+  }
+
+  return result;
 }
 
