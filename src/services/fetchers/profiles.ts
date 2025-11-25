@@ -57,3 +57,29 @@ export async function fetchProfilesByIds(
 
   return (data ?? []) as Profile[];
 }
+
+type ProfilesListOptions = ProfilesFetcherOptions & {
+  limit?: number;
+};
+
+export async function fetchProfilesList(
+  options: ProfilesListOptions = {}
+): Promise<Profile[]> {
+  const supabase = getSupabaseBrowserClient(options.client);
+  let query = supabase
+    .from('profiles')
+    .select('id, full_name, email')
+    .order('full_name', { ascending: true });
+
+  if (options.limit) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(resolveErrorMessage('Erreur Supabase lors du chargement des profils', error));
+  }
+
+  return (data ?? []) as Profile[];
+}

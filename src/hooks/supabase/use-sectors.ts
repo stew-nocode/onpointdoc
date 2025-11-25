@@ -6,7 +6,8 @@
 
 'use client';
 
-import { useSupabaseQuery } from './use-supabase-query';
+import useSWR from 'swr';
+import { fetchSectors } from '@/services/fetchers';
 
 type Sector = {
   id: string;
@@ -20,30 +21,28 @@ type UseSectorsResult = {
   refetch: () => Promise<void>;
 };
 
-/**
- * Hook pour charger la liste des secteurs depuis Supabase
- * 
- * @param options - Options de configuration
- * @returns Liste des secteurs avec état de chargement
- * 
- * @example
- * const { sectors, isLoading } = useSectors();
- * if (isLoading) return <Loading />;
- * return <Select options={sectors.map(s => ({ value: s.id, label: s.name }))} />;
- */
 export function useSectors(options: { enabled?: boolean } = {}): UseSectorsResult {
-  const { data, error, isLoading, refetch } = useSupabaseQuery<Sector[]>({
-    table: 'sectors',
-    select: 'id, name',
-    orderBy: { column: 'name', ascending: true },
-    enabled: options.enabled ?? true
-  });
+  const shouldFetch = options.enabled ?? true;
+
+  const {
+    data,
+    error,
+    isLoading,
+    mutate
+  } = useSWR(
+    shouldFetch ? ['sectors'] : null,
+    () => fetchSectors(),
+    { revalidateOnFocus: false }
+  );
 
   return {
-    sectors: data ?? [],
-    isLoading,
-    error,
-    refetch
+    sectors: (data as Sector[] | undefined) ?? [],
+    isLoading: shouldFetch ? Boolean(isLoading) : false,
+    error: (error as Error) ?? null,
+    refetch: async () => {
+      if (!shouldFetch) return;
+      await mutate();
+    }
   };
 }
 
