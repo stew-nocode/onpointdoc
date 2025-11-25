@@ -18,7 +18,6 @@ import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scr
 import { TicketsSearchBar } from '@/components/tickets/tickets-search-bar';
 import { TicketsQuickFilters } from '@/components/tickets/tickets-quick-filters';
 import { TicketsKPISectionLazy } from '@/components/tickets/tickets-kpi-section-lazy';
-import { TicketsPageClientWrapper } from '@/components/tickets/tickets-page-client-wrapper';
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -180,8 +179,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   }
 
   return (
-    <TicketsPageClientWrapper>
-      <PageLayoutWithFilters
+    <PageLayoutWithFilters
         sidebar={
           <Suspense fallback={<FiltersSidebarSkeleton />}>
             {/* @ts-expect-error Async Server Component */}
@@ -231,7 +229,6 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           />
         </Suspense>
       </PageLayoutWithFilters>
-    </TicketsPageClientWrapper>
   );
 }
 
