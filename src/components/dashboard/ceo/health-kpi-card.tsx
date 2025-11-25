@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { ProductHealthData } from '@/types/dashboard';
 
@@ -12,7 +13,7 @@ type HealthKPICardProps = {
  * 
  * @param data - Données de santé (par produit, top modules)
  */
-export function HealthKPICard({ data }: HealthKPICardProps) {
+export const HealthKPICard = memo(function HealthKPICard({ data }: HealthKPICardProps) {
   if (!data || !data.byProduct) {
     return (
       <KPICard
@@ -37,5 +38,5 @@ export function HealthKPICard({ data }: HealthKPICardProps) {
       variant={criticalProducts.length > 0 ? 'danger' : warningProducts.length > 0 ? 'warning' : 'success'}
     />
   );
-}
+});
 

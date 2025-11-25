@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import type { TicketFluxData } from '@/types/dashboard';
 
@@ -15,7 +16,7 @@ type TicketsOuvertsKPICardProps = {
  * 
  * @param data - Données de flux (ouverts, résolus, taux, tendances)
  */
-export function TicketsOuvertsKPICard({ data }: TicketsOuvertsKPICardProps) {
+export const TicketsOuvertsKPICard = memo(function TicketsOuvertsKPICard({ data }: TicketsOuvertsKPICardProps) {
   if (!data || !data.trend) {
     return (
       <KPICard
@@ -44,5 +45,5 @@ export function TicketsOuvertsKPICard({ data }: TicketsOuvertsKPICardProps) {
       }}
     />
   );
-}
+});
 
