@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 import { getTicketById, transferTicketToJira } from '@/services/tickets/jira-transfer';
-import { loadTicketInteractions } from '@/services/tickets/comments';
+import { loadTicketInteractions, loadTicketComments } from '@/services/tickets/comments';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
@@ -12,6 +12,7 @@ import { ValidateTicketButton } from '@/components/tickets/validate-ticket-butto
 import { TicketDescription } from '@/components/tickets/ticket-description';
 import { TicketEditForm } from '@/components/tickets/ticket-edit-form';
 import { TicketTimeline } from '@/components/tickets/ticket-timeline';
+import { CommentsSectionClient } from '@/components/tickets/comments/comments-section-client';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
@@ -82,6 +83,28 @@ async function getCurrentUserRole() {
   }
 }
 
+async function getCurrentUserProfileId() {
+  noStore();
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth_uid', user.id)
+      .single();
+
+    return profile?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 type TicketDetailPageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ edit?: string }>;
@@ -109,6 +132,9 @@ export default async function TicketDetailPage({
         ticket.created_by as string | null
       )
     : [];
+
+  // Charger les commentaires séparément pour la section commentaires
+  const comments = ticket && !isEditMode ? await loadTicketComments(id) : [];
 
   if (!ticket) {
     notFound();
@@ -346,6 +372,11 @@ export default async function TicketDetailPage({
               </CardContent>
             </Card>
           </div>
+
+          {/* Section Commentaires */}
+          {!isEditMode && (
+            <CommentsSectionClient ticketId={id} initialComments={comments} />
+          )}
         </div>
 
         {/* Colonne droite : Timeline fixe avec scroll interne */}

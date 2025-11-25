@@ -111,7 +111,14 @@ export function Combobox({
               className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 dark:placeholder:text-slate-400"
             />
           </div>
-          <div className="max-h-[300px] overflow-y-auto p-1">
+          <div
+            className="max-h-[300px] overflow-y-auto overscroll-contain p-1"
+            onWheel={(e) => {
+              // Empêcher la propagation du scroll au Dialog parent
+              // pour que le scroll reste dans la liste du Combobox
+              e.stopPropagation();
+            }}
+          >
             {filteredOptions.length === 0 ? (
               <div className="py-6 text-center text-sm text-slate-500">{emptyText}</div>
             ) : (

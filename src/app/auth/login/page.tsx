@@ -22,19 +22,47 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: signErr } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      // Utiliser la route API côté serveur pour éviter les problèmes CORS
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
       });
-      if (signErr) {
-        setError(signErr.message);
+
+      // Vérifier le type de contenu de la réponse
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('[Login] Réponse non-JSON:', text.substring(0, 200));
+        setError('Erreur serveur : réponse invalide. Vérifiez les logs du serveur.');
         return;
       }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        console.error('[Login] Erreur lors du parsing JSON:', parseErr);
+        setError('Erreur lors de la lecture de la réponse serveur');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorMessage = data.error || `Erreur ${response.status} lors de la connexion`;
+        console.error('[Login] Erreur API:', errorMessage);
+        setError(errorMessage);
+        return;
+      }
+
+      // Connexion réussie - les cookies sont gérés automatiquement par Supabase SSR
+      console.log('[Login] Connexion réussie:', data.user?.email);
       router.push(next);
       router.refresh();
     } catch (err: any) {
-      setError(err?.message ?? 'Erreur inattendue');
+      console.error('[Login Error]', err);
+      setError(err?.message ?? 'Erreur inattendue lors de la connexion');
     } finally {
       setLoading(false);
     }
@@ -80,7 +108,11 @@ function LoginForm() {
                 </button>
               </div>
             </div>
-            {error && <p className="text-sm text-status-danger">{error}</p>}
+            {error && (
+              <div className="rounded-lg bg-status-danger/10 border border-status-danger/20 p-3">
+                <p className="text-sm text-status-danger whitespace-pre-line">{error}</p>
+              </div>
+            )}
             <Button className="w-full" disabled={loading} type="submit">
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>

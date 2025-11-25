@@ -179,12 +179,13 @@ function splitIntoSections(text: string): string[] {
  * @returns Le HTML formaté de la section
  */
 function formatSection(section: string, index: number): string {
+  // Pas de fond coloré en dark mode pour améliorer la lisibilité
   const colors = [
-    'bg-slate-50 dark:bg-slate-900/30',
-    'bg-blue-50 dark:bg-blue-900/20',
-    'bg-purple-50 dark:bg-purple-900/20',
-    'bg-green-50 dark:bg-green-900/20',
-    'bg-amber-50 dark:bg-amber-900/20'
+    'bg-slate-50 dark:bg-transparent',
+    'bg-blue-50 dark:bg-transparent',
+    'bg-purple-50 dark:bg-transparent',
+    'bg-green-50 dark:bg-transparent',
+    'bg-amber-50 dark:bg-transparent'
   ];
   
   const color = colors[index % colors.length];
@@ -199,13 +200,14 @@ function formatSection(section: string, index: number): string {
     .replace(/\n\n/g, '</p><p class="mb-2">')
     .replace(/\n/g, '<br>');
   
-  let html = `<div class="mb-4 rounded-lg ${color} p-4 border border-slate-200 dark:border-slate-700">`;
+  // Pas de bordure ni d'ombre en dark mode pour un rendu plus épuré
+  let html = `<div class="mb-4 rounded-lg ${color} p-4 border border-slate-200 dark:border-transparent shadow-sm dark:shadow-none">`;
   
   if (title) {
-    html += `<h2 class="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-200 dark:border-slate-700">${title}</h2>`;
+    html += `<h2 class="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-50 pb-2 border-b border-slate-200 dark:border-slate-600">${title}</h2>`;
   }
   
-  html += `<div class="text-slate-700 dark:text-slate-300 leading-relaxed"><p class="mb-2">${formattedContent}</p></div>`;
+  html += `<div class="text-slate-700 dark:text-slate-200 leading-relaxed"><p class="mb-2">${formattedContent}</p></div>`;
   html += `</div>`;
   
   return html;

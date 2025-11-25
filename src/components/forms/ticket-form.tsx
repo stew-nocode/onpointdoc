@@ -9,19 +9,20 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import type {
   CreateTicketInput,
 } from '@/lib/validators/ticket';
 import { BUG_TYPES, ASSISTANCE_LOCAL_STATUSES } from '@/lib/constants/tickets';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import { Button } from '@/ui/button';
-import { RadioGroup, RadioCard } from '@/ui/radio-group';
 import { Combobox } from '@/ui/combobox';
 import type { BasicProfile } from '@/services/users';
-import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal, AlertCircle, AlertTriangle, Zap, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useTicketForm, useFileUpload, type FileWithPreview } from '@/hooks';
-import { RichTextEditor } from '@/components/editors/rich-text-editor';
+import { SimpleTextEditor } from '@/components/editors/simple-text-editor';
+import { INPUT_CLASS } from '@/lib/constants/form-styles';
+import { getDefaultFormValues } from './ticket-form/utils/reset-form';
+import { TicketTypeSection, PrioritySection } from './ticket-form/sections';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
@@ -96,73 +97,45 @@ export const TicketForm = ({
     }
   });
 
-  // Handler de soumission du formulaire
+  /**
+   * Réinitialise le formulaire après soumission (mode création uniquement)
+   */
+  const resetFormAfterSubmit = () => {
+    const defaultValues = getDefaultFormValues(products, contacts);
+    form.reset({
+      ...defaultValues,
+      moduleId: modules[0]?.id ?? ''
+    });
+    setSelectedProductId(defaultValues.productId ?? '');
+    setSelectedModuleId(modules[0]?.id ?? '');
+  };
+
+  /**
+   * Handler de soumission du formulaire
+   */
   const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
     await onSubmit(values, selectedFiles);
     clearFiles();
+    
     // Réinitialiser le formulaire après soumission uniquement en mode création
     if (mode === 'create') {
-      form.reset({
-        title: '',
-        description: '',
-        type: 'ASSISTANCE',
-        channel: 'Whatsapp',
-        productId: products[0]?.id ?? '',
-        moduleId: modules[0]?.id ?? '',
-        submoduleId: '',
-        featureId: '',
-        customerContext: '',
-        priority: 'Medium',
-        contactUserId: contacts[0]?.id ?? '',
-        bug_type: null
-      });
-      setSelectedProductId(products[0]?.id ?? '');
-      setSelectedModuleId(modules[0]?.id ?? '');
+      resetFormAfterSubmit();
     }
   });
 
   const { errors } = form.formState;
-  const inputClass =
-    'rounded-lg border border-slate-200 px-3 py-2 text-sm focus-visible:outline-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500';
-
   const productField = form.register('productId');
   const ticketType = form.watch('type');
 
   return (
     <form className="space-y-3 w-full" onSubmit={handleSubmit}>
       {/* Type et Canal */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="grid gap-2 min-w-0">
-          <label className="text-sm font-medium text-slate-700">Type de ticket</label>
-          <RadioGroup
-            value={form.watch('type')}
-            onValueChange={(v) => form.setValue('type', v as CreateTicketInput['type'])}
-            className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
-          >
-            <RadioCard variant="compact" value="BUG" label="BUG" icon={<Bug className="h-3 w-3" />} />
-            <RadioCard variant="compact" value="REQ" label="Requête" icon={<FileText className="h-3 w-3" />} />
-            <RadioCard variant="compact" value="ASSISTANCE" label="Assistance" icon={<HelpCircle className="h-3 w-3" />} />
-          </RadioGroup>
-        </div>
-        <div className="grid gap-2 min-w-0">
-          <label className="text-sm font-medium text-slate-700">Canal de contact</label>
-          <RadioGroup
-            value={form.watch('channel')}
-            onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"
-          >
-            <RadioCard variant="compact" value="Whatsapp" label="WhatsApp" icon={<MessageSquare className="h-3 w-3" />} />
-            <RadioCard variant="compact" value="Email" label="Email" icon={<Mail className="h-3 w-3" />} />
-            <RadioCard variant="compact" value="Appel" label="Appel" icon={<Phone className="h-3 w-3" />} />
-            <RadioCard variant="compact" value="Autre" label="Autre" icon={<MoreHorizontal className="h-3 w-3" />} />
-          </RadioGroup>
-        </div>
-      </div>
+      <TicketTypeSection form={form} />
 
       {/* Titre */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Titre</label>
-        <input className={inputClass} placeholder="Résumé du besoin" {...form.register('title')} />
+        <input className={INPUT_CLASS} placeholder="Résumé du besoin" {...form.register('title')} />
         {errors.title && <p className="text-xs text-status-danger">{errors.title.message}</p>}
       </div>
 
@@ -190,12 +163,11 @@ export const TicketForm = ({
       {/* Description */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">Description</label>
-        <RichTextEditor
+        <SimpleTextEditor
           value={form.watch('description') || ''}
           onChange={(value) => form.setValue('description', value, { shouldValidate: true })}
           placeholder="Détails fournis par le client"
           disabled={isSubmitting}
-          format="html"
           minHeight={150}
         />
         {errors.description && (
@@ -303,19 +275,7 @@ export const TicketForm = ({
       </div>
 
       {/* Priorité */}
-      <div className="grid gap-2">
-        <label className="text-sm font-medium text-slate-700">Priorité</label>
-        <RadioGroup
-          value={form.watch('priority')}
-          onValueChange={(v) => form.setValue('priority', v as CreateTicketInput['priority'])}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"
-        >
-          <RadioCard variant="compact" value="Low" label="Faible" icon={<Zap className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="Medium" label="Moyenne" icon={<AlertCircle className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="High" label="Élevée" icon={<AlertTriangle className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="Critical" label="Critique" icon={<Shield className="h-3 w-3" />} />
-        </RadioGroup>
-      </div>
+      <PrioritySection form={form} />
 
       {/* Statut (uniquement pour ASSISTANCE en mode édition) */}
       {mode === 'edit' && ticketType === 'ASSISTANCE' && (
@@ -352,7 +312,7 @@ export const TicketForm = ({
               id="durationMinutes"
               type="number"
               min={0}
-              className={`${inputClass} w-24`}
+              className={`${INPUT_CLASS} w-24`}
               placeholder="Ex: 45"
               {...form.register('durationMinutes', { valueAsNumber: true })}
             />
@@ -372,7 +332,7 @@ export const TicketForm = ({
         <label className="text-sm font-medium text-slate-700">Contexte client</label>
         <textarea
           rows={3}
-          className={inputClass}
+          className={INPUT_CLASS}
           placeholder="Entreprise, point focal, environnement, relance..."
           {...form.register('customerContext')}
         />

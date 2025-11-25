@@ -121,7 +121,10 @@ export const createError = {
     new ApplicationError(ErrorCode.NETWORK_ERROR, message, 500, details, originalError),
 
   internalError: (message: string = 'Erreur interne', originalError?: Error, details?: Record<string, unknown>) =>
-    new ApplicationError(ErrorCode.INTERNAL_ERROR, message, 500, details, originalError)
+    new ApplicationError(ErrorCode.INTERNAL_ERROR, message, 500, details, originalError),
+
+  configurationError: (message: string = 'Erreur de configuration', details?: Record<string, unknown>) =>
+    new ApplicationError(ErrorCode.INTERNAL_ERROR, message, 500, details)
 };
 
 /**

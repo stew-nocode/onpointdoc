@@ -8,6 +8,8 @@ import { createJiraIssue } from '@/services/jira/client';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
 import { mapSortColumnToSupabase } from '@/lib/utils/ticket-sort';
 import { DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
+import type { AdvancedFiltersInput } from '@/lib/validators/advanced-filters';
+import { applyAdvancedFilters } from './filters/advanced';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -127,10 +129,10 @@ export const updateTicket = async (payload: UpdateTicketInput) => {
     throw new Error('Non authentifié');
   }
 
-  // Récupérer le ticket actuel pour vérifier le type et le statut actuel
+  // Récupérer le ticket actuel pour vérifier le type, le statut et la clé JIRA
   const { data: currentTicket, error: fetchError } = await supabase
     .from('tickets')
-    .select('ticket_type, status')
+    .select('ticket_type, status, jira_issue_key')
     .eq('id', payload.id)
     .single();
 
@@ -176,6 +178,12 @@ export const updateTicket = async (payload: UpdateTicketInput) => {
   if (payload.contactUserId !== undefined) updateData.contact_user_id = payload.contactUserId;
   if (payload.bug_type !== undefined) updateData.bug_type = payload.bug_type;
   if (payload.status !== undefined) updateData.status = payload.status;
+
+  // Définir la source de mise à jour pour éviter les boucles de synchronisation
+  // Ne pas écraser si la dernière mise à jour vient de JIRA (pour éviter les boucles)
+  if (!currentTicket.jira_issue_key || currentTicket.ticket_type === 'ASSISTANCE') {
+    updateData.last_update_source = 'supabase';
+  }
 
   // Mettre à jour le ticket
   const { data, error } = await supabase
@@ -253,7 +261,8 @@ export const listTicketsPaginated = async (
   quickFilter?: QuickFilter,
   currentProfileId?: string | null,
   sortColumn?: TicketSortColumn,
-  sortDirection?: SortDirection
+  sortDirection?: SortDirection,
+  advancedFilters?: AdvancedFiltersInput | null
 ): Promise<TicketsPaginatedResult> => {
   const supabase = await createSupabaseServerClient();
   
@@ -280,6 +289,7 @@ export const listTicketsPaginated = async (
       target_date,
       bug_type,
       created_at,
+      updated_at,
       created_by,
       created_user:profiles!tickets_created_by_fkey(id, full_name),
       assigned_to,
@@ -288,31 +298,66 @@ export const listTicketsPaginated = async (
       contact_user:profiles!tickets_contact_user_id_fkey(id, full_name, company_id),
       product:products(id, name),
       module:modules(id, name)
-    `, { count: 'exact' })
-    .order(supabaseColumn, { ascending })
-    .range(offset, offset + limit - 1);
+    `, { count: 'exact' });
 
-  if (type) {
+  // Appliquer les filtres simples (pour compatibilité)
+  if (type && !advancedFilters?.types?.length) {
     query = query.eq('ticket_type', type);
   }
-  if (status) {
+  if (status && !advancedFilters?.statuses?.length) {
     query = query.eq('status', status);
   }
 
   // Recherche textuelle dans titre, description et clé Jira
   if (search && search.trim().length > 0) {
-    const searchTerm = `%${search.trim()}%`;
-    // Utiliser .or() avec la syntaxe correcte pour Supabase
-    // Format: "col1.op.val1,col2.op.val2" (sans guillemets autour des valeurs)
-    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
+    const searchTerm = search.trim();
+    // Échapper les caractères spéciaux pour ilike (%, _)
+    const escapedSearch = searchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    const searchPattern = `%${escapedSearch}%`;
+    
+    // Utiliser la syntaxe correcte de Supabase pour .or() avec ilike
+    // Format: column.operator.value,column2.operator.value2
+    // Les valeurs avec % doivent être correctement échappées
+    // Note: Pas de guillemets autour des valeurs dans la syntaxe .or()
+    query = query.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},jira_issue_key.ilike.${searchPattern}`);
   }
 
+  // Appliquer les quick filters
   query = applyQuickFilter(query, quickFilter, { currentProfileId: currentProfileId ?? undefined });
+
+  // Appliquer les filtres avancés si fournis (AVANT .order() et .range())
+  if (advancedFilters) {
+    try {
+      query = applyAdvancedFilters(query, advancedFilters);
+    } catch (filterError) {
+      console.error('[ERROR] Erreur lors de l\'application des filtres avancés:', filterError);
+      if (filterError instanceof Error) {
+        console.error('[ERROR] Message:', filterError.message);
+        console.error('[ERROR] Stack:', filterError.stack);
+      }
+      throw filterError;
+    }
+  }
+
+  // Appliquer le tri et la pagination APRÈS tous les filtres
+  query = query.order(supabaseColumn, { ascending }).range(offset, offset + limit - 1);
 
   const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(error.message);
+    console.error('[ERROR] Erreur Supabase dans listTicketsPaginated:');
+    console.error('[ERROR] Erreur complète (stringified):', JSON.stringify(error, null, 2));
+    console.error('[ERROR] Code:', error.code);
+    console.error('[ERROR] Message:', error.message);
+    console.error('[ERROR] Details:', error.details);
+    console.error('[ERROR] Hint:', error.hint);
+    
+    // Créer un message d'erreur plus descriptif avec tous les détails
+    const errorMessage = error.message || 'Erreur Supabase inconnue';
+    const errorCode = error.code || 'UNKNOWN';
+    const fullErrorMessage = `Erreur Supabase (${errorCode}): ${errorMessage}${error.details ? ` | Details: ${error.details}` : ''}${error.hint ? ` | Hint: ${error.hint}` : ''}`;
+    
+    throw new Error(fullErrorMessage);
   }
 
   // Récupérer tous les company_id uniques depuis contact_user
@@ -349,77 +394,11 @@ export const listTicketsPaginated = async (
     }
   }
 
-  // Transformer les données : Supabase retourne des tableaux pour les relations, on veut des objets uniques
-  const transformedTickets: TicketWithRelations[] = (data || []).map((ticket: SupabaseTicketRaw) => {
-    const transformedContactUser = transformRelation(ticket.contact_user);
-    
-    // Trouver la company via contact_user.company_id et s'assurer qu'elle est sérialisable
-    let company: { id: string; name: string } | null = null;
-    if (transformedContactUser && typeof transformedContactUser === 'object' && 'company_id' in transformedContactUser && transformedContactUser.company_id) {
-      const companyIdStr = String(transformedContactUser.company_id);
-      const companyData = companiesMap[companyIdStr];
-      if (companyData) {
-        // S'assurer que c'est un objet plain sérialisable
-        company = {
-          id: String(companyData.id),
-          name: String(companyData.name)
-        };
-      }
-    }
-    
-    // S'assurer que contact_user est sérialisable
-    const cleanContactUser = transformedContactUser && typeof transformedContactUser === 'object'
-      ? {
-          id: String(transformedContactUser.id),
-          full_name: String(transformedContactUser.full_name),
-          company_id: transformedContactUser.company_id ? String(transformedContactUser.company_id) : null
-        }
-      : transformedContactUser;
-    
-    // Nettoyer toutes les relations pour les rendre sérialisables
-    const cleanCreatedUser = transformRelation(ticket.created_user);
-    const cleanAssignedUser = transformRelation(ticket.assigned_user);
-    const cleanProduct = transformRelation(ticket.product);
-    const cleanModule = transformRelation(ticket.module);
-    
-    // S'assurer que toutes les relations sont des objets plain sérialisables
-    const serializableCreatedUser = cleanCreatedUser && typeof cleanCreatedUser === 'object'
-      ? { id: String(cleanCreatedUser.id), full_name: String(cleanCreatedUser.full_name) }
-      : cleanCreatedUser;
-    
-    const serializableAssignedUser = cleanAssignedUser && typeof cleanAssignedUser === 'object'
-      ? { id: String(cleanAssignedUser.id), full_name: String(cleanAssignedUser.full_name) }
-      : cleanAssignedUser;
-    
-    const serializableProduct = cleanProduct && typeof cleanProduct === 'object'
-      ? { id: String(cleanProduct.id), name: String(cleanProduct.name) }
-      : cleanProduct;
-    
-    const serializableModule = cleanModule && typeof cleanModule === 'object'
-      ? { id: String(cleanModule.id), name: String(cleanModule.name) }
-      : cleanModule;
-    
-    // S'assurer que tous les champs sont sérialisables
-    // Utiliser JSON.parse(JSON.stringify()) pour garantir la sérialisation
-    const baseTicket = {
-      ...ticket,
-      created_user: serializableCreatedUser,
-      assigned_user: serializableAssignedUser,
-      contact_user: cleanContactUser,
-      company: company,
-      product: serializableProduct,
-      module: serializableModule,
-      // S'assurer que created_at est une string si c'est une Date
-      created_at: ticket.created_at ? (typeof ticket.created_at === 'string' ? ticket.created_at : new Date(ticket.created_at).toISOString()) : ticket.created_at,
-      // S'assurer que target_date est une string si c'est une Date
-      target_date: ticket.target_date ? (typeof ticket.target_date === 'string' ? ticket.target_date : new Date(ticket.target_date).toISOString()) : ticket.target_date
-    };
-    
-    // Utiliser JSON.parse(JSON.stringify()) pour garantir que l'objet est sérialisable
-    const serializableTicket = JSON.parse(JSON.stringify(baseTicket)) as TicketWithRelations;
-    
-    return serializableTicket;
-  });
+  // Transformer les données avec l'utilitaire optimisé (sans JSON.parse/stringify)
+  const { transformTicket } = await import('./utils/ticket-transformer');
+  const transformedTickets: TicketWithRelations[] = (data || []).map(
+    (ticket: SupabaseTicketRaw) => transformTicket(ticket, companiesMap)
+  );
 
   return {
     tickets: transformedTickets,

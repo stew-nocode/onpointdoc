@@ -15,6 +15,7 @@ const nextConfig = {
       '@radix-ui/react-dialog',
       '@radix-ui/react-popover',
       '@radix-ui/react-tooltip'
+      // Note: react-quill retiré de optimizePackageImports car cela cause des conflits avec dynamic import
     ]
   }
 };

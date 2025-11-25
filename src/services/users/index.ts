@@ -1,7 +1,8 @@
 import { userCreateInternalSchema, type UserCreateInternalInput, userUpdateSchema, type UserUpdateInput } from '@/lib/validators/user';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-// Export BasicProfile type depuis server.ts (pas la fonction, elle est serveur uniquement)
+// Export du type uniquement (pas des fonctions serveur)
+// Les fonctions serveur doivent être importées directement depuis './server'
 export type { BasicProfile } from './server';
 
 /**

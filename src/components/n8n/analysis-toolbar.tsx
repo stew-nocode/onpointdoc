@@ -33,7 +33,7 @@ export function AnalysisToolbar({
   hasContent
 }: AnalysisToolbarProps) {
   return (
-    <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+    <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700 bg-transparent">
       <div className="flex items-center gap-2">
         {!isEditing ? (
           <Button

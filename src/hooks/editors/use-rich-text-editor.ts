@@ -10,7 +10,7 @@ import { useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { convertToEditorHTML, convertFromEditorHTML } from '@/lib/utils/rich-text-converter';
 import type { RichTextFormat, RichTextEditorOptions } from '@/types/rich-text';
 
@@ -57,38 +57,45 @@ export function useRichTextEditor(
   }, [value, format]);
 
   /**
+   * Mémoriser les extensions pour éviter les ré-initialisations
+   * Les extensions Tiptap sont coûteuses à créer, donc on les mémorise
+   */
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3]
+      },
+      bulletList: {
+        keepMarks: true,
+        keepAttributes: false
+      },
+      orderedList: {
+        keepMarks: true,
+        keepAttributes: false
+      }
+    }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300',
+        target: '_blank',
+        rel: 'noopener noreferrer'
+      }
+    }),
+    Placeholder.configure({
+      placeholder
+    })
+  ], [placeholder]);
+
+  /**
    * Initialise l'éditeur Tiptap
    * 
    * immediatelyRender: false pour éviter les problèmes d'hydratation SSR avec Next.js
+   * Les extensions sont mémorisées pour éviter les ré-initialisations coûteuses
    */
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3]
-        },
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false
-        }
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300',
-          target: '_blank',
-          rel: 'noopener noreferrer'
-        }
-      }),
-      Placeholder.configure({
-        placeholder
-      })
-    ],
+    extensions,
     content: getInitialContent(),
     editable: !disabled,
     onUpdate: ({ editor }) => {

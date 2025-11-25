@@ -8,6 +8,19 @@ import {
 } from './utils/build-interactions';
 
 /**
+ * Type pour une pièce jointe de commentaire
+ */
+export type CommentAttachment = {
+  id: string;
+  comment_id: string;
+  file_path: string;
+  file_name: string;
+  mime_type: string | null;
+  size_kb: number | null;
+  stored_at: string;
+};
+
+/**
  * Type pour un commentaire de ticket
  */
 export type TicketComment = {
@@ -22,6 +35,7 @@ export type TicketComment = {
     full_name: string | null;
     email: string | null;
   };
+  attachments?: CommentAttachment[];
 };
 
 /**
@@ -61,10 +75,10 @@ export type TicketInteraction = {
 };
 
 /**
- * Charge les commentaires d'un ticket avec les informations des utilisateurs
+ * Charge les commentaires d'un ticket avec les informations des utilisateurs et leurs pièces jointes
  * 
  * @param ticketId - UUID du ticket
- * @returns Liste des commentaires avec les informations des utilisateurs
+ * @returns Liste des commentaires avec les informations des utilisateurs et leurs pièces jointes
  */
 export async function loadTicketComments(ticketId: string): Promise<TicketComment[]> {
   const supabase = await createSupabaseServerClient();
@@ -76,7 +90,6 @@ export async function loadTicketComments(ticketId: string): Promise<TicketCommen
     .order('created_at', { ascending: true });
 
   if (commentsError) {
-    console.error('Erreur lors du chargement des commentaires:', commentsError);
     return [];
   }
 
@@ -91,6 +104,11 @@ export async function loadTicketComments(ticketId: string): Promise<TicketCommen
   
   const profilesMap = await loadProfilesByIds(userIds);
 
+  // Charger les pièces jointes pour tous les commentaires
+  const { loadCommentAttachmentsBatch } = await import('./comments/attachments/crud');
+  const commentIds = comments.map((c) => c.id);
+  const attachmentsMap = await loadCommentAttachmentsBatch(commentIds);
+
   return comments.map((comment) => ({
     id: comment.id,
     ticket_id: comment.ticket_id,
@@ -98,7 +116,8 @@ export async function loadTicketComments(ticketId: string): Promise<TicketCommen
     content: comment.content,
     origin: comment.origin as 'app' | 'jira' | null,
     created_at: comment.created_at,
-    user: comment.user_id ? profilesMap.get(comment.user_id) : undefined
+    user: comment.user_id ? profilesMap.get(comment.user_id) : undefined,
+    attachments: attachmentsMap.get(comment.id) || []
   }));
 }
 
