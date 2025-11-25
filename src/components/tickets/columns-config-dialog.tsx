@@ -87,10 +87,12 @@ export function ColumnsConfigDialog({ onColumnsChange }: ColumnsConfigDialogProp
             {AVAILABLE_COLUMNS.map(column => {
               const isVisible = visibleColumns.has(column.id);
               const isRequired = column.required;
+              const inputId = `column-toggle-${column.id}`;
 
               return (
                 <label
                   key={column.id}
+                  htmlFor={inputId}
                   className={`flex items-center gap-3 rounded-md p-3 cursor-pointer transition-colors ${
                     isRequired
                       ? 'bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-75'
@@ -103,6 +105,8 @@ export function ColumnsConfigDialog({ onColumnsChange }: ColumnsConfigDialogProp
                       checked={isVisible}
                       onChange={() => handleToggleColumn(column.id)}
                       disabled={isRequired}
+                      id={inputId}
+                      name={`column-toggle-${column.id}`}
                       className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand disabled:cursor-not-allowed dark:border-slate-600 appearance-none checked:bg-brand checked:border-brand"
                     />
                     {isVisible && (

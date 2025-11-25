@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/ui/button';
@@ -14,6 +14,7 @@ export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState(initialSearch || '');
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch || '');
+  const inputId = useId();
 
   // Debounce de 500ms
   useEffect(() => {
@@ -53,8 +54,13 @@ export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
     <div className="relative w-full max-w-md">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <label htmlFor={inputId} className="sr-only">
+          Rechercher des tickets
+        </label>
         <input
           type="text"
+          id={inputId}
+          name="tickets-search"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Rechercher dans les tickets (titre, description, Jira)..."

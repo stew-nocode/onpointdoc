@@ -1,9 +1,14 @@
 'use client';
 
+import { useId } from 'react';
+
 type FiltersSidebarSearchInputProps = {
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  label?: string;
+  id?: string;
+  name?: string;
 };
 
 /**
@@ -16,16 +21,31 @@ type FiltersSidebarSearchInputProps = {
 export function FiltersSidebarSearchInput({
   placeholder = 'Rechercher...',
   value,
-  onChange
+  onChange,
+  label,
+  id,
+  name
 }: FiltersSidebarSearchInputProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+  const resolvedLabel = label ?? placeholder;
+  const inputName = name ?? inputId;
+
   return (
-    <input
-      type="text"
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-500 dark:border-slate-700 dark:bg-slate-900"
-    />
+    <>
+      <label htmlFor={inputId} className="sr-only">
+        {resolvedLabel}
+      </label>
+      <input
+        id={inputId}
+        name={inputName}
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-500 dark:border-slate-700 dark:bg-slate-900"
+      />
+    </>
   );
 }
 
