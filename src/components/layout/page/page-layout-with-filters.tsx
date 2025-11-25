@@ -1,6 +1,4 @@
-'use client';
-
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { PageContent } from './page-content';
 import { FiltersSidebarProvider } from '@/components/tickets/filters/filters-sidebar-context';
 import { FiltersContentWrapper } from '@/components/tickets/filters/filters-content-wrapper';
