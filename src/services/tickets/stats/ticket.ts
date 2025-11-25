@@ -110,12 +110,11 @@ async function loadLastUpdateDate(
  * @param createdAt - Date de création du ticket
  * @returns Statistiques du ticket
  */
-export async function loadTicketStats(
+async function loadTicketStatsWithClient(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   ticketId: string,
   createdAt: string | null
 ): Promise<TicketStats> {
-  const supabase = await createSupabaseServerClient();
-
   const [commentsCount, attachmentsCount, statusChangesCount, lastUpdateDate] =
     await Promise.all([
       loadCommentsCount(supabase, ticketId),
@@ -133,5 +132,48 @@ export async function loadTicketStats(
     statusChangesCount,
     lastUpdateDate
   };
+}
+
+export async function loadTicketStats(
+  ticketId: string,
+  createdAt: string | null
+): Promise<TicketStats> {
+  const supabase = await createSupabaseServerClient();
+  return loadTicketStatsWithClient(supabase, ticketId, createdAt);
+}
+
+export async function loadTicketStatsBatch(
+  ticketIds: string[]
+): Promise<Record<string, TicketStats>> {
+  if (!ticketIds.length) {
+    return {};
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const { data: ticketsMeta } = await supabase
+    .from('tickets')
+    .select('id, created_at')
+    .in('id', ticketIds);
+
+  const createdAtMap = new Map<string, string | null>();
+  (ticketsMeta ?? []).forEach((ticket) => {
+    if (ticket && 'id' in ticket) {
+      createdAtMap.set(String(ticket.id), ticket.created_at || null);
+    }
+  });
+
+  const entries = await Promise.all(
+    ticketIds.map(async (ticketId) => {
+      const stats = await loadTicketStatsWithClient(
+        supabase,
+        ticketId,
+        createdAtMap.get(ticketId) ?? null
+      );
+      return [ticketId, stats] as const;
+    })
+  );
+
+  return Object.fromEntries(entries);
 }
 

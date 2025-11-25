@@ -196,9 +196,10 @@ function calculateResolutionRate(resolved: number, total: number): number {
  * @param profileId - UUID du profil utilisateur
  * @returns Statistiques de l'utilisateur en tant que rapporteur
  */
-export async function loadReporterStats(profileId: string): Promise<UserTicketStats> {
-  const supabase = await createSupabaseServerClient();
-
+async function loadReporterStatsWithClient(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  profileId: string
+): Promise<UserTicketStats> {
   const [totalTickets, createdThisMonth] = await Promise.all([
     loadTotalCreatedTickets(supabase, profileId),
     loadCreatedThisMonth(supabase, profileId)
@@ -215,14 +216,21 @@ export async function loadReporterStats(profileId: string): Promise<UserTicketSt
   };
 }
 
+export async function loadReporterStats(profileId: string): Promise<UserTicketStats> {
+  const supabase = await createSupabaseServerClient();
+  return loadReporterStatsWithClient(supabase, profileId);
+}
+
 /**
  * Charge les statistiques complètes d'un utilisateur (assigné)
  * 
  * @param profileId - UUID du profil utilisateur
  * @returns Statistiques de l'utilisateur en tant qu'assigné
  */
-export async function loadAssignedStats(profileId: string): Promise<UserTicketStats> {
-  const supabase = await createSupabaseServerClient();
+async function loadAssignedStatsWithClient(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  profileId: string
+): Promise<UserTicketStats> {
   const today = getToday();
 
   const [
@@ -250,5 +258,32 @@ export async function loadAssignedStats(profileId: string): Promise<UserTicketSt
     overdue,
     resolutionRate
   };
+}
+
+export async function loadAssignedStats(profileId: string): Promise<UserTicketStats> {
+  const supabase = await createSupabaseServerClient();
+  return loadAssignedStatsWithClient(supabase, profileId);
+}
+
+export async function loadUserStatsBatch(
+  profileIds: string[],
+  type: 'reporter' | 'assigned'
+): Promise<Record<string, UserTicketStats>> {
+  if (!profileIds.length) {
+    return {};
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const entries = await Promise.all(
+    profileIds.map(async (profileId) => {
+      const stats = type === 'reporter'
+        ? await loadReporterStatsWithClient(supabase, profileId)
+        : await loadAssignedStatsWithClient(supabase, profileId);
+      return [profileId, stats] as const;
+    })
+  );
+
+  return Object.fromEntries(entries);
 }
 
