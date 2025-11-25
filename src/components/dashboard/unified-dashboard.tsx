@@ -61,7 +61,8 @@ export function UnifiedDashboard({
     {
       fallbackData: initialData,
       revalidateOnFocus: false,
-      revalidateOnMount: false
+      revalidateOnMount: false,
+      suspense: true
     }
   );
 

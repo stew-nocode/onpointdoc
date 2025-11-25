@@ -56,7 +56,8 @@ export function UnifiedDashboardWithWidgets({
     {
       fallbackData: initialData,
       revalidateOnFocus: false,
-      revalidateOnMount: false
+      revalidateOnMount: false,
+      suspense: true
     }
   );
 
@@ -69,7 +70,8 @@ export function UnifiedDashboardWithWidgets({
     {
       fallbackData: initialWidgetConfig,
       revalidateOnFocus: false,
-      revalidateOnMount: false
+      revalidateOnMount: false,
+      suspense: true
     }
   );
 

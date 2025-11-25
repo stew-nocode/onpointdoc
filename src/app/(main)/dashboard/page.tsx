@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import { Suspense } from 'react';
 import { PageLayoutWithDashboardFilters } from '@/components/layout/page';
 import { UnifiedDashboardWithWidgets } from '@/components/dashboard/unified-dashboard-with-widgets';
 import { getUserDashboardConfig } from '@/services/dashboard/widgets';
@@ -10,6 +11,7 @@ import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole } from '@/types/dashboard-widgets';
 import { SWRConfig, unstable_serialize } from 'swr';
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
 
 type DashboardPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -166,13 +168,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           title: 'Indicateurs de performance'
         }}
       >
-        <UnifiedDashboardWithWidgets
-          role={dashboardRole}
-          profileId={profile.id}
-          initialData={initialData}
-          initialPeriod={period}
-          initialWidgetConfig={widgetConfig}
-        />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <UnifiedDashboardWithWidgets
+            role={dashboardRole}
+            profileId={profile.id}
+            initialData={initialData}
+            initialPeriod={period}
+            initialWidgetConfig={widgetConfig}
+          />
+        </Suspense>
       </PageLayoutWithDashboardFilters>
     </SWRConfig>
   );
