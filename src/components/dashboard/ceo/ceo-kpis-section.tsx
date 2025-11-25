@@ -6,6 +6,7 @@ import { TicketsResolusKPICard } from './tickets-resolus-kpi-card';
 import { WorkloadKPICard } from './workload-kpi-card';
 import { HealthKPICard } from './health-kpi-card';
 import type { CEODashboardData } from '@/types/dashboard';
+import { KPISuspense } from './kpi-section';
 
 type CEOKPIsSectionProps = {
   data: CEODashboardData;
@@ -22,12 +23,42 @@ type CEOKPIsSectionProps = {
 export function CEOKPIsSection({ data }: CEOKPIsSectionProps) {
   return (
     <div className="kpi-grid-responsive gap-4">
-      <MTTRKPICard data={data.mttr} />
-      <TicketsOuvertsKPICard data={data.flux} />
-      <TicketsResolusKPICard data={data.flux} />
-      <WorkloadKPICard data={data.workload} />
-      <HealthKPICard data={data.health} />
+      <KPISuspense>
+        <MTTRKPISlot data={data} />
+      </KPISuspense>
+      <KPISuspense>
+        <TicketsOpenSlot data={data} />
+      </KPISuspense>
+      <KPISuspense>
+        <TicketsResolvedSlot data={data} />
+      </KPISuspense>
+      <KPISuspense>
+        <WorkloadSlot data={data} />
+      </KPISuspense>
+      <KPISuspense>
+        <HealthSlot data={data} />
+      </KPISuspense>
     </div>
   );
+}
+
+function MTTRKPISlot({ data }: CEOKPIsSectionProps) {
+  return <MTTRKPICard data={data.mttr} />;
+}
+
+function TicketsOpenSlot({ data }: CEOKPIsSectionProps) {
+  return <TicketsOuvertsKPICard data={data.flux} />;
+}
+
+function TicketsResolvedSlot({ data }: CEOKPIsSectionProps) {
+  return <TicketsResolusKPICard data={data.flux} />;
+}
+
+function WorkloadSlot({ data }: CEOKPIsSectionProps) {
+  return <WorkloadKPICard data={data.workload} />;
+}
+
+function HealthSlot({ data }: CEOKPIsSectionProps) {
+  return <HealthKPICard data={data.health} />;
 }
 
