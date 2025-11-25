@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ErrorBoundary } from '@/components/errors/error-boundary';
 import { PerformanceMonitor } from '@/components/performance/performance-monitor';
+import { NavigationProvider } from '@/contexts/navigation-context';
 import { cn } from '@/lib/utils';
 
 import './globals.css';
@@ -21,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" suppressHydrationWarning>
       <body className={cn('bg-slate-50 text-slate-900 antialiased', inter.variable)}>
         <ThemeProvider>
-          <ErrorBoundary>
-            {children}
-            <Toaster />
-            {/* Performance Monitor - visible uniquement en développement */}
-            <PerformanceMonitor />
-          </ErrorBoundary>
+          <NavigationProvider>
+            <ErrorBoundary>
+              {children}
+              <Toaster />
+              {/* Performance Monitor - visible uniquement en développement */}
+              <PerformanceMonitor />
+            </ErrorBoundary>
+          </NavigationProvider>
         </ThemeProvider>
       </body>
     </html>

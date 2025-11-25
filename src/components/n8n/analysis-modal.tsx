@@ -111,10 +111,10 @@ export function AnalysisModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+        <DialogHeader className="border-b border-slate-200 dark:border-slate-800 pb-4">
+          <DialogTitle className="text-slate-900 dark:text-slate-50">{title}</DialogTitle>
+          <DialogDescription className="text-slate-600 dark:text-slate-400">
             Analyse générée par l&apos;IA via N8N
           </DialogDescription>
         </DialogHeader>
@@ -162,7 +162,7 @@ export function AnalysisModal({
                   <Textarea
                     value={editedContent || analysis}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditedContent(e.target.value)}
-                    className="min-h-[400px] font-mono text-sm"
+                    className="min-h-[400px] font-mono text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="Modifiez l'analyse..."
                   />
                 </>
@@ -183,7 +183,11 @@ export function AnalysisModal({
         {/* Bouton de fermeture (uniquement si pas en chargement) */}
         {!isLoading && (
           <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-800">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
               Fermer
             </Button>
           </div>

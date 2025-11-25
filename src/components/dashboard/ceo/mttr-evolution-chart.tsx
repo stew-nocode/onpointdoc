@@ -5,19 +5,20 @@ import {
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
+  CartesianGrid
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig
+} from '@/ui/chart';
 import type { MTTRData } from '@/types/dashboard';
-import { CustomTooltip } from './charts/custom-tooltip';
-import { MTTRAreaGradients } from './charts/chart-gradients';
 import { TrendIndicator } from './charts/trend-indicator';
 import { SectionTitleWithDoc } from '@/components/dashboard/section-title-with-doc';
 import { MTTR_EVOLUTION_DOCUMENTATION } from '@/components/dashboard/dashboard-documentation-content';
 import {
-  CHART_HEIGHT,
   CHART_MARGIN,
   AREA_STROKE_WIDTH,
   DOT_RADIUS,
@@ -29,6 +30,16 @@ import {
 type MTTREvolutionChartProps = {
   data: MTTRData;
 };
+
+/**
+ * Configuration du graphique MTTR avec couleurs shadcn/ui
+ */
+const chartConfig = {
+  mttr: {
+    label: 'MTTR',
+    color: '#6366F1' // Indigo
+  }
+} satisfies ChartConfig;
 
 /**
  * Transforme les données MTTR pour le graphique
@@ -72,38 +83,40 @@ export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
         </SectionTitleWithDoc>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={CHART_MARGIN}>
-            <MTTRAreaGradients />
+        <ChartContainer
+          config={chartConfig}
+          className="h-full w-full"
+        >
+          <AreaChart
+            accessibilityLayer
+            data={chartData}
+            margin={CHART_MARGIN}
+          >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#E2E8F0"
               vertical={false}
-              className="dark:stroke-slate-700"
             />
             <XAxis
               dataKey="name"
-              tick={{ fill: '#64748B', fontSize: 12 }}
-              axisLine={{ stroke: '#E2E8F0' }}
-              tickLine={{ stroke: '#E2E8F0' }}
-              className="dark:fill-slate-400"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
             />
             <YAxis
-              tick={{ fill: '#64748B', fontSize: 12 }}
-              axisLine={{ stroke: '#E2E8F0' }}
-              tickLine={{ stroke: '#E2E8F0' }}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
               label={{
                 value: 'Jours',
                 angle: -90,
                 position: 'insideLeft',
-                fill: '#64748B',
                 style: { textAnchor: 'middle' }
               }}
-              className="dark:fill-slate-400"
             />
-            <Tooltip
+            <ChartTooltip
+              cursor={false}
               content={
-                <CustomTooltip
+                <ChartTooltipContent
                   formatter={(value) => [`${value} jours`, 'MTTR']}
                 />
               }
@@ -111,16 +124,17 @@ export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
             <Area
               type="monotone"
               dataKey="mttr"
-              stroke="url(#mttrLineGradient)"
+              fill="var(--color-mttr)"
+              fillOpacity={0.4}
+              stroke="var(--color-mttr)"
               strokeWidth={AREA_STROKE_WIDTH}
-              fill="url(#mttrGradient)"
-              dot={{ fill: '#6366F1', r: DOT_RADIUS, strokeWidth: 2, stroke: '#fff' }}
+              dot={{ fill: 'var(--color-mttr)', r: DOT_RADIUS, strokeWidth: 2, stroke: '#fff' }}
               activeDot={{ r: ACTIVE_DOT_RADIUS, strokeWidth: 2, stroke: '#fff', fill: '#8B5CF6' }}
               animationDuration={ANIMATION_DURATION}
               animationEasing={ANIMATION_EASING}
             />
           </AreaChart>
-        </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

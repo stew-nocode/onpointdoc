@@ -65,7 +65,7 @@ export function AnalysisChatMessage({
     <div className="flex gap-3 p-4">
       {/* Avatar IA */}
       <div className="flex-shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 text-brand">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-300 border border-brand/20 dark:border-brand/30">
           <Bot className="h-4 w-4" />
         </div>
       </div>
@@ -76,10 +76,10 @@ export function AnalysisChatMessage({
           Assistant IA
         </div>
         
-        <div className="rounded-lg bg-slate-100 p-4 dark:bg-slate-800">
+        <div className="rounded-lg bg-slate-100 dark:bg-transparent border border-slate-200 dark:border-transparent p-4 shadow-sm dark:shadow-none">
           <div
             ref={containerRef}
-            className="max-w-none text-sm max-h-[60vh] overflow-y-auto"
+            className="max-w-none text-sm max-h-[60vh] overflow-y-auto custom-scrollbar"
           >
             <div className="relative">
               <div

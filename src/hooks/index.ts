@@ -39,3 +39,7 @@ export { useTicketSelection } from './tickets/use-ticket-selection';
 export { useBulkActions } from './tickets/use-bulk-actions';
 export type { BulkActionResult } from './tickets/use-bulk-actions';
 export { useComments } from './tickets/use-comments';
+
+// Hooks de navigation
+export { usePageTransition } from './navigation/use-page-transition';
+export { useLinkInterceptor } from './navigation/use-link-interceptor';

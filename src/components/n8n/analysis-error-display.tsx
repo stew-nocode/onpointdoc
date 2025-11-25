@@ -27,7 +27,7 @@ export function AnalysisErrorDisplay({ error }: AnalysisErrorDisplayProps) {
         <div className="space-y-2">
           <p className="font-medium">{mainError}</p>
           {details && (
-            <pre className="text-xs bg-slate-900/50 p-2 rounded overflow-x-auto">
+            <pre className="text-xs bg-slate-900/50 dark:bg-slate-800/80 text-slate-100 dark:text-slate-200 p-2 rounded overflow-x-auto border border-slate-700 dark:border-slate-600">
               {details}
             </pre>
           )}

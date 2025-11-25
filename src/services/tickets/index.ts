@@ -310,8 +310,16 @@ export const listTicketsPaginated = async (
 
   // Recherche textuelle dans titre, description et clé Jira
   if (search && search.trim().length > 0) {
-    const searchTerm = `%${search.trim()}%`;
-    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm},jira_issue_key.ilike.${searchTerm}`);
+    const searchTerm = search.trim();
+    // Échapper les caractères spéciaux pour ilike (%, _)
+    const escapedSearch = searchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    const searchPattern = `%${escapedSearch}%`;
+    
+    // Utiliser la syntaxe correcte de Supabase pour .or() avec ilike
+    // Format: column.operator.value,column2.operator.value2
+    // Les valeurs avec % doivent être correctement échappées
+    // Note: Pas de guillemets autour des valeurs dans la syntaxe .or()
+    query = query.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},jira_issue_key.ilike.${searchPattern}`);
   }
 
   // Appliquer les quick filters
