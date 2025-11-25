@@ -5,36 +5,12 @@ import { Loader2 } from 'lucide-react';
 import { TooltipContent } from '@/ui/tooltip';
 import { StatItem } from './utils/stat-item';
 import type { UserTicketStats } from '@/services/users/stats/user';
+import { fetchUserStatsClient } from '@/services/tickets/stats/client';
 
 type UserStatsTooltipProps = {
   profileId: string | null;
   type: 'reporter' | 'assigned';
 };
-
-/**
- * Charge les statistiques de l'utilisateur depuis l'API
- * 
- * @param profileId - UUID du profil utilisateur
- * @param type - Type de stats (reporter ou assigned)
- * @returns Statistiques de l'utilisateur ou null si erreur
- */
-async function fetchUserStats(
-  profileId: string,
-  type: 'reporter' | 'assigned'
-): Promise<UserTicketStats | null> {
-  try {
-    const response = await fetch(`/api/users/${profileId}/stats?type=${type}`);
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const result = await response.json();
-    return result.data;
-  } catch (error) {
-    return null;
-  }
-}
 
 /**
  * Construit le titre du tooltip selon le type
@@ -116,7 +92,7 @@ export function UserStatsTooltip({ profileId, type }: UserStatsTooltipProps) {
   const shouldFetch = Boolean(profileId);
   const { data: stats, isLoading } = useSWR<UserTicketStats | null>(
     shouldFetch ? ['user-stats', profileId, type] : null,
-    () => fetchUserStats(profileId as string, type),
+    () => fetchUserStatsClient(profileId as string, type),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false

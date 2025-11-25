@@ -7,6 +7,7 @@ import { StatItem } from './utils/stat-item';
 import { formatRelativeDate } from './utils/format-stats';
 import { parseADFToText } from '@/lib/utils/adf-parser';
 import type { TicketStats } from '@/services/tickets/stats/ticket';
+import { fetchTicketStatsClient } from '@/services/tickets/stats/client';
 
 type TicketStatsTooltipProps = {
   ticketId: string;
@@ -15,27 +16,6 @@ type TicketStatsTooltipProps = {
   description?: string | null;
   jiraIssueKey?: string | null;
 };
-
-/**
- * Charge les statistiques du ticket depuis l'API
- * 
- * @param ticketId - UUID du ticket
- * @returns Statistiques du ticket ou null si erreur
- */
-async function fetchTicketStats(ticketId: string): Promise<TicketStats | null> {
-  try {
-    const response = await fetch(`/api/tickets/${ticketId}/stats`);
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const result = await response.json();
-    return result.data;
-  } catch (error) {
-    return null;
-  }
-}
 
 /**
  * Formate la description pour l'affichage
@@ -142,7 +122,7 @@ export function TicketStatsTooltip({
 }: TicketStatsTooltipProps) {
   const { data: stats, isLoading } = useSWR<TicketStats | null>(
     ['ticket-stats', ticketId],
-    () => fetchTicketStats(ticketId),
+    () => fetchTicketStatsClient(ticketId),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false
