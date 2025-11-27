@@ -29,6 +29,7 @@ export function getDefaultFormValues(
     customerContext: '',
     priority: 'Medium',
     contactUserId: contacts[0]?.id ?? '',
+    companyId: '',
     bug_type: null
   };
 }

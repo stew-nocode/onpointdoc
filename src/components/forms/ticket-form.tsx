@@ -14,8 +14,10 @@ import type {
 } from '@/lib/validators/ticket';
 import { BUG_TYPES, ASSISTANCE_LOCAL_STATUSES } from '@/lib/constants/tickets';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
+import type { BasicCompany } from '@/services/companies';
 import { Button } from '@/ui/button';
 import { Combobox } from '@/ui/combobox';
+import { RadioGroup, RadioCard } from '@/ui/radio-group';
 import type { BasicProfile } from '@/services/users';
 import { Shield } from 'lucide-react';
 import { useTicketForm, useFileUpload, type FileWithPreview } from '@/hooks';
@@ -32,6 +34,7 @@ type TicketFormProps = {
   submodules: Submodule[];
   features: Feature[];
   contacts: BasicProfile[];
+  companies: BasicCompany[];
   initialValues?: Partial<CreateTicketInput>;
   mode?: 'create' | 'edit';
 };
@@ -46,6 +49,7 @@ type TicketFormProps = {
  * @param submodules - Liste des sous-modules
  * @param features - Liste des fonctionnalités
  * @param contacts - Liste des contacts
+ * @param companies - Liste des entreprises
  */
 export const TicketForm = ({
   onSubmit,
@@ -55,6 +59,7 @@ export const TicketForm = ({
   submodules,
   features,
   contacts,
+  companies,
   initialValues,
   mode = 'create'
 }: TicketFormProps) => {
@@ -139,23 +144,55 @@ export const TicketForm = ({
         {errors.title && <p className="text-xs text-status-danger">{errors.title.message}</p>}
       </div>
 
+      {/* Entreprise */}
+      <div className="grid gap-2">
+        <label className="text-sm font-medium text-slate-700">
+          Entreprise {form.watch('channel') === 'Constat Interne' && <span className="text-slate-500 text-xs">(recommandé)</span>}
+        </label>
+        <Combobox
+          options={companies.map((c) => ({
+            value: c.id,
+            label: c.name,
+            searchable: c.name
+          }))}
+          value={form.watch('companyId') || ''}
+          onValueChange={(v) => form.setValue('companyId', v || '')}
+          placeholder="Sélectionner une entreprise"
+          searchPlaceholder="Rechercher une entreprise..."
+          emptyText="Aucune entreprise disponible"
+          disabled={!companies.length || isSubmitting}
+        />
+        {form.watch('channel') === 'Constat Interne' && (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Recommandé pour un constat interne afin d&apos;associer le ticket à une entreprise.
+          </p>
+        )}
+      </div>
+
       {/* Contact */}
       <div className="grid gap-2">
-        <label className="text-sm font-medium text-slate-700">Contact</label>
+        <label className="text-sm font-medium text-slate-700">
+          Contact {form.watch('channel') !== 'Constat Interne' && <span className="text-status-danger">*</span>}
+        </label>
         <Combobox
           options={contacts.map((c) => ({
             value: c.id,
             label: c.full_name ?? c.email ?? 'Utilisateur',
             searchable: `${c.full_name ?? ''} ${c.email ?? ''}`.trim()
           }))}
-          value={form.watch('contactUserId')}
-          onValueChange={(v) => form.setValue('contactUserId', v)}
+          value={form.watch('contactUserId') || ''}
+          onValueChange={(v) => form.setValue('contactUserId', v || '')}
           placeholder="Sélectionner un contact"
           searchPlaceholder="Rechercher un contact..."
           emptyText="Aucun contact disponible"
-          disabled={!contacts.length}
+          disabled={!contacts.length || form.watch('channel') === 'Constat Interne' || isSubmitting}
         />
-        {errors.contactUserId && (
+        {form.watch('channel') === 'Constat Interne' && (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Le champ Contact n&apos;est pas disponible pour un constat interne. Vous pouvez sélectionner une entreprise ci-dessus.
+          </p>
+        )}
+        {form.watch('channel') !== 'Constat Interne' && errors.contactUserId && (
           <p className="text-xs text-status-danger">{errors.contactUserId.message}</p>
         )}
       </div>
@@ -381,7 +418,7 @@ export const TicketForm = ({
             <div className="text-xs text-slate-500">Formats acceptés: images et PDF. 20 Mo max par fichier.</div>
           </div>
           <input
-            ref={fileInputRef as React.RefObject<HTMLInputElement>}
+            ref={fileInputRef}
             type="file"
             multiple
             className="sr-only"

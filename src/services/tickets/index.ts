@@ -37,7 +37,8 @@ export const createTicket = async (payload: CreateTicketInput) => {
       priority: payload.priority,
       duration_minutes: payload.durationMinutes ?? null,
       customer_context: payload.customerContext,
-      contact_user_id: payload.contactUserId,
+      contact_user_id: (payload.contactUserId && payload.contactUserId !== '') ? payload.contactUserId : null,
+      company_id: (payload.companyId && payload.companyId !== '') ? payload.companyId : null,
       bug_type: payload.bug_type ?? null,
       created_by: profile.id, // ID du profil (pas auth.uid())
       status: getInitialStatus(payload.type), // Statut initial selon le type (JIRA pour BUG/REQ, local pour ASSISTANCE)
@@ -175,7 +176,16 @@ export const updateTicket = async (payload: UpdateTicketInput) => {
   if (payload.priority !== undefined) updateData.priority = payload.priority;
   if (payload.durationMinutes !== undefined) updateData.duration_minutes = payload.durationMinutes;
   if (payload.customerContext !== undefined) updateData.customer_context = payload.customerContext;
-  if (payload.contactUserId !== undefined) updateData.contact_user_id = payload.contactUserId;
+  if (payload.contactUserId !== undefined) {
+    updateData.contact_user_id = (payload.contactUserId && payload.contactUserId !== '') 
+      ? payload.contactUserId 
+      : null;
+  }
+  if (payload.companyId !== undefined) {
+    updateData.company_id = (payload.companyId && payload.companyId !== '') 
+      ? payload.companyId 
+      : null;
+  }
   if (payload.bug_type !== undefined) updateData.bug_type = payload.bug_type;
   if (payload.status !== undefined) updateData.status = payload.status;
 

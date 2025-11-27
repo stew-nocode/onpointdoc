@@ -10,6 +10,7 @@ import {
   listProductsForCurrentUserDepartment
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
+import { listCompanies } from '@/services/companies';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
@@ -119,11 +120,12 @@ async function loadProductsAndModules() {
     // Si aucun produit n'est lié au département, utiliser tous les produits (fallback)
     const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
     
-    const [allModules, submodules, features, contacts, allowedModules] = await Promise.all([
+    const [allModules, submodules, features, contacts, companies, allowedModules] = await Promise.all([
       listModules(),
       listSubmodules(),
       listFeatures(),
       listBasicProfiles(),
+      listCompanies(),
       listModulesForCurrentUser()
     ]);
 
@@ -133,9 +135,9 @@ async function loadProductsAndModules() {
         ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
         : allModules;
 
-    return { products, modules, submodules, features, contacts };
+    return { products, modules, submodules, features, contacts, companies };
   } catch {
-    return { products: [], modules: [], submodules: [], features: [], contacts: [] };
+    return { products: [], modules: [], submodules: [], features: [], contacts: [], companies: [] };
   }
 }
 
@@ -188,7 +190,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       ),
       getSupportTicketKPIs(currentProfileId),
     ]);
-    const { products, modules, submodules, features, contacts } = productsData;
+    const { products, modules, submodules, features, contacts, companies } = productsData;
 
     async function handleTicketSubmit(values: CreateTicketInput) {
       'use server';
@@ -217,6 +219,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 submodules={submodules}
                 features={features}
                 contacts={contacts}
+                companies={companies}
                 onSubmit={handleTicketSubmit}
               />
             )

@@ -7,7 +7,9 @@
 'use client';
 
 import { RadioGroup, RadioCard } from '@/ui/radio-group';
-import { Bug, FileText, HelpCircle, MessageSquare, Mail, Phone, MoreHorizontal } from 'lucide-react';
+import { Combobox } from '@/ui/combobox';
+import { Bug, FileText, HelpCircle } from 'lucide-react';
+import { ticketChannels } from '@/lib/validators/ticket';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -37,16 +39,24 @@ export function TicketTypeSection({ form }: TicketTypeSectionProps) {
       </div>
       <div className="grid gap-2 min-w-0">
         <label className="text-sm font-medium text-slate-700">Canal de contact</label>
-        <RadioGroup
+        <Combobox
+          options={ticketChannels.map((channel) => ({
+            value: channel,
+            label: channel,
+            searchable: channel
+          }))}
           value={form.watch('channel')}
-          onValueChange={(v) => form.setValue('channel', v as CreateTicketInput['channel'])}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"
-        >
-          <RadioCard variant="compact" value="Whatsapp" label="WhatsApp" icon={<MessageSquare className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="Email" label="Email" icon={<Mail className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="Appel" label="Appel" icon={<Phone className="h-3 w-3" />} />
-          <RadioCard variant="compact" value="Autre" label="Autre" icon={<MoreHorizontal className="h-3 w-3" />} />
-        </RadioGroup>
+          onValueChange={(v) => {
+            form.setValue('channel', v as CreateTicketInput['channel']);
+            // Si le canal est "Constat Interne", vider le champ Contact
+            if (v === 'Constat Interne') {
+              form.setValue('contactUserId', '');
+            }
+          }}
+          placeholder="Sélectionner un canal"
+          searchPlaceholder="Rechercher un canal..."
+          emptyText="Aucun canal disponible"
+        />
       </div>
     </div>
   );

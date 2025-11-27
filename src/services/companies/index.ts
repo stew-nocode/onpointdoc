@@ -1,6 +1,36 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { CompanyCreateInput, CompanyUpdateInput } from '@/lib/validators/company';
 import { companyCreateSchema, companyUpdateSchema } from '@/lib/validators/company';
+
+/**
+ * Type pour une entreprise simple (pour les listes déroulantes)
+ */
+export type BasicCompany = {
+  id: string;
+  name: string;
+};
+
+/**
+ * Charge toutes les entreprises (côté serveur)
+ * 
+ * @returns Liste des entreprises triées par nom
+ */
+export async function listCompanies(): Promise<BasicCompany[]> {
+  const supabase = await createSupabaseServerClient();
+  
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id, name')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Erreur lors du chargement des entreprises:', error);
+    return [];
+  }
+
+  return (data ?? []) as BasicCompany[];
+}
 
 /**
  * Crée une compagnie et ses liaisons de secteurs côté client (Supabase Browser).

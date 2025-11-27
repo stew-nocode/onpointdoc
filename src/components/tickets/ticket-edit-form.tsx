@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
+import type { BasicCompany } from '@/services/companies';
 import { Loader2 } from 'lucide-react';
 
 type TicketEditFormProps = {
@@ -29,6 +30,7 @@ type TicketEditFormProps = {
     priority: string;
     customer_context: string | null;
     contact_user_id: string | null;
+    company_id: string | null;
     bug_type: string | null;
     product_id: string | null;
     module_id: string | null;
@@ -40,6 +42,7 @@ type TicketEditFormProps = {
   submodules: Submodule[];
   features: Feature[];
   contacts: BasicProfile[];
+  companies: BasicCompany[];
 };
 
 /**
@@ -52,6 +55,7 @@ type TicketEditFormProps = {
  * @param submodules - Liste des sous-modules
  * @param features - Liste des fonctionnalités
  * @param contacts - Liste des contacts
+ * @param companies - Liste des entreprises
  */
 export function TicketEditForm({
   ticketId,
@@ -60,7 +64,8 @@ export function TicketEditForm({
   modules,
   submodules,
   features,
-  contacts
+  contacts,
+  companies
 }: TicketEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +95,7 @@ export function TicketEditForm({
           priority: values.priority,
           customerContext: values.customerContext || null,
           contactUserId: values.contactUserId || null,
+          companyId: values.companyId || null,
           bug_type: values.bug_type || null,
           status: values.status || undefined
         })
@@ -132,6 +138,7 @@ export function TicketEditForm({
     priority: ticketData.priority as CreateTicketInput['priority'],
     customerContext: ticketData.customer_context ?? '',
     contactUserId: ticketData.contact_user_id ?? '',
+    companyId: ticketData.company_id ?? '',
     bug_type: ticketData.bug_type as CreateTicketInput['bug_type'] | null,
     productId: ticketData.product_id ?? '',
     moduleId: ticketData.module_id ?? '',
@@ -160,6 +167,7 @@ export function TicketEditForm({
           submodules={submodules}
           features={features}
           contacts={contacts}
+          companies={companies}
           initialValues={initialValues}
           mode="edit"
         />

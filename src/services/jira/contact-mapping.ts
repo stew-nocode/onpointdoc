@@ -2,8 +2,25 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 /**
  * Types pour les mappings client/contact
+ * 
+ * Tous les canaux JIRA sont maintenant directement dans l'enum canal_t Supabase
+ * Mapping one-to-one : pas besoin de table de mapping
  */
-export type SupabaseChannel = 'Whatsapp' | 'Email' | 'Appel' | 'Autre';
+export type SupabaseChannel = 
+  | 'Whatsapp'
+  | 'Email'
+  | 'Appel'
+  | 'Autre'
+  | 'Appel Téléphonique'
+  | 'Appel WhatsApp'
+  | 'Chat SMS'
+  | 'Chat WhatsApp'
+  | 'Constat Interne'
+  | 'E-mail'
+  | 'En présentiel'
+  | 'En prsentiel'
+  | 'Non enregistré'
+  | 'Online (Google Meet, Teams...)';
 
 export interface JiraChannelMapping {
   id: string;
@@ -143,10 +160,13 @@ export async function mapJiraCompanyToCompanyId(
 }
 
 /**
- * Mappe un canal de contact Jira vers un canal Supabase
+ * Retourne le canal Supabase correspondant à un canal JIRA
+ * 
+ * Mapping one-to-one : la valeur JIRA correspond directement à la valeur Supabase
+ * La validation se fera lors de l'insertion dans Supabase (enum canal_t)
  * 
  * @param jiraChannelValue - Valeur du canal Jira (customfield_10055.value)
- * @returns Le canal Supabase correspondant ou null si aucun mapping trouvé
+ * @returns Le canal Supabase (identique à JIRA) ou null si valeur vide
  */
 export async function getSupabaseChannelFromJira(
   jiraChannelValue: string
@@ -155,20 +175,9 @@ export async function getSupabaseChannelFromJira(
     return null;
   }
 
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('jira_channel_mapping')
-    .select('supabase_channel')
-    .eq('jira_channel_value', jiraChannelValue.trim())
-    .single();
-
-  if (error || !data) {
-    console.warn(`Aucun mapping trouvé pour le canal Jira "${jiraChannelValue}"`);
-    return null;
-  }
-
-  return data.supabase_channel as SupabaseChannel;
+  // Mapping one-to-one : retourner la valeur JIRA telle quelle
+  // La validation se fera automatiquement par Supabase lors de l'insertion
+  return jiraChannelValue.trim() as SupabaseChannel;
 }
 
 /**
@@ -198,23 +207,21 @@ export async function updateProfileJobTitle(
 }
 
 /**
- * Récupère tous les mappings de canaux
+ * Récupère tous les canaux disponibles dans l'enum canal_t
  * 
- * @returns Liste de tous les mappings de canaux
+ * @deprecated Utiliser directement l'enum canal_t via ticketChannels depuis @/lib/validators/ticket
+ * @returns Liste de tous les canaux (mapping one-to-one avec JIRA)
  */
 export async function getAllChannelMappings(): Promise<JiraChannelMapping[]> {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from('jira_channel_mapping')
-    .select('*')
-    .order('jira_channel_value', { ascending: true });
-
-  if (error) {
-    console.error('Erreur lors de la récupération des mappings de canaux:', error);
-    return [];
-  }
-
-  return data || [];
+  // Retourner les canaux depuis l'enum (via ticketChannels)
+  const { ticketChannels } = await import('@/lib/validators/ticket');
+  
+  return ticketChannels.map((channel) => ({
+    id: channel, // Utiliser la valeur comme ID
+    jira_channel_value: channel,
+    supabase_channel: channel as SupabaseChannel,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
 }
 

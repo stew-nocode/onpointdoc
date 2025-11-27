@@ -16,6 +16,7 @@ import {
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
+import type { BasicCompany } from '@/services/companies';
 
 type CreateTicketDialogProps = {
   products: Product[];
@@ -23,6 +24,7 @@ type CreateTicketDialogProps = {
   submodules: Submodule[];
   features: Feature[];
   contacts: BasicProfile[];
+  companies: BasicCompany[];
   onSubmit: (values: CreateTicketInput) => Promise<string | void>;
 };
 
@@ -32,6 +34,7 @@ export const CreateTicketDialog = ({
   submodules,
   features,
   contacts,
+  companies,
   onSubmit
 }: CreateTicketDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -95,6 +98,7 @@ export const CreateTicketDialog = ({
           submodules={submodules}
           features={features}
           contacts={contacts}
+          companies={companies}
           isSubmitting={isSubmitting}
         />
       </DialogContent>

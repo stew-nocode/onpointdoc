@@ -24,6 +24,7 @@ import {
   listProductsForCurrentUserDepartment
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
+import { listCompanies } from '@/services/companies';
 
 async function loadTicket(id: string) {
   noStore();
@@ -41,11 +42,12 @@ async function loadFormData() {
     const departmentProducts = await listProductsForCurrentUserDepartment();
     const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
     
-    const [allModules, submodules, features, contacts, allowedModules] = await Promise.all([
+    const [allModules, submodules, features, contacts, companies, allowedModules] = await Promise.all([
       listModules(),
       listSubmodules(),
       listFeatures(),
       listBasicProfiles(),
+      listCompanies(),
       listModulesForCurrentUser()
     ]);
 
@@ -54,10 +56,10 @@ async function loadFormData() {
         ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
         : allModules;
 
-    return { products, modules, submodules, features, contacts };
+    return { products, modules, submodules, features, contacts, companies };
   } catch (error) {
     console.error('Erreur lors du chargement des données du formulaire:', error);
-    return { products: [], modules: [], submodules: [], features: [], contacts: [] };
+    return { products: [], modules: [], submodules: [], features: [], contacts: [], companies: [] };
   }
 }
 
@@ -186,6 +188,7 @@ export default async function TicketDetailPage({
             priority: (ticket.priority ?? 'Medium') as 'Low' | 'Medium' | 'High' | 'Critical',
             customer_context: ticket.customer_context ? String(ticket.customer_context) : null,
             contact_user_id: ticket.contact_user_id ? String(ticket.contact_user_id) : null,
+            company_id: ticket.company_id ? String(ticket.company_id) : null,
             bug_type: ticket.bug_type ? String(ticket.bug_type) : null,
             product_id: ticket.product_id ? String(ticket.product_id) : null,
             module_id: ticket.module_id ? String(ticket.module_id) : null,
@@ -197,6 +200,7 @@ export default async function TicketDetailPage({
           submodules={formData.submodules}
           features={formData.features}
           contacts={formData.contacts}
+          companies={formData.companies}
         />
       </div>
     );

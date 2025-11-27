@@ -14,11 +14,11 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { useWebVitals, useRenderCount } from '@/hooks/performance';
+import { useWebVitals, useRenderCount, usePageLoadTime } from '@/hooks/performance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Badge } from '@/ui/badge';
-import { X, Maximize2, Minimize2, BarChart3 } from 'lucide-react';
+import { X, Maximize2, Minimize2, BarChart3, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MetricList } from './performance-monitor/utils/metric-list';
 import type { WebVitalMetric } from '@/hooks/performance/use-web-vitals';
@@ -43,6 +43,7 @@ function PerformanceMonitorComponent({ defaultVisible = false }: PerformanceMoni
   const [isVisible, setIsVisible] = useState(defaultVisible);
   const [isMinimized, setIsMinimized] = useState(false);
   const webVitals = useWebVitals();
+  const pageLoadMetrics = usePageLoadTime({ logToConsole: false });
   const monitorRenderCount = useRenderCount({
     componentName: 'PerformanceMonitor',
     logToConsole: false,
@@ -138,8 +139,56 @@ function PerformanceMonitorComponent({ defaultVisible = false }: PerformanceMoni
 
             {!isMinimized && (
               <CardContent className="pt-4 space-y-4 max-h-[calc(80vh-60px)] overflow-y-auto">
-                {/* Core Web Vitals */}
+                {/* Temps de chargement de la page */}
                 <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    Temps de chargement
+                  </h3>
+                  <div className="space-y-1.5 text-xs">
+                    {pageLoadMetrics.pageLoadTime !== null ? (
+                      <>
+                        <div className="flex justify-between items-center p-2 rounded bg-slate-50 dark:bg-slate-900">
+                          <span className="text-slate-600 dark:text-slate-400">Chargement total:</span>
+                          <span className={cn(
+                            "font-mono font-semibold",
+                            pageLoadMetrics.pageLoadTime < 1000 ? "text-green-600 dark:text-green-400" :
+                            pageLoadMetrics.pageLoadTime < 2000 ? "text-yellow-600 dark:text-yellow-400" :
+                            "text-red-600 dark:text-red-400"
+                          )}>
+                            {pageLoadMetrics.pageLoadTime.toFixed(0)}ms
+                          </span>
+                        </div>
+                        {pageLoadMetrics.domContentLoaded !== null && (
+                          <div className="flex justify-between items-center px-2 py-1">
+                            <span className="text-slate-500 dark:text-slate-500">DOMContentLoaded:</span>
+                            <span className="font-mono text-slate-600 dark:text-slate-400">
+                              {pageLoadMetrics.domContentLoaded.toFixed(0)}ms
+                            </span>
+                          </div>
+                        )}
+                        {pageLoadMetrics.fullLoadTime !== null && (
+                          <div className="flex justify-between items-center px-2 py-1">
+                            <span className="text-slate-500 dark:text-slate-500">Load complet:</span>
+                            <span className="font-mono text-slate-600 dark:text-slate-400">
+                              {pageLoadMetrics.fullLoadTime.toFixed(0)}ms
+                            </span>
+                          </div>
+                        )}
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 pt-1 px-2">
+                          Page: {pageLoadMetrics.pagePath}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-xs text-slate-400 dark:text-slate-500 p-2">
+                        Mesure en cours...
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Core Web Vitals */}
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
                   <h3 className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
                     Core Web Vitals
                   </h3>

@@ -55,7 +55,7 @@ export function Combobox({
   };
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={setOpen} modal={false}>
       <PopoverPrimitive.Trigger asChild>
         <Button
           variant="outline"
@@ -97,9 +97,10 @@ export function Combobox({
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           className={cn(
-            'z-50 w-[var(--radix-popover-trigger-width)] rounded-md border border-slate-200 bg-white p-1 shadow-md dark:border-slate-800 dark:bg-slate-950'
+            'z-[100] w-[var(--radix-popover-trigger-width)] rounded-md border border-slate-200 bg-white p-1 shadow-md dark:border-slate-800 dark:bg-slate-950'
           )}
           align="start"
+          sideOffset={4}
         >
           <div className="flex items-center border-b border-slate-200 px-3 dark:border-slate-800">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
