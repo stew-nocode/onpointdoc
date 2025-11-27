@@ -12,7 +12,7 @@ const PUBLIC_PATHS = [
   '/sitemap.xml'
 ];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   // Laisser passer les chemins publics
@@ -51,5 +51,4 @@ export const config = {
   // Forcer l'exécution sur toutes les routes, on gère les exceptions dans le code
   matcher: ['/:path*']
 };
-
 

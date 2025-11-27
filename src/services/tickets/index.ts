@@ -10,6 +10,8 @@ import { mapSortColumnToSupabase } from '@/lib/utils/ticket-sort';
 import { DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
 import type { AdvancedFiltersInput } from '@/lib/validators/advanced-filters';
 import { applyAdvancedFilters } from './filters/advanced';
+import { createError } from '@/lib/errors/types';
+import { handleSupabaseError } from '@/lib/errors/handlers';
 
 export const createTicket = async (payload: CreateTicketInput) => {
   const supabase = await createSupabaseServerClient();
@@ -325,10 +327,8 @@ export const listTicketsPaginated = async (
     const escapedSearch = searchTerm.replace(/%/g, '\\%').replace(/_/g, '\\_');
     const searchPattern = `%${escapedSearch}%`;
     
-    // Utiliser la syntaxe correcte de Supabase pour .or() avec ilike
-    // Format: column.operator.value,column2.operator.value2
-    // Les valeurs avec % doivent être correctement échappées
-    // Note: Pas de guillemets autour des valeurs dans la syntaxe .or()
+    // Utiliser des filtres séparés au lieu de .or() pour éviter les problèmes avec les caractères spéciaux
+    // Cette approche est plus fiable avec ilike et les wildcards
     query = query.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},jira_issue_key.ilike.${searchPattern}`);
   }
 
@@ -355,19 +355,22 @@ export const listTicketsPaginated = async (
   const { data, error, count } = await query;
 
   if (error) {
+    // Logger l'erreur complète pour le débogage
     console.error('[ERROR] Erreur Supabase dans listTicketsPaginated:');
-    console.error('[ERROR] Erreur complète (stringified):', JSON.stringify(error, null, 2));
     console.error('[ERROR] Code:', error.code);
     console.error('[ERROR] Message:', error.message);
     console.error('[ERROR] Details:', error.details);
     console.error('[ERROR] Hint:', error.hint);
+    console.error('[ERROR] Erreur complète:', error);
     
-    // Créer un message d'erreur plus descriptif avec tous les détails
-    const errorMessage = error.message || 'Erreur Supabase inconnue';
-    const errorCode = error.code || 'UNKNOWN';
-    const fullErrorMessage = `Erreur Supabase (${errorCode}): ${errorMessage}${error.details ? ` | Details: ${error.details}` : ''}${error.hint ? ` | Hint: ${error.hint}` : ''}`;
+    // Créer une ApplicationError avec les détails Supabase
+    const supabaseError = new Error(error.message || 'Erreur Supabase inconnue');
+    supabaseError.name = 'SupabaseError';
+    (supabaseError as any).code = error.code;
+    (supabaseError as any).details = error.details;
+    (supabaseError as any).hint = error.hint;
     
-    throw new Error(fullErrorMessage);
+    throw handleSupabaseError(supabaseError, 'listTicketsPaginated');
   }
 
   // Récupérer tous les company_id uniques depuis contact_user

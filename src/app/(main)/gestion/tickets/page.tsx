@@ -10,7 +10,7 @@ import {
   listProductsForCurrentUserDepartment
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
-import { listCompanies } from '@/services/companies';
+import { listCompanies } from '@/services/companies/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
@@ -21,6 +21,7 @@ import { TicketsPageClientWrapper } from '@/components/tickets/tickets-page-clie
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { isApplicationError } from '@/lib/errors/types';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
 import { FiltersSidebarClientLazy } from '@/components/tickets/filters/filters-sidebar-client-lazy';
 import { PageLayoutWithFilters } from '@/components/layout/page';
@@ -78,7 +79,15 @@ async function loadInitialTickets(
       sort.direction,
       advancedFilters || undefined
     );
-  } catch {
+  } catch (error) {
+    // Logger l'erreur pour le débogage
+    console.error('[ERROR] Erreur dans loadInitialTickets:', error);
+    if (isApplicationError(error)) {
+      console.error('[ERROR] Code:', error.code);
+      console.error('[ERROR] StatusCode:', error.statusCode);
+      console.error('[ERROR] Details:', error.details);
+    }
+    // Retourner un résultat vide en cas d'erreur pour éviter de casser la page
     return { tickets: [], hasMore: false, total: 0 };
   }
 }
@@ -253,15 +262,32 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
         </PageLayoutWithFilters>
       </TicketsPageClientWrapper>
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des tickets:', error);
+    
+    // Extraire le message d'erreur selon le type
+    let errorMessage = 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.';
+    if (isApplicationError(error)) {
+      errorMessage = error.message;
+      console.error('[ERROR] Code:', error.code);
+      console.error('[ERROR] StatusCode:', error.statusCode);
+      if (error.details) {
+        console.error('[ERROR] Details:', error.details);
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return (
       <div className="space-y-6">
         <div className="rounded-lg border border-status-danger bg-status-danger/10 p-4 text-status-danger">
           <p className="font-semibold">Erreur lors du chargement</p>
-          <p className="text-sm">
-            {error?.message || 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.'}
-          </p>
+          <p className="text-sm">{errorMessage}</p>
+          {isApplicationError(error) && error.details && (
+            <p className="mt-2 text-xs opacity-75">
+              Code: {error.code} | Status: {error.statusCode}
+            </p>
+          )}
         </div>
       </div>
     );

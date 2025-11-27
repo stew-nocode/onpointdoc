@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
 /**
@@ -42,34 +42,33 @@ export function useTicketSelection() {
 
   /**
    * Vérifie si un ticket est sélectionné
+   * Utilise une ref pour éviter les re-créations de fonction
    */
-  const isTicketSelected = useCallback(
-    (ticketId: string) => selectedTicketIds.has(ticketId),
-    [selectedTicketIds]
-  );
+  const selectedIdsRef = useRef(selectedTicketIds);
+  selectedIdsRef.current = selectedTicketIds;
+  
+  const isTicketSelected = useCallback((ticketId: string) => {
+    return selectedIdsRef.current.has(ticketId);
+  }, []); // Pas de dépendances - utilise toujours la version actuelle via ref
 
   /**
    * Vérifie si tous les tickets visibles sont sélectionnés
+   * Utilise une ref pour éviter les re-créations de fonction
    */
-  const areAllTicketsSelected = useCallback(
-    (tickets: TicketWithRelations[]) => {
-      if (tickets.length === 0) return false;
-      return tickets.every((t) => selectedTicketIds.has(t.id));
-    },
-    [selectedTicketIds]
-  );
+  const areAllTicketsSelected = useCallback((tickets: TicketWithRelations[]) => {
+    if (tickets.length === 0) return false;
+    return tickets.every((t) => selectedIdsRef.current.has(t.id));
+  }, []); // Pas de dépendances - utilise toujours la version actuelle via ref
 
   /**
    * Vérifie si certains (mais pas tous) les tickets visibles sont sélectionnés
+   * Utilise une ref pour éviter les re-créations de fonction
    */
-  const areSomeTicketsSelected = useCallback(
-    (tickets: TicketWithRelations[]) => {
-      if (tickets.length === 0) return false;
-      const selectedCount = tickets.filter((t) => selectedTicketIds.has(t.id)).length;
-      return selectedCount > 0 && selectedCount < tickets.length;
-    },
-    [selectedTicketIds]
-  );
+  const areSomeTicketsSelected = useCallback((tickets: TicketWithRelations[]) => {
+    if (tickets.length === 0) return false;
+    const selectedCount = tickets.filter((t) => selectedIdsRef.current.has(t.id)).length;
+    return selectedCount > 0 && selectedCount < tickets.length;
+  }, []); // Pas de dépendances - utilise toujours la version actuelle via ref
 
   /**
    * Nombre de tickets sélectionnés

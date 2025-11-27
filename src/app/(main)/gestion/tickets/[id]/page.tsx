@@ -24,7 +24,7 @@ import {
   listProductsForCurrentUserDepartment
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
-import { listCompanies } from '@/services/companies';
+import { listCompanies } from '@/services/companies/server';
 
 async function loadTicket(id: string) {
   noStore();

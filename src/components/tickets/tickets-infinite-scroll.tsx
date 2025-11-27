@@ -21,7 +21,8 @@ import {
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 import { useAuth, useTicketSelection } from '@/hooks';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useStableSearchParams } from '@/hooks/use-stable-search-params';
 import { AnalysisButton } from '@/components/n8n/analysis-button';
 import { SortableTableHeader } from './sortable-table-header';
 import { parseTicketSort, DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
@@ -70,14 +71,26 @@ function TicketsInfiniteScrollComponent({
   currentProfileId
 }: TicketsInfiniteScrollProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { role } = useAuth();
+  const searchParams = useStableSearchParams();
+  const authState = useAuth();
+  
+  // Mémoriser le rôle et l'état complet pour éviter les re-renders
+  // Comparer les valeurs réelles plutôt que la référence de l'objet
+  const role = useMemo(() => {
+    return authState.role;
+  }, [authState.role]);
+  
+  // Mémoriser canEdit pour éviter les recalculs
+  const canEdit = useMemo(() => {
+    return role === 'admin' || role === 'manager';
+  }, [role]);
   
   // Stabiliser searchParams avec une ref pour éviter les re-renders
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
   
   // Mesures de performance (dev uniquement)
+  // Note: Les logs sont réduits automatiquement par le hook (seulement si > 1 render)
   const renderCount = useRenderCount({
     componentName: 'TicketsInfiniteScroll',
     warningThreshold: 10,
@@ -86,10 +99,10 @@ function TicketsInfiniteScrollComponent({
   
   // Parser les paramètres de tri depuis l'URL (memoizé pour éviter les recalculs)
   const sort = useMemo(() => {
-    const sortColumnParam = searchParamsRef.current.get('sortColumn') || undefined;
-    const sortDirectionParam = searchParamsRef.current.get('sortDirection') || undefined;
+    const sortColumnParam = searchParams.get('sortColumn') || undefined;
+    const sortDirectionParam = searchParams.get('sortDirection') || undefined;
     return parseTicketSort(sortColumnParam, sortDirectionParam);
-  }, [searchParams]); // Seulement si searchParams change (référence)
+  }, [searchParams]); // Utilise searchParams stabilisé
   
   const [currentSort, setCurrentSort] = useState<TicketSortColumn>(sort.column);
   const [currentSortDirection, setCurrentSortDirection] = useState<SortDirection>(sort.direction);
@@ -109,9 +122,6 @@ function TicketsInfiniteScrollComponent({
     return new Set(['title', 'type', 'status', 'priority', 'canal', 'company', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
   });
   const [isMounted, setIsMounted] = useState(false);
-  
-  // Vérifier les permissions pour l'édition (admin/manager)
-  const canEdit = role === 'admin' || role === 'manager';
 
   // Gestion de la sélection multiple
   const {
@@ -157,12 +167,24 @@ function TicketsInfiniteScrollComponent({
   /**
    * Synchroniser le tri avec l'URL au montage uniquement
    * Utilise une ref pour éviter les re-renders si le tri n'a pas changé
+   * 
+   * OPTIMISÉ : Ne synchronise que si les valeurs ont réellement changé
    */
   const sortInitializedRef = useRef(false);
+  const prevSortRef = useRef<{ column: TicketSortColumn; direction: SortDirection } | null>(null);
+  
   useEffect(() => {
-    if (!sortInitializedRef.current) {
-      setCurrentSort(sort.column);
-      setCurrentSortDirection(sort.direction);
+    const currentSortValue = { column: sort.column, direction: sort.direction };
+    
+    // Vérifier si le tri a réellement changé
+    if (
+      !sortInitializedRef.current ||
+      prevSortRef.current?.column !== currentSortValue.column ||
+      prevSortRef.current?.direction !== currentSortValue.direction
+    ) {
+      setCurrentSort(currentSortValue.column);
+      setCurrentSortDirection(currentSortValue.direction);
+      prevSortRef.current = currentSortValue;
       sortInitializedRef.current = true;
     }
   }, [sort.column, sort.direction]);
@@ -244,7 +266,7 @@ function TicketsInfiniteScrollComponent({
    * Optimisé avec utilitaires extraits et refs stables pour respecter Clean Code.
    * Utilise des refs pour isLoading et hasMore pour éviter les re-créations de la fonction.
    */
-  const loadMoreRef = useRef<() => Promise<void>>();
+  const loadMoreRef = useRef<() => Promise<void>>(() => Promise.resolve());
   
   // Mettre à jour la fonction loadMore dans la ref
   loadMoreRef.current = async () => {
@@ -348,8 +370,19 @@ function TicketsInfiniteScrollComponent({
    * Réinitialiser les tickets quand les filtres changent
    * 
    * Utilise une comparaison par IDs pour éviter les re-renders inutiles.
+   * 
+   * OPTIMISÉ : Utilise filterKey pour éviter les re-renders si les filtres n'ont pas changé
    */
+  const prevFilterKeyRef = useRef<string | null>(null);
+  
   useEffect(() => {
+    // Ne réinitialiser que si filterKey a réellement changé
+    if (prevFilterKeyRef.current === filterKey) {
+      return;
+    }
+    
+    prevFilterKeyRef.current = filterKey;
+    
     setTickets((prev) => {
       // Comparer par IDs uniquement (évite les re-renders si contenu identique)
       if (areTicketIdsEqual(prev, initialTicketsRef.current)) {
@@ -361,7 +394,7 @@ function TicketsInfiniteScrollComponent({
     });
     setHasMore(initialHasMoreRef.current);
     setError(null);
-  }, [type, status, search, quickFilter, currentSort, currentSortDirection]); // Pas de dépendance aux tickets
+  }, [filterKey]); // Utilise filterKey au lieu de toutes les dépendances individuelles
 
 
   if (tickets.length === 0 && !isLoading) {

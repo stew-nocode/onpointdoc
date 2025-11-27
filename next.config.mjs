@@ -6,6 +6,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production'
   },
   experimental: {
+    // Server Actions sont maintenant stables dans Next.js 16, mais la config reste dans experimental
     serverActions: {
       bodySizeLimit: '2mb'
     },
