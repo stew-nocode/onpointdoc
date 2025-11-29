@@ -56,15 +56,52 @@ export function LoadMoreButton({
     return null;
   }
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // CRITIQUE : Trouver et sauvegarder l'ID du dernier ticket visible AVANT le clic
+    // On va chercher le dernier élément <tr> visible dans le viewport
+    const allTicketRows = document.querySelectorAll<HTMLElement>('tr[id]');
+    let lastVisibleTicketId: string | null = null;
+    
+    // Parcourir depuis la fin pour trouver le dernier ticket visible
+    for (let i = allTicketRows.length - 1; i >= 0; i--) {
+      const row = allTicketRows[i];
+      const rect = row.getBoundingClientRect();
+      // Ticket visible si dans le viewport (même partiellement)
+      if (rect.top >= 0 && rect.top <= window.innerHeight) {
+        lastVisibleTicketId = row.id;
+        break;
+      }
+    }
+    
+    // Si aucun ticket visible trouvé, prendre le dernier ticket de la liste
+    if (!lastVisibleTicketId && allTicketRows.length > 0) {
+      lastVisibleTicketId = allTicketRows[allTicketRows.length - 1].id;
+    }
+    
+    // Sauvegarder l'ID du ticket dans sessionStorage
+    if (lastVisibleTicketId) {
+      sessionStorage.setItem('tickets-scroll-ticket-id', lastVisibleTicketId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] ID du dernier ticket visible sauvegardé:', lastVisibleTicketId);
+      }
+    }
+    
+    onLoadMore();
+  };
+
   return (
     <div className={`flex justify-center py-6 ${className || ''}`}>
       <Button
-        onClick={onLoadMore}
+        onClick={handleClick}
         disabled={isLoading}
         variant="outline"
         size="lg"
         className="min-w-[120px]"
         aria-label={isLoading ? 'Chargement en cours...' : label}
+        type="button"
       >
         {isLoading ? (
           <>

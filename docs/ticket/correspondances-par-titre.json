@@ -1,0 +1,90 @@
+[
+  {
+    "obcsKey": "OBCS-8652",
+    "obcsTitle": "CRM > DASHBOARD > ETAT DES DEALS : Corriger le bug lié à l'affichage de l'état des deals.",
+    "odTickets": [
+      {
+        "id": "d5c34fdc-de2d-4a14-94fd-1d58eb45474a",
+        "jira_issue_key": "OD-2373",
+        "title": "CRM > DASHBOARD > ETAT DES DEALS : Corriger le bug lié à l'affichage de l'état des deals."
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-6456",
+    "obcsTitle": "Un message d'erreur s'affiche à l'importation du fichier d'immobilisation",
+    "odTickets": [
+      {
+        "id": "70aec06c-004a-46e2-9e3f-08f7353ce377",
+        "jira_issue_key": "OD-1919",
+        "title": "Un message d'erreur s'affiche à l'importation du fichier d'immobilisation"
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-1277",
+    "obcsTitle": "Lorsque je clique sur une opportunité (CRM > Gestion des opportunités) il est impossible de voir l'onglet offre (type général) et le formulaire de devis (onglet devis) dans les opportunités créées avec mes rôles.",
+    "odTickets": [
+      {
+        "id": "63d46b08-38b7-4b40-9e1d-5aaac69931f2",
+        "jira_issue_key": "OD-1696",
+        "title": "Lorsque je clique sur une opportunité (CRM > Gestion des opportunités) il est impossible de voir l'onglet offre (type général) et le formulaire de devis (onglet devis) dans les opportunités créées avec mes rôles."
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-772",
+    "obcsTitle": "Ajouter les rôles \"Gestion des prospects\" et \"Gestion des clients\" dans CRM",
+    "odTickets": [
+      {
+        "id": "edd4a73f-e5b8-44b0-a67a-617692ec61c6",
+        "jira_issue_key": "OD-1192",
+        "title": "Ajouter les rôles \"Gestion des prospects\" et \"Gestion des clients\" dans CRM"
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-9172",
+    "obcsTitle": "Correction bulletin de salaire portail employé",
+    "odTickets": [
+      {
+        "id": "98ae3638-44e7-47a0-b687-1d840897c13e",
+        "jira_issue_key": "OD-2447",
+        "title": "Correction bulletin de salaire portail employé"
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-723",
+    "obcsTitle": "Intégration Processus de production béton-BAYSIDE",
+    "odTickets": [
+      {
+        "id": "d2ed4ebd-5f98-4e9f-a7d4-8a721fbfd4d4",
+        "jira_issue_key": "OD-904",
+        "title": "Intégration Processus de production béton-BAYSIDE"
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-718",
+    "obcsTitle": "Paiement fournisseur sur la base de Bons de commande",
+    "odTickets": [
+      {
+        "id": "ddf27a37-05e3-414c-b0d2-3a3bcf8be169",
+        "jira_issue_key": "OD-899",
+        "title": "Paiement fournisseur sur la base de Bons de commande"
+      }
+    ]
+  },
+  {
+    "obcsKey": "OBCS-603",
+    "obcsTitle": "Les journaux de trésorerie doivent être la source de Dépenses sur le dashboard Accueil.",
+    "odTickets": [
+      {
+        "id": "0ab09839-a72f-4494-a038-6cc3f9fb96ee",
+        "jira_issue_key": "OD-757",
+        "title": "Les journaux de trésorerie doivent être la source de \"Dépenses\" sur le dashboard Accueil."
+      }
+    ]
+  }
+]

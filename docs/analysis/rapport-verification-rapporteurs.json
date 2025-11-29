@@ -1,0 +1,131 @@
+{
+  "summary": {
+    "totalReporters": 8,
+    "foundInSupabase": 7,
+    "notFoundInSupabase": 1,
+    "internalUsers": 6,
+    "externalUsers": 1,
+    "missingRole": 0
+  },
+  "reporters": {
+    "found": [
+      {
+        "name": "Edwige KOUASSI",
+        "jira_user_id": "5fb4dd9e2730d800765b5774",
+        "poste": "Activation Specialist",
+        "ticket_count": 467,
+        "profile": {
+          "id": "ff6b3d35-c635-4258-a253-db3fac202302",
+          "full_name": "Edwidge Kouassi",
+          "email": "ekouassi@onpointafrica.om",
+          "role": "agent",
+          "job_title": null,
+          "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9"
+        },
+        "status": "✅ Utilisateur interne"
+      },
+      {
+        "name": "N'GBRA MOYE BERNICE DORIS",
+        "jira_user_id": "712020:ffe79a03-939f-4c9b-b02b-de08425af5b9",
+        "poste": "Activation Specialist",
+        "ticket_count": 312,
+        "profile": {
+          "id": "f87516de-277a-4266-b6f9-80ba47a7b71e",
+          "full_name": "N'GBRA MOYE BERNICE DORIS",
+          "email": "mngbra@onpointafrica.com",
+          "role": "agent",
+          "job_title": null,
+          "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9"
+        },
+        "status": "✅ Utilisateur interne"
+      },
+      {
+        "name": "GNAHORE AMOS",
+        "jira_user_id": "712020:bb02e93b-c270-4c40-a166-a19a42e5629a",
+        "poste": "Contrôleur de Gestion",
+        "ticket_count": 27,
+        "profile": {
+          "id": "5f1bbff1-9b6e-4b18-9391-3ce8b249b201",
+          "full_name": "GNAHORE AMOS",
+          "email": "agnaore@onpointafrica.om",
+          "role": "agent",
+          "job_title": null,
+          "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9"
+        },
+        "status": "✅ Utilisateur interne"
+      },
+      {
+        "name": "Vivien DAKPOGAN",
+        "jira_user_id": "712020:5c9548c8-e063-4cc7-b9e3-98eb370e0d9e",
+        "poste": "Directeur des Ressources Humaines",
+        "ticket_count": 501,
+        "profile": {
+          "id": "c87e119d-70c7-489a-83c6-1a7a485856ce",
+          "full_name": "Vivien DAKPOGAN",
+          "email": "vdakpogan@onpointafrica.com",
+          "role": "manager",
+          "job_title": null,
+          "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9"
+        },
+        "status": "✅ Utilisateur interne"
+      },
+      {
+        "name": "EVA BASSE",
+        "jira_user_id": "712020:d4a5e54b-dc78-41d8-a397-cc5dbd0461f0",
+        "poste": "Activation Specialist",
+        "ticket_count": 516,
+        "profile": {
+          "id": "62494f26-691b-4332-b831-07741d927779",
+          "full_name": "EVA BASSE",
+          "email": "ebasse@onpointafrica.om",
+          "role": "agent",
+          "job_title": null,
+          "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9"
+        },
+        "status": "✅ Utilisateur interne"
+      },
+      {
+        "name": "CHARLEY KOUAME",
+        "jira_user_id": "712020:1294eacb-4c40-4947-a874-6af47ae70d35",
+        "poste": "Consultant",
+        "ticket_count": 4,
+        "profile": {
+          "id": "306d39a4-ac82-46cb-aed9-19aaa9726e27",
+          "full_name": "CHARLEY KOUAME",
+          "email": "hkouame@onpointafrica.com",
+          "role": "agent",
+          "job_title": null,
+          "company_id": null
+        },
+        "status": "✅ Utilisateur interne"
+      }
+    ],
+    "notFound": [
+      {
+        "name": "Non renseigné",
+        "jira_user_id": "Inconnu",
+        "poste": "Comptable",
+        "ticket_count": 11,
+        "status": "❌ Non trouvé dans Supabase"
+      }
+    ],
+    "external": [
+      {
+        "name": "Joël SIE",
+        "jira_user_id": "712020:59ca107e-6201-472e-ab9d-ea6a335fbe18",
+        "poste": "Comptable",
+        "ticket_count": 226,
+        "profile": {
+          "id": "feb0408c-4b5b-427b-8966-6a0a86f4764b",
+          "full_name": "JOEL SIE",
+          "email": "joel.sie@onpointjira.local",
+          "role": "client",
+          "job_title": null,
+          "company_id": null
+        },
+        "status": "⚠️  Utilisateur externe (client)"
+      }
+    ],
+    "missingRole": []
+  }
+}

@@ -1,0 +1,1697 @@
+{
+  "totalRows": 281,
+  "rows": [
+    {
+      "rowNumber": 20,
+      "ticketKey": "OBCS-11264",
+      "summary": "Finance/Impôt et taxe/programmation de paiement_ Doublon sur la récupération de la TVA.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 50,
+      "ticketKey": "OBCS-10804",
+      "summary": "Finance/Opération de Caisse/ Edition Opération de caisse - Anomalie modification opération de caisse",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 64,
+      "ticketKey": "OBCS-10630",
+      "summary": "Problème constaté lors de l'enregistrement de la productivité des journaliers quand on clique sur le bouton enregistrer",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 65,
+      "ticketKey": "OBCS-10629",
+      "summary": "PROJET/TIMESHEET/Problème constaté sur l'enregistrement des timesheet journaliers",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 66,
+      "ticketKey": "OBCS-10624",
+      "summary": "CRM/ANALYTIQUE/ Nous constatons qu'il y a un page d'erreur au niveau du dashboard activité commerciale",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 67,
+      "ticketKey": "OBCS-10623",
+      "summary": "Page d'erreur après chargement de la fonctionnalité gestion des prospects",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 71,
+      "ticketKey": "OBCS-10554",
+      "summary": "RH/Contrat journalier/ Impossible de choisir un signataire lors de la création d'un contrat journalier",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 81,
+      "ticketKey": "OBCS-10485",
+      "summary": "Calendrier de Productivité Journalière",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 82,
+      "ticketKey": "OBCS-10484",
+      "summary": "RH/Fichier du personnel/ Import fichier  - Impossible d'importer le fichier du personnel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 87,
+      "ticketKey": "OBCS-10474",
+      "summary": "Impossible de visualiser le dashboard activité commerciale",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 88,
+      "ticketKey": "OBCS-10473",
+      "summary": "Finance/Budget/ Budget de dépense - Date incorrecte en historique",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 93,
+      "ticketKey": "OBCS-10351",
+      "summary": "Projet/Gestion Projet - Impossible de modifier les dates d'un projet, une notification \"Attention\" affiche sans donner suite à l'action",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 95,
+      "ticketKey": "OBCS-10347",
+      "summary": "RH/Document/Gestion des Employés - Impossible d'afficher & imprimer les contrats des agents enquêteurs",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 115,
+      "ticketKey": "OBCS-10008",
+      "summary": "Server Error in '/' Application.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 125,
+      "ticketKey": "OBCS-9976",
+      "summary": "CRM : Incohérence des données entre le Dashboard et les enregistrements faits",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 129,
+      "ticketKey": "OBCS-9889",
+      "summary": "RH/Salaire/Calcul de salaire occasionnel ou journalier - Dans le listing des salaires occasionnels les données ne correspondent pas au montant réel des salaires",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 141,
+      "ticketKey": "OBCS-9771",
+      "summary": "Opération/Achat/Enregistrement Bon de C à partir d'une Expression de besoin",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 173,
+      "ticketKey": "OBCS-9534",
+      "summary": "RH/Programmation Paie Journ - Impossible de programmer une paie Jour",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 192,
+      "ticketKey": "OBCS-9464",
+      "summary": "RH/Documents : Non affichage des bulletins de paie (voir capture) malgré le calcul de paie effectué",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 198,
+      "ticketKey": "OBCS-9391",
+      "summary": "Feuille de temps: Les sous-projets devraient se déverser en fonction du projet choisi mais on constate qu'on a la possibilité de choisir des sous-projets et ensuite selectionner un projet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 206,
+      "ticketKey": "OBCS-9199",
+      "summary": "CRM/Activité Commerciale/ Gestion des opportunités : Le tri ne fonctionne pas sur toute la table. Appliquer le tri à toutes les tables ou passer à un affichage à une table",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 207,
+      "ticketKey": "OBCS-9197",
+      "summary": "Correction Bug Affichage Rappel List Activité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 209,
+      "ticketKey": "OBCS-9173",
+      "summary": "Correction bulletin de salaire portail employé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 211,
+      "ticketKey": "OBCS-9158",
+      "summary": "RH/Gestion employés/Portail employé : Quand Olivier clique sur la fonctionnalité portail employé, il a un message d'erreur ( voir capture)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 216,
+      "ticketKey": "OBCS-8984",
+      "summary": "Projet/Note de Frais - Message d'erreur - Formulaire Note de frais",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 221,
+      "ticketKey": "OBCS-8886",
+      "summary": "CRM/Activités commerciale : Le formulaire \"Rappel\" ne s'affiche pas",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 225,
+      "ticketKey": "OBCS-8836",
+      "summary": "Au changement d'une entité, le rapport hebdomadaire sur les timesheet prend en compte l'ancienne entité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 229,
+      "ticketKey": "OBCS-8757",
+      "summary": "Le formulaire de rappel ne s'affiche pas",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 239,
+      "ticketKey": "OBCS-8652",
+      "summary": "CRM > DASHBOARD > ETAT DES DEALS : Corriger le bug lié à l'affichage de l'état des deals.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 240,
+      "ticketKey": "OBCS-8648",
+      "summary": "CRM > DASHBOARD > ETAT DES DEALS : Corriger le bug lié à l'affichage de l'état des deals.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 242,
+      "ticketKey": "OBCS-8644",
+      "summary": "Projet/ Gérer mes projets/ - Enregistrement TimeSheet - Liste des journaliers incomplète",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 245,
+      "ticketKey": "OBCS-8640",
+      "summary": "Stock de congés : Récupérations des stocks de congés à partir du stock de démarrage",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 251,
+      "ticketKey": "OBCS-8460",
+      "summary": "Encaissement client: dysfonctionnement du bouton export de l'historique des encaissements.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 253,
+      "ticketKey": "OBCS-8441",
+      "summary": "Il est impossible de supprimer une catégorie de prestation",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 254,
+      "ticketKey": "OBCS-8440",
+      "summary": "Les libéllées des champs est incorrectes",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 255,
+      "ticketKey": "OBCS-8438",
+      "summary": "CRM/Activités commerciale/Activités: Lorsqu'on clique sur \"Rappel activités\", la page reste vide (voir capture joint)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 261,
+      "ticketKey": "OBCS-8420",
+      "summary": "Demande d'asence: Lorqu'on sélectionna congés de paternité, il affiche 4 jours au lieu de 2 jours.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 266,
+      "ticketKey": "OBCS-8333",
+      "summary": "RH/Gestion Employé/Demande d'Absence - Sélectionner par défaut, la date à laquelle l’enregistrement de la demande d’absence est faite",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 267,
+      "ticketKey": "OBCS-8332",
+      "summary": "RH/Gestion Employé/Demande d'Absence - Sélectionner le nom de l’utilisateur par défaut dans le formulaire d'enregistrement",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 268,
+      "ticketKey": "OBCS-8331",
+      "summary": "RH/Gestion Employé/Demande d'Absence - Certaine Demande d'Absence se retrouve dans une entité a laquelle l’employé n'appartient pas.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 274,
+      "ticketKey": "OBCS-8275",
+      "summary": "Incohérence des données de la TVA.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 276,
+      "ticketKey": "OBCS-8267",
+      "summary": "Projet/Timesheet - Les projets sur l'année antérieur (2024) ne se déversent plus",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 278,
+      "ticketKey": "OBCS-8225",
+      "summary": "Les impots et taxes ne se deverses pas à l'enregistrement.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 279,
+      "ticketKey": "OBCS-8222",
+      "summary": "Le stock congés qui s'affichent sur les bulletins sont incorrecte.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 284,
+      "ticketKey": "OBCS-8155",
+      "summary": "Message d'erreur apparaissant lorsqu'on clique sur \"Gestion des opportunités\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 287,
+      "ticketKey": "OBCS-8061",
+      "summary": "Historique demande d'absence: Les heures et les dates de fin ont disparu.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 292,
+      "ticketKey": "OBCS-8043",
+      "summary": "Certaines factures enregistrées en opération, ne s'affiche pas sur le dashboard vente",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 293,
+      "ticketKey": "OBCS-8042",
+      "summary": "En historique des tâches, dans la colonne \"responsable\" , on a \"Inconnu or à l'édition, on remarque que des employés sont rattachés à chaque tâche (voir captures)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 296,
+      "ticketKey": "OBCS-7963",
+      "summary": "A l'enregistrement d'un contrat journalier un message s'affiche disant que le signataire existe déjà alors qu'aucun signataire n'a été ajouté.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 302,
+      "ticketKey": "OBCS-7956",
+      "summary": "harmoniser la liste de secteurs dans les champs de création de prospects ou de clients",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 303,
+      "ticketKey": "OBCS-7955",
+      "summary": "La section pour l'ajout de nouvelle activité ne s'ouvre toujours pas correctement donc il est impossible d'enregistrer les activités; le champ attribué À n'es t pas ouvert, ni celui de la priorité.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 304,
+      "ticketKey": "OBCS-7954",
+      "summary": "A l'ouverture de certaines opportunités, un message d'erreur apparait",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 306,
+      "ticketKey": "OBCS-7951",
+      "summary": "Impossible de joindre un fichier lors d'une demande d'absence (Voir capture)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 307,
+      "ticketKey": "OBCS-7950",
+      "summary": "A l'enregistrement des frais de mission, un message s'affiche demandant de renseigner un prix unitaire alors qu'il est renseigné.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 331,
+      "ticketKey": "OBCS-7724",
+      "summary": "La modification de la date de l'opportunité n'est pas prise en compte après enregistremet.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 336,
+      "ticketKey": "OBCS-7717",
+      "summary": "Une message d'erreur à l'enregistrement des timesheet (error success: Undefined)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 337,
+      "ticketKey": "OBCS-7655",
+      "summary": "Au calcul de la paie des journaliers, certains journaliers n'apparaissent pas",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 351,
+      "ticketKey": "OBCS-7531",
+      "summary": "Quand on enregistre une expression de besoin et qu’on choisi une “nature de besoin”, les champs disparaissent . Ce qui empêche de terminer l’enregistrement",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 354,
+      "ticketKey": "OBCS-7520",
+      "summary": "l'amélioration du temps d'affichage du fichier du personnel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 356,
+      "ticketKey": "OBCS-7518",
+      "summary": "Impossible de programmer et modifier la paie des journaliers ou paie Occasionnel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 357,
+      "ticketKey": "OBCS-7517",
+      "summary": "Absence de rubrique enregistré dans les notes de frais - Avec Edition impossible",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 359,
+      "ticketKey": "OBCS-7515",
+      "summary": "Message d'erreur apparaissant lorsqu'on clique sur \"Pilotage commercial\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 361,
+      "ticketKey": "OBCS-7513",
+      "summary": "Lorsque j'enregistre une note dans CRM, le message ci-joint apparaît et ne me permets pas de réaliser l'enregistrement. ",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 365,
+      "ticketKey": "OBCS-7505",
+      "summary": "lorsqu'on ajoute plus d'un interlocuteur à l'enregistrement du prospect ce message joint s'affiche.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 430,
+      "ticketKey": "OBCS-6957",
+      "summary": "Un message d'erreur s'affiche lorsqu'elle clique sur Activité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 472,
+      "ticketKey": "OBCS-6644",
+      "summary": "Message d'erreur lorsqu'on clique sur le \"Learning-center\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 482,
+      "ticketKey": "OBCS-6565",
+      "summary": "Erreur Ajax lors de l'importation de prospects dans le CRM",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 483,
+      "ticketKey": "OBCS-6563",
+      "summary": "Dès qu'on clique sur la fonctionnalité \"Fichier du personnel\" sur la base test (OACI), on a un message d'erreur (voir pièce jointe)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 486,
+      "ticketKey": "OBCS-6509",
+      "summary": "Impossible d'extraire les Timesheet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 487,
+      "ticketKey": "OBCS-6507",
+      "summary": "Message d'erreur au chargement de la fonctionnalité opération de caisse",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 507,
+      "ticketKey": "OBCS-6418",
+      "summary": "Type pipeline à lier à OACI",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 508,
+      "ticketKey": "OBCS-6415",
+      "summary": "Lenteur édition et enregistrement absence",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 522,
+      "ticketKey": "OBCS-6296",
+      "summary": "A l'enregistrement d'une opportunité, la liste déroulante des offres propose des offres différentes de celles existantes en historique de la fonctionnalité \"offre\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 523,
+      "ticketKey": "OBCS-6295",
+      "summary": "A l'enregistrement d'une nouvelle opportunité , aucun type de pipeline ne se déverse",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 524,
+      "ticketKey": "OBCS-6280",
+      "summary": "Corriger/Enlever les alertes 444/222 quand on édite une opportunité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 529,
+      "ticketKey": "OBCS-6222",
+      "summary": "A l'enregistrement d'un prospect à partir du formulaire de nouvelle opportunité, on a un message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 531,
+      "ticketKey": "OBCS-6217",
+      "summary": "A l'édition d'une fiche offre, lorsqu'on clique sur \"fermer\", il y a une page blanche qui apparait ( voir capture)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 532,
+      "ticketKey": "OBCS-6215",
+      "summary": "A l'enregistrement d'une opportunité dont le type de pipeline est \"vente directe\", on a un message d'erreur(voir pièce jointe)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 533,
+      "ticketKey": "OBCS-6214",
+      "summary": "A l'édition d'une fiche offre, la page ne charge pas correctement (voir pièce jointe)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 534,
+      "ticketKey": "OBCS-6213",
+      "summary": "Doublon de la pagination (voir capture joint)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 535,
+      "ticketKey": "OBCS-6191",
+      "summary": "Impossible d'enregistrer les TimeSheet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 537,
+      "ticketKey": "OBCS-6104",
+      "summary": "A l'enregistrement d'une opportunité, on a un message d'erreur (voir pièce jointe)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 554,
+      "ticketKey": "OBCS-5801",
+      "summary": "Lorsqu'on enregistre une nouvelle activité dans CRM chez un prospect dans gestion des opportunités,on reçois 4 mails provenant de OBC Support pour la même activité. ",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 564,
+      "ticketKey": "OBCS-5410",
+      "summary": "Incohérence des données sur le nombre d'absence",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 573,
+      "ticketKey": "OBCS-1380",
+      "summary": "Fabien n'a pas accès à  \"Ajouter une activité\" (voir la pièce jointe) et il ne peux non plus rajouter de tâche.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 574,
+      "ticketKey": "OBCS-1379",
+      "summary": "Lorsqu'on modifie une note dans une étape du SPANCO, on a le message d'erreur \"erreur ajax\" (voir pièce jointe)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 575,
+      "ticketKey": "OBCS-1378",
+      "summary": "Lorsqu'on termine l'enregistrement de toute la donnée pour un compte au moment de valider la donnée, on a l'apparition d'un message d'erreur (Voir pièces jointes)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 582,
+      "ticketKey": "OBCS-1364",
+      "summary": "Preprod : Serveur Error",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 589,
+      "ticketKey": "OBCS-1309",
+      "summary": "A la génération de l'écriture, le compte tiers n'est pas généré.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 593,
+      "ticketKey": "OBCS-1296",
+      "summary": "Le solde du dashboard caisse ne correspond pas au solde réel de la caisse Wave OCGCI, mais il affiche le bon solde à l'extraction",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 595,
+      "ticketKey": "OBCS-1292",
+      "summary": "Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 596,
+      "ticketKey": "OBCS-1290",
+      "summary": "Lorsqu'on selectionne sur la bas de travail l'exercice 20219, 2020, 2021 et 2022 aucune donnée ne s'affiche dans l'historique des factures achats. Entité OCG",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 599,
+      "ticketKey": "OBCS-1286",
+      "summary": "Mauvais déversement des données au niveau du nombre de congés du dans les  bulletins de salaire",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 600,
+      "ticketKey": "OBCS-1285",
+      "summary": "L'historique de congés et autres absences affiche des employés non enregistrés et à la modification l'employé sensé être enregistré réapparait",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 605,
+      "ticketKey": "OBCS-1280",
+      "summary": "La liste déroulante \"secteur d’activité\" vide dans les fonctionnalités \"gestion des prospects\" et \"gestion des clients\" .",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 606,
+      "ticketKey": "OBCS-1278",
+      "summary": "Le calendrier des notes de frais n'ordonne pas les semaines (voir capture )",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 607,
+      "ticketKey": "OBCS-1277",
+      "summary": "Lorsque je clique sur une opportunité (CRM > Gestion des opportunités) il est impossible de voir l'onglet offre (type général) et le formulaire de devis (onglet devis) dans les opportunités créées avec mes rôles.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 610,
+      "ticketKey": "OBCS-1268",
+      "summary": "Lorsque je clique sur une opportunité (CRM > Gestion des opportunités) il est impossible de voir l'onglet offre (type général) et le formulaire de devis (onglet devis) dans les opportunités créées avec mes rôles.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 629,
+      "ticketKey": "OBCS-1235",
+      "summary": "Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 633,
+      "ticketKey": "OBCS-1224",
+      "summary": "La conversion des heures travaillées n'est pas cohérente. Certaines personnes ayant plus de 8 heures de travail il met moins d'un jour de travail",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 651,
+      "ticketKey": "OBCS-1197",
+      "summary": "Impossible d'exporter les timesheets",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 653,
+      "ticketKey": "OBCS-1194",
+      "summary": "L'utilisateur n'ayant pas les accès \"admis\", ne voit rien dans l'historique des opportunités. Même ses propres opportunités crées",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 655,
+      "ticketKey": "OBCS-1190",
+      "summary": "Impossible de calculer les salaires occasionnel sans les heures supplementaires",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 669,
+      "ticketKey": "OBCS-1163",
+      "summary": "Le solde sur le dashboard mensuel de la caisse différent du solde des opérations à l'exportation",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 671,
+      "ticketKey": "OBCS-1156",
+      "summary": "Disparition des  Date de fin de contrat de certains employés",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 672,
+      "ticketKey": "OBCS-1155",
+      "summary": "L'historique de congés et autres absences n'affiche qu'une page",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 683,
+      "ticketKey": "OBCS-1134",
+      "summary": "Affichage des données d'une autre entité dans la base sélectionné",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 685,
+      "ticketKey": "OBCS-1131",
+      "summary": "Perte de données dans les timesheet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 686,
+      "ticketKey": "OBCS-1130",
+      "summary": "HTTP Error 404. The requested resource is not found.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 694,
+      "ticketKey": "OBCS-1115",
+      "summary": "Non affichage de livre de paie général sur l'entité OACI",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 699,
+      "ticketKey": "OBCS-1106",
+      "summary": "La récupération de salaire dans les budgets prévus réalisés est incorrecte",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 711,
+      "ticketKey": "OBCS-1058",
+      "summary": "Un salarié ayant, un contrat actif avec nombre de jour travaillé 30 ne figure pas dans la paie de Mars.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 712,
+      "ticketKey": "OBCS-1057",
+      "summary": "Impossible d'éditer une fiche prospect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 714,
+      "ticketKey": "OBCS-1053",
+      "summary": "Impossible de générer le fichier csv d'import de la fonctionnalité \"Clients par portefeuille\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 880,
+      "ticketKey": "OBCS-691",
+      "summary": "Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 888,
+      "ticketKey": "OBCS-670",
+      "summary": "A l'édition de mes bulletins sur le portail employé il affiche aucune données disponible sur tous les mois",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 901,
+      "ticketKey": "OBCS-656",
+      "summary": "Après l'enregistrement d'un devis comprenant du stock, les articles du stock se désélectionnent à l'édition de ce devis.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 902,
+      "ticketKey": "OBCS-655",
+      "summary": "Non déversement du stock sur une facture de vente sur devis",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 903,
+      "ticketKey": "OBCS-654",
+      "summary": "Impossible de supprimer un suspect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 907,
+      "ticketKey": "OBCS-650",
+      "summary": "Conversion de devises dans l'enregistrement des notes de frais",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 911,
+      "ticketKey": "OBCS-646",
+      "summary": "Certains contrats journaliers enrégistrés sont introuvable dans l'histhorique",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 921,
+      "ticketKey": "OBCS-636",
+      "summary": "Erreur Serveur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 926,
+      "ticketKey": "OBCS-631",
+      "summary": "Affichage",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 927,
+      "ticketKey": "OBCS-630",
+      "summary": "Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 938,
+      "ticketKey": "OBCS-619",
+      "summary": "Impossible de modifier le staffing",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 940,
+      "ticketKey": "OBCS-617",
+      "summary": "Disfonctionnement",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 941,
+      "ticketKey": "OBCS-616",
+      "summary": "Affichage Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 944,
+      "ticketKey": "OBCS-613",
+      "summary": "Erreur d'affichage",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 945,
+      "ticketKey": "OBCS-612",
+      "summary": "Non affichage de la liste des employés sur le formulaire de demande d'absence",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 961,
+      "ticketKey": "OBCS-536",
+      "summary": "Message d'erreur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 990,
+      "ticketKey": "OBCS-422",
+      "summary": "Message d'erreur apparaissant à l'édition d'un prospect et d'un contact simultanément",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1007,
+      "ticketKey": "OBCS-397",
+      "summary": "Impossible de rouvrir une opportunité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1009,
+      "ticketKey": "OBCS-394",
+      "summary": "Doublon générés",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1056,
+      "ticketKey": "OBCS-11225",
+      "summary": "Un message d'erreur s'affiche lorsqu'on enregistre un contrat de stage.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1084,
+      "ticketKey": "OBCS-10687",
+      "summary": "Dashboard utilisateur V2 / Refonte tableau de bord utilisateur  - Création d'une section Paiements effectués",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1085,
+      "ticketKey": "OBCS-10686",
+      "summary": "Dashboard utilisateur V2 / Analytique / Refonte tableau de bord utilisateur V2 - Création d'une section Paiements reçus",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1086,
+      "ticketKey": "OBCS-10685",
+      "summary": "Dashboard utilisateur V2 / Analytique / Refonte tableau de bord utilisateur V2 - Création d'une section Paiements en attente",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1087,
+      "ticketKey": "OBCS-10684",
+      "summary": "Opération / Analytique / Achat - Refonte Dashboard _ Création d'un bloc recap \"bon de commande\" émis sur le tableau de bord",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1088,
+      "ticketKey": "OBCS-10683",
+      "summary": "Opération / Analytique / Achat -  Refonte Dashboard, Création d'une section recap demande d'achat sur le tableau de bord",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1089,
+      "ticketKey": "OBCS-10682",
+      "summary": "Opération / Analytique / Achat -  Refonte Dashboard, Création d'une section Factures fournisseurs",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1090,
+      "ticketKey": "OBCS-10681",
+      "summary": "Opération / Analytique / Vente -  Refonte Dashboard, Création d'une section Factures clients",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1091,
+      "ticketKey": "OBCS-10680",
+      "summary": "Refonte Dashboard /Opération / Analytique / Vente - Création d'une section récap des devis enregistré à date",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1100,
+      "ticketKey": "OBCS-10626",
+      "summary": "CRM/ACTIVITE COMMERCIALE/HISTORIQUE DE GESTION DES OPPORTUNITES/Revoir le tri du listing des opportunités en historique de gestion des opportunités pour prioriser les “en cours” au niveau des étapes du pipeline",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1101,
+      "ticketKey": "OBCS-10625",
+      "summary": "CRM/ACTIVITE COMMERCIALE/HISTORIQUE DE GESTION DES OPPORTUNITES/ Afficher en premier les opportunités en cours dans la liste récapitulative composée des offres en cours, abandonnées, gagnées et perdues",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1109,
+      "ticketKey": "OBCS-10498",
+      "summary": "RH/Gestion des employés/ Productivité Journalière - Créer un fichier d'import et un bouton pour la productivité journalière comme pour les TimeSheet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1110,
+      "ticketKey": "OBCS-10488",
+      "summary": "Refonte Dashboard Principal V2",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1127,
+      "ticketKey": "OBCS-10349",
+      "summary": "Opération/Tableau de bord Vente - Vérification cohérence de données Dashboard Vente",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1131,
+      "ticketKey": "OBCS-10266",
+      "summary": "OBC - Réorganisation des dossiers / Modules & Fonctionnalité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1133,
+      "ticketKey": "OBCS-10180",
+      "summary": "RH/Gestion Employé/Fichier du personnel - Fonction Export de données",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1143,
+      "ticketKey": "OBCS-9885",
+      "summary": "RH/Gestion des Employés/Contrat - Demande de Suppression Contrat enquêteur enregistrer le 11/05/2025",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1144,
+      "ticketKey": "OBCS-9884",
+      "summary": "RH/Gestion des Employés/Contrat - Suppression Contrat enquêteur  enregistrer  le 12/05/2025",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1145,
+      "ticketKey": "OBCS-9883",
+      "summary": "RH/Gestion_Employé/Timesheet Journalier - Donner la possibilité d'importer les données à partir d'un fichier import",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1146,
+      "ticketKey": "OBCS-9882",
+      "summary": "RH/Gestion Employé/Productivité Journalière - Créer un fichier d'importation",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1147,
+      "ticketKey": "OBCS-9881",
+      "summary": "RH/Gestion Employé/Contrat - Donner plus de détails sur les lignes non Importé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1150,
+      "ticketKey": "OBCS-9785",
+      "summary": "Intégration des plans analytiques multiples dans les fonctionnalités",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1162,
+      "ticketKey": "OBCS-9715",
+      "summary": "DASHBOARD ACHAT V2",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1192,
+      "ticketKey": "OBCS-9471",
+      "summary": "Le livre de paie ne s'affiche pas sur 2 entités de Onpoint (OD et OCG)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1194,
+      "ticketKey": "OBCS-9467",
+      "summary": "Avoir sur le formulaire de \"Prêt\", un champs \"Demande de prêt\" afin d'avoir un lien entre les demandes de prêt et le formulaires de prêt.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1234,
+      "ticketKey": "OBCS-9207",
+      "summary": "Dashboard Tréso",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1235,
+      "ticketKey": "OBCS-9206",
+      "summary": "Avoir la possibilité de sélectionner plusieurs années afin d'avoir les infos cumulées de ces années (dashboard)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1236,
+      "ticketKey": "OBCS-9205",
+      "summary": "Dashboard Vente",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1237,
+      "ticketKey": "OBCS-9204",
+      "summary": "Dashboard Fournisseurs",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1238,
+      "ticketKey": "OBCS-9203",
+      "summary": "Permettre la recherche de fournisseur par poste comptable (F/seur et clt)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1239,
+      "ticketKey": "OBCS-9202",
+      "summary": "Dashboard RH",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1240,
+      "ticketKey": "OBCS-9201",
+      "summary": "Supprimer l'affichage de l'heure dans le libellé des opportunités générées par défaut afin de réduire la largeur de la colonne \"Libellé Opportunité\".",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1241,
+      "ticketKey": "OBCS-9200",
+      "summary": "Permettre que l'actualisation des onglets ne change pas l'interface des utilisateurs",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1242,
+      "ticketKey": "OBCS-9198",
+      "summary": "Graphe CA par produit : Représenter plutôt sous forme de graphe cumulé. Graphe Suivi Mensuel Opportunité : Ajouter les montants cumulés des opportunités également dans les courbes",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1243,
+      "ticketKey": "OBCS-9196",
+      "summary": "Lorsque le formulaire contact est renseigné, enlever l'obligation sur le formulaire interlocuteur DANS PROSPECT",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1244,
+      "ticketKey": "OBCS-9195",
+      "summary": "Dans la fonction rappel du CRM, nous souhaitons avoir  la possibilité de filtrer les rappels par: - Date de rappel, - Client, - Statut.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1245,
+      "ticketKey": "OBCS-9194",
+      "summary": "Dashboard CRM (filtrer les données selon la ou les bases de travail du user connecté) ;",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1265,
+      "ticketKey": "OBCS-9172",
+      "summary": "Correction bulletin de salaire portail employé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1299,
+      "ticketKey": "OBCS-8658",
+      "summary": "Comptabilité générale/Solde de démarrage des comptes: Dans le fichier csv d'importation, ajouter une colonne \"compte tiers\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1300,
+      "ticketKey": "OBCS-8657",
+      "summary": "CRM > DASHBOARD > ETAT DES DEALS : Dans le CRM, l'état des deals s'affiche uniquement après avoir renseigné le filtre et cliqué sur le bouton \"Rechercher\". Cependant, l'affichage est lent, et le nombre d'opportunités clôturées gagnées reste à 0.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1301,
+      "ticketKey": "OBCS-8655",
+      "summary": "CRM - Historique Gestion Opportunité : Ajouter une colonne affichant la probabilité de closing.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1302,
+      "ticketKey": "OBCS-8654",
+      "summary": "CRM - Historique Gestion Opportunité : Remplacer le nom complet du client par son sigle dans la colonne des clients.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1303,
+      "ticketKey": "OBCS-8653",
+      "summary": "Supprimer l'affichage de l'heure dans le libellé des opportunités généré par défaut afin de réduire la largeur de la colonne \"Libellé Opportunité\".",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1304,
+      "ticketKey": "OBCS-8651",
+      "summary": "Ajouter une vue listant les raccourcis des formulaires de création des fonctionnalités : Prospect, Client, Activité et Gestion Opportunité. A l'instar de la vue \"Liens rapides\" qui est dans : Dashboard utilisateur de la page d'accueil de OBC.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1305,
+      "ticketKey": "OBCS-8650",
+      "summary": "CRM > DASHBOARD > CLIENT : Ajouter le nombre de clients et de prospects dans le \"Dashboard Client (Map)\".",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1306,
+      "ticketKey": "OBCS-8649",
+      "summary": "CRM > DASHBOARD > ACTIVITÉ COMMERCIALE : Ajouter un tableau affichant l'état des deals dans l'activité commerciale (destiné aux commerciaux).",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1307,
+      "ticketKey": "OBCS-8647",
+      "summary": "CRM > DASHBOARD > ACTIVITÉ COMMERCIALE : Ajouter un filtre \"Commercial\",  commun pour tous les graphiques de la page \"Dashboard Activité Commerciale\".",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1308,
+      "ticketKey": "OBCS-8646",
+      "summary": "CRM > DASHBOARD > ACTIVITÉ COMMERCIALE : Ajouter un \"title\" affichant les clients appelés ou visités dans le tableau de flux d'activité.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1309,
+      "ticketKey": "OBCS-8642",
+      "summary": "Correction des nombre de jours légaux fonction des absences",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1310,
+      "ticketKey": "OBCS-8639",
+      "summary": "Finance/Budget - Doublon salaire journalier constaté dans le budget",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1317,
+      "ticketKey": "OBCS-8428",
+      "summary": "Mise à niveau Dashboard RH1",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1319,
+      "ticketKey": "OBCS-8423",
+      "summary": "Ajouter des Dashboard sur les visites, call (voir image joint)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1332,
+      "ticketKey": "OBCS-8274",
+      "summary": "Historique paiement ajouer une colonne afin d'afficher le nom des founisseurs payés et donner la possibilité de faire le filtre par fournisseur.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1340,
+      "ticketKey": "OBCS-8158",
+      "summary": "Mise à jour des dashboard OBC",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1352,
+      "ticketKey": "OBCS-8047",
+      "summary": "Congés et autres absences: A la saisie de la date de fin lorsqu'on saisie l'heure, la date de fin s'éfface.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1356,
+      "ticketKey": "OBCS-7968",
+      "summary": "Fixer le journal ou déverser la liste des journaux en lieu et place de la saisie a chaque paramétrage",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1357,
+      "ticketKey": "OBCS-7964",
+      "summary": "Contrat journalier: la liste deroulante des signataire, afficher que le nom des personnes ayant un contrat permanent.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1389,
+      "ticketKey": "OBCS-7535",
+      "summary": "Faire en sorte que au rechargement de l'historique Gestion Opportunité on puisse rester sur l'historique et non sur le formulaire de création",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1390,
+      "ticketKey": "OBCS-7534",
+      "summary": "Rendre cliquable les badges \"Etape Encours par nombre opportunité\" de sorte à filtrer l'historique en fonction de l'étape",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1398,
+      "ticketKey": "OBCS-7444",
+      "summary": "Amélioration extraction",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1401,
+      "ticketKey": "OBCS-7428",
+      "summary": "Export Fichier du personnel : Ajouter la colonne n° de téléphone",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1402,
+      "ticketKey": "OBCS-7427",
+      "summary": "Correction Bug CRM Activité Historique : impossible d'éditer une activité lorsqu'une note est enregistré",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1403,
+      "ticketKey": "OBCS-7426",
+      "summary": "enlever le filtre du milieu des filtres historique opportunités (cela occupe assez d'espace)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1404,
+      "ticketKey": "OBCS-7425",
+      "summary": "Sur le Dashboard CRM, Graphes Suivi Mensuel Opportunités : rendre cumulatif le graphe suivi mensuel opportunités selon les statuts (ils ne doivent pas revenir au point zéro)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1405,
+      "ticketKey": "OBCS-7424",
+      "summary": "filtrer activité par date réel début plutôt que par date d'enregistrement réel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1408,
+      "ticketKey": "OBCS-7346",
+      "summary": "Cohérence des données du Dashboard Acceuil",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1420,
+      "ticketKey": "OBCS-7080",
+      "summary": "Ajouter colonne date début ou réelle de l’activité dans historique de activité CRM",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1445,
+      "ticketKey": "OBCS-6851",
+      "summary": "Amélioration Filtre dans Activité / CRM",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1446,
+      "ticketKey": "OBCS-6850",
+      "summary": "Amélioration Filtre dans Activité / CRM",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1455,
+      "ticketKey": "OBCS-6672",
+      "summary": "Avoir la possibilité d'envoyer un mail en cliquant sur le mail du contact",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1456,
+      "ticketKey": "OBCS-6671",
+      "summary": "Ajouter \"n'a pas repondu\" , \"a repondu\" (ajouter deux checkbox lorsqu'on sélectionne phoning et un bouton + pour le nombre d'appels pour chaque checkbox)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1463,
+      "ticketKey": "OBCS-6593",
+      "summary": "Filtrer sur les clients à rappeler",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1464,
+      "ticketKey": "OBCS-6592",
+      "summary": "Identifier les clients à rappeler et marquer la date et l’heure de rappel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1465,
+      "ticketKey": "OBCS-6591",
+      "summary": "Afficher l'exhaustivité de l'historique des opportunités",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1466,
+      "ticketKey": "OBCS-6590",
+      "summary": "Rendre paramétrable les champs du formulaire de création d'un nouveau contact",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1467,
+      "ticketKey": "OBCS-6589",
+      "summary": "Simplifier l'ergonomie (mise en page) de l'historique des contacts",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1468,
+      "ticketKey": "OBCS-6588",
+      "summary": "Rendre paramétrable les champs du formulaire de création d'un nouveau prospect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1469,
+      "ticketKey": "OBCS-6587",
+      "summary": "Lorsque le formulaire contact est renseigné, enlever l'obligation sur le formulaire interlocuteur",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1470,
+      "ticketKey": "OBCS-6586",
+      "summary": "Ajouter une colonne fonction dans le champ interlocuteur dans le formulaire de création d'un prospect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1471,
+      "ticketKey": "OBCS-6585",
+      "summary": "Corriger les doublons dans la liste des secteurs dans le champ Secteur d'activité dans le formulaire de création d'un prospect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1472,
+      "ticketKey": "OBCS-6584",
+      "summary": "Mettre un espace entre taille de l'entreprise et source dans le formulaire de création d'un prospect",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1473,
+      "ticketKey": "OBCS-6583",
+      "summary": "Harmoniser les types d'offres selon pricing OBC et permettre la suppression des ancinenes offres liées à une opprotunité ou non",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1474,
+      "ticketKey": "OBCS-6582",
+      "summary": "Agrandir l'espace d'enregistrement des notes dans \"Activité Etape\" dans la gestion des opportunités",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1475,
+      "ticketKey": "OBCS-6581",
+      "summary": "Ajouter \"Mailing\" dans le champ Type d'intéraction",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1476,
+      "ticketKey": "OBCS-6580",
+      "summary": "Ajouter une nouvelle note dans le formulaire de création d'une activité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1477,
+      "ticketKey": "OBCS-6579",
+      "summary": "Enlever le champ Échéance lorsque Type d'activité n'est pas Tâches ni Evenement. Rendre le champ facultatif",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1478,
+      "ticketKey": "OBCS-6578",
+      "summary": "Enlever les champs Progrès et Priorité lorsque le Type d'activité n'est pas Tâches",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1479,
+      "ticketKey": "OBCS-6577",
+      "summary": "Enlever le champ quand activité est phoning",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1480,
+      "ticketKey": "OBCS-6576",
+      "summary": "Supprimer le champ catégorie dans le formulaire de création d'une activité",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1481,
+      "ticketKey": "OBCS-6575",
+      "summary": "Lier le calendrier des activités/Tâches à son calendrier Google/Outlook…",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1482,
+      "ticketKey": "OBCS-6574",
+      "summary": "Donner la possibilité de voir la photo sur le formulaire de contact et dans la liste des contacts",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1483,
+      "ticketKey": "OBCS-6573",
+      "summary": "Enlever le champ \"TYPE\" dans le formulaire de création d'un nouveau contact",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1488,
+      "ticketKey": "OBCS-6562",
+      "summary": "Mise en lien entre OBC et la plateforme Marketing pour les vidéos",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1498,
+      "ticketKey": "OBCS-6422",
+      "summary": "A l'enregistrement d'une opportunité, alerter sur la non définition des étapes d'un type de pipeline",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1499,
+      "ticketKey": "OBCS-6421",
+      "summary": "Un séparateur de milliers à mettre dans les fonctionnalités avec des montants à renseigner et/ou à récupérer",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1500,
+      "ticketKey": "OBCS-6420",
+      "summary": "Changer l'emplacement de l'entité et du type pipeline",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1501,
+      "ticketKey": "OBCS-6419",
+      "summary": "Filtrer par entité au niveau de l'historique et du formulaire de création",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1511,
+      "ticketKey": "OBCS-6289",
+      "summary": "Enlever \"Phoning\" de la liste déroulante \"Catégorie\" sur le formulaire 'activité\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1512,
+      "ticketKey": "OBCS-6286",
+      "summary": "Annuler l'affichage popup des interfaces dans \"Gestion des portefeuilles\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1513,
+      "ticketKey": "OBCS-6285",
+      "summary": "Rendre plus visible le bouton (+) sur les filtres",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1514,
+      "ticketKey": "OBCS-6284",
+      "summary": "Enlever les accès \"contrat de réservation BTP\" aux commerciaux de Onpoint",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1515,
+      "ticketKey": "OBCS-6282",
+      "summary": "Permettre que l'actualisation des onglets ne change pas l'interface des utilisateurs",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1516,
+      "ticketKey": "OBCS-6279",
+      "summary": "Filtrer les clients par entité dans \"Gestion des portefeuilles\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1517,
+      "ticketKey": "OBCS-6277",
+      "summary": "Déplacer la fonctionnalité \"Nouvelle activité\" du sous-module \"Paramétrage\" vers le sous-module \"Activité commerciale\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1518,
+      "ticketKey": "OBCS-6276",
+      "summary": "Corriger les doublons existants sur sur le formulaire \"Détail de l'étape",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1519,
+      "ticketKey": "OBCS-6275",
+      "summary": "Rendre possible la modification des étapes du SPANCO sans forcément arriver à \"ORDER\"",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1521,
+      "ticketKey": "OBCS-6216",
+      "summary": "Sur le formulaire de \"opportunité\" ,les informations de la liste déroulante du champs \"offre\" ne sont pas ordonnées",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1522,
+      "ticketKey": "OBCS-6211",
+      "summary": "Avoir des alertes sur les timesheets",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1523,
+      "ticketKey": "OBCS-6210",
+      "summary": "Rapport d'activité OBC",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1529,
+      "ticketKey": "OBCS-6102",
+      "summary": "Permettre l'impression des workflows de tous les processus",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1530,
+      "ticketKey": "OBCS-6101",
+      "summary": "Corriger la date des attestations de travail et prendre en compte le dernier poste occupé par l'employé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1531,
+      "ticketKey": "OBCS-6100",
+      "summary": "Avoir la possibilité de saisir des mots clés lors du choix des natures de prestations sur les formulaires",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1532,
+      "ticketKey": "OBCS-6099",
+      "summary": "Corriger les doublons dans la récupération des salaires journaliers",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1533,
+      "ticketKey": "OBCS-6098",
+      "summary": "Filtrer par journal l'interrogation des comptes",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1534,
+      "ticketKey": "OBCS-6097",
+      "summary": "Rendre impossible la suppression des écritures déjà lettrées",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1535,
+      "ticketKey": "OBCS-6096",
+      "summary": "Intégrer l'option \"Approvisionnement\" des cartes électroniques",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1545,
+      "ticketKey": "OBCS-5795",
+      "summary": "Sur formulaire de l'offre ajouter dans la liste déroulante périodicité ''ONE SHORT''",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1550,
+      "ticketKey": "OBCS-5418",
+      "summary": "Intégration Paiement par carte électronique",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1577,
+      "ticketKey": "OBCS-1279",
+      "summary": "Ajouter la colonne \"segment\" à l’historique dans les  fonctionnalités \"gestion des prospects\" et \"gestion des clients\" afin de permettre un filtrage selon ce critère.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1578,
+      "ticketKey": "OBCS-1276",
+      "summary": "Ajouter une adresse LinkedIn cliquable pour chaque contact afin de faciliter la redirection vers leur contenu LinkedIn. (CRM>Gestion des contacts>Historique)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1579,
+      "ticketKey": "OBCS-1275",
+      "summary": "Dans la fonctionnalité \"CRM > gestion des contacts > historique\", donner la possibilité de savoir directement à quel client appartient un contact.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1580,
+      "ticketKey": "OBCS-1274",
+      "summary": "Il est impossible de différencier les prospects des clients sur la carte (map) dans \"CRM > Analytique > Onglet CLIENT\".",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1582,
+      "ticketKey": "OBCS-1267",
+      "summary": "Sur la fonctionnalité prospect et client trois à intégrer (Voir détail)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1614,
+      "ticketKey": "OBCS-1191",
+      "summary": "Donner la possibilité de modifier les écritures importé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1615,
+      "ticketKey": "OBCS-1189",
+      "summary": "Matricule Grisé - Fichier du personnel",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1619,
+      "ticketKey": "OBCS-1180",
+      "summary": "Possibilité de récupérer le réalisé de la paie des journaliers à partir des timeshit dès l'enregistrement de leurs enregistrement sans attentdre le lancement de la paie",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1620,
+      "ticketKey": "OBCS-1179",
+      "summary": "Possibilité de récupérer les expenses dans le réalisé du budget avant le paiement",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1632,
+      "ticketKey": "OBCS-1157",
+      "summary": "Faire ressortir dans l'historique des journaux Les journaux déséquilibré",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1637,
+      "ticketKey": "OBCS-1143",
+      "summary": "Afficher automatiquement le schéma d'écriture (Imputation) lors des enregistrements d'opérations",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1650,
+      "ticketKey": "OBCS-1120",
+      "summary": "Correction RAN 2023",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1663,
+      "ticketKey": "OBCS-1092",
+      "summary": "Mettre un bouton export sur le stafing des journaliers",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1665,
+      "ticketKey": "OBCS-1090",
+      "summary": "Rajouter un Bouton import et export sur la fonctionnalité Staffing employé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1679,
+      "ticketKey": "OBCS-1061",
+      "summary": "Vérrouillage Timesheet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1701,
+      "ticketKey": "OBCS-1026",
+      "summary": "Amélioration du Système de Filtre OBC",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1886,
+      "ticketKey": "OBCS-600",
+      "summary": "Mettre un controle d'interdiction lorsque la nature de prestation ou le parametrage de comptabilisation des natures de prestation existe déjà.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1888,
+      "ticketKey": "OBCS-598",
+      "summary": "Faire réapparaitre les statuts Bizdev, Admin, Project sur le formulaire de création de projet",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1942,
+      "ticketKey": "OBCS-535",
+      "summary": "Rajouter le bouton import et export pour le sous module Gérer mes tâches",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1943,
+      "ticketKey": "OBCS-534",
+      "summary": "Sur le cumul de plusieurs factures sélectionnées, il est impossible d'effectuer un encaissement au dessous du montant total",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1944,
+      "ticketKey": "OBCS-533",
+      "summary": " Possibilité de gérer une flotte pour le compte d'une entreprise (Pagani, Orange,etc…)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1945,
+      "ticketKey": "OBCS-532",
+      "summary": "Dans les récap des fonctionnalités d'Achat, avoir la description ou le récap de chaque étapes (Expression de besoin, synthèse de cotation… Enregistrer une facture)",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1946,
+      "ticketKey": "OBCS-531",
+      "summary": "Avoir la liste des employés à l'édition des expressions de besoins pour un suivi des demandes par employé",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1947,
+      "ticketKey": "OBCS-530",
+      "summary": "Envoi direct par mail au fournisseur (Achat) ou du client (Vente) via OBC les factures",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1948,
+      "ticketKey": "OBCS-528",
+      "summary": "Exporter l'interrogation des comptes",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1949,
+      "ticketKey": "OBCS-527",
+      "summary": "mettre une interdiction de modification des écritures lettrées",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1950,
+      "ticketKey": "OBCS-526",
+      "summary": "S’assurer que dans etats des deals, les opporunités cloturées sont archivées dans order pour qu’on ait une visibilité sur tous les deals closés",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1951,
+      "ticketKey": "OBCS-525",
+      "summary": "Lors d'une recherche sur les filtres, il est impossible de passer aux pages suivantes.",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1952,
+      "ticketKey": "OBCS-524",
+      "summary": "Dahboard Pilotage Commercial ne s'affiche pas : Erreur ajax dash vente : SyntaxError: Unexpected end of JSON input",
+      "company": "ONPOINT"
+    },
+    {
+      "rowNumber": 1953,
+      "ticketKey": "OBCS-523",
+      "summary": "Activités commerciales : le filtre commercial appel tout le personnel de l'employé",
+      "company": "ONPOINT"
+    }
+  ],
+  "instructions": [
+    "1. Ouvrez le Google Sheet",
+    "2. Allez dans la colonne \"Entreprises\" (colonne J)",
+    "3. Remplacez \"ONPOINT\" par \"ONPOINT AFRICA GROUP\" dans 281 ligne(s)",
+    "4. Les lignes concernées sont listées ci-dessus"
+  ]
+}

@@ -3,12 +3,13 @@
 /**
  * Wrapper client pour la page tickets avec mesures de performance
  * 
- * Mesure :
- * - Temps de rendu de la page
- * - Re-renders du composant principal
+ * OPTIMISÉ : En production, ce wrapper est complètement désactivé (passe-through).
+ * En développement, il mesure les performances mais se désactive automatiquement
+ * après un certain nombre de re-renders pour éviter le spam.
  * 
- * Optimisé avec React.memo pour éviter les re-renders inutiles.
- * Tous les hooks sont appelés de manière inconditionnelle pour respecter les règles des hooks React.
+ * IMPORTANT : Les Server Components de Next.js se re-rendent naturellement
+ * quand les searchParams changent. C'est un comportement normal et attendu.
+ * Ce wrapper ne doit PAS empêcher ces re-renders, seulement les mesurer.
  */
 
 import React, { useRef, useEffect } from 'react';
@@ -19,15 +20,18 @@ type TicketsPageClientWrapperProps = {
 };
 
 /**
- * Composant interne non memoizé pour les hooks
+ * Composant wrapper optimisé
  * 
- * Les hooks DOIVENT être appelés dans le même ordre à chaque render.
- * React.memo n'affecte PAS l'ordre des hooks - c'est une fausse croyance.
- * 
- * OPTIMISÉ : Désactive les mesures de performance si trop de re-renders détectés
- * pour éviter le spam de logs en développement.
+ * En production : passe-through direct (pas de mesures, pas de re-renders inutiles)
+ * En développement : mesures de performance avec auto-désactivation
  */
 function TicketsPageClientWrapperComponent({ children }: TicketsPageClientWrapperProps) {
+  // En production, retourner directement les children sans mesures
+  if (process.env.NODE_ENV === 'production') {
+    return <>{children}</>;
+  }
+
+  // En développement, utiliser les mesures de performance
   const hasLoggedRef = useRef(false);
   const renderCountRef = useRef(0);
   const isPerformanceDisabledRef = useRef(false);
@@ -36,43 +40,38 @@ function TicketsPageClientWrapperComponent({ children }: TicketsPageClientWrappe
   renderCountRef.current += 1;
 
   // Désactiver les mesures si trop de re-renders (évite le spam)
+  // Réduire le seuil à 10 pour désactiver plus rapidement
   const shouldMeasure = 
-    process.env.NODE_ENV === 'development' && 
     !isPerformanceDisabledRef.current &&
-    renderCountRef.current < 20; // Désactiver après 20 re-renders
+    renderCountRef.current < 10; // Désactiver après 10 re-renders
 
   // Tous les hooks doivent être appelés dans le même ordre à chaque render
-  // 1. usePerformanceMeasure (toujours appelé, inconditionnel)
   usePerformanceMeasure({
     name: 'TicketsPageRender',
     measureRender: shouldMeasure,
     logToConsole: shouldMeasure,
   });
 
-  // 2. useRenderCount (toujours appelé, inconditionnel)
-  // Désactiver les logs si trop de re-renders
   useRenderCount({
     componentName: 'TicketsPage',
     warningThreshold: 5,
     logToConsole: shouldMeasure,
   });
 
-  // 3. useEffect pour le logging (toujours appelé, inconditionnel)
   useEffect(() => {
     if (shouldMeasure && !hasLoggedRef.current) {
-      console.group('📊 Tickets Page Performance');
+      console.group('📊 Tickets Page Performance (Dev Mode)');
       console.log('✅ Page montée');
-      console.log('⏱️ Mesures automatiques activées :');
-      console.log('   - Temps de rendu (TicketsPageRender)');
-      console.log('   - Compteur de re-renders');
+      console.log('⏱️ Mesures automatiques activées (max 10 re-renders)');
+      console.log('ℹ️ Note: Les Server Components se re-rendent normalement quand les searchParams changent');
       console.groupEnd();
       hasLoggedRef.current = true;
     }
 
     // Désactiver les mesures si trop de re-renders
-    if (renderCountRef.current >= 20 && !isPerformanceDisabledRef.current) {
+    if (renderCountRef.current >= 10 && !isPerformanceDisabledRef.current) {
       isPerformanceDisabledRef.current = true;
-      console.warn('⚠️ [Performance] Trop de re-renders détectés. Mesures de performance désactivées pour éviter le spam.');
+      console.warn('⚠️ [Performance] Mesures désactivées après 10 re-renders. C\'est normal pour un Server Component qui réagit aux searchParams.');
     }
   }, [shouldMeasure]);
 
@@ -80,28 +79,26 @@ function TicketsPageClientWrapperComponent({ children }: TicketsPageClientWrappe
 }
 
 /**
- * Wrapper client optimisé avec React.memo
+ * Wrapper client optimisé
  * 
- * Ne se re-rend que si les children changent réellement (référence différente).
+ * En production : passe-through direct (pas de memo, pas de overhead)
+ * En développement : memo pour éviter les re-renders inutiles du wrapper lui-même
  * 
- * NOTE : En production, ce wrapper peut être supprimé car les mesures de performance
- * ne sont pas nécessaires. En développement, il aide à identifier les problèmes.
- * 
- * IMPORTANT : React.memo n'affecte PAS l'ordre des hooks.
- * Les hooks sont toujours appelés dans le même ordre à chaque render.
+ * IMPORTANT : Les Server Components de Next.js créent de nouvelles références
+ * pour les children à chaque render. C'est normal et ne peut pas être évité.
+ * Ce wrapper ne doit PAS empêcher ces re-renders, seulement les mesurer en dev.
  */
-export const TicketsPageClientWrapper = React.memo(
-  TicketsPageClientWrapperComponent,
-  (prevProps, nextProps) => {
-    // En développement, comparer les children pour éviter les re-renders inutiles
-    // En production, toujours re-render (mais le wrapper devrait être supprimé)
-    if (process.env.NODE_ENV === 'development') {
-      return prevProps.children === nextProps.children;
-    }
-    // En production, permettre le re-render (mais idéalement supprimer le wrapper)
-    return false;
-  }
-);
+export const TicketsPageClientWrapper = 
+  process.env.NODE_ENV === 'production'
+    ? TicketsPageClientWrapperComponent // En production, pas de memo (passe-through)
+    : React.memo(
+        TicketsPageClientWrapperComponent,
+        (prevProps, nextProps) => {
+          // En développement, comparer les children par référence
+          // Mais accepter les re-renders si les children changent (comportement normal)
+          return prevProps.children === nextProps.children;
+        }
+      );
 
 TicketsPageClientWrapper.displayName = 'TicketsPageClientWrapper';
 

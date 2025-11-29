@@ -99,10 +99,43 @@ export function FiltersSidebarClient({
 
   /**
    * Met à jour l'URL avec les nouveaux filtres
+   * 
+   * ✅ OPTIMISÉ - Principe Clean Code :
+   * - Compare les filtres actuels avec les nouveaux avant router.push
+   * - Évite la boucle infinie en vérifiant si les filtres ont réellement changé
+   * - Retire searchParams des dépendances pour stabiliser le callback
    */
   const updateUrlWithFilters = useCallback(
     (newFilters: AdvancedFiltersInput) => {
-      const params = new URLSearchParams(searchParams.toString());
+      // ✅ Lire searchParams directement dans le callback (pas de dépendance)
+      // Évite la recréation du callback à chaque changement de searchParams
+      const currentSearchParams = new URLSearchParams(searchParams.toString());
+      
+      // ✅ Parser les filtres actuels dans l'URL pour comparaison
+      const currentFilters = parseAdvancedFiltersFromParams(
+        Object.fromEntries(currentSearchParams.entries())
+      ) || buildEmptyFilters();
+      
+      // ✅ Comparer les filtres actuels avec les nouveaux
+      // Utiliser une comparaison simple pour éviter les router.push inutiles
+      const currentFiltersEmpty = areFiltersEmpty(currentFilters);
+      const newFiltersEmpty = areFiltersEmpty(newFilters);
+      
+      // Si les deux sont vides, ne rien faire
+      if (currentFiltersEmpty && newFiltersEmpty) {
+        return;
+      }
+      
+      // Si les filtres sont identiques (comparaison simple par stringification)
+      // Note: Comparaison basique pour éviter les router.push si pas de changement réel
+      const currentFiltersStr = JSON.stringify(currentFilters);
+      const newFiltersStr = JSON.stringify(newFilters);
+      
+      if (currentFiltersStr === newFiltersStr) {
+        return; // Pas de changement, ne pas mettre à jour l'URL
+      }
+
+      const params = new URLSearchParams(currentSearchParams);
 
       // Supprimer tous les paramètres de filtres avancés existants
       const filterKeys = [
@@ -131,9 +164,6 @@ export function FiltersSidebarClient({
         
         // Pour chaque clé dans filterParams, remplacer ou ajouter
         filterParams.forEach((value, key) => {
-          // Si c'est une clé qui peut avoir plusieurs valeurs, on doit utiliser getAll
-          const existingValues = params.getAll(key);
-          
           // Supprimer les anciennes valeurs et ajouter les nouvelles
           params.delete(key);
           filterParams.getAll(key).forEach((val) => params.append(key, val));
@@ -145,8 +175,9 @@ export function FiltersSidebarClient({
 
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [router, pathname, searchParams]
+    [router, pathname] // ✅ Retirer searchParams des dépendances pour stabiliser le callback
   );
 
   /**

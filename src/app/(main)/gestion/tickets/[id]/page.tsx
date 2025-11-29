@@ -2,7 +2,8 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-import { getTicketById, transferTicketToJira } from '@/services/tickets/jira-transfer';
+import { getTicketById } from '@/services/tickets/jira-transfer';
+import { transferTicketAction } from '../actions';
 import { loadTicketInteractions, loadTicketComments } from '@/services/tickets/comments';
 import { Badge } from '@/ui/badge';
 import { Button } from '@/ui/button';
@@ -142,14 +143,7 @@ export default async function TicketDetailPage({
     notFound();
   }
 
-  async function handleTransfer() {
-    'use server';
-    try {
-      await transferTicketToJira(id);
-    } catch (error) {
-      throw error;
-    }
-  }
+  // ✅ Utiliser la Server Action externe (revalidatePath inclus)
 
   const canTransfer =
     ticket.ticket_type === 'ASSISTANCE' && ticket.status === 'En_cours';
@@ -221,7 +215,7 @@ export default async function TicketDetailPage({
         </div>
         <div className="flex items-center gap-3">
           {canTransfer && (
-            <TransferTicketButton onTransfer={handleTransfer} ticketId={id} />
+            <TransferTicketButton onTransfer={() => transferTicketAction(id)} ticketId={id} />
           )}
           {canValidate && (
             <ValidateTicketButton ticketId={id} isValidated={isValidated} />

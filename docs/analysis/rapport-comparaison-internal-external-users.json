@@ -1,0 +1,93 @@
+{
+  "date": "2025-11-27T21:35:54.780Z",
+  "summary": {
+    "totalInternal": 17,
+    "totalExternal": 199,
+    "totalMatches": 5,
+    "exactMatches": 3,
+    "highSimilarity": 2,
+    "mediumSimilarity": 0
+  },
+  "matches": [
+    {
+      "similarity": 100,
+      "internal": {
+        "id": "306d39a4-ac82-46cb-aed9-19aaa9726e27",
+        "name": "CHARLEY KOUAME",
+        "email": "hkouame@onpointafrica.com",
+        "role": "agent",
+        "department": "Support"
+      },
+      "external": {
+        "id": "c6c6e00f-a6f7-4477-a731-dc9cf6dc5cc6",
+        "name": "Charley KOUAME",
+        "email": null,
+        "company_id": "55dddd2e-c02d-4db0-b889-6fab597339e9"
+      }
+    },
+    {
+      "similarity": 100,
+      "internal": {
+        "id": "41d6b175-6a99-4c2b-9ae9-c78a1c43fedf",
+        "name": "Martial Gnali",
+        "email": "mgnali@onpointafrica.com",
+        "role": "manager",
+        "department": "IT"
+      },
+      "external": {
+        "id": "7b3dc6f2-6352-44a8-8d7b-cd70456016d8",
+        "name": "Martial GNALI",
+        "email": null,
+        "company_id": "55dddd2e-c02d-4db0-b889-6fab597339e9"
+      }
+    },
+    {
+      "similarity": 100,
+      "internal": {
+        "id": "312a371e-feb1-4c51-93b6-a4a0efef9d3d",
+        "name": "Ulrich GBO",
+        "email": "ugbo@onpointafrica.com",
+        "role": "agent",
+        "department": "IT"
+      },
+      "external": {
+        "id": "ba09620a-09a9-4a11-a6d0-f95177ab5fe8",
+        "name": "Ulrich GBO",
+        "email": null,
+        "company_id": "55dddd2e-c02d-4db0-b889-6fab597339e9"
+      }
+    },
+    {
+      "similarity": 90,
+      "internal": {
+        "id": "c8431448-08b0-4349-9fb3-c0cc7447db04",
+        "name": "JOEL SIE",
+        "email": "jsie@onpointafrica.om",
+        "role": "agent",
+        "department": "Support"
+      },
+      "external": {
+        "id": "1e1419c7-68ba-4500-9e12-d454d46a538d",
+        "name": "SIE",
+        "email": null,
+        "company_id": "7c3f4b81-4407-40f3-a97e-dd75339b9d5e"
+      }
+    },
+    {
+      "similarity": 90,
+      "internal": {
+        "id": "236132f6-b04c-4781-b1de-ad01fa1cbd6c",
+        "name": "kader coulibaly",
+        "email": "kcoulibaly@onpointafrica.com",
+        "role": "agent",
+        "department": "IT"
+      },
+      "external": {
+        "id": "6c26c569-842f-41df-a43f-02e162938a4c",
+        "name": "Coulibaly",
+        "email": null,
+        "company_id": "1ec41f35-f404-4a90-a880-7fbced374ac3"
+      }
+    }
+  ]
+}

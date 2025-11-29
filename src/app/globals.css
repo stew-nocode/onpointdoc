@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Empêcher le scroll automatique vers le haut lors des changements de DOM */
+html {
+  overflow-anchor: none;
+}
+
+body {
+  overflow-anchor: none;
+}
+
 /* Styles pour le contenu de l'analyse IA - Optimisé Dark Mode */
 @layer components {
   .analysis-content {

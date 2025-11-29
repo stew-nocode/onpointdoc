@@ -7,7 +7,7 @@
  * Utilise TicketForm en mode édition avec les valeurs initiales du ticket
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TicketForm } from '@/components/forms/ticket-form';
@@ -17,7 +17,7 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
 import type { BasicCompany } from '@/services/companies';
-import { Loader2 } from 'lucide-react';
+import { updateTicketAction } from '@/app/(main)/gestion/tickets/actions';
 
 type TicketEditFormProps = {
   ticketId: string;
@@ -75,36 +75,40 @@ export function TicketEditForm({
     router.push(`/gestion/tickets/${ticketId}`);
   };
 
+  /**
+   * Gère la soumission du formulaire d'édition
+   * 
+   * Principe Clean Code :
+   * - SRP : Une seule responsabilité (mettre à jour un ticket)
+   * - Utilise directement la Server Action (pas d'API route intermédiaire)
+   * - Pas de router.refresh() (revalidatePath dans la Server Action)
+   * 
+   * @param values - Valeurs du formulaire
+   * @param files - Fichiers à uploader (optionnel)
+   */
   const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/tickets/${ticketId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: values.title,
-          description: values.description,
-          type: values.type,
-          channel: values.channel,
-          productId: values.productId || null,
-          moduleId: values.moduleId || null,
-          submoduleId: values.submoduleId || null,
-          featureId: values.featureId || null,
-          priority: values.priority,
-          customerContext: values.customerContext || null,
-          contactUserId: values.contactUserId || null,
-          companyId: values.companyId || null,
-          bug_type: values.bug_type || null,
-          status: values.status || undefined
-        })
+      // ✅ Utiliser la Server Action directement (revalidatePath inclus)
+      await updateTicketAction({
+        id: ticketId,
+        title: values.title,
+        description: values.description,
+        type: values.type,
+        channel: values.channel,
+        productId: values.productId || null,
+        moduleId: values.moduleId || null,
+        submoduleId: values.submoduleId || null,
+        featureId: values.featureId || null,
+        priority: values.priority,
+        customerContext: values.customerContext || null,
+        contactUserId: values.contactUserId || null,
+        companyId: values.companyId || null,
+        bug_type: values.bug_type || null,
+        status: values.status || undefined
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Erreur inconnue' }));
-        throw new Error(errorData.message || `Erreur ${response.status}`);
-      }
 
       // Upload des fichiers si présents (optionnel pour l'édition)
       if (files && files.length) {
@@ -118,8 +122,10 @@ export function TicketEditForm({
       }
 
       toast.success('Ticket mis à jour avec succès');
+      
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
+      // Rediriger vers la page de détail du ticket
       router.push(`/gestion/tickets/${ticketId}`);
-      router.refresh();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du ticket';
       setError(errorMessage);

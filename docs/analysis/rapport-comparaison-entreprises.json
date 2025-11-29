@@ -1,0 +1,219 @@
+{
+  "summary": {
+    "totalInSheet": 39,
+    "totalInSupabase": 40,
+    "foundInBoth": 39,
+    "onlyInSheet": [],
+    "onlyInSupabase": [
+      "ONPOINT AFRICA GROUP"
+    ]
+  },
+  "details": {
+    "found": [
+      {
+        "name": "2AAZ",
+        "supabase_id": "a081dfb0-8d3a-4e6f-be15-a3d1808eb62f",
+        "jira_company_id": null
+      },
+      {
+        "name": "AFREX/MEHO CAPITAL",
+        "supabase_id": "894a0a9b-9409-4504-8ed1-ca3016642116",
+        "jira_company_id": null
+      },
+      {
+        "name": "AFRIC URBA",
+        "supabase_id": "cdbb200c-a5af-4c51-b1f9-1fb176e80a65",
+        "jira_company_id": null
+      },
+      {
+        "name": "ARIC",
+        "supabase_id": "c6eec27f-e2a1-4630-b776-c9ca8334277c",
+        "jira_company_id": null
+      },
+      {
+        "name": "CILAGRI",
+        "supabase_id": "694c9b22-adf0-45c0-9f0f-1b499d387977",
+        "jira_company_id": null
+      },
+      {
+        "name": "CIP",
+        "supabase_id": "fe33ea05-8beb-4d77-8c67-bd0994ce14e9",
+        "jira_company_id": null
+      },
+      {
+        "name": "CSCTICAO",
+        "supabase_id": "3a707152-1d9b-41c1-8dd5-ff8e04c2e43d",
+        "jira_company_id": null
+      },
+      {
+        "name": "ECORIGINE",
+        "supabase_id": "caa10f0f-6de6-43f5-99dd-65d37c418687",
+        "jira_company_id": null
+      },
+      {
+        "name": "EDIPRESSE",
+        "supabase_id": "7e5cbfaa-1fdc-4a64-ab28-51faa327e23e",
+        "jira_company_id": null
+      },
+      {
+        "name": "EGBV",
+        "supabase_id": "e9c42cf0-1782-4e68-85c5-e7e7ed39568b",
+        "jira_company_id": null
+      },
+      {
+        "name": "EJARA",
+        "supabase_id": "c67ed264-849b-4fb6-9e6e-f8a7ed6ca903",
+        "jira_company_id": null
+      },
+      {
+        "name": "ELIO GROUP",
+        "supabase_id": "dc3aed59-eecb-4966-bc4d-d462440ee73b",
+        "jira_company_id": null
+      },
+      {
+        "name": "ENVAL LABORATOIRE",
+        "supabase_id": "519ec65b-4526-4540-ae38-26dbcbad6917",
+        "jira_company_id": null
+      },
+      {
+        "name": "ENVIPUR",
+        "supabase_id": "4a450958-4ba4-4577-9e9b-c56a0855d496",
+        "jira_company_id": null
+      },
+      {
+        "name": "ETRAKOM-CI",
+        "supabase_id": "fff4f6d3-a1d5-44a8-89fb-61a58fb6fa47",
+        "jira_company_id": null
+      },
+      {
+        "name": "ETS MAB",
+        "supabase_id": "068573c1-5c63-42d1-a987-fc6cb93b5f1f",
+        "jira_company_id": null
+      },
+      {
+        "name": "FALCON",
+        "supabase_id": "069d0b62-cc54-4f0f-bca3-8a6f82cc102b",
+        "jira_company_id": null
+      },
+      {
+        "name": "FIRST CAPITAL",
+        "supabase_id": "fc77dfc5-0c15-43e5-9676-2b955a47c067",
+        "jira_company_id": null
+      },
+      {
+        "name": "HC CAPITAL PROPERTIES",
+        "supabase_id": "7216d999-ab5e-4829-b416-23f1d245fb86",
+        "jira_company_id": null
+      },
+      {
+        "name": "IPT",
+        "supabase_id": "7a85dca8-9824-46f5-9fa5-cd5f5483a45a",
+        "jira_company_id": null
+      },
+      {
+        "name": "IVOIRE DEVELOPPEMENT",
+        "supabase_id": "61a228f1-89fe-4363-9c72-131c438292cb",
+        "jira_company_id": null
+      },
+      {
+        "name": "JOEL K PERFORMANCE",
+        "supabase_id": "7ed145e7-6bd2-4e5d-880b-2c5f7655cfa9",
+        "jira_company_id": null
+      },
+      {
+        "name": "JOEL K PROPERTIES",
+        "supabase_id": "91e3ce7c-5a61-44e2-8dbf-ef3bd82223a2",
+        "jira_company_id": null
+      },
+      {
+        "name": "KOFFI & DIABATE",
+        "supabase_id": "3ac8cf28-e98b-4675-9bab-34eaf441c251",
+        "jira_company_id": null
+      },
+      {
+        "name": "KORI TRANSPORT",
+        "supabase_id": "1ec41f35-f404-4a90-a880-7fbced374ac3",
+        "jira_company_id": null
+      },
+      {
+        "name": "LABOGEM",
+        "supabase_id": "2feb0bc6-4faa-443f-bfcd-528e464055e5",
+        "jira_company_id": null
+      },
+      {
+        "name": "MATRELEC",
+        "supabase_id": "174156e8-f568-45f2-8242-fe5b68b733b8",
+        "jira_company_id": null
+      },
+      {
+        "name": "MYKA",
+        "supabase_id": "86612ae4-dea1-42c6-82cc-368824533d71",
+        "jira_company_id": null
+      },
+      {
+        "name": "NOAH",
+        "supabase_id": "7a42e7d4-b108-4682-b015-877d4ae0930a",
+        "jira_company_id": null
+      },
+      {
+        "name": "ONPOINT",
+        "supabase_id": "b321e0c7-8788-4408-845a-9b876f18adf8",
+        "jira_company_id": null
+      },
+      {
+        "name": "OTOMASYS",
+        "supabase_id": "c8936e45-2580-4f66-ba45-096f5b87af07",
+        "jira_company_id": null
+      },
+      {
+        "name": "PROPERTY KRO",
+        "supabase_id": "92de31f0-af59-434b-8c3a-510cb89419dd",
+        "jira_company_id": null
+      },
+      {
+        "name": "ROCFED",
+        "supabase_id": "2ca869ba-4382-490c-9327-4ba4de5799cd",
+        "jira_company_id": null
+      },
+      {
+        "name": "S-TEL",
+        "supabase_id": "f00409a4-268a-45bf-acff-b9ea4afa60f1",
+        "jira_company_id": null
+      },
+      {
+        "name": "SERTEM",
+        "supabase_id": "96d5eb6a-60ae-471c-bb25-3b6a82090ec2",
+        "jira_company_id": null
+      },
+      {
+        "name": "SIE-TRAVAUX",
+        "supabase_id": "3184cfb7-4154-4c34-85cd-7d70a2040782",
+        "jira_company_id": null
+      },
+      {
+        "name": "SIS",
+        "supabase_id": "7c3f4b81-4407-40f3-a97e-dd75339b9d5e",
+        "jira_company_id": null
+      },
+      {
+        "name": "SIT BTP",
+        "supabase_id": "aceab3a6-98a6-453e-83f4-5534bd4c3c83",
+        "jira_company_id": null
+      },
+      {
+        "name": "VENUS DISTRIBUTION",
+        "supabase_id": "55a7945f-8301-4610-a77d-c51e36a17a73",
+        "jira_company_id": null
+      }
+    ],
+    "missingInSupabase": [],
+    "missingInSheet": [
+      {
+        "name": "ONPOINT AFRICA GROUP",
+        "id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+        "jira_company_id": 10028,
+        "status": "⚠️  Non trouvée dans le fichier"
+      }
+    ]
+  }
+}

@@ -30,6 +30,23 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    // Ne pas afficher l'UI d'erreur pour les erreurs réseau normales
+    // Ces erreurs sont déjà gérées dans les composants qui font les fetch
+    const isNetworkError = error instanceof TypeError && (
+      error.message.toLowerCase().includes('network') ||
+      error.message.toLowerCase().includes('fetch') ||
+      error.message === 'network error'
+    );
+
+    // Si c'est une erreur réseau, ne pas déclencher l'UI d'erreur
+    // mais retourner quand même un état pour éviter les re-renders
+    if (isNetworkError) {
+      return {
+        hasError: false,
+        error: null
+      };
+    }
+
     return {
       hasError: true,
       error
@@ -37,8 +54,18 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Logger l'erreur pour le monitoring
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Ne pas logger les erreurs réseau qui sont normales (déconnexion, timeout, etc.)
+    // Ces erreurs sont déjà gérées dans les composants qui font les fetch
+    const isNetworkError = error instanceof TypeError && (
+      error.message.toLowerCase().includes('network') ||
+      error.message.toLowerCase().includes('fetch') ||
+      error.message === 'network error'
+    );
+
+    if (!isNetworkError) {
+      // Logger l'erreur pour le monitoring (seulement les erreurs non réseau)
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
 
     // Appeler le callback si fourni
     if (this.props.onError) {

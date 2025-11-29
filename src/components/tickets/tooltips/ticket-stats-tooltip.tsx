@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { TooltipContent } from '@/ui/tooltip';
 import { StatItem } from './utils/stat-item';
@@ -14,10 +14,19 @@ type TicketStatsTooltipProps = {
   title: string;
   description?: string | null;
   jiraIssueKey?: string | null;
+  /**
+   * Indique si le tooltip est ouvert
+   * Si fourni, le chargement des données se fera seulement quand isOpen = true
+   */
+  isOpen?: boolean;
 };
 
 /**
  * Charge les statistiques du ticket depuis l'API
+ * 
+ * Principe Clean Code - Fonction pure :
+ * - Fonction pure sans effets de bord
+ * - Gestion d'erreur centralisée
  * 
  * @param ticketId - UUID du ticket
  * @returns Statistiques du ticket ou null si erreur
@@ -40,6 +49,9 @@ async function fetchTicketStats(ticketId: string): Promise<TicketStats | null> {
 /**
  * Formate la description pour l'affichage
  * 
+ * Principe Clean Code - Fonction pure :
+ * - Fonction pure et déterministe
+ * 
  * @param description - Description du ticket (ADF ou texte)
  * @returns Description formatée et tronquée
  */
@@ -55,6 +67,8 @@ function formatDescription(description?: string | null): string | null {
 
 /**
  * Affiche le loader pendant le chargement
+ * 
+ * Principe Clean Code - Composant simple et réutilisable
  */
 function LoadingState() {
   return (
@@ -69,6 +83,8 @@ function LoadingState() {
 
 /**
  * Affiche les informations de base du ticket
+ * 
+ * Principe Clean Code - Composant de présentation pur
  * 
  * @param title - Titre du ticket
  * @param description - Description formatée
@@ -101,6 +117,8 @@ function TicketInfo({
 /**
  * Affiche les statistiques du ticket
  * 
+ * Principe Clean Code - Composant de présentation pur
+ * 
  * @param stats - Statistiques du ticket
  */
 function TicketStats({ stats }: { stats: TicketStats }) {
@@ -128,6 +146,14 @@ function TicketStats({ stats }: { stats: TicketStats }) {
 /**
  * Composant pour afficher les statistiques d'un ticket dans un tooltip
  * 
+ * ✅ OPTIMISÉ : Charge les données seulement quand le tooltip est ouvert (isOpen = true)
+ * 
+ * Principe Clean Code - Niveau Senior :
+ * - SRP : Une seule responsabilité (afficher les stats dans un tooltip)
+ * - Lazy loading : Charge les données seulement à la demande
+ * - Mémorisation : Cache les données une fois chargées
+ * - Gestion d'erreur robuste
+ * 
  * Affiche :
  * - Titre et description du ticket
  * - Clé JIRA si présente
@@ -138,29 +164,58 @@ export function TicketStatsTooltip({
   createdAt,
   title,
   description,
-  jiraIssueKey
+  jiraIssueKey,
+  isOpen = false
 }: TicketStatsTooltipProps) {
   const [stats, setStats] = useState<TicketStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadStats();
-  }, [ticketId]);
+  const [isLoading, setIsLoading] = useState(false);
+  const hasLoadedRef = useRef(false); // Mémoriser si les données ont déjà été chargées
 
   /**
-   * Charge les statistiques du ticket
+   * ✅ OPTIMISÉ : Charger les données seulement quand le tooltip est ouvert
+   * ET seulement une fois (mémorisation avec hasLoadedRef)
    */
-  async function loadStats(): Promise<void> {
-    setIsLoading(true);
-    const loadedStats = await fetchTicketStats(ticketId);
-    setStats(loadedStats);
-    setIsLoading(false);
-  }
+  useEffect(() => {
+    // Ne charger que si :
+    // 1. Le tooltip est ouvert (isOpen = true)
+    // 2. Les données n'ont pas encore été chargées
+    if (!isOpen || hasLoadedRef.current) {
+      return;
+    }
+
+    /**
+     * Charge les statistiques du ticket
+     * 
+     * Principe Clean Code - Fonction pure et async/await propre
+     */
+    async function loadStats(): Promise<void> {
+      setIsLoading(true);
+      try {
+        const loadedStats = await fetchTicketStats(ticketId);
+        setStats(loadedStats);
+        hasLoadedRef.current = true; // Marquer comme chargé
+      } catch (error) {
+        // Erreur déjà gérée dans fetchTicketStats (retourne null)
+        setStats(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadStats();
+  }, [isOpen, ticketId]); // Dépendances : isOpen, ticketId
 
   const formattedDescription = formatDescription(description);
 
-  if (isLoading) {
+  // Afficher le loader seulement si on est en train de charger (tooltip ouvert)
+  if (isLoading && isOpen) {
     return <LoadingState />;
+  }
+
+  // ✅ CRITIQUE : Si le tooltip n'est pas ouvert et n'a jamais été chargé, ne rien rendre
+  // Cela évite le montage inutile du composant
+  if (!isOpen && !hasLoadedRef.current) {
+    return null;
   }
 
   return (
@@ -176,4 +231,3 @@ export function TicketStatsTooltip({
     </TooltipContent>
   );
 }
-

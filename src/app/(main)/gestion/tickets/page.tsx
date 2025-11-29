@@ -20,11 +20,13 @@ import { TicketsKPISectionLazy } from '@/components/tickets/tickets-kpi-section-
 import { TicketsPageClientWrapper } from '@/components/tickets/tickets-page-client-wrapper';
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getCachedCurrentUserProfileId } from '@/lib/auth/cached-auth';
 import { isApplicationError } from '@/lib/errors/types';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
 import { FiltersSidebarClientLazy } from '@/components/tickets/filters/filters-sidebar-client-lazy';
 import { PageLayoutWithFilters } from '@/components/layout/page';
+import { createTicketAction } from './actions';
+import { getCachedSearchParams, stabilizeSearchParams } from '@/lib/utils/search-params';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -40,7 +42,16 @@ type TicketsPageProps = {
 /**
  * Charge les tickets initiaux pour la page
  * 
- * Optimisé : noStore() seulement ici pour éviter le cache des tickets (données temps réel)
+ * ✅ PHASE 4 OPTIMISÉE (correction) :
+ * - noStore() nécessaire car les tickets dépendent de cookies() (authentification)
+ * - unstable_cache() ne peut pas être utilisé avec cookies() (limitation Next.js)
+ * - Les tickets sont des données dynamiques dépendantes de l'utilisateur (RLS)
+ * - revalidatePath() dans les Server Actions reste efficace pour les mises à jour
+ * 
+ * Principe Clean Code - Niveau Senior :
+ * - noStore() utilisé seulement pour les tickets (données temps réel + dynamiques)
+ * - Les optimisations des phases précédentes restent (Server Actions, searchParams)
+ * - revalidatePath() assure la fraîcheur des données après modifications
  */
 async function loadInitialTickets(
   typeParam?: string,
@@ -52,8 +63,10 @@ async function loadInitialTickets(
   sortDirectionParam?: string,
   advancedFilters?: ReturnType<typeof parseAdvancedFiltersFromParams>
 ): Promise<TicketsPaginatedResult> {
-  // noStore() uniquement pour les tickets (données temps réel)
+  // ✅ noStore() nécessaire : tickets dépendent de cookies() (authentification)
+  // Impossible d'utiliser unstable_cache() avec cookies() selon Next.js
   noStore();
+  
   try {
     const normalizedType =
       typeParam === 'BUG' || typeParam === 'REQ' || typeParam === 'ASSISTANCE'
@@ -67,18 +80,20 @@ async function loadInitialTickets(
     const { parseTicketSort } = await import('@/types/ticket-sort');
     const sort = parseTicketSort(sortColumnParam, sortDirectionParam);
 
-    return await listTicketsPaginated(
+    const result = await listTicketsPaginated(
       normalizedType,
       normalizedStatus,
       0,
       25,
       searchParam,
       quickFilterParam,
-      currentProfileId,
+      currentProfileId ?? undefined,
       sort.column,
       sort.direction,
       advancedFilters || undefined
     );
+    
+    return result;
   } catch (error) {
     // Logger l'erreur pour le débogage
     console.error('[ERROR] Erreur dans loadInitialTickets:', error);
@@ -87,31 +102,12 @@ async function loadInitialTickets(
       console.error('[ERROR] StatusCode:', error.statusCode);
       console.error('[ERROR] Details:', error.details);
     }
+    
     // Retourner un résultat vide en cas d'erreur pour éviter de casser la page
     return { tickets: [], hasMore: false, total: 0 };
   }
 }
 
-async function getCurrentUserProfileId() {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_uid', user.id)
-      .single();
-
-    return profile?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Charge les produits et modules pour les formulaires
@@ -150,27 +146,31 @@ async function loadProductsAndModules() {
   }
 }
 
+
 /**
  * Page principale de gestion des tickets
  * 
- * Optimisé : noStore() déplacé uniquement dans loadInitialTickets
- * pour permettre le cache des données statiques (produits, modules)
+ * Optimisations appliquées (Niveau Senior) :
+ * - noStore() déplacé uniquement dans loadInitialTickets (données temps réel uniquement)
+ * - cache() utilisé pour mémoriser la résolution des searchParams
+ * - searchParams stabilisés pour éviter les recompilations inutiles
+ * - Parallélisme optimisé pour les requêtes indépendantes
  */
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  // Résoudre la Promise searchParams pour Next.js 15
-  const resolvedSearchParams = await searchParams;
-  const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
+  // ✅ PHASE 3 : Utiliser cache() pour mémoriser la résolution des searchParams
+  // Évite de résoudre plusieurs fois les mêmes params dans le même render tree
+  const resolvedSearchParams = await getCachedSearchParams(searchParams);
   
-  // Parser les filtres avancés depuis les URL params
-  // Next.js 15 retourne les searchParams comme un objet, mais pour les valeurs multiples,
-  // il faut les extraire manuellement depuis l'URL
-  const allParams: Record<string, string | string[] | undefined> = {};
+  // Stabiliser et normaliser les searchParams pour une comparaison stable
+  const stabilizedParams = await stabilizeSearchParams(resolvedSearchParams);
   
-  // Pour les paramètres simples, utiliser directement
-  if (resolvedSearchParams?.type) allParams.type = resolvedSearchParams.type;
-  if (resolvedSearchParams?.status) allParams.status = resolvedSearchParams.status;
-  if (resolvedSearchParams?.search) allParams.search = resolvedSearchParams.search;
-  if (resolvedSearchParams?.quick) allParams.quick = resolvedSearchParams.quick;
+  // Extraire les paramètres avec types appropriés
+  const quickFilter = stabilizedParams.quick as QuickFilter | undefined;
+  const typeParam = stabilizedParams.type;
+  const statusParam = stabilizedParams.status;
+  const searchParam = stabilizedParams.search;
+  const sortColumnParam = stabilizedParams.sortColumn;
+  const sortDirectionParam = stabilizedParams.sortDirection;
   
   // Pour les paramètres de filtres avancés, on doit les extraire depuis l'URL directement
   // car Next.js 15 ne les expose pas comme arrays dans searchParams
@@ -179,8 +179,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   
   // Optimiser le parallélisme : démarrer toutes les requêtes en parallèle
   // Le profileId est nécessaire pour les KPIs et tickets, donc on l'attend d'abord
+  // ✅ OPTIMISÉ : Utilise getCachedCurrentUserProfileId pour éviter le rate limit
   const [currentProfileId, productsData] = await Promise.all([
-    getCurrentUserProfileId(),
+    getCachedCurrentUserProfileId(),
     loadProductsAndModules(), // Pas de dépendance, peut être en parallèle
   ]);
 
@@ -188,24 +189,21 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   try {
     const [initialTicketsData, kpis] = await Promise.all([
       loadInitialTickets(
-        resolvedSearchParams?.type,
-        resolvedSearchParams?.status,
-        resolvedSearchParams?.search,
+        typeParam,
+        statusParam,
+        searchParam,
         quickFilter,
         currentProfileId,
-        resolvedSearchParams?.sortColumn,
-        resolvedSearchParams?.sortDirection,
+        sortColumnParam,
+        sortDirectionParam,
         null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
       ),
       getSupportTicketKPIs(currentProfileId),
     ]);
     const { products, modules, submodules, features, contacts, companies } = productsData;
 
-    async function handleTicketSubmit(values: CreateTicketInput) {
-      'use server';
-      const created = await createTicket(values);
-      return created?.id as string;
-    }
+    // ✅ Server Action extraite dans actions.ts pour éviter les recompilations
+    // La fonction inline était recréée à chaque recompilation du Server Component
 
     return (
       <TicketsPageClientWrapper>
@@ -229,7 +227,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 features={features}
                 contacts={contacts}
                 companies={companies}
-                onSubmit={handleTicketSubmit}
+                onSubmit={createTicketAction}
               />
             )
           }}
@@ -240,7 +238,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
               initialTicketsData.total > 0
                 ? `(${initialTicketsData.total} au total)`
                 : undefined,
-            search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
+            search: <TicketsSearchBar initialSearch={searchParam} />,
             quickFilters: (
               <TicketsQuickFilters
                 activeFilter={quickFilter}
@@ -253,9 +251,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTickets={initialTicketsData.tickets}
             initialHasMore={initialTicketsData.hasMore}
             initialTotal={initialTicketsData.total}
-            type={resolvedSearchParams?.type}
-            status={resolvedSearchParams?.status}
-            search={resolvedSearchParams?.search}
+            type={typeParam}
+            status={statusParam}
+            search={searchParam}
             quickFilter={quickFilter}
             currentProfileId={currentProfileId ?? undefined}
           />

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TicketForm } from '@/components/forms/ticket-form';
 import { Button } from '@/ui/button';
@@ -40,7 +39,6 @@ export const CreateTicketDialog = ({
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
     setIsSubmitting(true);
@@ -63,7 +61,7 @@ export const CreateTicketDialog = ({
       }
       toast.success('Ticket créé avec succès');
       setOpen(false);
-      router.refresh();
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
       const errorMessage = error?.message ?? 'Erreur lors de la création du ticket';

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { MessageSquare } from 'lucide-react';
+import { addCommentAction } from '@/app/(main)/gestion/tickets/actions';
 import {
   Dialog,
   DialogContent,
@@ -30,32 +30,8 @@ type AddCommentDialogProps = {
 export function AddCommentDialog({ ticketId, ticketTitle }: AddCommentDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
 
-  /**
-   * Crée le commentaire via l'API
-   * 
-   * @param content - Contenu du commentaire
-   * @returns Données du commentaire créé
-   * @throws Error si la création échoue
-   */
-  const createComment = async (content: string): Promise<{ id: string }> => {
-    const response = await fetch(`/api/tickets/${ticketId}/comments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ content })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || 'Erreur lors de l\'ajout du commentaire');
-    }
-
-    const result = await response.json();
-    return result.data;
-  };
+  // ✅ Plus besoin de createComment - on utilise directement la Server Action
 
   /**
    * Upload les pièces jointes d'un commentaire
@@ -82,15 +58,16 @@ export function AddCommentDialog({ ticketId, ticketTitle }: AddCommentDialogProp
     setIsSubmitting(true);
 
     try {
-      const comment = await createComment(content);
+      // ✅ Utiliser la Server Action directement (revalidatePath inclus)
+      const commentId = await addCommentAction(ticketId, content);
 
       if (files && files.length > 0) {
-        await uploadAttachments(comment.id, files);
+        await uploadAttachments(commentId, files);
       }
 
       toast.success('Commentaire ajouté avec succès');
       setOpen(false);
-      router.refresh();
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'ajout du commentaire';
       toast.error(errorMessage);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/ui/button';
@@ -9,11 +9,25 @@ type TicketsSearchBarProps = {
   initialSearch?: string;
 };
 
+/**
+ * Composant de barre de recherche pour les tickets
+ * 
+ * ✅ OPTIMISÉ - Principe Clean Code :
+ * - Évite la boucle infinie en comparant les valeurs avant router.push
+ * - Retire searchParams des dépendances pour éviter les re-renders cycliques
+ * - Utilise useRef pour stabiliser la valeur précédente
+ * 
+ * @param initialSearch - Valeur de recherche initiale depuis l'URL
+ */
 export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState(initialSearch || '');
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch || '');
+  
+  // ✅ Utiliser useRef pour suivre la dernière valeur mise à jour dans l'URL
+  // Évite les appels router.push inutiles si l'URL contient déjà la valeur
+  const lastUrlSearchRef = useRef<string>(initialSearch || '');
 
   // Debounce de 500ms
   useEffect(() => {
@@ -24,12 +38,36 @@ export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
     return () => clearTimeout(timer);
   }, [searchValue]);
 
-  // Mettre à jour l'URL quand la recherche change (après debounce)
+  // ✅ OPTIMISÉ : Mettre à jour l'URL seulement si la valeur a réellement changé
+  // Retire searchParams des dépendances pour éviter la boucle infinie
   useEffect(() => {
+    const trimmedDebouncedSearch = debouncedSearch.trim();
+    
+    // ✅ Vérifier si on a déjà mis à jour l'URL avec cette valeur
+    // Si oui, ne pas appeler router.push (évite la boucle)
+    if (lastUrlSearchRef.current === trimmedDebouncedSearch) {
+      return; // Pas de changement nécessaire
+    }
+    
+    // ✅ Récupérer la valeur actuelle dans l'URL pour comparaison
+    // On lit searchParams directement dans le useEffect sans dépendance
+    // car on veut seulement comparer, pas réagir à chaque changement
+    const currentUrlSearch = searchParams.get('search') || '';
+    
+    // Si l'URL contient déjà la valeur souhaitée, ne pas appeler router.push
+    if (currentUrlSearch === trimmedDebouncedSearch) {
+      // Mettre à jour la référence pour éviter les appels futurs inutiles
+      lastUrlSearchRef.current = trimmedDebouncedSearch;
+      return;
+    }
+    
+    // ✅ Mettre à jour la référence avant de changer l'URL
+    lastUrlSearchRef.current = trimmedDebouncedSearch;
+    
     const params = new URLSearchParams(searchParams.toString());
     
-    if (debouncedSearch.trim()) {
-      params.set('search', debouncedSearch.trim());
+    if (trimmedDebouncedSearch) {
+      params.set('search', trimmedDebouncedSearch);
     } else {
       params.delete('search');
     }
@@ -41,8 +79,10 @@ export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
       ? `/gestion/tickets?${params.toString()}`
       : '/gestion/tickets';
     
-    router.push(newUrl);
-  }, [debouncedSearch, router, searchParams]);
+    // ✅ CRITIQUE : scroll: false pour ne pas remonter en haut lors de la recherche
+    router.push(newUrl, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, router]); // ✅ searchParams lu dans le useEffect mais pas en dépendance
 
   const handleClear = useCallback(() => {
     setSearchValue('');

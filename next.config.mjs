@@ -5,6 +5,9 @@ const nextConfig = {
     // Supprimer les console.log en production
     removeConsole: process.env.NODE_ENV === 'production'
   },
+  // ✅ Correction : Désactiver les source maps en production pour éviter l'erreur Supabase/Turbopack
+  // En développement, les source maps restent actives pour le debug
+  productionBrowserSourceMaps: false,
   experimental: {
     // Server Actions sont maintenant stables dans Next.js 16, mais la config reste dans experimental
     serverActions: {

@@ -1,0 +1,14 @@
+{
+  "lastProcessedKey": "OD-906",
+  "processedCount": 2009,
+  "updatedCount": 2008,
+  "errorCount": 1,
+  "errorDetails": [
+    {
+      "jiraKey": "OD-2991",
+      "error": "Ticket non trouvé dans JIRA"
+    }
+  ],
+  "timestamp": "2025-11-28T13:10:37.791Z",
+  "completed": true
+}
