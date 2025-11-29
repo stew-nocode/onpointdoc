@@ -1,0 +1,359 @@
+#!/usr/bin/env node
+
+/**
+ * Script pour mettre à jour created_by des tickets créés par JOEL SIE
+ * 
+ * Processus:
+ * 1. Parse le fichier CSV de correspondance OBCS ↔ OD
+ * 2. Pour chaque clé OBCS dans la liste fournie, trouve la clé OD correspondante
+ * 3. Met à jour tickets.created_by avec le profil de JOEL SIE
+ * 
+ * Usage:
+ *   node scripts/update-joel-tickets-created-by.mjs --obcs OBCS-11493,OBCS-11491,OBCS-11483
+ *   ou
+ *   node scripts/update-joel-tickets-created-by.mjs --file liste-obcs-joel.txt
+ */
+
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from 'fs';
+import { createClient } from '@supabase/supabase-js';
+import { parse } from 'csv-parse/sync';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Charger .env.local
+try {
+  const envPath = path.resolve(process.cwd(), '.env.local');
+  dotenv.config({ path: envPath });
+} catch {
+  dotenv.config();
+}
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const SERVICE_ROLE =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE ??
+  '';
+
+if (!SUPABASE_URL || !SERVICE_ROLE) {
+  console.error('❌ Variables Supabase manquantes (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)');
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
+  auth: { persistSession: false }
+});
+
+// ⚠️ À COMPLÉTER: ID du profil de JOEL SIE (agent support)
+// On le cherchera automatiquement si non fourni
+const JOEL_PROFILE_ID = process.env.JOEL_PROFILE_ID || null;
+
+/**
+ * Parse le fichier CSV de correspondance
+ * @returns Map<OBCS_Key, OD_Key>
+ */
+function parseCorrespondanceCSV() {
+  const csvPath = path.resolve(__dirname, '../docs/ticket/correspondance - Jira (3).csv');
+  
+  if (!existsSync(csvPath)) {
+    throw new Error(`Fichier CSV introuvable: ${csvPath}`);
+  }
+
+  const csvContent = readFileSync(csvPath, 'utf-8');
+  
+  // ✅ Utiliser csv-parse pour un parsing robuste
+  const records = parse(csvContent, {
+    columns: true, // Première ligne = headers
+    skip_empty_lines: true,
+    relax_quotes: true,
+    trim: true
+  });
+  
+  // Mapping OBCS → OD
+  const mapping = new Map();
+  
+  for (const record of records) {
+    // Format: Résumé, Clé de ticket (OD), Lien de ticket sortant (OBCS)
+    const odKey = record['Clé de ticket']?.trim();
+    const obcsKey = record['Lien de ticket sortant (Duplicate)']?.trim();
+    
+    // Si on a une clé OBCS, créer le mapping
+    if (obcsKey && obcsKey.startsWith('OBCS-') && odKey && odKey.startsWith('OD-')) {
+      mapping.set(obcsKey, odKey);
+    }
+  }
+  
+  return mapping;
+}
+
+/**
+ * Extrait les clés OBCS depuis les arguments ou un fichier
+ */
+function getOBCSKeys() {
+  const args = process.argv.slice(2);
+  
+  // Option --obcs
+  const obcsIndex = args.indexOf('--obcs');
+  if (obcsIndex !== -1 && args[obcsIndex + 1]) {
+    return args[obcsIndex + 1].split(',').map(k => k.trim()).filter(Boolean);
+  }
+  
+  // Option --file
+  const fileIndex = args.indexOf('--file');
+  if (fileIndex !== -1 && args[fileIndex + 1]) {
+    const filePath = path.resolve(process.cwd(), args[fileIndex + 1]);
+    if (!existsSync(filePath)) {
+      throw new Error(`Fichier introuvable: ${filePath}`);
+    }
+    const content = readFileSync(filePath, 'utf-8');
+    return content.split('\n').map(k => k.trim()).filter(k => k && (k.startsWith('OBCS-') || k.startsWith('OBBCS-') || k.startsWith('OBCSS-')));
+  }
+  
+  // Si pas d'arguments, demander à l'utilisateur
+  console.error('❌ Aucune clé OBCS fournie');
+  console.error('');
+  console.error('Usage:');
+  console.error('  node scripts/update-joel-tickets-created-by.mjs --obcs OBCS-11493,OBCS-11491,OBCS-11483');
+  console.error('  ou');
+  console.error('  node scripts/update-joel-tickets-created-by.mjs --file liste-obcs-joel.txt');
+  process.exit(1);
+}
+
+/**
+ * Trouve le profile_id de JOEL SIE dans Supabase
+ */
+async function findJoelProfileId() {
+  console.log('🔍 Recherche du profil de JOEL SIE...');
+  
+  // Rechercher par nom (variations possibles)
+  const searchNames = [
+    'JOEL SIE',
+    'JOËL SIE',
+    'JOEL SIE',
+    'Joel Sie',
+    'Joël Sie'
+  ];
+  
+  for (const searchName of searchNames) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role')
+      .or(`full_name.ilike.%${searchName}%,full_name.ilike.%${searchName.split(' ').reverse().join(' ')}%`)
+      .limit(5);
+    
+    if (error) {
+      console.warn(`⚠️  Erreur lors de la recherche pour "${searchName}":`, error.message);
+      continue;
+    }
+    
+    if (data && data.length > 0) {
+      // Afficher les résultats pour que l'utilisateur choisisse
+      console.log(`\n📋 Profils trouvés pour "${searchName}":`);
+      data.forEach((profile, index) => {
+        console.log(`   ${index + 1}. ${profile.full_name} (${profile.email}) - ${profile.role} - ID: ${profile.id}`);
+      });
+      
+      if (data.length === 1) {
+        console.log(`\n✅ Profil unique trouvé: ${data[0].full_name} (${data[0].id})`);
+        return data[0].id;
+      }
+    }
+  }
+  
+  throw new Error('Profil de JOEL SIE introuvable. Veuillez fournir le profile_id via la variable d\'environnement JOEL_PROFILE_ID ou modifier le script.');
+}
+
+/**
+ * Met à jour created_by pour un ticket
+ */
+async function updateTicketCreatedBy(jiraIssueKey, profileId, dryRun = false) {
+  // Trouver le ticket
+  const { data: ticket, error: ticketError } = await supabase
+    .from('tickets')
+    .select('id, jira_issue_key, created_by, title')
+    .eq('jira_issue_key', jiraIssueKey)
+    .maybeSingle();
+  
+  if (ticketError) {
+    console.error(`❌ Erreur lors de la recherche du ticket ${jiraIssueKey}:`, ticketError.message);
+    return { success: false, error: ticketError.message };
+  }
+  
+  if (!ticket) {
+    console.warn(`⚠️  Ticket ${jiraIssueKey} introuvable dans Supabase`);
+    return { success: false, error: 'Ticket introuvable' };
+  }
+  
+  // Vérifier si déjà à jour
+  if (ticket.created_by === profileId) {
+    console.log(`✅ ${jiraIssueKey} - Déjà à jour (created_by = JOEL SIE)`);
+    return { success: true, skipped: true };
+  }
+  
+  // Afficher les informations
+  const { data: currentUser } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', ticket.created_by)
+    .maybeSingle();
+  
+  const currentUserName = currentUser?.full_name || ticket.created_by || 'Inconnu';
+  
+  const { data: newUser } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', profileId)
+    .maybeSingle();
+  
+  const newUserName = newUser?.full_name || 'JOEL SIE';
+  
+  if (dryRun) {
+    console.log(`🔍 [DRY-RUN] ${jiraIssueKey} - Mise à jour prévue:`);
+    console.log(`   Actuel: ${currentUserName}`);
+    console.log(`   Nouveau: ${newUserName}`);
+    return { success: true, dryRun: true };
+  }
+  
+  // Mettre à jour
+  const { error: updateError } = await supabase
+    .from('tickets')
+    .update({ created_by: profileId })
+    .eq('id', ticket.id);
+  
+  if (updateError) {
+    console.error(`❌ Erreur lors de la mise à jour du ticket ${jiraIssueKey}:`, updateError.message);
+    return { success: false, error: updateError.message };
+  }
+  
+  console.log(`✅ ${jiraIssueKey} - Mis à jour (${currentUserName} → ${newUserName})`);
+  return { success: true, updated: true };
+}
+
+/**
+ * Fonction principale
+ */
+async function main() {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  
+  console.log('🔍 Mise à jour des tickets created_by pour JOEL SIE\n');
+  
+  if (dryRun) {
+    console.log('⚠️  MODE DRY-RUN activé - Aucune modification ne sera effectuée\n');
+  }
+  
+  // 0. Trouver le profile_id de JOEL SIE
+  let joelProfileId = JOEL_PROFILE_ID;
+  
+  if (!joelProfileId) {
+    joelProfileId = await findJoelProfileId();
+  } else {
+    // Vérifier que le profil existe
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role')
+      .eq('id', joelProfileId)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error(`❌ Profil avec ID ${joelProfileId} introuvable:`, profileError?.message);
+      process.exit(1);
+    }
+    
+    console.log(`✅ Profil trouvé: ${profile.full_name} (${profile.email}, ${profile.role})`);
+    console.log('');
+  }
+  
+  // 1. Parser le CSV de correspondance
+  console.log('📖 Parsing du fichier CSV de correspondance...');
+  const correspondanceMap = parseCorrespondanceCSV();
+  console.log(`✅ ${correspondanceMap.size} correspondances trouvées\n`);
+  
+  // 2. Récupérer les clés OBCS
+  console.log('📋 Récupération des clés OBCS...');
+  const obcsKeys = getOBCSKeys();
+  console.log(`✅ ${obcsKeys.length} clés OBCS à traiter:`, obcsKeys.slice(0, 5).join(', '), obcsKeys.length > 5 ? '...' : '');
+  console.log('');
+  
+  // 3. Trouver les clés OD correspondantes
+  const odKeys = [];
+  const notFound = [];
+  
+  for (const obcsKey of obcsKeys) {
+    const odKey = correspondanceMap.get(obcsKey);
+    if (odKey) {
+      odKeys.push({ obcsKey, odKey });
+    } else {
+      notFound.push(obcsKey);
+    }
+  }
+  
+  if (notFound.length > 0) {
+    console.warn(`⚠️  ${notFound.length} clés OBCS sans correspondance OD:`, notFound.slice(0, 5).join(', '), notFound.length > 5 ? '...' : '');
+    console.log('');
+  }
+  
+  if (odKeys.length === 0) {
+    console.error('❌ Aucune clé OD trouvée. Arrêt.');
+    process.exit(1);
+  }
+  
+  console.log(`✅ ${odKeys.length} clés OD trouvées:\n`);
+  odKeys.slice(0, 10).forEach(({ obcsKey, odKey }) => {
+    console.log(`   ${obcsKey} → ${odKey}`);
+  });
+  if (odKeys.length > 10) {
+    console.log(`   ... et ${odKeys.length - 10} autres`);
+  }
+  console.log('');
+  
+  // 4. Mettre à jour les tickets
+  console.log('🔄 Mise à jour des tickets...\n');
+  
+  let successCount = 0;
+  let skippedCount = 0;
+  let errorCount = 0;
+  
+  for (const { obcsKey, odKey } of odKeys) {
+    const result = await updateTicketCreatedBy(odKey, joelProfileId, dryRun);
+    
+    if (result.success) {
+      if (result.skipped) {
+        skippedCount++;
+      } else {
+        successCount++;
+      }
+    } else {
+      errorCount++;
+    }
+    
+    // Petite pause pour éviter de surcharger la DB
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  console.log('');
+  console.log('📊 RÉSUMÉ:');
+  console.log(`   ✅ Mis à jour: ${successCount}`);
+  console.log(`   ⏭️  Déjà à jour: ${skippedCount}`);
+  console.log(`   ❌ Erreurs: ${errorCount}`);
+  console.log(`   📝 Total: ${odKeys.length}`);
+  
+  if (notFound.length > 0) {
+    console.log(`   ⚠️  Sans correspondance: ${notFound.length}`);
+  }
+  
+  if (dryRun) {
+    console.log('');
+    console.log('⚠️  Mode DRY-RUN - Aucune modification effectuée');
+    console.log('   Relancez sans --dry-run pour appliquer les modifications');
+  }
+}
+
+main().catch((error) => {
+  console.error('❌ Erreur fatale:', error);
+  process.exit(1);
+});
+
