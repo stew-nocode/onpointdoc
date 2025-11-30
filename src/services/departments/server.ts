@@ -32,3 +32,17 @@ export const getDepartment = async (id: string): Promise<Department | null> => {
   return data;
 };
 
+/**
+ * Récupère tous les départements actifs pour les formulaires
+ */
+export const listActiveDepartments = async (): Promise<Pick<Department, 'id' | 'name' | 'code' | 'color'>[]> => {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('departments')
+    .select('id, name, code, color')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+};
+

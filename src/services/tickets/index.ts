@@ -115,6 +115,16 @@ export const createTicket = async (payload: CreateTicketInput) => {
     }
   }
 
+  // Créer les liens dans ticket_department_link si des départements sont sélectionnés
+  if (payload.selectedDepartmentIds && payload.selectedDepartmentIds.length > 0) {
+    const departmentLinks = payload.selectedDepartmentIds.map((deptId, index) => ({
+      ticket_id: data.id,
+      department_id: deptId,
+      is_primary: index === 0, // Premier département = principal
+    }));
+    await supabase.from('ticket_department_link').insert(departmentLinks);
+  }
+
   // Pour BUG et REQ, créer immédiatement le ticket JIRA
   if (payload.type === 'BUG' || payload.type === 'REQ') {
     try {

@@ -33,6 +33,7 @@ export function getDefaultFormValues(
     scope: undefined,
     affectsAllCompanies: false,
     selectedCompanyIds: [],
+    selectedDepartmentIds: [],
     bug_type: null
   };
 }

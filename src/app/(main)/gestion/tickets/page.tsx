@@ -11,6 +11,7 @@ import {
 } from '@/services/products';
 import { listBasicProfiles } from '@/services/users/server';
 import { listCompanies } from '@/services/companies/server';
+import { listActiveDepartments } from '@/services/departments/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
@@ -125,13 +126,14 @@ async function loadProductsAndModules() {
     // Si aucun produit n'est lié au département, utiliser tous les produits (fallback)
     const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
     
-    const [allModules, submodules, features, contacts, companies, allowedModules] = await Promise.all([
+    const [allModules, submodules, features, contacts, companies, allowedModules, departments] = await Promise.all([
       listModules(),
       listSubmodules(),
       listFeatures(),
       listBasicProfiles(),
       listCompanies(),
-      listModulesForCurrentUser()
+      listModulesForCurrentUser(),
+      listActiveDepartments()
     ]);
 
     // Si l'utilisateur a des modules affectés, filtrer la liste
@@ -140,9 +142,9 @@ async function loadProductsAndModules() {
         ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
         : allModules;
 
-    return { products, modules, submodules, features, contacts, companies };
+    return { products, modules, submodules, features, contacts, companies, departments };
   } catch {
-    return { products: [], modules: [], submodules: [], features: [], contacts: [], companies: [] };
+    return { products: [], modules: [], submodules: [], features: [], contacts: [], companies: [], departments: [] };
   }
 }
 
@@ -200,7 +202,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       ),
       getSupportTicketKPIs(currentProfileId),
     ]);
-    const { products, modules, submodules, features, contacts, companies } = productsData;
+    const { products, modules, submodules, features, contacts, companies, departments } = productsData;
 
     // ✅ Server Action extraite dans actions.ts pour éviter les recompilations
     // La fonction inline était recréée à chaque recompilation du Server Component
@@ -227,6 +229,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
                 features={features}
                 contacts={contacts}
                 companies={companies}
+                departments={departments}
                 onSubmit={createTicketAction}
               />
             )

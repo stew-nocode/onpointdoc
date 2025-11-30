@@ -16,6 +16,7 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
 import type { BasicCompany } from '@/services/companies';
+import type { BasicDepartment } from '@/components/forms/ticket-form/sections';
 
 type CreateTicketDialogProps = {
   products: Product[];
@@ -24,6 +25,7 @@ type CreateTicketDialogProps = {
   features: Feature[];
   contacts: BasicProfile[];
   companies: BasicCompany[];
+  departments: BasicDepartment[];
   onSubmit: (values: CreateTicketInput) => Promise<string | void>;
 };
 
@@ -34,6 +36,7 @@ export const CreateTicketDialog = ({
   features,
   contacts,
   companies,
+  departments,
   onSubmit
 }: CreateTicketDialogProps) => {
   const [open, setOpen] = useState(false);
@@ -118,6 +121,7 @@ export const CreateTicketDialog = ({
           features={features}
           contacts={contacts}
           companies={companies}
+          departments={departments}
           isSubmitting={isSubmitting}
         />
       </DialogContent>

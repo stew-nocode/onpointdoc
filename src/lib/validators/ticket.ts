@@ -41,6 +41,7 @@ export const createTicketSchema = z
     scope: z.enum(['single', 'all', 'multiple']).optional(),
     affectsAllCompanies: z.boolean().optional(),
     selectedCompanyIds: z.array(z.string().uuid()).optional(),
+    selectedDepartmentIds: z.array(z.string().uuid()).optional(),
     bug_type: z.enum(BUG_TYPES).nullable().optional(),
     // Statut optionnel pour le formulaire (utilisé uniquement en mode édition pour ASSISTANCE)
     status: z.enum(ASSISTANCE_LOCAL_STATUSES).optional()
