@@ -25,6 +25,14 @@ export const createTicket = async (payload: CreateTicketInput) => {
     .single();
   if (!profile) throw new Error('Profil utilisateur introuvable');
 
+  // Déterminer company_id selon la portée
+  let companyId: string | null = null;
+  if (payload.scope === 'single' && payload.companyId) {
+    companyId = payload.companyId;
+  } else if (payload.scope === 'multiple' && payload.selectedCompanyIds?.[0]) {
+    companyId = payload.selectedCompanyIds[0]; // Première pour compatibilité
+  }
+
   const { data, error } = await supabase
     .from('tickets')
     .insert({
@@ -40,7 +48,8 @@ export const createTicket = async (payload: CreateTicketInput) => {
       duration_minutes: payload.durationMinutes ?? null,
       customer_context: payload.customerContext,
       contact_user_id: (payload.contactUserId && payload.contactUserId !== '') ? payload.contactUserId : null,
-      company_id: (payload.companyId && payload.companyId !== '') ? payload.companyId : null,
+      company_id: companyId,
+      affects_all_companies: payload.affectsAllCompanies || false,
       bug_type: payload.bug_type ?? null,
       created_by: profile.id, // ID du profil (pas auth.uid())
       status: getInitialStatus(payload.type), // Statut initial selon le type (JIRA pour BUG/REQ, local pour ASSISTANCE)
@@ -51,6 +60,59 @@ export const createTicket = async (payload: CreateTicketInput) => {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  // Créer les liens dans ticket_company_link selon la portée
+  if (payload.scope === 'single' && companyId) {
+    await supabase.from('ticket_company_link').insert({
+      ticket_id: data.id,
+      company_id: companyId,
+      is_primary: true,
+      role: 'affected',
+    });
+  } else if (payload.scope === 'multiple' && payload.selectedCompanyIds && payload.selectedCompanyIds.length > 0) {
+    // Si scope = 'multiple', créer un lien pour chaque entreprise
+    const links = payload.selectedCompanyIds.map((compId, index) => ({
+      ticket_id: data.id,
+      company_id: compId,
+      is_primary: index === 0,
+      role: 'affected' as const,
+    }));
+    await supabase.from('ticket_company_link').insert(links);
+    
+    // Ajouter aussi l'entreprise signalante si différente
+    if (payload.contactUserId) {
+      const { data: contactProfile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', payload.contactUserId)
+        .single();
+      
+      if (contactProfile?.company_id && !payload.selectedCompanyIds.includes(contactProfile.company_id)) {
+        await supabase.from('ticket_company_link').insert({
+          ticket_id: data.id,
+          company_id: contactProfile.company_id,
+          is_primary: false,
+          role: 'reporter',
+        });
+      }
+    }
+  } else if (payload.scope === 'all' && payload.contactUserId) {
+    // Si scope = 'all', ajouter uniquement l'entreprise signalante (pour référence)
+    const { data: contactProfile } = await supabase
+      .from('profiles')
+      .select('company_id')
+      .eq('id', payload.contactUserId)
+      .single();
+    
+    if (contactProfile?.company_id) {
+      await supabase.from('ticket_company_link').insert({
+        ticket_id: data.id,
+        company_id: contactProfile.company_id,
+        is_primary: false,
+        role: 'reporter',
+      });
+    }
   }
 
   // Pour BUG et REQ, créer immédiatement le ticket JIRA

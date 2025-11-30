@@ -37,6 +37,10 @@ export const createTicketSchema = z
     customerContext: z.string().optional(),
     contactUserId: z.union([z.string().uuid(), z.literal('')]).optional(),
     companyId: z.union([z.string().uuid(), z.literal('')]).optional(),
+    // Portée du ticket : single (une seule entreprise), all (toutes), multiple (plusieurs spécifiques)
+    scope: z.enum(['single', 'all', 'multiple']).optional(),
+    affectsAllCompanies: z.boolean().optional(),
+    selectedCompanyIds: z.array(z.string().uuid()).optional(),
     bug_type: z.enum(BUG_TYPES).nullable().optional(),
     // Statut optionnel pour le formulaire (utilisé uniquement en mode édition pour ASSISTANCE)
     status: z.enum(ASSISTANCE_LOCAL_STATUSES).optional()
@@ -67,6 +71,45 @@ export const createTicketSchema = z
     {
       message: 'Le contact n\'est pas requis pour un constat interne',
       path: ['contactUserId']
+    }
+  )
+  .refine(
+    (data) => {
+      // Si scope = 'all', affectsAllCompanies doit être true
+      if (data.scope === 'all') {
+        return data.affectsAllCompanies === true;
+      }
+      return true;
+    },
+    {
+      message: 'La portée "Toutes les entreprises" nécessite que affectsAllCompanies soit true',
+      path: ['affectsAllCompanies']
+    }
+  )
+  .refine(
+    (data) => {
+      // Si scope = 'multiple', au moins 2 entreprises doivent être sélectionnées
+      if (data.scope === 'multiple') {
+        return data.selectedCompanyIds && data.selectedCompanyIds.length >= 2;
+      }
+      return true;
+    },
+    {
+      message: 'La portée "Plusieurs entreprises" nécessite au moins 2 entreprises',
+      path: ['selectedCompanyIds']
+    }
+  )
+  .refine(
+    (data) => {
+      // Si scope = 'single', companyId doit être renseigné
+      if (data.scope === 'single') {
+        return data.companyId && data.companyId !== '';
+      }
+      return true;
+    },
+    {
+      message: 'La portée "Une seule entreprise" nécessite une entreprise sélectionnée',
+      path: ['companyId']
     }
   );
 

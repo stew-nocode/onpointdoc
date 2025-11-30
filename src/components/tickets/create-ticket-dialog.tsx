@@ -40,7 +40,14 @@ export const CreateTicketDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
+  /**
+   * Gère la soumission du formulaire avec possibilité de continuer ou fermer
+   * 
+   * @param values - Valeurs du formulaire
+   * @param files - Fichiers joints (optionnel)
+   * @param shouldClose - Si true, ferme le dialog après création (défaut: true)
+   */
+  const handleSubmit = async (values: CreateTicketInput, files?: File[], shouldClose: boolean = true) => {
     setIsSubmitting(true);
     setError(null);
     try {
@@ -48,6 +55,7 @@ export const CreateTicketDialog = ({
       if (!id) {
         throw new Error('Aucun ID de ticket retourné');
       }
+      
       // Upload attachments si présents
       if (files && files.length) {
         try {
@@ -59,8 +67,20 @@ export const CreateTicketDialog = ({
           toast.warning('Ticket créé mais erreur lors de l\'upload des pièces jointes');
         }
       }
-      toast.success('Ticket créé avec succès');
-      setOpen(false);
+      
+      // Afficher un toast avec message adapté selon le mode
+      if (shouldClose) {
+        toast.success('Ticket créé avec succès');
+      } else {
+        toast.success('Ticket créé avec succès. Le formulaire a été réinitialisé pour créer un autre ticket.', {
+          duration: 4000
+        });
+      }
+      
+      // Fermer le dialog uniquement si shouldClose est true
+      if (shouldClose) {
+        setOpen(false);
+      }
       // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
@@ -90,7 +110,8 @@ export const CreateTicketDialog = ({
           </div>
         )}
         <TicketForm
-          onSubmit={handleSubmit}
+          onSubmit={(values, files) => handleSubmit(values, files, true)}
+          onSubmitAndContinue={(values, files) => handleSubmit(values, files, false)}
           products={products}
           modules={modules}
           submodules={submodules}

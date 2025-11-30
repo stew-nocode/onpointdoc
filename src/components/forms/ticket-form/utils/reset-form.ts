@@ -30,6 +30,9 @@ export function getDefaultFormValues(
     priority: 'Medium',
     contactUserId: contacts[0]?.id ?? '',
     companyId: '',
+    scope: undefined,
+    affectsAllCompanies: false,
+    selectedCompanyIds: [],
     bug_type: null
   };
 }

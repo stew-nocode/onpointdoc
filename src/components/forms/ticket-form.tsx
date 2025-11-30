@@ -19,15 +19,18 @@ import { Button } from '@/ui/button';
 import { Combobox } from '@/ui/combobox';
 import { RadioGroup, RadioCard } from '@/ui/radio-group';
 import type { BasicProfile } from '@/services/users';
-import { Shield } from 'lucide-react';
+import { Shield, Plus } from 'lucide-react';
 import { useTicketForm, useFileUpload, type FileWithPreview } from '@/hooks';
 import { SimpleTextEditor } from '@/components/editors/simple-text-editor';
 import { INPUT_CLASS } from '@/lib/constants/form-styles';
 import { getDefaultFormValues } from './ticket-form/utils/reset-form';
 import { TicketTypeSection, PrioritySection } from './ticket-form/sections';
+import { TicketScopeSection } from './ticket-form/sections/ticket-scope-section';
+import { formatContactLabel, getContactSearchableText } from './ticket-form/utils/format-contact-label';
 
 type TicketFormProps = {
   onSubmit: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
+  onSubmitAndContinue?: (values: CreateTicketInput, files?: File[]) => Promise<void | string>;
   isSubmitting?: boolean;
   products: Product[];
   modules: Module[];
@@ -53,6 +56,7 @@ type TicketFormProps = {
  */
 export const TicketForm = ({
   onSubmit,
+  onSubmitAndContinue,
   isSubmitting,
   products,
   modules,
@@ -116,13 +120,32 @@ export const TicketForm = ({
   };
 
   /**
-   * Handler de soumission du formulaire
+   * Handler de soumission du formulaire (ferme le dialog)
    */
   const handleSubmit = form.handleSubmit(async (values: CreateTicketInput) => {
     await onSubmit(values, selectedFiles);
     clearFiles();
     
     // Réinitialiser le formulaire après soumission uniquement en mode création
+    if (mode === 'create') {
+      resetFormAfterSubmit();
+    }
+  });
+
+  /**
+   * Handler de soumission avec continuation (garde le dialog ouvert)
+   * Réinitialise le formulaire pour créer un autre ticket
+   */
+  const handleSubmitAndContinue = form.handleSubmit(async (values: CreateTicketInput) => {
+    if (!onSubmitAndContinue) {
+      // Fallback sur onSubmit si onSubmitAndContinue n'est pas fourni
+      await onSubmit(values, selectedFiles);
+    } else {
+      await onSubmitAndContinue(values, selectedFiles);
+    }
+    clearFiles();
+    
+    // Toujours réinitialiser le formulaire en mode continuer
     if (mode === 'create') {
       resetFormAfterSubmit();
     }
@@ -144,31 +167,6 @@ export const TicketForm = ({
         {errors.title && <p className="text-xs text-status-danger">{errors.title.message}</p>}
       </div>
 
-      {/* Entreprise */}
-      <div className="grid gap-2">
-        <label className="text-sm font-medium text-slate-700">
-          Entreprise {form.watch('channel') === 'Constat Interne' && <span className="text-slate-500 text-xs">(recommandé)</span>}
-        </label>
-        <Combobox
-          options={companies.map((c) => ({
-            value: c.id,
-            label: c.name,
-            searchable: c.name
-          }))}
-          value={form.watch('companyId') || ''}
-          onValueChange={(v) => form.setValue('companyId', v || '')}
-          placeholder="Sélectionner une entreprise"
-          searchPlaceholder="Rechercher une entreprise..."
-          emptyText="Aucune entreprise disponible"
-          disabled={!companies.length || isSubmitting}
-        />
-        {form.watch('channel') === 'Constat Interne' && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Recommandé pour un constat interne afin d&apos;associer le ticket à une entreprise.
-          </p>
-        )}
-      </div>
-
       {/* Contact */}
       <div className="grid gap-2">
         <label className="text-sm font-medium text-slate-700">
@@ -177,25 +175,34 @@ export const TicketForm = ({
         <Combobox
           options={contacts.map((c) => ({
             value: c.id,
-            label: c.full_name ?? c.email ?? 'Utilisateur',
-            searchable: `${c.full_name ?? ''} ${c.email ?? ''}`.trim()
+            label: formatContactLabel(c),
+            searchable: getContactSearchableText(c)
           }))}
           value={form.watch('contactUserId') || ''}
           onValueChange={(v) => form.setValue('contactUserId', v || '')}
           placeholder="Sélectionner un contact"
-          searchPlaceholder="Rechercher un contact..."
+          searchPlaceholder="Rechercher un contact (nom, email ou entreprise)..."
           emptyText="Aucun contact disponible"
           disabled={!contacts.length || form.watch('channel') === 'Constat Interne' || isSubmitting}
         />
         {form.watch('channel') === 'Constat Interne' && (
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Le champ Contact n&apos;est pas disponible pour un constat interne. Vous pouvez sélectionner une entreprise ci-dessus.
+            Le champ Contact n&apos;est pas disponible pour un constat interne. Sélectionnez la portée et l&apos;entreprise ci-dessous.
           </p>
         )}
         {form.watch('channel') !== 'Constat Interne' && errors.contactUserId && (
           <p className="text-xs text-status-danger">{errors.contactUserId.message}</p>
         )}
       </div>
+
+      {/* Portée du Ticket */}
+      <TicketScopeSection
+        form={form}
+        contacts={contacts}
+        companies={companies}
+        selectedContactId={form.watch('contactUserId')}
+        channel={form.watch('channel')}
+      />
 
       {/* Description */}
       <div className="grid gap-2">
@@ -480,12 +487,36 @@ export const TicketForm = ({
         )}
       </div>
 
-      {/* Bouton de soumission */}
-      <Button className="w-full" disabled={isSubmitting} type="submit">
-        {isSubmitting 
-          ? (mode === 'edit' ? 'Enregistrement...' : 'Création...') 
-          : (mode === 'edit' ? 'Enregistrer les modifications' : 'Créer le ticket')}
-      </Button>
+      {/* Boutons de soumission */}
+      {mode === 'create' && onSubmitAndContinue ? (
+        <div className="flex gap-2 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={isSubmitting}
+            onClick={handleSubmitAndContinue}
+          >
+            {isSubmitting ? (
+              'Création...'
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Créer et continuer
+              </>
+            )}
+          </Button>
+          <Button className="flex-1" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Création...' : 'Créer le ticket'}
+          </Button>
+        </div>
+      ) : (
+        <Button className="w-full" disabled={isSubmitting} type="submit">
+          {isSubmitting 
+            ? (mode === 'edit' ? 'Enregistrement...' : 'Création...') 
+            : (mode === 'edit' ? 'Enregistrer les modifications' : 'Créer le ticket')}
+        </Button>
+      )}
     </form>
   );
 };
