@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -14,7 +15,7 @@ import {
   ChartTooltipContent,
   type ChartConfig
 } from '@/ui/chart';
-import type { MTTRData } from '@/types/dashboard';
+import type { MTTRData, Period } from '@/types/dashboard';
 import { TrendIndicator } from './charts/trend-indicator';
 import { SectionTitleWithDoc } from '@/components/dashboard/section-title-with-doc';
 import { MTTR_EVOLUTION_DOCUMENTATION } from '@/components/dashboard/dashboard-documentation-content';
@@ -29,6 +30,7 @@ import {
 
 type MTTREvolutionChartProps = {
   data: MTTRData;
+  period: Period; // Période globale pour cohérence
 };
 
 /**
@@ -55,9 +57,18 @@ function transformMTTRData(data: MTTRData) {
  * Graphique d'évolution du MTTR par produit avec design moderne
  * 
  * @param data - Données MTTR avec répartition par produit
+ * @param period - Période globale pour cohérence (utilisé pour optimiser les re-renders)
  */
-export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
-  if (!data || !data.byProduct) {
+export function MTTREvolutionChart({ data, period }: MTTREvolutionChartProps) {
+  // Optimiser la transformation des données avec useMemo
+  const chartData = useMemo(() => {
+    if (!data || !data.byProduct) {
+      return [];
+    }
+    return transformMTTRData(data);
+  }, [data?.byProduct]); // Recalculer seulement si byProduct change
+
+  if (!data || !data.byProduct || chartData.length === 0) {
     return (
       <Card className="h-[420px] flex flex-col">
         <CardHeader className="flex-shrink-0">
@@ -69,8 +80,6 @@ export function MTTREvolutionChart({ data }: MTTREvolutionChartProps) {
       </Card>
     );
   }
-
-  const chartData = transformMTTRData(data);
 
   return (
     <Card className="border-slate-200 shadow-sm transition-shadow hover:shadow-md dark:border-slate-800 h-[420px] flex flex-col">

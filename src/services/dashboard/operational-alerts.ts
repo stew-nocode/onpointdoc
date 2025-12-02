@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { OperationalAlert } from '@/types/dashboard';
 import {
@@ -10,9 +11,13 @@ import {
 /**
  * Récupère les alertes opérationnelles critiques
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @returns Liste des alertes (tickets en retard, non assignés, activités, tâches)
  */
-export async function getOperationalAlerts(): Promise<OperationalAlert[]> {
+async function getOperationalAlertsInternal(): Promise<OperationalAlert[]> {
   const [overdueAlerts, unassignedAlerts, activityAlerts, taskAlerts] = 
     await Promise.all([
       getOverdueCriticalTickets(),
@@ -149,3 +154,12 @@ function sortAlertsByPriority(alerts: OperationalAlert[]): OperationalAlert[] {
   });
 }
 
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const getOperationalAlerts = cache(getOperationalAlertsInternal);

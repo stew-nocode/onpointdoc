@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TicketForm } from '@/components/forms/ticket-form';
 import { Button } from '@/ui/button';
@@ -34,14 +35,21 @@ export const CreateTicketDialog = ({
   modules,
   submodules,
   features,
-  contacts,
+  contacts: initialContacts,
   companies,
   departments,
   onSubmit
 }: CreateTicketDialogProps) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contacts, setContacts] = useState<BasicProfile[]>(initialContacts);
+
+  // Synchroniser les contacts avec les props lorsque le dialog est rafraîchi
+  useEffect(() => {
+    setContacts(initialContacts);
+  }, [initialContacts]);
 
   /**
    * Gère la soumission du formulaire avec possibilité de continuer ou fermer
@@ -123,6 +131,10 @@ export const CreateTicketDialog = ({
           companies={companies}
           departments={departments}
           isSubmitting={isSubmitting}
+          onContactsRefresh={() => {
+            // Rafraîchir les contacts depuis le serveur
+            router.refresh();
+          }}
         />
       </DialogContent>
     </Dialog>

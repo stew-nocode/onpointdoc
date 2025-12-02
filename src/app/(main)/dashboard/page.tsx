@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { PageLayoutWithDashboardFilters } from '@/components/layout/page';
 import { UnifiedDashboardWithWidgets } from '@/components/dashboard/unified-dashboard-with-widgets';
-import { getUserDashboardConfig } from '@/services/dashboard/widgets';
+import { getCachedUserDashboardConfig } from '@/services/dashboard/widgets';
 import { DashboardFiltersSidebarClient } from '@/components/dashboard/ceo/filters/dashboard-filters-sidebar-client';
 import { listProducts } from '@/services/products';
 import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
@@ -43,7 +43,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const period = filters?.period || 'month';
 
   // Charger la configuration des widgets (affectation par rôle + préférences utilisateur)
-  const widgetConfig = await getUserDashboardConfig(profile.id, dashboardRole);
+  // ✅ OPTIMISÉ : Utilise React.cache() pour éviter les appels répétés
+  const widgetConfig = await getCachedUserDashboardConfig(profile.id, dashboardRole);
 
   // Charger les données selon le rôle (directement via les services)
   const { getCEODashboardData } = await import('@/services/dashboard/ceo-kpis');

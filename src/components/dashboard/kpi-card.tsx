@@ -78,6 +78,7 @@ export function KPICard({
       </CardHeader>
       <CardContent className="px-3 pb-3 flex-1 flex flex-col justify-center">
         <div className="space-y-1">
+          {/* Ligne 1 : Valeur principale + Trend */}
           <div className="flex items-baseline justify-between">
             <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
               {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
@@ -94,19 +95,18 @@ export function KPICard({
               </div>
             )}
           </div>
+          {/* Ligne 2 : Mini chart (optionnel) */}
           {chartData && chartData.length > 0 && (
             <KPIMiniChart data={chartData} variant={variant} />
           )}
-          {description && (
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-              {description}
-            </p>
-          )}
-          {subtitle && (
-            <p className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight">
-              {subtitle}
-            </p>
-          )}
+          {/* Ligne 3 : Description principale (toujours affichée) */}
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight min-h-[14px]">
+            {description || '\u00A0'}
+          </p>
+          {/* Ligne 4 : Sous-titre (toujours affiché pour standardisation) */}
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight min-h-[12px]">
+            {subtitle || '\u00A0'}
+          </p>
         </div>
       </CardContent>
     </Card>

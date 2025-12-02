@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader } from '@/ui/card';
 import { Badge } from '@/ui/badge';
-import type { ProductHealthData } from '@/types/dashboard';
+import type { ProductHealthData, Period } from '@/types/dashboard';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SectionTitleWithDoc } from '@/components/dashboard/section-title-with-doc';
@@ -10,14 +10,16 @@ import { TOP_BUGS_MODULES_DOCUMENTATION } from '@/components/dashboard/dashboard
 
 type TopBugsModulesTableProps = {
   data: ProductHealthData['topBugModules'];
+  period: Period; // Période globale pour cohérence (utilisé par React.memo)
 };
 
 /**
  * Tableau des top 10 modules avec le plus de bugs
  * 
  * @param data - Liste des modules avec bugs
+ * @param period - Période globale pour cohérence (utilisé par React.memo pour détecter les changements)
  */
-export function TopBugsModulesTable({ data }: TopBugsModulesTableProps) {
+export function TopBugsModulesTable({ data, period: _period }: TopBugsModulesTableProps) {
   if (data.length === 0) {
     return (
       <Card className="h-[420px] flex flex-col">

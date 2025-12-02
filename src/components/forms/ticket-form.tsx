@@ -46,6 +46,7 @@ type TicketFormProps = {
   departments: BasicDepartment[];
   initialValues?: Partial<CreateTicketInput>;
   mode?: 'create' | 'edit';
+  onContactsRefresh?: () => void;
 };
 
 /**
@@ -65,7 +66,8 @@ export const TicketForm = ({
   companies,
   departments,
   initialValues,
-  mode = 'create'
+  mode = 'create',
+  onContactsRefresh
 }: TicketFormProps) => {
   // Gestion des fichiers avec le hook personnalisé
   const fileUpload = useFileUpload({
@@ -133,6 +135,7 @@ export const TicketForm = ({
         form={ticketForm.form}
         contacts={contacts}
         isSubmitting={isSubmitting}
+        onContactsRefresh={onContactsRefresh}
       />
       <TicketScopeSection
         form={ticketForm.form}

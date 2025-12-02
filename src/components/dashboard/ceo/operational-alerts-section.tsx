@@ -19,8 +19,11 @@ const GAP_HEIGHT = 8; // Hauteur du gap entre items (space-y-2) - Réduit
  */
 const SCROLLABLE_HEIGHT = ALERT_ITEM_HEIGHT * ITEMS_VISIBLE + GAP_HEIGHT * (ITEMS_VISIBLE - 1);
 
+import type { Period } from '@/types/dashboard';
+
 type OperationalAlertsSectionProps = {
   alerts: OperationalAlert[];
+  period: Period; // Période globale pour cohérence (utilisé par React.memo)
 };
 
 /**
@@ -28,7 +31,7 @@ type OperationalAlertsSectionProps = {
  * 
  * @param alerts - Liste des alertes critiques
  */
-export function OperationalAlertsSection({ alerts }: OperationalAlertsSectionProps) {
+export function OperationalAlertsSection({ alerts, period: _period }: OperationalAlertsSectionProps) {
   if (alerts.length === 0) {
     return (
       <Card>

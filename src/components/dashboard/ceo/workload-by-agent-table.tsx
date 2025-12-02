@@ -2,21 +2,23 @@
 
 import { Card, CardContent, CardHeader } from '@/ui/card';
 import { Badge } from '@/ui/badge';
-import type { WorkloadData } from '@/types/dashboard';
+import type { WorkloadData, Period } from '@/types/dashboard';
 import { cn } from '@/lib/utils';
 import { SectionTitleWithDoc } from '@/components/dashboard/section-title-with-doc';
 import { WORKLOAD_BY_AGENT_DOCUMENTATION } from '@/components/dashboard/dashboard-documentation-content';
 
 type WorkloadByAgentTableProps = {
   data: WorkloadData['byAgent'];
+  period: Period; // Période globale pour cohérence (utilisé par React.memo)
 };
 
 /**
  * Tableau de répartition de la charge par agent
  * 
  * @param data - Liste des agents avec leur charge
+ * @param period - Période globale pour cohérence (utilisé par React.memo pour détecter les changements)
  */
-export function WorkloadByAgentTable({ data }: WorkloadByAgentTableProps) {
+export function WorkloadByAgentTable({ data, period: _period }: WorkloadByAgentTableProps) {
   if (data.length === 0) {
     return (
       <Card className="h-[420px] flex flex-col">

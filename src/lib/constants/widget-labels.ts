@@ -24,5 +24,6 @@ export const WIDGET_LABELS: Record<DashboardWidget, string> = {
   ticketsDistribution: 'Distribution des tickets',
   topBugsModules: 'Top modules avec bugs',
   workloadByAgent: 'Charge par agent',
+  supportEvolutionChart: 'Évolution Performance Support',
 };
 

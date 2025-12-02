@@ -127,16 +127,97 @@ export function DashboardWidgetGrid({
  * 
  * Utilise React.memo avec comparaison shallow par défaut pour éviter les re-renders
  * si les props n'ont pas changé.
+ * 
+ * ⚠️ IMPORTANT: La comparaison shallow permet de détecter les changements dans les props,
+ * donc si les données changent (nouvelle référence d'objet), le widget se mettra à jour.
  */
+/**
+ * Widget individuel mémorisé pour éviter les re-renders inutiles
+ * 
+ * ⚠️ IMPORTANT: React.memo avec comparaison shallow détecte automatiquement
+ * les changements de référence d'objet dans les props. Comme les données
+ * sont recréées à chaque chargement (nouvelle référence), les widgets
+ * se mettront à jour automatiquement.
+ */
+/**
+ * Comparaison optimisée pour React.memo
+ * 
+ * Détecte les changements de :
+ * - period (string) : comparaison par valeur
+ * - data (object) : comparaison par référence
+ * - alerts (array) : comparaison par référence
+ * 
+ * ⚠️ IMPORTANT : La comparaison shallow par défaut de React.memo
+ * détecte automatiquement les changements de référence d'objet.
+ * On ajoute une comparaison explicite pour `period` pour être sûr.
+ */
+const arePropsEqual = (
+  prevProps: { component: ComponentType<WidgetProps>; props: WidgetProps },
+  nextProps: { component: ComponentType<WidgetProps>; props: WidgetProps }
+): boolean => {
+  // Si le composant change, re-render
+  if (prevProps.component !== nextProps.component) {
+    return false;
+  }
+
+  // Comparer period si présent (comparaison par valeur)
+  if ('period' in prevProps.props && 'period' in nextProps.props) {
+    if (prevProps.props.period !== nextProps.props.period) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[MemoizedWidget] Period changed, re-rendering:', {
+          prev: prevProps.props.period,
+          next: nextProps.props.period,
+        });
+      }
+      return false;
+    }
+  }
+
+  // Pour les autres props, React.memo fait une comparaison shallow par défaut
+  // qui détecte les changements de référence d'objet
+  // On compare les clés principales pour optimiser
+  const prevKeys = Object.keys(prevProps.props);
+  const nextKeys = Object.keys(nextProps.props);
+
+  if (prevKeys.length !== nextKeys.length) {
+    return false;
+  }
+
+  // Comparaison shallow : si les références sont identiques, pas de changement
+  // Si les références diffèrent, React.memo détectera le changement
+  // On retourne true seulement si toutes les références sont identiques
+  for (const key of prevKeys) {
+    if (prevProps.props[key] !== nextProps.props[key]) {
+      // Si period a déjà été comparé et est identique, on continue
+      if (key === 'period') continue;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[MemoizedWidget] Prop changed, re-rendering:', key);
+      }
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const MemoizedWidget = memo(
   ({ component: WidgetComponent, props }: {
     component: ComponentType<WidgetProps>;
     props: WidgetProps;
-  }) => (
-    <div className="w-full h-full">
-      <WidgetComponent {...props} />
-    </div>
-  )
+  }) => {
+    // Debug: Logger les changements de props pour les graphiques
+    if (process.env.NODE_ENV === 'development' && 'period' in props) {
+      console.log('[MemoizedWidget] Rendering widget with period:', props.period);
+    }
+    
+    return (
+      <div className="w-full h-full">
+        <WidgetComponent {...props} />
+      </div>
+    );
+  },
+  arePropsEqual // Comparaison personnalisée optimisée
 );
 MemoizedWidget.displayName = 'MemoizedWidget';
 

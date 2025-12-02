@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Period, ProductHealthData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
@@ -11,11 +12,15 @@ import { MAX_TOP_BUG_MODULES } from './constants/limits';
 /**
  * Calcule la santé des produits (taux de BUGs par produit/module)
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @param period - Type de période
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données de santé (par produit, top modules avec bugs)
  */
-export async function getProductHealth(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<ProductHealthData> {
+async function getProductHealthInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<ProductHealthData> {
   const { startDate, endDate } = getPeriodDates(period);
   const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period);
 
@@ -221,3 +226,12 @@ function buildPreviousBugCountMap(
   return bugCountByModule;
 }
 
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const getProductHealth = cache(getProductHealthInternal);

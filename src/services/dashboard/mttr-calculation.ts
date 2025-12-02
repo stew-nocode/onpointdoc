@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Period, MTTRData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
@@ -9,11 +10,15 @@ import { extractProduct, type SupabaseProductRelation } from './utils/product-ut
 /**
  * Calcule le MTTR (Mean Time To Resolution) pour une période donnée
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @param period - Type de période
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données MTTR (global, par produit, par type, tendance)
  */
-export async function calculateMTTR(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<MTTRData> {
+async function calculateMTTRInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<MTTRData> {
   const { startDate, endDate } = getPeriodDates(period);
   const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period);
 
@@ -156,5 +161,15 @@ function calculateMTTRByType(
       mttr: calculateAverageMTTR(typeTickets)
     }));
 }
+
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const calculateMTTR = cache(calculateMTTRInternal);
 
 

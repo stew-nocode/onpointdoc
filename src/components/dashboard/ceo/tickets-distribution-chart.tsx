@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   PieChart,
   Pie,
@@ -14,7 +15,7 @@ import {
   ChartLegendContent,
   type ChartConfig
 } from '@/ui/chart';
-import type { TicketFluxData } from '@/types/dashboard';
+import type { TicketFluxData, Period } from '@/types/dashboard';
 import { CHART_COLORS, getChartColor } from './charts/chart-colors';
 import { renderPieLabel } from './charts/pie-label-renderer';
 import { TrendIndicator } from './charts/trend-indicator';
@@ -29,6 +30,7 @@ import {
 
 type TicketsDistributionChartProps = {
   data: TicketFluxData | null;
+  period: Period; // Période globale pour cohérence
 };
 
 /**
@@ -68,9 +70,29 @@ function createChartConfig(data: TicketFluxData): ChartConfig {
  * Graphique de distribution des tickets par produit avec design moderne
  * 
  * @param data - Données de flux avec répartition par produit
+ * @param period - Période globale pour cohérence (utilisé pour optimiser les re-renders)
  */
-export function TicketsDistributionChart({ data }: TicketsDistributionChartProps) {
-  if (!data || !data.byProduct || !data.trend) {
+export function TicketsDistributionChart({ data, period }: TicketsDistributionChartProps) {
+  // Optimiser les calculs avec useMemo
+  const chartData = useMemo(() => {
+    if (!data || !data.byProduct) {
+      return [];
+    }
+    return transformPieData(data);
+  }, [data?.byProduct]); // Recalculer seulement si byProduct change
+
+  const chartConfig = useMemo(() => {
+    if (!data || !data.byProduct) {
+      return {};
+    }
+    return createChartConfig(data);
+  }, [data?.byProduct]); // Recalculer seulement si byProduct change
+
+  const totalOpened = useMemo(() => {
+    return data?.opened || 0;
+  }, [data?.opened]);
+
+  if (!data || !data.byProduct || !data.trend || chartData.length === 0) {
     return (
       <Card className="h-[420px] flex flex-col">
         <CardHeader className="flex-shrink-0">
@@ -82,10 +104,6 @@ export function TicketsDistributionChart({ data }: TicketsDistributionChartProps
       </Card>
     );
   }
-
-  const chartData = transformPieData(data);
-  const totalOpened = data.opened;
-  const chartConfig = createChartConfig(data);
 
   return (
     <Card className="border-slate-200 shadow-none dark:border-slate-800 h-[420px] flex flex-col">

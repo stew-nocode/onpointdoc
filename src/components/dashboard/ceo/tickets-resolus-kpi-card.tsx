@@ -1,10 +1,11 @@
 'use client';
 
 import { KPICard } from '@/components/dashboard/kpi-card';
-import type { TicketFluxData } from '@/types/dashboard';
+import type { TicketFluxData, Period } from '@/types/dashboard';
 
 type TicketsResolusKPICardProps = {
   data: TicketFluxData | null;
+  period: Period; // Période globale pour cohérence (utilisé par React.memo)
 };
 
 /**
@@ -14,8 +15,9 @@ type TicketsResolusKPICardProps = {
  * et la tendance par rapport à la période précédente.
  * 
  * @param data - Données de flux (ouverts, résolus, taux, tendances)
+ * @param period - Période globale pour cohérence (utilisé par React.memo pour détecter les changements)
  */
-export function TicketsResolusKPICard({ data }: TicketsResolusKPICardProps) {
+export function TicketsResolusKPICard({ data, period: _period }: TicketsResolusKPICardProps) {
   if (!data || !data.trend) {
     return (
       <KPICard
@@ -24,6 +26,7 @@ export function TicketsResolusKPICard({ data }: TicketsResolusKPICardProps) {
         description="Données non disponibles"
         icon="check-circle-2"
         variant="default"
+        subtitle="vs période précédente"
       />
     );
   }

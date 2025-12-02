@@ -18,7 +18,8 @@ export type DashboardWidget =
   | 'mttrEvolution'         // Évolution MTTR dans le temps (Chart)
   | 'ticketsDistribution'   // Distribution tickets par type (Chart)
   | 'topBugsModules'        // Top modules avec bugs (Table)
-  | 'workloadByAgent';      // Charge par agent (Table)
+  | 'workloadByAgent'       // Charge par agent (Table)
+  | 'supportEvolutionChart'; // Évolution Performance Support (Graphique temporel)
 
 /**
  * Type de layout pour chaque widget

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Period, WorkloadData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
@@ -8,11 +9,15 @@ import { extractProfileRole, extractProfile, type SupabaseProfileRoleRelation, t
 /**
  * Calcule la répartition de la charge de travail par équipe et agent
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @param period - Type de période
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données de charge (par équipe, par agent, total)
  */
-export async function getWorkloadDistribution(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<WorkloadData> {
+async function getWorkloadDistributionInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<WorkloadData> {
   const { startDate, endDate } = getPeriodDates(period);
 
   const supabase = await createSupabaseServerClient();
@@ -204,3 +209,12 @@ function getTeamFromRole(role: string | undefined | null): string {
   return 'support';
 }
 
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const getWorkloadDistribution = cache(getWorkloadDistributionInternal);

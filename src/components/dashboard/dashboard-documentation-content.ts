@@ -210,3 +210,32 @@ Le pourcentage de charge permet de comparer la charge relative entre agents.`,
 • Permet d'identifier les agents surchargés ou sous-chargés`
 };
 
+/**
+ * Documentation pour le widget Évolution Performance Support
+ */
+export const SUPPORT_EVOLUTION_DOCUMENTATION: DocumentationContent = {
+  title: 'Évolution Performance Support',
+  subtitle: 'Tendances globales par dimension (BUG, REQ, ASSISTANCE, Temps)',
+  definition: `Widget de suivi des tendances globales du département Support. Affiche les volumes de tickets créés par type (BUG, REQ, ASSISTANCE) et le temps d'assistance total dans le temps. Permet d'identifier les pics d'activité et les évolutions par type de demande.`,
+  calculation: `Pour chaque période (jour/semaine/mois selon le filtre) :
+1. Volumes par type :
+   - BUG : Nombre de tickets BUG créés (created_at dans la période)
+   - REQ : Nombre de tickets REQ créés
+   - ASSISTANCE : Nombre de tickets ASSISTANCE créés
+
+2. Temps d'assistance :
+   - Somme des duration_minutes pour les tickets ASSISTANCE résolus dans la période
+
+3. Filtres disponibles :
+   - Période : Semaine, Mois, Trimestre, Année en cours ou années précédentes (2023, 2024, etc.)
+   - Agents : Filtrer par un ou plusieurs agents Support
+   - Dimensions : Sélectionner les dimensions à afficher (BUG, REQ, ASSISTANCE, Temps)
+
+Note : Les volumes comptent les tickets créés (charge entrante), le temps d'assistance est basé sur les tickets résolus.`,
+  interpretation: `• Volumes en hausse = Augmentation de la charge entrante
+• Volumes en baisse = Diminution de la charge entrante
+• Temps d'assistance élevé = Beaucoup de temps passé sur les assistances
+• Comparer les tendances entre types pour identifier les priorités
+• Utiliser les filtres pour analyser par agent ou période spécifique`
+};
+

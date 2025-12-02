@@ -12,6 +12,7 @@ import { TicketsDistributionChart } from '../ceo/tickets-distribution-chart';
 import { TopBugsModulesTable } from '../ceo/top-bugs-modules-table';
 import { WorkloadByAgentTable } from '../ceo/workload-by-agent-table';
 import { OperationalAlertsSection } from '../ceo/operational-alerts-section';
+import { SupportEvolutionChartServerV2 } from '../manager/support-evolution-chart-server-v2';
 
 /**
  * Définition d'un widget avec son composant et son type de layout
@@ -104,6 +105,12 @@ export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
     title: 'Charge par agent',
     description: 'Détails de la charge de travail par agent',
   },
+  supportEvolutionChart: {
+    component: SupportEvolutionChartServerV2,
+    layoutType: 'chart',
+    title: 'Évolution Performance Support',
+    description: 'Tendances globales par dimension (BUG, REQ, ASSISTANCE, Temps d\'assistance) avec filtres personnalisables',
+  },
 };
 
 /**
@@ -144,50 +151,76 @@ const DEFAULT_HEALTH_DATA = {
  */
 export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
   mttr: (data) => {
-    if (data.strategic) return { data: data.strategic.mttr };
-    if (data.team) return { data: data.team.mttr };
-    return { data: DEFAULT_MTTR_DATA };
+    const mttrData = data.strategic?.mttr || data.team?.mttr || DEFAULT_MTTR_DATA;
+    return { 
+      data: mttrData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
   'tickets-ouverts': (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
+    const fluxData = data.strategic?.flux || data.team?.flux || DEFAULT_FLUX_DATA;
+    return { 
+      data: fluxData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
   'tickets-resolus': (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
+    const fluxData = data.strategic?.flux || data.team?.flux || DEFAULT_FLUX_DATA;
+    return { 
+      data: fluxData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
   workload: (data) => {
-    if (data.strategic) return { data: data.strategic.workload };
-    if (data.team) return { data: data.team.workload };
-    return { data: DEFAULT_WORKLOAD_DATA };
+    const workloadData = data.strategic?.workload || data.team?.workload || DEFAULT_WORKLOAD_DATA;
+    return { 
+      data: workloadData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
   health: (data) => {
-    if (data.strategic) return { data: data.strategic.health };
-    if (data.team) return { data: data.team.health };
-    return { data: DEFAULT_HEALTH_DATA };
+    const healthData = data.strategic?.health || data.team?.health || DEFAULT_HEALTH_DATA;
+    return { 
+      data: healthData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
-  alerts: (data) => ({ alerts: data.alerts || [] }),
+  alerts: (data) => ({ 
+    alerts: data.alerts || [],
+    period: data.period, // Période globale pour cohérence
+  }),
   mttrEvolution: (data) => {
-    if (data.strategic) return { data: data.strategic.mttr };
-    if (data.team) return { data: data.team.mttr };
-    return { data: DEFAULT_MTTR_DATA };
+    const mttrData = data.strategic?.mttr || data.team?.mttr || DEFAULT_MTTR_DATA;
+    return { 
+      data: mttrData,
+      period: data.period, // Ajouter la période pour que le widget soit conscient du filtre global
+    };
   },
   ticketsDistribution: (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
+    const fluxData = data.strategic?.flux || data.team?.flux || DEFAULT_FLUX_DATA;
+    return { 
+      data: fluxData,
+      period: data.period, // Ajouter la période pour que le widget soit conscient du filtre global
+    };
   },
   topBugsModules: (data) => {
-    if (data.strategic) return { data: data.strategic.health.topBugModules };
-    if (data.team) return { data: data.team.health.topBugModules };
-    return { data: [] };
+    const modulesData = data.strategic?.health.topBugModules || data.team?.health.topBugModules || [];
+    return { 
+      data: modulesData,
+      period: data.period, // Période globale pour cohérence
+    };
   },
   workloadByAgent: (data) => {
-    if (data.strategic) return { data: data.strategic.workload.byAgent };
-    if (data.team) return { data: data.team.workload.byAgent };
-    return { data: [] };
+    const agentsData = data.strategic?.workload.byAgent || data.team?.workload.byAgent || [];
+    return { 
+      data: agentsData,
+      period: data.period, // Période globale pour cohérence
+    };
+  },
+  supportEvolutionChart: (data) => {
+    // Le widget Support Evolution charge ses propres données via API route
+    // On passe juste la période globale pour qu'il charge les données
+    return { period: data.period };
   },
 };
 

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Period, TicketFluxData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
@@ -9,11 +10,15 @@ import { extractProduct, type SupabaseProductRelation } from './utils/product-ut
 /**
  * Calcule le flux de tickets (ouverts vs résolus) pour une période
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @param period - Type de période
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données de flux (ouverts, résolus, taux, tendances)
  */
-export async function getTicketFlux(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<TicketFluxData> {
+async function getTicketFluxInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<TicketFluxData> {
   const { startDate, endDate } = getPeriodDates(period);
   const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period);
 
@@ -141,4 +146,13 @@ function calculateFluxByProduct(
   }));
 }
 
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const getTicketFlux = cache(getTicketFluxInternal);
 

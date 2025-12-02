@@ -1,18 +1,20 @@
 'use client';
 
 import { KPICard } from '@/components/dashboard/kpi-card';
-import type { MTTRData } from '@/types/dashboard';
+import type { MTTRData, Period } from '@/types/dashboard';
 
 type MTTRKPICardProps = {
   data: MTTRData;
+  period: Period; // Période globale pour cohérence (utilisé par React.memo)
 };
 
 /**
  * Card KPI pour le MTTR (Mean Time To Resolution)
  * 
  * @param data - Données MTTR (global, par produit, tendance)
+ * @param period - Période globale pour cohérence (utilisé par React.memo pour détecter les changements)
  */
-export function MTTRKPICard({ data }: MTTRKPICardProps) {
+export function MTTRKPICard({ data, period: _period }: MTTRKPICardProps) {
   if (!data) {
     return (
       <KPICard
@@ -21,6 +23,7 @@ export function MTTRKPICard({ data }: MTTRKPICardProps) {
         description="Données non disponibles"
         icon="clock"
         variant="default"
+        subtitle="vs période précédente"
       />
     );
   }

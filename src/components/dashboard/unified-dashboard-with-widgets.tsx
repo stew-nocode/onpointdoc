@@ -1,16 +1,21 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect, Suspense } from 'react';
 import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
 import { DashboardWidgetGrid } from './widgets';
 import { PeriodSelector } from './ceo/period-selector';
+import { CustomPeriodSelector } from './ceo/custom-period-selector';
+import { YearSelector } from './ceo/year-selector';
 import { WidgetPreferencesDialog } from './user/widget-preferences-dialog';
+import { DashboardSkeleton } from './dashboard-skeleton';
 import { Loader2 } from 'lucide-react';
 import { useRealtimeDashboardData } from '@/hooks/dashboard/use-realtime-dashboard-data';
 import { useRealtimeWidgetConfig } from '@/hooks/dashboard/use-realtime-widget-config';
 import { usePerformanceMeasure, useRenderCount } from '@/hooks/performance';
+import { DateRange } from 'react-day-picker';
+import { getPeriodDates } from '@/services/dashboard/period-utils';
 
 type UnifiedDashboardWithWidgetsProps = {
   role: DashboardRole;
@@ -47,6 +52,17 @@ function UnifiedDashboardWithWidgetsComponent({
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [data, setData] = useState<UnifiedDashboardData>(initialData);
   const [widgetConfig, setWidgetConfig] = useState<UserDashboardConfig>(initialWidgetConfig);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
+  
+  // Initialiser la plage de dates en fonction de la période initiale
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const { startDate, endDate } = getPeriodDates(initialPeriod);
+    return {
+      from: new Date(startDate),
+      to: new Date(endDate)
+    };
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,7 +147,52 @@ function UnifiedDashboardWithWidgetsComponent({
   const handlePeriodChange = useCallback(
     (newPeriod: Period) => {
       setPeriod(newPeriod);
+      // Si on change de période, on réinitialise l'année si c'était une sélection d'année
+      // (Logique à affiner selon le besoin métier exact)
       loadData(newPeriod);
+    },
+    [loadData]
+  );
+
+  /**
+   * Gère le changement de période via le sélecteur personnalisé
+   */
+  const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+    setDateRange(range);
+    setSelectedYear(undefined); // Réinitialiser l'année si on utilise une plage personnalisée
+    
+    if (range?.from && range?.to) {
+      // Utiliser une période personnalisée (on passe les dates directement)
+      // Pour les widgets, on utilise 'year' comme période mais avec une plage personnalisée
+      // Les widgets devront gérer cette plage via dateRange dans le contexte ou les props
+      setPeriod('year'); // Utiliser 'year' comme période par défaut pour les plages personnalisées
+      
+      // Recharger les données du dashboard avec la nouvelle plage
+      loadData('year');
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Nouvelle plage sélectionnée:', {
+          from: range.from.toISOString(),
+          to: range.to.toISOString(),
+        });
+      }
+    }
+  }, [loadData]);
+
+  const handleYearChange = useCallback(
+    (year: string | undefined) => {
+      setSelectedYear(year);
+      setDateRange(undefined); // Réinitialiser la plage personnalisée si on utilise l'année
+      
+      if (year) {
+        // Mettre à jour la période avec l'année sélectionnée
+        setPeriod(year as Period); // L'année est passée comme période
+        loadData(year as Period);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Année sélectionnée:', year);
+        }
+      }
     },
     [loadData]
   );
@@ -186,10 +247,26 @@ function UnifiedDashboardWithWidgetsComponent({
 
   // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
   // Comparaison fine : ne recréer que si les propriétés essentielles changent
+  // Mettre à jour la période dans les données du dashboard pour les widgets
+  // La période vient toujours de l'état local (period, selectedYear, ou dateRange)
   const dashboardDataWithFilteredAlerts = useMemo(() => {
+    // Déterminer la période active : année sélectionnée > période > période par défaut
+    const activePeriod: Period | string = selectedYear || period || data.period;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Dashboard] Active period for widgets:', {
+        selectedYear,
+        period,
+        dataPeriod: data.period,
+        activePeriod,
+      });
+    }
+    
     return {
       ...data,
       alerts: filteredAlerts,
+      // S'assurer que la période est toujours à jour avec l'état local
+      period: activePeriod as Period,
     };
   }, [
     data.role,
@@ -197,10 +274,12 @@ function UnifiedDashboardWithWidgetsComponent({
     data.team,
     data.personal,
     data.config,
-    data.period,
     data.periodStart,
     data.periodEnd,
+    data.period, // Garder data.period comme fallback
     filteredAlerts,
+    period, // Période de l'état local (week, month, quarter, year)
+    selectedYear, // Année sélectionnée (ex: "2024")
   ]); // Dépendances granulaires au lieu de l'objet complet
 
   return (
@@ -209,7 +288,8 @@ function UnifiedDashboardWithWidgetsComponent({
         <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
         <div className="flex items-center gap-3">
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-          <PeriodSelector value={period} onChange={handlePeriodChange} />
+          <YearSelector value={selectedYear} onValueChange={handleYearChange} className="w-[120px]" />
+          <CustomPeriodSelector date={dateRange} onSelect={handleDateRangeChange} />
         </div>
       </div>
 
@@ -219,12 +299,14 @@ function UnifiedDashboardWithWidgetsComponent({
         </div>
       )}
 
-      {/* Affichage des widgets via DashboardWidgetGrid */}
+      {/* Affichage des widgets via DashboardWidgetGrid avec Suspense pour streaming */}
       {widgetConfig.visibleWidgets.length > 0 ? (
-        <DashboardWidgetGrid
-          widgets={widgetConfig.visibleWidgets}
-          dashboardData={dashboardDataWithFilteredAlerts}
-        />
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardWidgetGrid
+            widgets={widgetConfig.visibleWidgets}
+            dashboardData={dashboardDataWithFilteredAlerts}
+          />
+        </Suspense>
       ) : (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           Aucun widget configuré pour votre rôle. Contactez un administrateur pour activer des widgets.
