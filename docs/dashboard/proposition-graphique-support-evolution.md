@@ -238,3 +238,4 @@ export async function getSupportEvolutionData(
 6. Intégrer dans le registry des widgets
 7. Activer dans la base de données pour le rôle "manager"
 
+

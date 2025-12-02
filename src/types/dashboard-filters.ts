@@ -4,7 +4,7 @@ import type { Period } from './dashboard';
  * Filtres pour le dashboard CEO
  */
 export type DashboardFiltersInput = {
-  period: Period;
+  period: Period | string; // Période standard ou année spécifique (ex: "2024")
   products: string[]; // IDs des produits sélectionnés
   teams: string[]; // ['support', 'it', 'marketing']
   types: ('BUG' | 'REQ' | 'ASSISTANCE')[]; // Types de tickets

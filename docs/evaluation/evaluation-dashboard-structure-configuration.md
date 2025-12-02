@@ -338,3 +338,4 @@ Le panneau de configuration est fonctionnel mais pourrait bénéficier d'une pre
 - Sécurité: 6/10
 - UX: 7/10
 
+

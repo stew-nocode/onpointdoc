@@ -58,3 +58,4 @@ Bien que chaque département ait des indicateurs différents, la structure peut 
 
 **Important** : Toujours filtrer strictement par département dans les requêtes Supabase.
 
+

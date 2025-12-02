@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { unstable_noStore as noStore } from 'next/cache';
 import { getCEODashboardData } from '@/services/dashboard/ceo-kpis';
 import type { Period, UnifiedDashboardData, CEODashboardData, TeamDashboardData, AgentDashboardData } from '@/types/dashboard';
 import type { DashboardRole } from '@/types/dashboard';
@@ -6,6 +7,7 @@ import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-u
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
 import { getCurrentUserProfile } from '@/services/users/server';
 import { handleApiError } from '@/lib/errors/handlers';
+import { getPeriodDates } from '@/services/dashboard/period-utils';
 
 /**
  * Route API unifiée pour récupérer les données du dashboard selon le rôle
@@ -18,6 +20,10 @@ import { handleApiError } from '@/lib/errors/handlers';
  * - Agent : données personnelles
  */
 export async function GET(request: NextRequest) {
+  // Désactiver le cache pour forcer le rechargement des données
+  // Le cache React.cache() pourrait bloquer les mises à jour avec les nouvelles périodes
+  noStore();
+  
   try {
     // Récupérer le profil utilisateur
     const profile = await getCurrentUserProfile();
@@ -29,11 +35,47 @@ export async function GET(request: NextRequest) {
     // Mapper le rôle du profil vers DashboardRole
     const dashboardRole = mapProfileRoleToDashboardRole(profile.role);
 
+    // Log pour debug (dev uniquement)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API Dashboard] User profile:', {
+        profileRole: profile.role,
+        dashboardRole,
+        profileId: profile.id,
+      });
+    }
+
     // Parser les filtres depuis l'URL
     const searchParams = request.nextUrl.searchParams;
     const params = Object.fromEntries(searchParams.entries());
     const filters = parseDashboardFiltersFromParams(params);
     const period = filters?.period || 'month';
+
+    // Vérifier si des dates personnalisées sont fournies
+    const customStartDate = searchParams.get('startDate');
+    const customEndDate = searchParams.get('endDate');
+
+    // Utiliser les dates personnalisées si fournies, sinon calculer selon la période
+    let startDate: string;
+    let endDate: string;
+    
+    if (customStartDate && customEndDate) {
+      // Utiliser les dates personnalisées
+      startDate = customStartDate;
+      endDate = customEndDate;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API Dashboard] Using custom dates:', {
+          period,
+          startDate,
+          endDate,
+        });
+      }
+    } else {
+      // Calculer les dates de période (gère aussi les années spécifiques comme "2024")
+      const periodDates = getPeriodDates(period);
+      startDate = periodDates.startDate;
+      endDate = periodDates.endDate;
+    }
 
     // Récupérer les alertes (tous les rôles)
     const { getOperationalAlerts } = await import('@/services/dashboard/operational-alerts');
@@ -44,13 +86,43 @@ export async function GET(request: NextRequest) {
       role: dashboardRole,
       alerts,
       period,
-      periodStart: new Date().toISOString(), // TODO: calculer selon période
-      periodEnd: new Date().toISOString(),
+      periodStart: startDate,
+      periodEnd: endDate,
     };
 
-    if (dashboardRole === 'direction') {
-      // Direction : données stratégiques globales
-      const strategic = await getCEODashboardData(period, filters || undefined);
+    if (dashboardRole === 'direction' || dashboardRole === 'admin') {
+      // Direction ou Admin : données stratégiques globales
+      
+      // Log pour debug (dev uniquement)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API Dashboard] Loading strategic data:', {
+          dashboardRole,
+          period,
+          startDate,
+          endDate,
+          filters,
+        });
+      }
+      
+      // Passer les dates personnalisées si disponibles
+      const strategic = await getCEODashboardData(
+        period, 
+        filters || undefined,
+        customStartDate || undefined,
+        customEndDate || undefined
+      );
+      
+      // Log pour debug (dev uniquement)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[API Dashboard] Strategic data loaded:', {
+          period,
+          mttr: strategic.mttr.global,
+          fluxOpened: strategic.flux.opened,
+          fluxResolved: strategic.flux.resolved,
+          resolutionRate: strategic.flux.resolutionRate,
+        });
+      }
+      
       responseData.strategic = strategic;
     } else if (dashboardRole === 'manager') {
       // Manager : données de l'équipe

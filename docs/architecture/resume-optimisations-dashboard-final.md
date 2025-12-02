@@ -156,3 +156,4 @@ Les optimisations suivent les meilleures pratiques Next.js 16+ et sont alignées
 - `src/components/dashboard/dashboard-skeleton.tsx` (nouveau)
 - `supabase/migrations/20251130000000_dashboard_widgets_indexes.sql` (nouveau)
 
+

@@ -137,3 +137,4 @@ Le script affichera :
 
 **Prochaine étape** : Exécuter le script d'analyse pour voir l'état réel de vos tickets.
 
+

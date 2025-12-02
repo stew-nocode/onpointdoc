@@ -39,6 +39,8 @@ export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
     'mttrEvolution',
     'ticketsDistribution',
     'supportEvolutionChart',
+    'ticketsByTypePieChart',
+    'ticketsByCompanyPieChart',
     'topBugsModules',
     'workloadByAgent',
     'alerts',

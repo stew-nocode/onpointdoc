@@ -404,3 +404,4 @@ export async function getAgentPerformanceMetrics(
 
 **Note**: Toutes les propositions respectent les principes Clean Code, utilisent Recharts (déjà installé), et s'intègrent dans l'architecture existante du dashboard.
 
+

@@ -115,11 +115,18 @@ function transformChartData(
 
     // Format de date selon la période
     const isYearPeriod = typeof data.period === 'string' && /^\d{4}$/.test(data.period) || data.period === 'year';
+    const isCustomPeriod = data.period === 'custom';
 
     if (isYearPeriod) {
       // Pour l'année, afficher seulement le mois
       dateLabel = dateObj.toLocaleDateString('fr-FR', {
         month: 'short',
+      });
+    } else if (isCustomPeriod) {
+      // Pour les périodes personnalisées, afficher mois + jour pour plus de précision
+      dateLabel = dateObj.toLocaleDateString('fr-FR', {
+        month: 'short',
+        day: 'numeric',
       });
     } else if (data.period === 'quarter') {
       // Pour le trimestre, afficher mois + jour

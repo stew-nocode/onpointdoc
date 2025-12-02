@@ -250,3 +250,4 @@ Quand vous créez le widget `supportEvolutionChart` :
 
 **Tout est automatique** grâce au système de widgets individuels + groupement par `layoutType` !
 
+

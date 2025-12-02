@@ -459,3 +459,4 @@ supportEvolutionChart: {
 - [ ] Test responsive : vérifier sur mobile (< 640px)
 - [ ] Pas de largeur fixe dans le composant
 
+

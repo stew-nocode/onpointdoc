@@ -158,3 +158,4 @@ Ces widgets détaillés seront créés séparément :
 - Les volumes sont toujours des tickets/dimensions **créés** (charge entrante)
 - Le temps d'assistance est une exception (basé sur résolution)
 
+

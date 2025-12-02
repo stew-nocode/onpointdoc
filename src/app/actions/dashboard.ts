@@ -25,6 +25,8 @@ import { createError, isApplicationError } from '@/lib/errors/types';
 export async function getSupportEvolutionDataAction(
   params: {
     period: string;
+    periodStart?: string;
+    periodEnd?: string;
     dimensions?: string[];
     agents?: string[];
   }
@@ -44,21 +46,26 @@ export async function getSupportEvolutionDataAction(
     period: params.period,
     dimensions: params.dimensions,
     agents: params.agents,
+    periodStart: params.periodStart,
+    periodEnd: params.periodEnd,
   });
 
   if (!validationResult.success) {
     throw createError.validationError('Paramètres invalides', {
       errors: validationResult.error.errors,
       context: 'getSupportEvolutionDataAction',
+      receivedParams: params,
     });
   }
 
-  const { period, dimensions, agents } = validationResult.data;
+  const { period, dimensions, agents, periodStart, periodEnd } = validationResult.data;
 
   // 3. Logger en développement
   if (process.env.NODE_ENV === 'development') {
     console.log('[SupportEvolution Action] Request params:', {
       period,
+      periodStart: params.periodStart,
+      periodEnd: params.periodEnd,
       dimensions,
       agents,
       userId: user.id,
@@ -66,8 +73,24 @@ export async function getSupportEvolutionDataAction(
   }
 
   try {
-    // 4. Récupérer les données via le service
-    const data = await getSupportEvolutionDataV2(period, dimensions, agents);
+    // 4. Validation conditionnelle : si period est 'custom', periodStart et periodEnd sont requis
+    if (period === 'custom' && (!periodStart || !periodEnd)) {
+      throw createError.validationError('Les dates personnalisées sont requises pour la période "custom"', {
+        context: 'getSupportEvolutionDataAction',
+        period,
+        hasPeriodStart: !!periodStart,
+        hasPeriodEnd: !!periodEnd,
+      });
+    }
+
+    // 5. Récupérer les données via le service
+    const data = await getSupportEvolutionDataV2(
+      period,
+      dimensions,
+      agents,
+      periodStart,
+      periodEnd
+    );
 
     if (process.env.NODE_ENV === 'development') {
       console.log('[SupportEvolution Action] Success:', {

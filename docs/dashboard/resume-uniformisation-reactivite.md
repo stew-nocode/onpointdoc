@@ -189,3 +189,4 @@ Le widget Support Evolution est le seul à charger ses propres données car :
 - ✅ Meilleure performance (pas de sérialisation JSON)
 - ✅ Cohérence avec les best practices Next.js 16+
 
+

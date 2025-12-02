@@ -135,10 +135,24 @@ export type ProductHealthData = {
   topBugModules: {
     moduleId: string;
     moduleName: string;
-    productName: string;
-    bugCount: number;
-    bugRate: number;
-    trend: number;
+    productName: string; // Gardé pour compatibilité, mais vide dans le nouveau format
+    bugCount: number; // Gardé pour compatibilité = bugsSignales
+    bugRate: number; // Gardé pour compatibilité = resolutionRate
+    trend: number; // Gardé pour compatibilité = trends.bugsSignales
+    // Nouvelles métriques
+    bugsSignales: number;
+    bugsCritiques: number;
+    criticalRate: number; // % Critique
+    bugsOuverts: number;
+    bugsResolus: number;
+    resolutionRate: number;
+    trends: {
+      bugsSignales: number;
+      criticalRate: number;
+      bugsOuverts: number;
+      bugsResolus: number;
+      resolutionRate: number;
+    };
   }[];
 };
 

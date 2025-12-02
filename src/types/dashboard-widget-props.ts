@@ -61,6 +61,8 @@ export type WorkloadByAgentWidgetProps = {
 
 export type SupportEvolutionChartWidgetProps = {
   period: Period; // Période globale (le widget charge ses propres données)
+  periodStart?: string; // Date de début personnalisée (ISO string)
+  periodEnd?: string; // Date de fin personnalisée (ISO string)
 };
 
 /**

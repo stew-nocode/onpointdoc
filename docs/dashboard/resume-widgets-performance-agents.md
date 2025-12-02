@@ -251,3 +251,4 @@ Avant de commencer le code, valider :
 
 **Document complet**: `docs/dashboard/widget-performance-agents-support.md`
 
+

@@ -96,3 +96,4 @@ Refonte complète du widget "Évolution Performance Support" selon la nouvelle s
 
 La refonte est complète et prête à être testée. Le widget utilise maintenant la nouvelle architecture simplifiée selon la spécification.
 
+

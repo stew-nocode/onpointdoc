@@ -160,3 +160,4 @@ export type Period =
 - ✅ Documentation JSDoc complète
 - ✅ Code performant (useMemo, initialisation optimale)
 
+

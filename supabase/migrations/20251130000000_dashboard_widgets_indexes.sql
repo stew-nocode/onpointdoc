@@ -39,3 +39,4 @@ COMMENT ON INDEX idx_dashboard_user_preferences_profile_id_visible IS
 COMMENT ON INDEX idx_dashboard_configurations_role IS 
 'Index pour optimiser les requêtes de configuration dashboard par rôle';
 
+

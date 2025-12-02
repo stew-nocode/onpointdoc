@@ -167,27 +167,40 @@ Les segments sont colorés différemment par produit pour faciliter la visualisa
 };
 
 /**
- * Documentation pour le tableau Top Modules avec BUGs
+ * Documentation pour le tableau Modules par Période
  */
 export const TOP_BUGS_MODULES_DOCUMENTATION: DocumentationContent = {
-  title: 'Top Modules avec BUGs',
-  subtitle: 'Les 10 modules avec le plus de bugs cette période',
-  definition: `Liste des modules les plus problématiques en termes de bugs, pour identifier les zones nécessitant une attention prioritaire.`,
-  calculation: `1. Groupe tous les tickets par module
-2. Compte les BUGs par module
-3. Calcule le taux : (BUGs module / Total tickets module) × 100
-4. Trie par nombre de BUGs décroissant
-5. Affiche les 10 premiers
-6. Compare avec période précédente pour la tendance
+  title: 'Modules par Période',
+  subtitle: 'Métriques détaillées de bugs par module pour la période sélectionnée',
+  definition: `Tableau complet présentant les métriques de bugs détaillées pour tous les modules, permettant d'identifier les zones nécessitant une attention prioritaire. Affiche les bugs signalés, le taux de bugs critiques, les bugs ouverts, résolus et le taux de résolution.`,
+  calculation: `Pour chaque module :
 
-Tendance :
-- Calcul : ((BUGs actuels - BUGs précédents) / BUGs précédents) × 100
-- Exemple : +50% = 50% de bugs en plus que la période précédente`,
-  interpretation: `• Top 1-3 = Modules critiques nécessitant action immédiate 🔴
-• Tendance positive = Dégradation, besoin d'investigation ⚠️
-• Tendance négative = Amélioration en cours ✅
-• Taux élevé (> 40%) = Module instable nécessitant refactoring
-• Permet de prioriser les efforts de correction`
+1. Bug signalé :
+   - Compte tous les bugs créés dans la période
+
+2. % Critique :
+   - Nombre de bugs avec priorité "Critical" / Total bugs signalés × 100
+
+3. Ouvert :
+   - Bugs signalés dans la période - Bugs résolus dans la période (créés ET résolus dans la période)
+
+4. Résolu :
+   - Bugs créés ET résolus dans la période uniquement
+
+5. Taux résolution :
+   - (Bugs résolus / Bugs signalés) × 100
+
+Tendances :
+- Comparaison avec la période précédente pour chaque métrique
+- Calcul : ((Valeur actuelle - Valeur précédente) / Valeur précédente) × 100
+- Exemple : +50% = 50% d'augmentation par rapport à la période précédente`,
+  interpretation: `• Bug signalé élevé = Module problématique nécessitant attention 🔴
+• % Critique élevé = Proportion importante de bugs critiques ⚠️
+• Ouvert élevé = Accumulation de bugs non résolus ⚠️
+• Taux résolution élevé = Bonne réactivité dans la résolution ✅
+• Tendances positives (↑) = Dégradation, besoin d'investigation ⚠️
+• Tendances négatives (↓) = Amélioration en cours ✅
+• Permet de prioriser les efforts de correction et d'identifier les modules les plus stables`
 };
 
 /**

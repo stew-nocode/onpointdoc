@@ -35,7 +35,7 @@ export function YearSelector({
 
   return (
     <div className="relative">
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={value || undefined} onValueChange={onValueChange}>
         <SelectTrigger 
           className={`${className} ${isActive ? 'ring-1 ring-green-500/20 dark:ring-green-400/20 border-green-300 dark:border-green-700' : ''} ${!value ? 'opacity-60' : ''}`}
         >

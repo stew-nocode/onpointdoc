@@ -169,3 +169,4 @@ ON dashboard_user_preferences(profile_id);
 
 **État**: 📝 Plan créé - Prêt pour implémentation
 
+

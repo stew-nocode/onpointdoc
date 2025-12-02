@@ -251,3 +251,4 @@ Après corrections, vérifier :
 
 **Conclusion** : Les conflits identifiés sont principalement dus à une architecture avec trop de couches et des callbacks multiples. La solution recommandée est d'unifier les callbacks pour simplifier le flux et éviter les appels multiples.
 
+

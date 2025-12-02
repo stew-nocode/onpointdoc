@@ -18,9 +18,14 @@ import { extractProduct, type SupabaseProductRelation } from './utils/product-ut
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données MTTR (global, par produit, par type, tendance)
  */
-async function calculateMTTRInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<MTTRData> {
-  const { startDate, endDate } = getPeriodDates(period);
-  const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period);
+async function calculateMTTRInternal(
+  period: Period | string, 
+  filters?: Partial<DashboardFiltersInput>,
+  customStartDate?: string,
+  customEndDate?: string
+): Promise<MTTRData> {
+  const { startDate, endDate } = getPeriodDates(period, customStartDate, customEndDate);
+  const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period, customStartDate, customEndDate);
 
   const supabase = await createSupabaseServerClient();
 

@@ -248,3 +248,4 @@ Pour chaque widget :
 4. **Étape 4** : Uniformiser Support Evolution (vérifier la réactivité à `period`)
 5. **Étape 5** : Tests et validation
 
+

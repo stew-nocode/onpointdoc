@@ -532,3 +532,4 @@ type SupportEvolutionData = {
 5. Intégrer dans le registry des widgets
 6. Activer dans la base de données pour le rôle "manager"
 
+

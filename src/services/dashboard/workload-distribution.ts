@@ -17,8 +17,13 @@ import { extractProfileRole, extractProfile, type SupabaseProfileRoleRelation, t
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données de charge (par équipe, par agent, total)
  */
-async function getWorkloadDistributionInternal(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<WorkloadData> {
-  const { startDate, endDate } = getPeriodDates(period);
+async function getWorkloadDistributionInternal(
+  period: Period | string, 
+  filters?: Partial<DashboardFiltersInput>,
+  customStartDate?: string,
+  customEndDate?: string
+): Promise<WorkloadData> {
+  const { startDate, endDate } = getPeriodDates(period, customStartDate, customEndDate);
 
   const supabase = await createSupabaseServerClient();
 

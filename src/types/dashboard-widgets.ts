@@ -19,7 +19,9 @@ export type DashboardWidget =
   | 'ticketsDistribution'   // Distribution tickets par type (Chart)
   | 'topBugsModules'        // Top modules avec bugs (Table)
   | 'workloadByAgent'       // Charge par agent (Table)
-  | 'supportEvolutionChart'; // Évolution Performance Support (Graphique temporel)
+  | 'supportEvolutionChart' // Évolution Performance Support (Graphique temporel)
+  | 'ticketsByTypePieChart' // Répartition par type (Pie Chart avec filtre agent)
+  | 'ticketsByCompanyPieChart'; // Répartition par entreprise (Pie Chart avec filtre type de ticket)
 
 /**
  * Type de layout pour chaque widget

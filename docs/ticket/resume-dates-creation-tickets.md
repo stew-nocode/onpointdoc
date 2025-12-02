@@ -71,3 +71,4 @@ node scripts/refresh-all-tickets-from-jira.mjs --limit 10
 
 **État Global**: 🟢 **100% des tickets ont une date de création**
 
+

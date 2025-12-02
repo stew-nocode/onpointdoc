@@ -78,8 +78,16 @@ function UnifiedDashboardWithWidgetsComponent({
 
   /**
    * Charge les données pour une période donnée
+   * 
+   * @param selectedPeriod - Période standard (week, month, quarter, year) ou année spécifique
+   * @param customStartDate - Date de début personnalisée (optionnelle)
+   * @param customEndDate - Date de fin personnalisée (optionnelle)
    */
-  const loadData = useCallback(async (selectedPeriod: Period | string) => {
+  const loadData = useCallback(async (
+    selectedPeriod: Period | string,
+    customStartDate?: string,
+    customEndDate?: string
+  ) => {
     // Mesure du temps de chargement (dev uniquement)
     const loadStartTime = performance.now();
     if (process.env.NODE_ENV === 'development') {
@@ -92,6 +100,19 @@ function UnifiedDashboardWithWidgetsComponent({
       const url = new URL(window.location.href);
       const params = new URLSearchParams(url.search);
       params.set('period', selectedPeriod);
+      
+      // Ajouter les dates personnalisées si fournies
+      if (customStartDate && customEndDate) {
+        params.set('startDate', customStartDate);
+        params.set('endDate', customEndDate);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Dashboard] Loading with custom dates:', {
+            period: selectedPeriod,
+            startDate: customStartDate,
+            endDate: customEndDate,
+          });
+        }
+      }
 
       const response = await fetch(`/api/dashboard?${params.toString()}`);
       if (!response.ok) {
@@ -173,39 +194,56 @@ function UnifiedDashboardWithWidgetsComponent({
    * Gère le changement de période via le sélecteur personnalisé
    */
   const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+    // Réinitialiser l'année AVANT de définir la période personnalisée
+    setSelectedYear(undefined);
+    
+    // Définir la période personnalisée
     setDateRange(range);
-    setSelectedYear(undefined); // Réinitialiser l'année si on utilise une plage personnalisée
     
     if (range?.from && range?.to) {
-      // Utiliser une période personnalisée (on passe les dates directement)
-      // Pour les widgets, on utilise 'year' comme période mais avec une plage personnalisée
-      // Les widgets devront gérer cette plage via dateRange dans le contexte ou les props
-      setPeriod('year'); // Utiliser 'year' comme période par défaut pour les plages personnalisées
+      // Utiliser une période personnalisée - transmettre les dates à l'API
+      setPeriod('year'); // Pour la compatibilité avec les widgets
       
-      // Recharger les données du dashboard avec la nouvelle plage
-      loadData('year');
+      // Transmettre les dates personnalisées à loadData
+      loadData('year', range.from.toISOString(), range.to.toISOString());
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('Nouvelle plage sélectionnée:', {
+        console.log('[Dashboard] Nouvelle plage personnalisée sélectionnée:', {
           from: range.from.toISOString(),
           to: range.to.toISOString(),
         });
+      }
+    } else {
+      // Si on efface la période personnalisée, réinitialiser aussi
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Dashboard] Période personnalisée désélectionnée');
       }
     }
   }, [loadData]);
 
   const handleYearChange = useCallback(
     (year: string | undefined) => {
-      setSelectedYear(year);
-      setDateRange(undefined); // Réinitialiser la plage personnalisée si on utilise l'année
+      // Normaliser : traiter les chaînes vides comme undefined
+      const normalizedYear = year === '' || year === undefined ? undefined : year;
       
-      if (year) {
+      // Réinitialiser la période personnalisée AVANT de définir l'année
+      setDateRange(undefined);
+      
+      // Définir l'année
+      setSelectedYear(normalizedYear);
+      
+      if (normalizedYear) {
         // Mettre à jour la période avec l'année sélectionnée
-        setPeriod(year as Period); // L'année est passée comme période
-        loadData(year as Period);
+        setPeriod(normalizedYear as Period); // L'année est passée comme période
+        loadData(normalizedYear as Period);
         
         if (process.env.NODE_ENV === 'development') {
-          console.log('Année sélectionnée:', year);
+          console.log('[Dashboard] Année sélectionnée:', normalizedYear);
+        }
+      } else {
+        // Si on désélectionne l'année, réinitialiser aussi la période
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Dashboard] Année désélectionnée, réinitialisation de la période');
         }
       }
     },
@@ -272,13 +310,42 @@ function UnifiedDashboardWithWidgetsComponent({
     return 'none';
   }, [dateRange, selectedYear]);
 
+  // Détecter et résoudre les conflits entre les sélecteurs
+  useEffect(() => {
+    const hasDateRange = dateRange?.from && dateRange?.to;
+    const hasSelectedYear = !!selectedYear;
+
+    // Conflit : les deux sont définis simultanément
+    if (hasDateRange && hasSelectedYear) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Dashboard] Conflit détecté : dateRange et selectedYear sont tous deux définis. Réinitialisation de selectedYear.');
+      }
+      // Priorité : dateRange > selectedYear, donc on réinitialise selectedYear
+      setSelectedYear(undefined);
+    }
+  }, [dateRange, selectedYear]);
+
   // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
   // Comparaison fine : ne recréer que si les propriétés essentielles changent
   // Mettre à jour la période dans les données du dashboard pour les widgets
   // La période vient toujours de l'état local (period, selectedYear, ou dateRange)
   const dashboardDataWithFilteredAlerts = useMemo(() => {
-    // Déterminer la période active : année sélectionnée > période > période par défaut
-    const activePeriod: Period | string = selectedYear || period || data.period;
+    // Déterminer la période active et les dates
+    let activePeriod: Period | string;
+    let customPeriodStart: string | undefined;
+    let customPeriodEnd: string | undefined;
+    
+    // Priorité : dateRange > selectedYear > period
+    if (dateRange?.from && dateRange?.to) {
+      // Période personnalisée active
+      activePeriod = 'custom'; // Indiquer que c'est une période personnalisée
+      customPeriodStart = dateRange.from.toISOString();
+      customPeriodEnd = dateRange.to.toISOString();
+    } else if (selectedYear) {
+      activePeriod = selectedYear;
+    } else {
+      activePeriod = period || data.period;
+    }
     
     if (process.env.NODE_ENV === 'development') {
       console.log('[Dashboard] Active period for widgets:', {
@@ -287,6 +354,9 @@ function UnifiedDashboardWithWidgetsComponent({
         dataPeriod: data.period,
         activePeriod,
         activeFilterType,
+        hasCustomDates: !!(customPeriodStart && customPeriodEnd),
+        customStart: customPeriodStart,
+        customEnd: customPeriodEnd,
       });
     }
     
@@ -295,6 +365,11 @@ function UnifiedDashboardWithWidgetsComponent({
       alerts: filteredAlerts,
       // S'assurer que la période est toujours à jour avec l'état local
       period: activePeriod as Period,
+      // Transmettre les dates personnalisées si disponibles
+      ...(customPeriodStart && customPeriodEnd && {
+        periodStart: customPeriodStart,
+        periodEnd: customPeriodEnd,
+      }),
     };
   }, [
     data.role,
@@ -308,6 +383,7 @@ function UnifiedDashboardWithWidgetsComponent({
     filteredAlerts,
     period, // Période de l'état local (week, month, quarter, year)
     selectedYear, // Année sélectionnée (ex: "2024")
+    dateRange, // Période personnalisée
     activeFilterType,
   ]); // Dépendances granulaires au lieu de l'objet complet
 
@@ -318,12 +394,14 @@ function UnifiedDashboardWithWidgetsComponent({
         <div className="flex items-center gap-3">
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
           <YearSelector 
+            key={`year-selector-${selectedYear || 'none'}`}
             value={selectedYear} 
             onValueChange={handleYearChange} 
             className="w-[120px]"
             isActive={activeFilterType === 'year'}
           />
           <CustomPeriodSelector 
+            key={`custom-period-${dateRange?.from?.toISOString() || 'none'}-${dateRange?.to?.toISOString() || 'none'}`}
             date={dateRange} 
             onSelect={handleDateRangeChange}
             isActive={activeFilterType === 'custom-period'}

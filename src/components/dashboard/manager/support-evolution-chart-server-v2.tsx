@@ -19,6 +19,8 @@ import { getSupportEvolutionDataAction } from '@/app/actions/dashboard';
 
 type SupportEvolutionChartServerV2Props = {
   period: Period; // Période globale du dashboard
+  periodStart?: string; // Date de début personnalisée (ISO string)
+  periodEnd?: string; // Date de fin personnalisée (ISO string)
 };
 
 /**
@@ -61,6 +63,8 @@ function extractErrorMessage(error: unknown, fallback: string = 'Erreur inconnue
  */
 export function SupportEvolutionChartServerV2({
   period: globalPeriod,
+  periodStart: customPeriodStart,
+  periodEnd: customPeriodEnd,
 }: SupportEvolutionChartServerV2Props) {
   const [data, setData] = useState<SupportEvolutionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,9 +73,13 @@ export function SupportEvolutionChartServerV2({
   // Debug: Logger les changements de période
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[SupportEvolutionChartServerV2] Period changed:', globalPeriod);
+      console.log('[SupportEvolutionChartServerV2] Period changed:', {
+        period: globalPeriod,
+        periodStart: customPeriodStart,
+        periodEnd: customPeriodEnd,
+      });
     }
-  }, [globalPeriod]);
+  }, [globalPeriod, customPeriodStart, customPeriodEnd]);
 
   // Filtres locaux (état React - pas de conflit avec filtres globaux)
   const [localFilters, setLocalFilters] = useState<{
@@ -96,6 +104,8 @@ export function SupportEvolutionChartServerV2({
 
       const result = await getSupportEvolutionDataAction({
         period: globalPeriod.toString(),
+        periodStart: customPeriodStart,
+        periodEnd: customPeriodEnd,
         dimensions: localFilters.selectedDimensions,
         agents: localFilters.selectedAgents.length > 0 ? localFilters.selectedAgents : undefined,
       });
@@ -126,7 +136,7 @@ export function SupportEvolutionChartServerV2({
     } finally {
       setIsLoading(false);
     }
-  }, [globalPeriod, localFilters.selectedDimensions, localFilters.selectedAgents]);
+  }, [globalPeriod, customPeriodStart, customPeriodEnd, localFilters.selectedDimensions, localFilters.selectedAgents]);
 
   // Charger les données avec debouncing et transition
   useEffect(() => {

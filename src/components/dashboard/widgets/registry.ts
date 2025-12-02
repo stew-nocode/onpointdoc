@@ -13,6 +13,8 @@ import { TopBugsModulesTable } from '../ceo/top-bugs-modules-table';
 import { WorkloadByAgentTable } from '../ceo/workload-by-agent-table';
 import { OperationalAlertsSection } from '../ceo/operational-alerts-section';
 import { SupportEvolutionChartServerV2 } from '../manager/support-evolution-chart-server-v2';
+import { TicketsByTypePieChartServer } from '../manager/tickets-by-type-pie-chart-server';
+import { TicketsByCompanyPieChartServer } from '../manager/tickets-by-company-pie-chart-server';
 
 /**
  * Définition d'un widget avec son composant et son type de layout
@@ -110,6 +112,18 @@ export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
     layoutType: 'chart',
     title: 'Évolution Performance Support',
     description: 'Tendances globales par dimension (BUG, REQ, ASSISTANCE, Temps d\'assistance) avec filtres personnalisables',
+  },
+  ticketsByTypePieChart: {
+    component: TicketsByTypePieChartServer,
+    layoutType: 'chart',
+    title: 'Répartition par Type',
+    description: 'Répartition des tickets créés par type (BUG, REQ, ASSISTANCE) avec filtre par agent Support',
+  },
+  ticketsByCompanyPieChart: {
+    component: TicketsByCompanyPieChartServer,
+    layoutType: 'chart',
+    title: 'Répartition par Entreprise',
+    description: 'Répartition des tickets créés par entreprise avec filtre par type de ticket (BUG, REQ, ASSISTANCE)',
   },
 };
 
@@ -219,8 +233,30 @@ export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
   },
   supportEvolutionChart: (data) => {
     // Le widget Support Evolution charge ses propres données via API route
-    // On passe juste la période globale pour qu'il charge les données
-    return { period: data.period };
+    // On passe la période globale et les dates personnalisées si disponibles
+    return {
+      period: data.period,
+      periodStart: data.periodStart,
+      periodEnd: data.periodEnd,
+    };
+  },
+  ticketsByTypePieChart: (data) => {
+    // Le widget Répartition par Type charge ses propres données via Server Action
+    // On passe la période globale et les dates personnalisées si disponibles
+    return {
+      period: data.period,
+      periodStart: data.periodStart,
+      periodEnd: data.periodEnd,
+    };
+  },
+  ticketsByCompanyPieChart: (data) => {
+    // Le widget Répartition par Entreprise charge ses propres données via Server Action
+    // On passe la période globale et les dates personnalisées si disponibles
+    return {
+      period: data.period,
+      periodStart: data.periodStart,
+      periodEnd: data.periodEnd,
+    };
   },
 };
 
