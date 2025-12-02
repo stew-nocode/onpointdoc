@@ -1,503 +1,344 @@
 # 🔍 Audit Clean Code - Dashboard
 
 **Date**: 2025-01-16  
-**Objectif**: Analyse complète du code du dashboard selon les principes Clean Code  
-**Exigence**: Clean Code Extrême
-
-## 📋 Table des matières
-
-1. [Problèmes critiques](#problèmes-critiques)
-2. [Types `any` à éliminer](#types-any-à-éliminer)
-3. [Duplications de code](#duplications-de-code)
-4. [Fonctions trop longues](#fonctions-trop-longues)
-5. [Code mort / fichiers inutilisés](#code-mort--fichiers-inutilisés)
-6. [Constantes hardcodées](#constantes-hardcodées)
-7. [Améliorations structurelles](#améliorations-structurelles)
-8. [Plan d'action](#plan-daction)
+**Objectif**: Analyser le respect des principes Clean Code dans les composants dashboard
 
 ---
 
-## 🚨 Problèmes critiques
+## 📊 Résumé Exécutif
 
-### 1. Types `any` à éliminer
+### ✅ Points Positifs
 
-**Principe violé**: Types explicites partout
+- ✅ **Types explicites** : Tous les composants sont bien typés
+- ✅ **Séparation des responsabilités** : Widgets, sections, et logique métier bien séparés
+- ✅ **DRY** : Pas de duplication évidente de code
+- ✅ **Memoization** : Utilisation appropriée de `React.memo`, `useMemo`, `useCallback`
 
-#### Fichier: `src/components/dashboard/widgets/registry.ts`
-- **Ligne 19**: `component: ComponentType<any>` 
-- **Ligne 204**: `getWidgetProps(...): any`
+### ⚠️ Violations Identifiées
 
-**Correction**:
-```typescript
-// Créer un type générique pour les props des widgets
-type WidgetProps = {
-  data?: MTTRData | TicketFluxData | WorkloadData | ProductHealthData;
-  alerts?: OperationalAlert[];
-};
-
-export type WidgetDefinition<P extends WidgetProps = WidgetProps> = {
-  component: ComponentType<P>;
-  layoutType: WidgetLayoutType;
-  title: string;
-  description?: string;
-};
-
-export function getWidgetProps(
-  widgetId: DashboardWidget, 
-  dashboardData: UnifiedDashboardData
-): WidgetProps {
-  // ...
-}
-```
-
-#### Fichier: `src/components/dashboard/widgets/widget-grid.tsx`
-- **Ligne 22**: `component: ComponentType<any>`
-- **Ligne 23**: `props: any`
-
-**Correction**: Utiliser le type `WidgetProps` défini ci-dessus
-
-#### Fichier: `src/app/api/dashboard/route.ts`
-- **Ligne 42**: `responseData: any`
-
-**Correction**:
-```typescript
-type DashboardApiResponse = {
-  role: DashboardRole;
-  alerts: OperationalAlert[];
-  period: Period;
-  periodStart: string;
-  periodEnd: string;
-  strategic?: CEODashboardData;
-  team?: TeamDashboardData;
-  personal?: AgentDashboardData;
-};
-
-let responseData: DashboardApiResponse = {
-  // ...
-};
-```
+- ❌ **Composants > 100 lignes** : `UnifiedDashboardWithWidgetsComponent` (272 lignes)
+- ❌ **Fonctions > 20 lignes** : `arePropsEqual` (48 lignes), `loadData` (39 lignes)
+- ⚠️ **Commentaires dupliqués** : Commentaires JSDoc répétitifs dans `widget-grid.tsx`
 
 ---
 
-## 🔄 Duplications de code
+## 🔍 Analyse Détaillée
 
-### 1. Fonction `calculateTrend` dupliquée
+### 1. `src/components/dashboard/widgets/widget-grid.tsx` (325 lignes)
 
-**Fichiers**:
-- `src/services/dashboard/mttr-calculation.ts` (ligne 168)
-- `src/services/dashboard/ticket-flux.ts` (ligne 143)
-- `src/services/dashboard/product-health.ts` (ligne 190)
+#### ✅ Respect du Clean Code
 
-**Correction**: Extraire dans `src/services/dashboard/utils/trend-calculation.ts`
+| Principe | Statut | Détails |
+|----------|--------|---------|
+| **Composant principal < 100 lignes** | ✅ | `DashboardWidgetGrid` : 73 lignes |
+| **Sections < 100 lignes** | ✅ | Toutes les sections < 20 lignes |
+| **Types explicites** | ✅ | Tous les types sont définis |
+| **DRY** | ✅ | Pas de duplication |
 
-```typescript
+#### ❌ Violations
+
+**Violation 1 : Fonction trop longue**
+
+```154:202:src/components/dashboard/widgets/widget-grid.tsx
+const arePropsEqual = (
+  prevProps: { component: ComponentType<WidgetProps>; props: WidgetProps },
+  nextProps: { component: ComponentType<WidgetProps>; props: WidgetProps }
+): boolean => {
+  // 48 lignes de code...
+};
+```
+
+**Problème** : La fonction `arePropsEqual` fait **48 lignes** (limite : 20 lignes)
+
+**Impact** : Difficile à maintenir, logique complexe
+
+**Solution** : Extraire la logique en plusieurs fonctions :
+- `compareComponents()` : Comparer les composants
+- `comparePeriod()` : Comparer la période
+- `comparePropsKeys()` : Comparer les clés des props
+
+---
+
+**Violation 2 : Commentaires dupliqués**
+
+```125:153:src/components/dashboard/widgets/widget-grid.tsx
 /**
- * Calcule la tendance en pourcentage entre deux valeurs
+ * Widget individuel mémorisé pour éviter les re-renders inutiles
  * 
- * @param current - Valeur actuelle
- * @param previous - Valeur précédente
- * @returns Pourcentage de variation (arrondi)
+ * Utilise React.memo avec comparaison shallow par défaut pour éviter les re-renders
+ * si les props n'ont pas changé.
+ * 
+ * ⚠️ IMPORTANT: La comparaison shallow permet de détecter les changements dans les props,
+ * donc si les données changent (nouvelle référence d'objet), le widget se mettra à jour.
  */
-export function calculateTrend(current: number, previous: number): number {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100);
-}
-```
-
-### 2. Logique de gestion des produits dupliquée
-
-**Fichiers**:
-- `src/services/dashboard/mttr-calculation.ts` (lignes 85-122)
-- `src/services/dashboard/ticket-flux.ts` (lignes 92-138)
-- `src/services/dashboard/product-health.ts` (lignes 55-104)
-
-**Pattern récurrent**: 
-```typescript
-const product = Array.isArray(ticket.product) 
-  ? ticket.product[0] 
-  : ticket.product;
-if (!product) return;
-```
-
-**Correction**: Créer une fonction utilitaire `src/services/dashboard/utils/product-utils.ts`
-
-```typescript
-type Product = { id: string; name: string };
-type ProductRelation = Product | Product[] | null;
-
 /**
- * Extrait un produit d'une relation Supabase (simple ou array)
+ * Widget individuel mémorisé pour éviter les re-renders inutiles
+ * 
+ * ⚠️ IMPORTANT: React.memo avec comparaison shallow détecte automatiquement
+ * les changements de référence d'objet dans les props. Comme les données
+ * sont recréées à chaque chargement (nouvelle référence), les widgets
+ * se mettront à jour automatiquement.
  */
-export function extractProduct(
-  product: ProductRelation
-): Product | null {
-  if (!product) return null;
-  return Array.isArray(product) ? product[0] : product;
-}
+/**
+ * Comparaison optimisée pour React.memo
+ * 
+ * Détecte les changements de :
+ * - period (string) : comparaison par valeur
+ * - data (object) : comparaison par référence
+ * - alerts (array) : comparaison par référence
+ * 
+ * ⚠️ IMPORTANT : La comparaison shallow par défaut de React.memo
+ * détecte automatiquement les changements de référence d'objet.
+ * On ajoute une comparaison explicite pour `period` pour être sûr.
+ */
 ```
 
-### 3. Logique de gestion des modules dupliquée
+**Problème** : 3 commentaires JSDoc dupliqués (29 lignes)
 
-**Fichier**: `src/services/dashboard/product-health.ts`
+**Impact** : Confusion, maintenance difficile
 
-Même pattern que pour les produits. Utiliser une fonction similaire `extractModule()`.
+**Solution** : Garder un seul commentaire clair et concis
 
 ---
 
-## 📏 Fonctions trop longues
+### 2. `src/components/dashboard/unified-dashboard-with-widgets.tsx` (353 lignes)
 
-### 1. `getOperationalAlerts` - 104 lignes
+#### ✅ Respect du Clean Code
 
-**Fichier**: `src/services/dashboard/operational-alerts.ts`
+| Principe | Statut | Détails |
+|----------|--------|---------|
+| **Types explicites** | ✅ | Tous les types sont définis |
+| **useCallback** | ✅ | Handlers mémorisés correctement |
+| **useMemo** | ✅ | Calculs mémorisés |
+| **Séparation logique** | ✅ | Logique métier séparée |
 
-**Violation**: Fonction > 20 lignes
+#### ❌ Violations
 
-**Correction**: Découper en fonctions plus petites
+**Violation 1 : Composant trop long**
 
-```typescript
-export async function getOperationalAlerts(): Promise<OperationalAlert[]> {
-  const [overdueAlerts, unassignedAlerts, activityAlerts, taskAlerts] = 
-    await Promise.all([
-      getOverdueCriticalTickets(),
-      getUnassignedLongTickets(),
-      getUpcomingActivities(),
-      getBlockedTasks(),
-    ]);
-
-  return sortAlertsByPriority([
-    ...overdueAlerts,
-    ...unassignedAlerts,
-    ...activityAlerts,
-    ...taskAlerts,
-  ]);
-}
-
-async function getOverdueCriticalTickets(): Promise<OperationalAlert[]> {
-  // 7 lignes max
-}
-
-async function getUnassignedLongTickets(): Promise<OperationalAlert[]> {
-  // 7 lignes max
-}
-
-async function getUpcomingActivities(): Promise<OperationalAlert[]> {
-  // 7 lignes max
-}
-
-async function getBlockedTasks(): Promise<OperationalAlert[]> {
-  // 7 lignes max
-}
-
-function sortAlertsByPriority(alerts: OperationalAlert[]): OperationalAlert[] {
-  // 5 lignes max
+```45:317:src/components/dashboard/unified-dashboard-with-widgets.tsx
+function UnifiedDashboardWithWidgetsComponent({
+  role,
+  profileId,
+  initialData,
+  initialPeriod,
+  initialWidgetConfig,
+}: UnifiedDashboardWithWidgetsProps) {
+  // 272 lignes de code...
 }
 ```
 
-### 2. `calculateMTTRByProduct` - 38 lignes
+**Problème** : Le composant fait **272 lignes** (limite : 100 lignes)
 
-**Fichier**: `src/services/dashboard/mttr-calculation.ts`
+**Impact** : Difficile à comprendre, maintenir et tester
 
-**Violation**: Fonction > 20 lignes
-
-**Correction**: Extraire la logique de groupement
-
-```typescript
-function calculateMTTRByProduct(
-  tickets: Array<{...}>
-): MTTRData['byProduct'] {
-  const groupedTickets = groupTicketsByProduct(tickets);
-  return Array.from(groupedTickets.entries()).map(([productId, productTickets]) => {
-    const product = getProductFromTickets(tickets, productId);
-    return {
-      productId,
-      productName: product?.name || 'Non défini',
-      mttr: calculateAverageMTTR(productTickets),
-    };
-  });
-}
-
-function groupTicketsByProduct(tickets: Array<{...}>) {
-  // Logique de groupement isolée
-}
-
-function getProductFromTickets(tickets: Array<{...}>, productId: string) {
-  // Extraction du produit isolée
-}
-```
-
-### 3. `calculateWorkloadByAgent` - 71 lignes
-
-**Fichier**: `src/services/dashboard/workload-distribution.ts`
-
-**Violation**: Fonction > 20 lignes
-
-**Correction**: Découper en fonctions
-
-```typescript
-function calculateWorkloadByAgent(...): WorkloadData['byAgent'] {
-  const agentMap = buildAgentMap(activeTickets, resolvedTickets);
-  return calculateWorkloadPercentages(agentMap);
-}
-
-function buildAgentMap(...) {
-  // Construction de la map
-}
-
-function calculateWorkloadPercentages(agentMap: Map<...>) {
-  // Calcul des pourcentages
-}
-```
+**Solution** : Extraire la logique en hooks personnalisés :
+- `useDashboardData()` : Gestion des données et chargement
+- `useDashboardPeriod()` : Gestion de la période (period, year, dateRange)
+- `useDashboardRealtime()` : Gestion des subscriptions realtime
 
 ---
 
-## 💀 Code mort / fichiers inutilisés
+**Violation 2 : Fonction trop longue**
 
-### 1. `flux-kpi-card.tsx` - Fichier obsolète
-
-**Fichier**: `src/components/dashboard/ceo/flux-kpi-card.tsx`
-
-**Raison**: Remplacé par `tickets-ouverts-kpi-card.tsx` et `tickets-resolus-kpi-card.tsx`
-
-**Action**: Supprimer le fichier
-
-### 2. `unified-dashboard.tsx` - Peut-être obsolète
-
-**Fichier**: `src/components/dashboard/unified-dashboard.tsx`
-
-**Raison**: Remplacé par `unified-dashboard-with-widgets.tsx` ?
-
-**Vérification nécessaire**: Vérifier si ce fichier est encore importé quelque part
-
-**Action**: Si non utilisé, supprimer. Sinon, migrer vers le système de widgets.
-
----
-
-## 🔢 Constantes hardcodées
-
-### 1. Dates hardcodées
-
-**Fichier**: `src/services/dashboard/operational-alerts.ts`
-
-- **Ligne 14-15**: `sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)`
-- **Ligne 57-58**: `nextWeek.setDate(nextWeek.getDate() + 7)`
-
-**Correction**: Créer des constantes
-
-```typescript
-// src/services/dashboard/constants/alert-constants.ts
-export const UNASSIGNED_ALERT_DAYS = 7;
-export const UPCOMING_ACTIVITY_DAYS = 7;
-```
-
-### 2. Valeurs magiques
-
-**Fichier**: `src/services/dashboard/product-health.ts`
-
-- **Ligne 92-94**: Seuils de santé hardcodés (`20`, `40`)
-
-**Correction**: Constantes nommées
-
-```typescript
-// src/services/dashboard/constants/health-constants.ts
-export const HEALTH_THRESHOLD_GOOD = 20;
-export const HEALTH_THRESHOLD_WARNING = 40;
-```
-
-### 3. Limites de résultats hardcodées
-
-**Fichier**: `src/services/dashboard/operational-alerts.ts`
-
-- **Ligne 66**: `.limit(5)`
-- **Ligne 85**: `.limit(5)`
-
-**Fichier**: `src/services/dashboard/product-health.ts`
-
-- **Ligne 184**: `.slice(0, 10)`
-
-**Correction**: Constantes centralisées
-
-```typescript
-// src/services/dashboard/constants/limits.ts
-export const MAX_ALERTS_PER_TYPE = 5;
-export const MAX_TOP_BUG_MODULES = 10;
-```
-
-### 4. Priorité order hardcodée
-
-**Fichier**: `src/services/dashboard/operational-alerts.ts`
-
-- **Ligne 100**: `const priorityOrder = { high: 0, medium: 1, low: 2 };`
-
-**Correction**: Extraire dans constants
-
-```typescript
-// src/services/dashboard/constants/alert-constants.ts
-export const ALERT_PRIORITY_ORDER: Record<OperationalAlert['priority'], number> = {
-  high: 0,
-  medium: 1,
-  low: 2,
-};
-```
-
----
-
-## 🏗️ Améliorations structurelles
-
-### 1. Créer un module `utils` pour le dashboard
-
-**Structure proposée**:
-```
-src/services/dashboard/
-  utils/
-    trend-calculation.ts
-    product-utils.ts
-    module-utils.ts
-    date-utils.ts (extrait de period-utils.ts si nécessaire)
-  constants/
-    alert-constants.ts
-    health-constants.ts
-    limits.ts
-```
-
-### 2. Extraire les types de relations Supabase
-
-**Problème**: Types complexes dupliqués pour les relations Supabase
-
-**Solution**: Créer des types utilitaires
-
-```typescript
-// src/services/dashboard/types/supabase-relations.ts
-export type SupabaseProductRelation = 
-  | { id: string; name: string }
-  | { id: string; name: string }[]
-  | null;
-
-export type SupabaseModuleRelation = 
-  | { id: string; name: string }
-  | { id: string; name: string }[]
-  | null;
-
-export type SupabaseProfileRelation = 
-  | { id: string; full_name: string | null; role: string }
-  | { id: string; full_name: string | null; role: string }[]
-  | null;
-```
-
-### 3. Standardiser la gestion d'erreur
-
-**Problème**: Pas de gestion d'erreur cohérente dans les services
-
-**Solution**: Utiliser `handleApiError` partout ou créer une fonction spécifique
-
-```typescript
-// src/services/dashboard/utils/error-handler.ts
-export async function handleDashboardServiceError<T>(
-  operation: () => Promise<T>,
-  fallback: T
-): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[Dashboard Service]', error);
-    }
-    return fallback;
+```83:122:src/components/dashboard/unified-dashboard-with-widgets.tsx
+const loadData = useCallback(async (selectedPeriod: Period) => {
+  // Mesure du temps de chargement (dev uniquement)
+  const loadStartTime = performance.now();
+  if (process.env.NODE_ENV === 'development') {
+    console.time('⏱️ DashboardDataLoad');
   }
-}
+
+  setIsLoading(true);
+  setError(null);
+  try {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    params.set('period', selectedPeriod);
+
+    const response = await fetch(`/api/dashboard?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des données');
+    }
+    const newData: UnifiedDashboardData = await response.json();
+    setData(newData);
+
+    // Logger le temps de chargement (dev uniquement)
+    if (process.env.NODE_ENV === 'development') {
+      const loadDuration = performance.now() - loadStartTime;
+      console.timeEnd('⏱️ DashboardDataLoad');
+      const rating = loadDuration < 500 ? '✅' : loadDuration < 1000 ? '⚠️' : '❌';
+      console.log(`${rating} DashboardDataLoad: ${Math.round(loadDuration)}ms`);
+    }
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
+    setError(errorMessage);
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.error('[Dashboard] Erreur lors du chargement des données:', err);
+      console.timeEnd('⏱️ DashboardDataLoad');
+    }
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
 ```
 
-### 4. Améliorer la documentation
+**Problème** : La fonction `loadData` fait **39 lignes** (limite : 20 lignes)
 
-**Problème**: Certaines fonctions manquent de JSDoc
+**Impact** : Logique complexe mélangeant plusieurs responsabilités
 
-**Solution**: Ajouter JSDoc à toutes les fonctions exportées avec:
-- Description claire
-- `@param` pour chaque paramètre
-- `@returns` avec description du retour
-- `@throws` si applicable
-
----
-
-## ✅ Plan d'action
-
-### Phase 1: Corrections critiques (Priorité haute)
-
-1. ✅ Éliminer tous les `any`
-   - [ ] Créer `WidgetProps` type
-   - [ ] Mettre à jour `registry.ts`
-   - [ ] Mettre à jour `widget-grid.tsx`
-   - [ ] Mettre à jour `api/dashboard/route.ts`
-
-2. ✅ Extraire les duplications
-   - [ ] Créer `trend-calculation.ts`
-   - [ ] Créer `product-utils.ts`
-   - [ ] Créer `module-utils.ts`
-   - [ ] Refactoriser les services
-
-### Phase 2: Refactoring fonctions (Priorité moyenne)
-
-3. ✅ Découper les fonctions longues
-   - [ ] `getOperationalAlerts` → 5 fonctions
-   - [ ] `calculateMTTRByProduct` → 3 fonctions
-   - [ ] `calculateWorkloadByAgent` → 2 fonctions
-
-4. ✅ Extraire les constantes
-   - [ ] Créer `alert-constants.ts`
-   - [ ] Créer `health-constants.ts`
-   - [ ] Créer `limits.ts`
-   - [ ] Mettre à jour les services
-
-### Phase 3: Nettoyage (Priorité basse)
-
-5. ✅ Supprimer le code mort
-   - [ ] Vérifier l'utilisation de `unified-dashboard.tsx`
-   - [ ] Supprimer `flux-kpi-card.tsx`
-   - [ ] Nettoyer les imports inutilisés
-
-6. ✅ Améliorer la structure
-   - [ ] Créer le module `utils/`
-   - [ ] Créer le module `constants/`
-   - [ ] Créer le module `types/`
-   - [ ] Standardiser la gestion d'erreur
+**Solution** : Extraire en fonctions plus petites :
+- `buildDashboardApiUrl(period)` : Construire l'URL de l'API
+- `fetchDashboardData(url)` : Faire la requête
+- `logDashboardLoadTime(duration)` : Logger le temps de chargement
 
 ---
 
-## 📊 Métriques après refactoring
+**Violation 3 : useMemo complexe**
 
-### Avant
-- Types `any`: **5 occurrences** (registry.ts, widget-grid.tsx, api/route.ts)
-- Duplications: **3 fonctions `calculateTrend`**
-- Fonctions > 20 lignes: **4 fonctions**
-- Constantes hardcodées: **8 occurrences**
-- Code mort: **1 fichier** (flux-kpi-card.tsx)
+```252:283:src/components/dashboard/unified-dashboard-with-widgets.tsx
+const dashboardDataWithFilteredAlerts = useMemo(() => {
+  // Déterminer la période active : année sélectionnée > période > période par défaut
+  const activePeriod: Period | string = selectedYear || period || data.period;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Dashboard] Active period for widgets:', {
+      selectedYear,
+      period,
+      dataPeriod: data.period,
+      activePeriod,
+    });
+  }
+  
+  return {
+    ...data,
+    alerts: filteredAlerts,
+    // S'assurer que la période est toujours à jour avec l'état local
+    period: activePeriod as Period,
+  };
+}, [
+  data.role,
+  data.strategic,
+  data.team,
+  data.personal,
+  data.config,
+  data.periodStart,
+  data.periodEnd,
+  data.period, // Garder data.period comme fallback
+  filteredAlerts,
+  period, // Période de l'état local (week, month, quarter, year)
+  selectedYear, // Année sélectionnée (ex: "2024")
+]); // Dépendances granulaires au lieu de l'objet complet
+```
 
-### Après ✅
-- Types `any`: **3 occurrences** (justifiées : ComponentType<any> pour widgets polymorphes)
-- Duplications: **0** ✅ (fonction centralisée)
-- Fonctions > 20 lignes: **0** ✅ (toutes découpées)
-- Constantes hardcodées: **0** ✅ (toutes extraites)
-- Code mort: **0** ✅ (flux-kpi-card.tsx supprimé)
+**Problème** : Logique complexe avec beaucoup de dépendances (11 dépendances)
 
-### Notes sur les `any` restants
-Les 3 `any` restants dans `ComponentType<any>` sont justifiés car :
-- Chaque widget a des props spécifiques différentes
-- TypeScript ne permet pas facilement une union de types pour ComponentType
-- La sécurité de type est assurée au niveau des composants individuels
-- Les mappers de données garantissent le bon type au runtime
+**Impact** : Difficile à maintenir, risque d'erreurs
+
+**Solution** : Extraire en fonction utilitaire :
+- `getActivePeriod(selectedYear, period, dataPeriod)` : Déterminer la période active
+- `mergeDashboardDataWithAlerts(data, filteredAlerts, activePeriod)` : Merger les données
 
 ---
 
-## 🎯 Checklist finale
+## 📋 Plan de Refactoring
 
-Avant de considérer le refactoring terminé, vérifier:
+### Priorité 1 : Refactoring `widget-grid.tsx`
 
-- [ ] Tous les types sont explicites (pas de `any`)
-- [ ] Aucune duplication de code
-- [ ] Toutes les fonctions < 20 lignes (ou justifiées)
-- [ ] Tous les composants < 100 lignes (ou justifiés)
-- [ ] Toutes les constantes nommées (pas de valeurs magiques)
-- [ ] Code mort supprimé
-- [ ] Tous les fichiers ont JSDoc pour les exports
-- [ ] Gestion d'erreur cohérente
-- [ ] Tests unitaires pour les nouvelles fonctions utilitaires
+1. **Supprimer les commentaires dupliqués** (5 min)
+   - Garder un seul commentaire JSDoc clair pour `arePropsEqual`
 
+2. **Découper `arePropsEqual` en fonctions plus petites** (15 min)
+   - `compareComponents()` : 5 lignes
+   - `comparePeriod()` : 8 lignes
+   - `comparePropsKeys()` : 15 lignes
+   - `arePropsEqual()` : 10 lignes (orchestration)
+
+**Fichier à créer** : `src/components/dashboard/widgets/utils/widget-props-comparison.ts`
+
+---
+
+### Priorité 2 : Refactoring `unified-dashboard-with-widgets.tsx`
+
+1. **Extraire la logique de chargement** (20 min)
+   - Créer `useDashboardData()` hook
+   - Extraire `loadData()` en fonctions plus petites
+
+2. **Extraire la logique de période** (15 min)
+   - Créer `useDashboardPeriod()` hook
+   - Gérer period, selectedYear, dateRange
+
+3. **Extraire la logique realtime** (10 min)
+   - Créer `useDashboardRealtime()` hook
+   - Gérer les subscriptions
+
+4. **Extraire les utilitaires** (10 min)
+   - Créer `src/components/dashboard/utils/dashboard-data-helpers.ts`
+   - Extraire `getActivePeriod()` et `mergeDashboardDataWithAlerts()`
+
+**Fichiers à créer** :
+- `src/hooks/dashboard/use-dashboard-data.ts`
+- `src/hooks/dashboard/use-dashboard-period.ts`
+- `src/hooks/dashboard/use-dashboard-realtime.ts`
+- `src/components/dashboard/utils/dashboard-data-helpers.ts`
+
+---
+
+## ✅ Checklist de Refactoring
+
+### Avant de Commencer
+
+- [ ] ✅ Audit Clean Code terminé
+- [ ] ✅ Plan de refactoring validé
+- [ ] ✅ Tests existants identifiés (si présents)
+
+### Pendant le Refactoring
+
+- [ ] ✅ Respecter les principes Clean Code
+- [ ] ✅ Fonctions < 20 lignes
+- [ ] ✅ Composants < 100 lignes
+- [ ] ✅ Maximum 3 paramètres par fonction
+- [ ] ✅ Types explicites partout
+- [ ] ✅ Pas de duplication (DRY)
+- [ ] ✅ Tests après chaque étape
+
+### Après le Refactoring
+
+- [ ] ✅ Linter sans erreurs
+- [ ] ✅ Tests passent (si présents)
+- [ ] ✅ Fonctionnalité inchangée
+- [ ] ✅ Documentation à jour
+- [ ] ✅ Performance maintenue (vérifier avec Performance Monitor)
+
+---
+
+## 📊 Métriques Avant/Après (Objectif)
+
+| Métrique | Avant | Objectif Après | Amélioration |
+|----------|-------|----------------|--------------|
+| **Lignes `widget-grid.tsx`** | 325 | ~250 | -23% |
+| **Lignes `unified-dashboard.tsx`** | 353 | ~150 | -57% |
+| **Fonctions > 20 lignes** | 2 | 0 | -100% |
+| **Composants > 100 lignes** | 1 | 0 | -100% |
+
+---
+
+## 🎯 Bénéfices Attendus
+
+1. **Maintenabilité** : Code plus facile à comprendre et modifier
+2. **Testabilité** : Fonctions petites et isolées = tests plus simples
+3. **Réutilisabilité** : Hooks extraits réutilisables ailleurs
+4. **Lisibilité** : Code plus clair et organisé
+
+---
+
+## 📚 Ressources
+
+- [Clean Code - Méthodologie](../refactoring/CLEAN-CODE-METHODOLOGIE.md)
+- [Règles Clean Code - Cursor](../.cursor/rules/clean-code.mdc)
+- [Performance Dashboard](../performance/DASHBOARD-PERFORMANCE-MEASUREMENT.md)
+
+---
+
+**Note** : Ce refactoring doit être fait progressivement, étape par étape, en vérifiant que tout fonctionne après chaque modification.

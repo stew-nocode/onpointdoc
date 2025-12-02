@@ -5,7 +5,6 @@ import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
 import { DashboardWidgetGrid } from './widgets';
-import { PeriodSelector } from './ceo/period-selector';
 import { CustomPeriodSelector } from './ceo/custom-period-selector';
 import { YearSelector } from './ceo/year-selector';
 import { WidgetPreferencesDialog } from './user/widget-preferences-dialog';
@@ -80,7 +79,7 @@ function UnifiedDashboardWithWidgetsComponent({
   /**
    * Charge les données pour une période donnée
    */
-  const loadData = useCallback(async (selectedPeriod: Period) => {
+  const loadData = useCallback(async (selectedPeriod: Period | string) => {
     // Mesure du temps de chargement (dev uniquement)
     const loadStartTime = performance.now();
     if (process.env.NODE_ENV === 'development') {
@@ -99,6 +98,22 @@ function UnifiedDashboardWithWidgetsComponent({
         throw new Error('Erreur lors du chargement des données');
       }
       const newData: UnifiedDashboardData = await response.json();
+      
+      // Log pour debug (dev uniquement)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Dashboard] Data loaded from API:', {
+          role: newData.role,
+          period: newData.period,
+          periodStart: newData.periodStart,
+          periodEnd: newData.periodEnd,
+          hasStrategic: !!newData.strategic,
+          strategicFluxOpened: newData.strategic?.flux?.opened,
+          strategicFluxResolved: newData.strategic?.flux?.resolved,
+          strategicMTTR: newData.strategic?.mttr?.global,
+          strategicData: newData.strategic, // Structure complète pour debug
+        });
+      }
+      
       setData(newData);
 
       // Logger le temps de chargement (dev uniquement)
@@ -245,6 +260,18 @@ function UnifiedDashboardWithWidgetsComponent({
     [data.alerts, role]
   );
 
+  // Déterminer quel sélecteur est actif pour l'affichage visuel
+  // Priorité : dateRange > selectedYear > aucun (période standard)
+  const activeFilterType = useMemo(() => {
+    if (dateRange?.from && dateRange?.to) {
+      return 'custom-period';
+    }
+    if (selectedYear) {
+      return 'year';
+    }
+    return 'none';
+  }, [dateRange, selectedYear]);
+
   // Mettre à jour les alertes dans les données (mémorisé pour éviter les re-renders)
   // Comparaison fine : ne recréer que si les propriétés essentielles changent
   // Mettre à jour la période dans les données du dashboard pour les widgets
@@ -259,6 +286,7 @@ function UnifiedDashboardWithWidgetsComponent({
         period,
         dataPeriod: data.period,
         activePeriod,
+        activeFilterType,
       });
     }
     
@@ -280,6 +308,7 @@ function UnifiedDashboardWithWidgetsComponent({
     filteredAlerts,
     period, // Période de l'état local (week, month, quarter, year)
     selectedYear, // Année sélectionnée (ex: "2024")
+    activeFilterType,
   ]); // Dépendances granulaires au lieu de l'objet complet
 
   return (
@@ -288,8 +317,17 @@ function UnifiedDashboardWithWidgetsComponent({
         <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
         <div className="flex items-center gap-3">
           {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-          <YearSelector value={selectedYear} onValueChange={handleYearChange} className="w-[120px]" />
-          <CustomPeriodSelector date={dateRange} onSelect={handleDateRangeChange} />
+          <YearSelector 
+            value={selectedYear} 
+            onValueChange={handleYearChange} 
+            className="w-[120px]"
+            isActive={activeFilterType === 'year'}
+          />
+          <CustomPeriodSelector 
+            date={dateRange} 
+            onSelect={handleDateRangeChange}
+            isActive={activeFilterType === 'custom-period'}
+          />
         </div>
       </div>
 

@@ -17,9 +17,7 @@ import {
   endOfWeek,
   isSameMonth,
   isSameDay,
-  isWithinInterval,
-  addMonths,
-  subMonths as subMonth
+  isWithinInterval
 } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -42,12 +40,14 @@ interface CustomPeriodSelectorProps {
   date?: { from?: Date; to?: Date }
   onSelect?: (range: { from?: Date; to?: Date } | undefined) => void
   className?: string
+  isActive?: boolean
 }
 
 export function CustomPeriodSelector({
   date,
   onSelect,
   className,
+  isActive = false,
 }: CustomPeriodSelectorProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [tempDate, setTempDate] = React.useState<{ from?: Date; to?: Date } | undefined>(date)
@@ -240,32 +240,36 @@ export function CustomPeriodSelector({
     )
   }
 
+  const hasActiveRange = date?.from && date?.to;
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant={"outline"}
-          className={cn(
-            "w-full sm:w-[300px] justify-start text-left font-normal",
-            !date && "text-muted-foreground",
-            className
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date?.from ? (
-            date.to ? (
-              <>
-                {format(date.from, "dd MMM yyyy", { locale: fr })} -{" "}
-                {format(date.to, "dd MMM yyyy", { locale: fr })}
-              </>
+    <div className="relative">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-full sm:w-[300px] justify-start text-left font-normal",
+              !hasActiveRange && "text-muted-foreground opacity-60",
+              isActive && hasActiveRange && "ring-1 ring-green-500/20 dark:ring-green-400/20 border-green-300 dark:border-green-700",
+              className
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date?.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "dd MMM yyyy", { locale: fr })} -{" "}
+                  {format(date.to, "dd MMM yyyy", { locale: fr })}
+                </>
+              ) : (
+                format(date.from, "dd MMM yyyy", { locale: fr })
+              )
             ) : (
-              format(date.from, "dd MMM yyyy", { locale: fr })
-            )
-          ) : (
-            <span>Période personnalisée</span>
-          )}
-        </Button>
-      </PopoverTrigger>
+              <span>Période personnalisée</span>
+            )}
+          </Button>
+        </PopoverTrigger>
       <PopoverContent className="w-auto p-0 max-w-[95vw] sm:max-w-none" align="start">
         <div className="flex flex-col sm:flex-row h-auto sm:h-[480px]">
           {/* Sidebar Gauche */}
@@ -365,5 +369,11 @@ export function CustomPeriodSelector({
         </div>
       </PopoverContent>
     </Popover>
+      {isActive && hasActiveRange && (
+        <div className="absolute -top-2 -right-2 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 text-xs font-normal px-1.5 py-0.5 rounded-full border border-green-200 dark:border-green-800/50">
+          Actif
+        </div>
+      )}
+    </div>
   )
 }
