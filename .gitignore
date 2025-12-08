@@ -25,6 +25,7 @@ Thumbs.db
 .vscode
 .idea
 .cursor
+.claude
 
 # Supabase
 supabase/.temp
