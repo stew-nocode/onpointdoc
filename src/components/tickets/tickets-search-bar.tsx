@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/ui/button';
+import { cn } from '@/lib/utils';
 
 type TicketsSearchBarProps = {
   initialSearch?: string;
+  className?: string;
 };
 
 /**
@@ -19,7 +21,7 @@ type TicketsSearchBarProps = {
  * 
  * @param initialSearch - Valeur de recherche initiale depuis l'URL
  */
-export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
+export function TicketsSearchBar({ initialSearch, className }: TicketsSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState(initialSearch || '');
@@ -90,15 +92,15 @@ export function TicketsSearchBar({ initialSearch }: TicketsSearchBarProps) {
   }, []);
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className={cn("relative w-full", className)}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          placeholder="Rechercher dans les tickets (titre, description, Jira)..."
-          className="w-full rounded-md border border-slate-200 bg-white pl-10 pr-10 py-2 text-sm placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand"
+          placeholder="titre, description, clé ticket"
+          className="w-full rounded-md border border-slate-200 bg-white pl-10 pr-10 py-2 text-[0.7rem] placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand"
         />
         {searchValue && (
           <Button
