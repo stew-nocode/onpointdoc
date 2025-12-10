@@ -186,3 +186,4 @@ const prevResolutionRate = Math.min(
 **Action** : Corriger le calcul pour plafonner le taux de résolution à 100% maximum.
 
 
+

@@ -288,3 +288,4 @@ if (data.bugsResolus > data.bugsSignales) {
 **Statut**: ⏳ **EN ATTENTE DE VALIDATION DES PROPOSITIONS**
 
 
+

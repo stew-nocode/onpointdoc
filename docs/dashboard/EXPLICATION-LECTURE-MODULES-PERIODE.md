@@ -143,3 +143,4 @@ Finance | 3 | 73% ↑ | 100% | 10% ↓ | 0 | 100% ↑ | 3 | 67% ↑ | 100% | 22%
 **Résumé** : Chaque ligne montre l'état actuel du module (valeurs) et l'évolution (flèches) par rapport à la période précédente. Les verts sont des bonnes nouvelles, les rouges des alertes.
 
 
+

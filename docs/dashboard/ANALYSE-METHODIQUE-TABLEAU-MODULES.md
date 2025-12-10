@@ -368,3 +368,4 @@ function calculateModuleBugsMetrics(...) {
 **Statut**: ⏳ **EN ATTENTE DE VALIDATION DES PROPOSITIONS**
 
 
+

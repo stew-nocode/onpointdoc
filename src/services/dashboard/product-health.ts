@@ -332,20 +332,21 @@ function calculateModuleBugsMetrics(
     };
 
     // Calculer les pourcentages et tendances
+    // Plafonner à 100% maximum pour éviter les incohérences (un taux ne peut pas dépasser 100%)
     const criticalRate = data.bugsSignales > 0
-      ? Math.round((data.bugsCritiques / data.bugsSignales) * 100)
+      ? Math.min(Math.round((data.bugsCritiques / data.bugsSignales) * 100), 100)
       : 0;
 
     const resolutionRate = data.bugsSignales > 0
-      ? Math.round((data.bugsResolus / data.bugsSignales) * 100)
+      ? Math.min(Math.round((data.bugsResolus / data.bugsSignales) * 100), 100)
       : 0;
 
     const prevCriticalRate = prev.bugsSignales > 0
-      ? (prev.bugsCritiques / prev.bugsSignales) * 100
+      ? Math.min((prev.bugsCritiques / prev.bugsSignales) * 100, 100)
       : 0;
 
     const prevResolutionRate = prev.bugsSignales > 0
-      ? (prev.bugsResolus / prev.bugsSignales) * 100
+      ? Math.min((prev.bugsResolus / prev.bugsSignales) * 100, 100)
       : 0;
 
     return {

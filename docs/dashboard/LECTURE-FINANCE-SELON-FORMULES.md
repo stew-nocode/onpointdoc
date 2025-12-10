@@ -155,3 +155,4 @@ La couleur de la flèche dépend du **signe mathématique** de la tendance, pas 
 **Conclusion** : Finance a fortement réduit ses bugs (-73%), tous sont résolus, mais attention : ils sont tous critiques (problèmes graves).
 
 
+
