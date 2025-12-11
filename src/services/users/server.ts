@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from '@/lib/supabase/server';
 
 /**
  * Type pour un profil utilisateur basique (id, nom, email, entreprise)
@@ -109,6 +109,111 @@ export async function getCurrentUserProfile(): Promise<{
  * 
  * @returns Liste des profils avec id, full_name, email, company_id, company_name
  */
+/**
+ * Liste uniquement les agents du département Support
+ * 
+ * Principe Clean Code - Niveau Senior :
+ * - SRP : Fonction dédiée à un besoin spécifique (agents support uniquement)
+ * - Type-safe : Retourne le même type BasicProfile pour cohérence
+ * - Performance : Filtre au niveau base de données (pas de filtrage en mémoire)
+ * 
+ * @returns Liste des profils agents support avec id, full_name, email, company_id, company_name
+ * 
+ * @example
+ * ```tsx
+ * const agents = await listSupportAgents();
+ * // [{ id: '...', full_name: 'Agent Support', email: '...', ... }, ...]
+ * ```
+ */
+export async function listSupportAgents(): Promise<BasicProfile[]> {
+  try {
+    // ✅ Utiliser le service role client pour contourner les RLS
+    // Cette fonction doit lister TOUS les agents support, pas seulement ceux visibles par l'utilisateur
+    // C'est une fonction administrative utilisée par les managers pour filtrer les tickets
+    const supabase = createSupabaseServiceRoleClient();
+    
+    // ✅ D'après la vérification de l'enum user_role_t via MCP Supabase :
+    // L'enum contient : {agent,manager,admin,director,client}
+    // Il n'y a PAS de valeur 'agent_support' dans l'enum
+    // Les agents support ont : role = 'agent' AND department = 'Support'
+    
+    // Requête unique : Agents avec role = 'agent' AND department = 'Support'
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, company_id')
+      .eq('role', 'agent')
+      .eq('department', 'Support')
+      .order('full_name', { ascending: true });
+
+    // ✅ Gestion d'erreur améliorée
+    if (profilesError) {
+      const hasErrorDetails = profilesError.code || profilesError.message || Object.keys(profilesError).length > 0;
+      
+      if (hasErrorDetails) {
+        console.error('[listSupportAgents] Erreur lors de la récupération des agents support:', {
+          code: profilesError.code,
+          message: profilesError.message,
+          details: profilesError.details,
+          hint: profilesError.hint,
+          fullError: profilesError
+        });
+        
+        // Ne pas throw si c'est juste une liste vide (PGRST116 = no rows returned)
+        if (profilesError.code && profilesError.code !== 'PGRST116') {
+          throw profilesError;
+        }
+      } else {
+        console.warn('[listSupportAgents] Erreur vide détectée (possible problème RLS)');
+      }
+    }
+
+    if (!profiles || profiles.length === 0) {
+      console.warn('[listSupportAgents] Aucun agent support trouvé');
+      return [];
+    }
+
+    // Récupérer les company_id uniques
+    const companyIds = [...new Set(profiles.map((p) => p.company_id).filter((id): id is string => id !== null))];
+
+    // Récupérer les entreprises si nécessaire
+    let companiesMap = new Map<string, string>();
+    if (companyIds.length > 0) {
+      const { data: companies, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .in('id', companyIds);
+
+      if (companiesError) {
+        console.error('[listSupportAgents] Erreur lors de la récupération des entreprises:', {
+          code: companiesError.code,
+          message: companiesError.message,
+          details: companiesError.details,
+          hint: companiesError.hint
+        });
+        // Ne pas faire échouer la fonction si les entreprises ne peuvent pas être chargées
+      } else if (companies) {
+        companiesMap = new Map(companies.map((c) => [c.id, c.name]));
+      }
+    }
+
+    // Mapper les profils avec les noms d'entreprises
+    const mapped: BasicProfile[] = profiles.map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      email: p.email,
+      company_id: p.company_id,
+      company_name: p.company_id ? companiesMap.get(p.company_id) ?? null : null,
+    }));
+
+    console.log('[listSupportAgents]', mapped.length, 'agents support chargés');
+    return mapped;
+  } catch (error) {
+    console.error('[listSupportAgents] Erreur lors du chargement des agents support:', error);
+    // Retourner un tableau vide pour éviter de casser la page, mais logger l'erreur
+    return [];
+  }
+}
+
 /**
  * Liste tous les profils utilisateurs basiques avec leurs informations d'entreprise
  * 

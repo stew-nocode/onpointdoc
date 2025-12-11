@@ -346,7 +346,9 @@ export const listTicketsPaginated = async (
   currentProfileId?: string | null,
   sortColumn?: TicketSortColumn,
   sortDirection?: SortDirection,
-  advancedFilters?: AdvancedFiltersInput | null
+  advancedFilters?: AdvancedFiltersInput | null,
+  agentId?: string, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
 ): Promise<TicketsPaginatedResult> => {
   const supabase = await createSupabaseServerClient();
   
@@ -404,8 +406,36 @@ export const listTicketsPaginated = async (
     query = query.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},jira_issue_key.ilike.${searchPattern}`);
   }
 
+  // ✅ Récupérer les modules affectés à l'utilisateur si nécessaire (pour le filtre "all")
+  let assignedModuleIds: string[] | undefined;
+  if (currentProfileId && quickFilter === 'all') {
+    const { data: moduleAssignments } = await supabase
+      .from('user_module_assignments')
+      .select('module_id')
+      .eq('user_id', currentProfileId);
+    
+    if (moduleAssignments && moduleAssignments.length > 0) {
+      assignedModuleIds = moduleAssignments.map(ma => ma.module_id);
+    }
+  }
+
   // Appliquer les quick filters
-  query = applyQuickFilter(query, quickFilter, { currentProfileId: currentProfileId ?? undefined });
+  query = applyQuickFilter(query, quickFilter, { 
+    currentProfileId: currentProfileId ?? undefined,
+    assignedModuleIds 
+  });
+
+  // ✅ Appliquer le filtre par agent support si fourni (pour les managers)
+  // Filtrer sur created_by OU assigned_to de l'agent sélectionné
+  if (agentId) {
+    query = query.or(`created_by.eq.${agentId},assigned_to.eq.${agentId}`);
+  }
+
+  // ✅ Appliquer le filtre par entreprise si fourni
+  // Filtrer sur company_id (entreprise principale du ticket)
+  if (companyId) {
+    query = query.eq('company_id', companyId);
+  }
 
   // Appliquer les filtres avancés si fournis (AVANT .order() et .range())
   if (advancedFilters) {
@@ -495,7 +525,7 @@ export const listTicketsPaginated = async (
 export function applyQuickFilter(
   query: any,
   quickFilter?: QuickFilter,
-  options?: { currentProfileId?: string }
+  options?: { currentProfileId?: string; assignedModuleIds?: string[] }
 ) {
   if (!quickFilter) {
     return query;
@@ -514,9 +544,38 @@ export function applyQuickFilter(
   const firstDayOfMonthStr = firstDayOfMonth.toISOString().slice(0, 10);
 
   switch (quickFilter) {
+    case 'all':
+      // ✅ MODIFIÉ : Filtre "Tous les tickets"
+      // Pour les agents support : inclure leurs tickets (créés/assignés) + tickets de leurs modules affectés
+      // Pour les autres rôles : tous les tickets accessibles via RLS
+      if (options?.currentProfileId) {
+        const conditions: string[] = [
+          `created_by.eq.${options.currentProfileId}`,
+          `assigned_to.eq.${options.currentProfileId}`
+        ];
+        
+        // Ajouter les tickets des modules affectés si disponibles
+        // Pour chaque module, créer une condition module_id.eq.${moduleId}
+        if (options.assignedModuleIds && options.assignedModuleIds.length > 0) {
+          const moduleConditions = options.assignedModuleIds
+            .map(moduleId => `module_id.eq.${moduleId}`);
+          conditions.push(...moduleConditions);
+        }
+        
+        // Combiner toutes les conditions avec OR
+        // Syntaxe Supabase : .or('condition1,condition2,condition3')
+        return query.or(conditions.join(','));
+      }
+      // Pour les autres rôles (managers, admin, etc.), retourner la query sans modification
+      // Les règles RLS s'appliqueront automatiquement
+      return query;
     case 'mine':
       if (options?.currentProfileId) {
-        return query.eq('assigned_to', options.currentProfileId);
+        // ✅ MODIFIÉ : Inclure les tickets créés OU assignés à l'utilisateur
+        // Syntaxe Supabase : 'colonne1.eq.valeur1,colonne2.eq.valeur2'
+        return query.or(
+          `created_by.eq.${options.currentProfileId},assigned_to.eq.${options.currentProfileId}`
+        );
       }
       return query;
     case 'unassigned':
@@ -528,9 +587,37 @@ export function applyQuickFilter(
     case 'to_validate':
       return query.eq('status', 'Transfere');
     case 'week':
+      // ✅ MODIFIÉ : Si currentProfileId est fourni, filtrer sur date ET ownership
+      // Pour les agents : leurs tickets (créés OU assignés) de cette semaine
+      // Pour les managers : tous les tickets de cette semaine (comportement existant)
+      if (options?.currentProfileId) {
+        return query
+          .gte('created_at', startOfWeekStr)
+          .or(`created_by.eq.${options.currentProfileId},assigned_to.eq.${options.currentProfileId}`);
+      }
       return query.gte('created_at', startOfWeekStr);
     case 'month':
+      // ✅ MODIFIÉ : Si currentProfileId est fourni, filtrer sur date ET ownership
+      // Pour les agents : leurs tickets (créés OU assignés) de ce mois
+      // Pour les managers : tous les tickets de ce mois (comportement existant)
+      if (options?.currentProfileId) {
+        return query
+          .gte('created_at', firstDayOfMonthStr)
+          .or(`created_by.eq.${options.currentProfileId},assigned_to.eq.${options.currentProfileId}`);
+      }
       return query.gte('created_at', firstDayOfMonthStr);
+    case 'bug_in_progress':
+      // ✅ NOUVEAU : Filtre les bugs en cours (Traitement en Cours ou Test en Cours)
+      // Les statuts JIRA "en cours" sont : 'Traitement en Cours', 'Test en Cours'
+      return query
+        .eq('ticket_type', 'BUG')
+        .in('status', ['Traitement en Cours', 'Test en Cours']);
+    case 'req_in_progress':
+      // ✅ NOUVEAU : Filtre les requêtes en cours (Traitement en Cours ou Test en Cours)
+      // Les statuts JIRA "en cours" sont : 'Traitement en Cours', 'Test en Cours'
+      return query
+        .eq('ticket_type', 'REQ')
+        .in('status', ['Traitement en Cours', 'Test en Cours']);
     default:
       return query;
   }
