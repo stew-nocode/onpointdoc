@@ -21,6 +21,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       search: searchParams.get('search') || undefined,
       quick: searchParams.get('quick') || undefined,
       currentProfileId: searchParams.get('currentProfileId') || undefined,
+      agent: searchParams.get('agent') || undefined, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+      company: searchParams.get('company') || undefined, // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
       offset: searchParams.get('offset') || '0',
       limit: searchParams.get('limit') || '25',
       sortColumn: searchParams.get('sortColumn') || undefined,
@@ -100,6 +102,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const search = params.search || null;
     const quickFilterParam = params.quick as QuickFilter | undefined;
     const currentProfileIdParam = params.currentProfileId || null;
+    const agentParam = rawParams.agent as string | undefined; // ✅ Extraire le paramètre agent
+    const companyParam = rawParams.company as string | undefined; // ✅ Extraire le paramètre company
     const offset = params.offset;
     const limit = params.limit;
     const sortColumn = params.sortColumn as TicketSortColumn | undefined;
@@ -119,7 +123,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       currentProfileIdParam || null,
       sortColumn,
       sortDirection,
-      advancedFilters || undefined
+      advancedFilters || undefined,
+      agentParam, // ✅ Passer le paramètre agent
+      companyParam // ✅ Passer le paramètre company
     );
 
     return NextResponse.json(result);

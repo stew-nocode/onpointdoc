@@ -227,7 +227,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     getCachedIsSupportAgent(), // Vérifier si l'utilisateur est un agent support
     loadProductsAndModules(), // Pas de dépendance, peut être en parallèle
   ]);
-  
+
   // Déterminer le rôle de vue et récupérer la configuration
   const viewRole = getTicketViewRole(userRole);
   const viewConfig = TICKET_VIEW_CONFIGS[viewRole];
@@ -270,11 +270,11 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
           sidebar={
             // ✅ Afficher la sidebar seulement si configuré (masquée pour agents)
             viewConfig.showAdvancedFilters ? (
-              <FiltersSidebarClientLazy
-                users={contacts}
-                products={products}
-                modules={modules}
-              />
+            <FiltersSidebarClientLazy
+              users={contacts}
+              products={products}
+              modules={modules}
+            />
             ) : null
           }
           header={{
