@@ -64,6 +64,12 @@ type TicketsTableHeaderProps = {
    * Fonction pour vérifier si une colonne est visible
    */
   isColumnVisible: (columnId: ColumnId) => boolean;
+  
+  /**
+   * Permissions de sélection multiple
+   * Si false, masque la checkbox "Select All"
+   */
+  canSelectMultiple?: boolean;
 };
 
 /**
@@ -84,28 +90,31 @@ export function TicketsTableHeader({
   currentSort,
   currentSortDirection,
   handleSort,
-  isColumnVisible
+  isColumnVisible,
+  canSelectMultiple = true // Par défaut, autoriser la sélection
 }: TicketsTableHeaderProps) {
   return (
     <thead className="border-b border-slate-200 dark:border-slate-800">
       <tr>
-        {/* Colonne checkbox Select All */}
-        <th className="w-12 pb-2.5 pr-2">
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={areAllTicketsSelected(tickets)}
-              indeterminate={areSomeTicketsSelected(tickets)}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  selectAllTickets(tickets);
-                } else {
-                  clearSelection();
-                }
-              }}
-              aria-label="Sélectionner tous les tickets"
-            />
-          </div>
-        </th>
+        {/* Colonne checkbox Select All - Masquée si canSelectMultiple est false */}
+        {canSelectMultiple && (
+          <th className="w-12 pb-2 pr-2">
+            <div className="flex items-center justify-center">
+              <Checkbox
+                checked={areAllTicketsSelected(tickets)}
+                indeterminate={areSomeTicketsSelected(tickets)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    selectAllTickets(tickets);
+                  } else {
+                    clearSelection();
+                  }
+                }}
+                aria-label="Sélectionner tous les tickets"
+              />
+            </div>
+          </th>
+        )}
 
         {/* Titre - Triable */}
         {isColumnVisible('title') && (
@@ -120,7 +129,7 @@ export function TicketsTableHeader({
 
         {/* Type - Non triable */}
         {isColumnVisible('type') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Type
           </th>
         )}
@@ -149,35 +158,35 @@ export function TicketsTableHeader({
 
         {/* Canal - Non triable */}
         {isColumnVisible('canal') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Canal
           </th>
         )}
 
         {/* Entreprise - Non triable */}
         {isColumnVisible('company') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Entreprise
           </th>
         )}
 
         {/* Produit - Non triable */}
         {isColumnVisible('product') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Produit
           </th>
         )}
 
         {/* Module - Non triable */}
         {isColumnVisible('module') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Module
           </th>
         )}
 
         {/* Jira - Non triable */}
         {isColumnVisible('jira') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Jira
           </th>
         )}
@@ -195,7 +204,7 @@ export function TicketsTableHeader({
 
         {/* Rapporteur - Non triable */}
         {isColumnVisible('reporter') && (
-          <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
             Rapporteur
           </th>
         )}
@@ -212,7 +221,7 @@ export function TicketsTableHeader({
         )}
 
         {/* Colonne vide pour les actions */}
-        <th className="pb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" />
+        <th className="pb-2 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400" />
       </tr>
     </thead>
   );
