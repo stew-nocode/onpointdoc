@@ -278,10 +278,10 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             ) : null
           }
           header={{
-            label: 'Tickets',
+            icon: 'Ticket',
             title: viewConfig.pageTitle,
             description: viewConfig.pageDescription,
-            action: (
+            actions: (
               <CreateTicketDialogLazy
                 products={products}
                 modules={modules}

@@ -58,4 +58,8 @@ export async function updateCompany(input: CompanyUpdateInput): Promise<void> {
   }
 }
 
+// NOTE: listCompaniesPaginated n'est PAS exporté ici car c'est un service serveur
+// qui utilise createSupabaseServerClient (next/headers).
+// Il doit être importé directement depuis './list-companies-paginated' dans les
+// Server Components ou routes API uniquement.
 

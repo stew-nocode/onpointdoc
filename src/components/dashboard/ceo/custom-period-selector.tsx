@@ -296,73 +296,102 @@ export function CustomPeriodSelector({
           </div>
 
           {/* Contenu Droit */}
-          <div className="flex-1 p-4 sm:p-6 flex flex-col bg-white dark:bg-slate-900">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
-              <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-md h-10 px-4 bg-white dark:bg-slate-800 shadow-sm w-full sm:min-w-[300px]">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {tempDate?.from ? format(tempDate.from, "dd MMM yyyy", { locale: fr }) : "Début"}
-                </span>
-                <span className="mx-3 text-slate-400 dark:text-slate-500">-</span>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {tempDate?.to ? format(tempDate.to, "dd MMM yyyy", { locale: fr }) : "Fin"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <button onClick={handleClear} className="text-sm text-brand dark:text-brand-400 font-medium hover:underline px-2">
-                  Effacer filtres
-                </button>
-                <Button variant="ghost" onClick={handleCancel} className="font-medium text-slate-600 dark:text-slate-400 text-sm sm:text-base">
-                  Annuler
-                </Button>
-                <Button onClick={handleApply} className="bg-brand hover:bg-brand/90 px-4 sm:px-6 font-medium shadow-sm shadow-brand/20 text-sm sm:text-base">
-                  Appliquer
+          <div className="flex-1 flex flex-col bg-white dark:bg-slate-900">
+            {/* Header - Affichage période sélectionnée */}
+            <div className="p-4 sm:p-6 pb-3 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {tempDate?.from ? format(tempDate.from, "dd MMM yyyy", { locale: fr }) : "Sélectionnez une date"}
+                    </span>
+                    {tempDate?.from && tempDate?.to && (
+                      <>
+                        <span className="text-slate-400 dark:text-slate-500">→</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {format(tempDate.to, "dd MMM yyyy", { locale: fr })}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClear}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand-400 h-8 px-3"
+                  disabled={!tempDate?.from && !tempDate?.to}
+                >
+                  Effacer
                 </Button>
               </div>
             </div>
 
             {/* Calendriers - Grille personnalisée */}
-            <div className="flex flex-col sm:flex-row gap-6 sm:gap-12 flex-1">
-              <div className="flex-1 w-full">
-                <div className="text-sm font-semibold mb-4 px-1 text-slate-900 dark:text-slate-100">De</div>
-                <CustomCaption displayMonth={monthFrom} onChange={setMonthFrom} />
-                <CustomCalendar 
-                  month={monthFrom}
-                  onMonthChange={setMonthFrom}
-                  selected={tempDate}
-                  onSelect={(day) => {
-                    if (!tempDate?.from || (tempDate.from && tempDate.to)) {
-                      setTempDate({ from: day, to: undefined })
-                    } else if (tempDate.from && !tempDate.to) {
-                      if (day < tempDate.from) {
-                        setTempDate({ from: day, to: tempDate.from })
-                      } else {
-                        setTempDate({ from: tempDate.from, to: day })
+            <div className="flex-1 p-4 sm:p-6 overflow-auto">
+              <div className="flex flex-col sm:flex-row gap-6 sm:gap-12">
+                <div className="flex-1 w-full">
+                  <div className="text-sm font-semibold mb-4 px-1 text-slate-900 dark:text-slate-100">De</div>
+                  <CustomCaption displayMonth={monthFrom} onChange={setMonthFrom} />
+                  <CustomCalendar
+                    month={monthFrom}
+                    onMonthChange={setMonthFrom}
+                    selected={tempDate}
+                    onSelect={(day) => {
+                      if (!tempDate?.from || (tempDate.from && tempDate.to)) {
+                        setTempDate({ from: day, to: undefined })
+                      } else if (tempDate.from && !tempDate.to) {
+                        if (day < tempDate.from) {
+                          setTempDate({ from: day, to: tempDate.from })
+                        } else {
+                          setTempDate({ from: tempDate.from, to: day })
+                        }
                       }
-                    }
-                  }}
-                />
-              </div>
+                    }}
+                  />
+                </div>
 
-              <div className="flex-1 w-full">
-                <div className="text-sm font-semibold mb-4 px-1 text-slate-900 dark:text-slate-100">À</div>
-                <CustomCaption displayMonth={monthTo} onChange={setMonthTo} />
-                <CustomCalendar 
-                  month={monthTo}
-                  onMonthChange={setMonthTo}
-                  selected={tempDate}
-                  onSelect={(day) => {
-                    if (!tempDate?.from || (tempDate.from && tempDate.to)) {
-                      setTempDate({ from: day, to: undefined })
-                    } else if (tempDate.from && !tempDate.to) {
-                      if (day < tempDate.from) {
-                        setTempDate({ from: day, to: tempDate.from })
-                      } else {
-                        setTempDate({ from: tempDate.from, to: day })
+                <div className="flex-1 w-full">
+                  <div className="text-sm font-semibold mb-4 px-1 text-slate-900 dark:text-slate-100">À</div>
+                  <CustomCaption displayMonth={monthTo} onChange={setMonthTo} />
+                  <CustomCalendar
+                    month={monthTo}
+                    onMonthChange={setMonthTo}
+                    selected={tempDate}
+                    onSelect={(day) => {
+                      if (!tempDate?.from || (tempDate.from && tempDate.to)) {
+                        setTempDate({ from: day, to: undefined })
+                      } else if (tempDate.from && !tempDate.to) {
+                        if (day < tempDate.from) {
+                          setTempDate({ from: day, to: tempDate.from })
+                        } else {
+                          setTempDate({ from: tempDate.from, to: day })
+                        }
                       }
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer - Actions */}
+            <div className="p-4 sm:px-6 sm:py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="font-medium text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleApply}
+                  disabled={!tempDate?.from || !tempDate?.to}
+                  className="bg-brand hover:bg-brand/90 px-6 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Appliquer
+                </Button>
               </div>
             </div>
           </div>

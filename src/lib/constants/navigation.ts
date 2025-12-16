@@ -1,7 +1,7 @@
 export type NavItem = {
   href: string;
   label: string;
-  segment: 'tickets' | 'activites' | 'taches' | 'dashboard';
+  segment: 'tickets' | 'activites' | 'taches' | 'dashboard' | 'marketing';
   roles: Array<'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'admin'>;
 };
 
@@ -29,6 +29,12 @@ export const mainNav: NavItem[] = [
     label: 'Tâches',
     segment: 'taches',
     roles: ['agent', 'manager', 'marketing']
+  },
+  {
+    href: '/marketing/email',
+    label: 'Marketing',
+    segment: 'marketing',
+    roles: ['marketing', 'manager', 'direction', 'admin']
   }
 ];
 

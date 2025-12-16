@@ -57,13 +57,17 @@ export function addSimpleFilters(
   status?: string,
   search?: string,
   quickFilter?: QuickFilter,
-  currentProfileId?: string
+  currentProfileId?: string,
+  agentId?: string, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
 ): void {
   if (type) params.set('type', type);
   if (status) params.set('status', status);
   if (search) params.set('search', search);
   if (quickFilter) params.set('quick', quickFilter);
   if (currentProfileId) params.set('currentProfileId', currentProfileId);
+  if (agentId) params.set('agent', agentId); // ✅ Ajouter le paramètre agent
+  if (companyId) params.set('company', companyId); // ✅ Ajouter le paramètre company
 }
 
 /**
@@ -92,10 +96,12 @@ export function buildTicketListParams(
   search: string | undefined,
   quickFilter: QuickFilter | undefined,
   currentProfileId: string | undefined,
-  searchParams: URLSearchParams
+  searchParams: URLSearchParams,
+  agentId?: string, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
 ): URLSearchParams {
   const params = buildBaseParams(offset, limit, sortColumn, sortDirection);
-  addSimpleFilters(params, type, status, search, quickFilter, currentProfileId);
+  addSimpleFilters(params, type, status, search, quickFilter, currentProfileId, agentId, companyId);
   addAdvancedFilters(params, searchParams);
   return params;
 }

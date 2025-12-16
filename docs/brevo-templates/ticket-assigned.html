@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Un agent travaille sur votre demande - Ticket #{{params.ticket_id}}</title>
+  <style>
+    /* Reset email */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+    
+    /* Base styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fa;
+      color: #333333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .header .logo {
+      margin-bottom: 16px;
+    }
+    
+    .content {
+      padding: 32px 24px;
+    }
+    
+    .ticket-card {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 20px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .ticket-card h2 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      color: #1e293b;
+    }
+    
+    .ticket-info {
+      margin: 8px 0;
+      color: #64748b;
+    }
+    
+    .ticket-info strong {
+      color: #334155;
+    }
+    
+    .agent-card {
+      display: flex;
+      align-items: center;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 8px;
+    }
+    
+    .agent-avatar {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+      margin-right: 16px;
+    }
+    
+    .agent-info h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      color: #1e293b;
+    }
+    
+    .agent-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #64748b;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background-color: #fef3c7;
+      color: #d97706;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .progress-bar {
+      background-color: #e2e8f0;
+      border-radius: 9999px;
+      height: 8px;
+      margin: 24px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      height: 100%;
+      width: 50%;
+      border-radius: 9999px;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 24px 0;
+    }
+    
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .footer p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #64748b;
+    }
+    
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <img src="https://app.onpointdoc.com/logo-white.png" alt="OnpointDoc" width="150" style="max-width: 150px;">
+        </div>
+        <h1>👨‍💻 En cours de traitement</h1>
+      </div>
+      
+      <!-- Content -->
+      <div class="content">
+        <p>Bonjour,</p>
+        
+        <p>Bonne nouvelle ! Un agent a pris en charge votre demande et travaille actuellement dessus.</p>
+        
+        <!-- Agent Card -->
+        {% if params.agent_name %}
+        <table class="agent-card" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <tr>
+            <td width="64" style="padding: 16px;">
+              <div class="agent-avatar" style="width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 50%; text-align: center; line-height: 48px; color: white; font-size: 20px; font-weight: 600;">
+                {{params.agent_name | slice: 0}}
+              </div>
+            </td>
+            <td style="padding: 16px 16px 16px 0;">
+              <h3 style="margin: 0 0 4px 0; font-size: 16px; color: #1e293b;">{{params.agent_name}}</h3>
+              <p style="margin: 0; font-size: 14px; color: #64748b;">Agent Support OnpointDoc</p>
+            </td>
+          </tr>
+        </table>
+        {% endif %}
+        
+        <!-- Ticket Card -->
+        <div class="ticket-card">
+          <h2>{{params.ticket_title}}</h2>
+          
+          <p class="ticket-info">
+            <strong>Numéro :</strong> #{{params.ticket_id}}
+          </p>
+          
+          <p class="ticket-info">
+            <strong>Statut :</strong> 
+            <span class="status-badge">🔄 En cours</span>
+          </p>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div style="margin: 24px 0;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #64748b;">Progression estimée</p>
+          <div class="progress-bar">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #94a3b8;">Analyse en cours...</p>
+        </div>
+        
+        <p><strong>Que se passe-t-il maintenant ?</strong></p>
+        <ul>
+          <li>L'agent analyse votre demande en détail</li>
+          <li>Vous recevrez un email dès que le ticket sera résolu</li>
+          <li>N'hésitez pas à ajouter des informations via le portail</li>
+        </ul>
+        
+        <div style="text-align: center;">
+          <a href="{{params.portal_url}}" class="cta-button">
+            📋 Suivre mon ticket
+          </a>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="footer">
+        <p><strong>{{params.company_name}}</strong></p>
+        <p>Notre équipe fait tout son possible pour résoudre votre demande rapidement.</p>
+        <p>
+          <a href="mailto:{{params.support_email}}">{{params.support_email}}</a>
+        </p>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 16px;">
+          Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

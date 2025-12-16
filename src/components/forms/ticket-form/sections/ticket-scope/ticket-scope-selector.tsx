@@ -23,14 +23,23 @@ export function TicketScopeSelector({
   onValueChange,
   isRequired = false
 }: TicketScopeSelectorProps) {
+  // ✅ Fix : Toujours passer une valeur définie pour éviter le warning "uncontrolled to controlled"
+  // Si value est undefined, utiliser une chaîne vide pour rester en mode controlled
+  const controlledValue = value || '';
+
   return (
     <div className="grid gap-2">
       <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
         Portée du ticket {isRequired && <span className="text-status-danger">*</span>}
       </label>
       <RadioGroup
-        value={value}
-        onValueChange={(v) => onValueChange(v as 'single' | 'all' | 'multiple')}
+        value={controlledValue}
+        onValueChange={(v) => {
+          // Ignorer les changements vers une valeur vide
+          if (v) {
+            onValueChange(v as 'single' | 'all' | 'multiple');
+          }
+        }}
         className="grid grid-cols-3 gap-2 w-full"
       >
         <RadioCard

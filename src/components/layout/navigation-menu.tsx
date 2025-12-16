@@ -11,14 +11,18 @@ import {
   Ticket,
   CalendarDays,
   ListChecks,
-  Users
+  Users,
+  Mail
 } from 'lucide-react';
 import { TicketsSubmenu } from './tickets-submenu';
+import { MarketingSubmenu } from './marketing-submenu';
 
 type NavigationMenuProps = {
   role: 'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'director' | 'admin';
   ticketsOpen: boolean;
   onTicketsToggle: () => void;
+  marketingOpen: boolean;
+  onMarketingToggle: () => void;
   onLinkClick: () => void;
 };
 
@@ -31,6 +35,8 @@ export function NavigationMenu({
   role,
   ticketsOpen,
   onTicketsToggle,
+  marketingOpen,
+  onMarketingToggle,
   onLinkClick
 }: NavigationMenuProps) {
   const pathname = usePathname();
@@ -45,6 +51,7 @@ export function NavigationMenu({
       {items.map((item) => {
         const isActive = pathname.startsWith(item.href);
         const isTickets = item.segment === 'tickets';
+        const isMarketing = item.segment === 'marketing';
         const Icon =
           item.segment === 'dashboard'
             ? LayoutDashboard
@@ -54,7 +61,9 @@ export function NavigationMenu({
                 ? CalendarDays
                 : item.segment === 'taches'
                   ? ListChecks
-                  : undefined;
+                  : item.segment === 'marketing'
+                    ? Mail
+                    : undefined;
 
         if (isTickets) {
           const activeTickets = pathname.startsWith(item.href);
@@ -107,6 +116,45 @@ export function NavigationMenu({
                   <span>Contacts</span>
                 </Link>
               </li>
+            </Fragment>
+          );
+        }
+
+        if (isMarketing) {
+          const activeMarketing = pathname.startsWith(item.href);
+
+          return (
+            <Fragment key={`${item.href}-group`}>
+              <li key={item.href}>
+                <div
+                  className={cn(
+                    'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                    activeMarketing
+                      ? ACTIVE_GRADIENT
+                      : INACTIVE_HOVER_STYLES
+                  )}
+                >
+                  <Link
+                    href={item.href}
+                    onClick={onLinkClick}
+                    className="flex-1 inline-flex items-center gap-2"
+                  >
+                    {Icon && <Icon className="h-4 w-4 opacity-80" />}
+                    <span>{item.label}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    aria-expanded={marketingOpen}
+                    aria-controls="submenu-marketing"
+                    onClick={onMarketingToggle}
+                    className="ml-2 rounded-md px-2 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {marketingOpen ? '▾' : '▸'}
+                  </button>
+                </div>
+              </li>
+
+              <MarketingSubmenu isOpen={marketingOpen} onLinkClick={onLinkClick} />
             </Fragment>
           );
         }

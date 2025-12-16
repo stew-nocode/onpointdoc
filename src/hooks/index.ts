@@ -26,6 +26,10 @@ export { useUserModules } from './supabase/use-user-modules';
 export { useFileUpload } from './forms/use-file-upload';
 export type { FileWithPreview } from './forms/use-file-upload';
 export { useTicketForm } from './forms/use-ticket-form';
+export { useActivityForm } from './forms/use-activity-form';
+
+// Hooks d'activités
+export { useSearchLinks } from './activities/use-search-links';
 
 // Hooks N8N
 export { useAnalysisGenerator } from './n8n/use-analysis-generator';
@@ -36,6 +40,7 @@ export { useRichTextEditor } from './editors/use-rich-text-editor';
 
 // Hooks de tickets
 export { useTicketSelection } from './tickets/use-ticket-selection';
+export { useActivitySelection } from './activities/use-activity-selection';
 export { useBulkActions } from './tickets/use-bulk-actions';
 export type { BulkActionResult } from './tickets/use-bulk-actions';
 export { useComments } from './tickets/use-comments';
@@ -43,3 +48,7 @@ export { useComments } from './tickets/use-comments';
 // Hooks de navigation
 export { usePageTransition } from './navigation/use-page-transition';
 export { useLinkInterceptor } from './navigation/use-link-interceptor';
+
+// Hooks utilitaires
+export { useRetryFetch } from './use-retry-fetch';
+export type { RetryOptions, UseRetryFetchReturn } from './use-retry-fetch';

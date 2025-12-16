@@ -12,6 +12,15 @@ import {
   AlertTriangle,
   PlusCircle,
   Activity,
+  Calendar,
+  CalendarDays,
+  PlayCircle,
+  Mail,
+  Eye,
+  Send,
+  MousePointerClick,
+  Circle,
+  AlertCircle,
   type LucideIcon
 } from 'lucide-react';
 
@@ -23,7 +32,16 @@ export type IconId =
   | 'briefcase'
   | 'alert-triangle'
   | 'plus-circle'
-  | 'activity';
+  | 'activity'
+  | 'calendar'
+  | 'calendar-days'
+  | 'play-circle'
+  | 'mail'
+  | 'eye'
+  | 'send'
+  | 'mouse-pointer-click'
+  | 'circle'
+  | 'alert-circle';
 
 export const ICON_MAP: Record<IconId, LucideIcon> = {
   clock: Clock,
@@ -33,7 +51,16 @@ export const ICON_MAP: Record<IconId, LucideIcon> = {
   briefcase: Briefcase,
   'alert-triangle': AlertTriangle,
   'plus-circle': PlusCircle,
-  activity: Activity
+  activity: Activity,
+  calendar: Calendar,
+  'calendar-days': CalendarDays,
+  'play-circle': PlayCircle,
+  mail: Mail,
+  eye: Eye,
+  send: Send,
+  'mouse-pointer-click': MousePointerClick,
+  circle: Circle,
+  'alert-circle': AlertCircle
 };
 
 /**

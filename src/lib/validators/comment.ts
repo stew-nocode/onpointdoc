@@ -6,13 +6,15 @@ import { z } from 'zod';
  * Contraintes :
  * - content : minimum 1 caractère, maximum 5000 caractères
  * - ticket_id : UUID valide
+ * - comment_type : 'comment' ou 'followup' (optionnel, défaut: 'comment')
  */
 export const createCommentSchema = z.object({
   content: z
     .string()
     .min(1, 'Le commentaire ne peut pas être vide')
     .max(5000, 'Le commentaire est trop long (maximum 5000 caractères)'),
-  ticket_id: z.string().uuid('ID de ticket invalide')
+  ticket_id: z.string().uuid('ID de ticket invalide'),
+  comment_type: z.enum(['comment', 'followup']).default('comment').optional()
 });
 
 /**

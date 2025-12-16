@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-12-10T13:31:51.050Z",
+  "summary": {
+    "migrations_total": 15,
+    "migrations_success": 15,
+    "migrations_failed": 0,
+    "tickets_before": 6478,
+    "tickets_after": 7339,
+    "tickets_added": 861
+  },
+  "detailed_stats": {
+    "total": 1000,
+    "with_created_at": 1000,
+    "with_action_menee": 988,
+    "with_objet_principal": 958,
+    "with_duration": 767,
+    "date_range": {
+      "oldest": "2025-07-25T20:31:00+00:00",
+      "newest": "2025-12-09T20:16:11.399784+00:00"
+    }
+  },
+  "results": [
+    {
+      "part": 1,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-01.sql"
+    },
+    {
+      "part": 2,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-02.sql"
+    },
+    {
+      "part": 3,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-03.sql"
+    },
+    {
+      "part": 4,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-04.sql"
+    },
+    {
+      "part": 5,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-05.sql"
+    },
+    {
+      "part": 6,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-06.sql"
+    },
+    {
+      "part": 7,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-07.sql"
+    },
+    {
+      "part": 8,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-08.sql"
+    },
+    {
+      "part": 9,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-09.sql"
+    },
+    {
+      "part": 10,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-10.sql"
+    },
+    {
+      "part": 11,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-11.sql"
+    },
+    {
+      "part": 12,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-12.sql"
+    },
+    {
+      "part": 13,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-13.sql"
+    },
+    {
+      "part": 14,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-14.sql"
+    },
+    {
+      "part": 15,
+      "success": true,
+      "error": null,
+      "file": "2025-12-10-import-all-assistance-part-15.sql"
+    }
+  ]
+}

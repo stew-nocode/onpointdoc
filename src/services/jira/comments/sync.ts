@@ -44,7 +44,8 @@ async function createCommentFromJira(
       ticket_id: ticketId,
       content: jiraComment.body,
       origin: 'jira',
-      user_id: null
+      user_id: null,
+      comment_type: 'comment' // ✅ Les commentaires JIRA sont toujours des commentaires
     })
     .select('id')
     .single();

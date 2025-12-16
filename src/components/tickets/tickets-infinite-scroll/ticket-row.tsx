@@ -15,10 +15,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, Edit } from 'lucide-react';
+import { Eye, Edit, MessageSquare, Sparkles, Calendar } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Checkbox } from '@/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/ui/context-menu';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 import {
   highlightText,
@@ -33,7 +40,15 @@ import { TicketStatsTooltip } from '../tooltips/ticket-stats-tooltip';
 import { UserStatsTooltip } from '../tooltips/user-stats-tooltip';
 import { LazyTooltipWrapper } from '../tooltips/lazy-tooltip-wrapper';
 import { AnalysisButton } from '@/components/n8n/analysis-button';
-import { AddCommentDialog } from '../add-comment-dialog';
+import { useAnalysisGenerator } from '@/hooks/n8n/use-analysis-generator';
+import { AnalysisModal } from '@/components/n8n/analysis-modal';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui/dialog';
+import { CommentForm } from '../comments/comment-form';
+import { addCommentAction } from '@/app/(main)/gestion/tickets/actions';
+import { toast } from 'sonner';
+import { CreateActivityFromTicketDialog } from '@/components/activities/create-activity-from-ticket-dialog';
+import { useProfiles } from '@/hooks';
+import { createActivityAction } from '@/app/(main)/gestion/activites/actions';
 
 type TicketRowProps = {
   /**
@@ -62,6 +77,12 @@ type TicketRowProps = {
   canEdit: boolean;
 
   /**
+   * Permissions de sélection multiple
+   * Si false, masque la checkbox de sélection
+   */
+  canSelectMultiple?: boolean;
+
+  /**
    * Terme de recherche pour surligner le texte
    */
   search?: string;
@@ -87,6 +108,7 @@ export function TicketRow({
   toggleTicketSelection,
   handleEdit,
   canEdit,
+  canSelectMultiple = true, // Par défaut, autoriser la sélection
   search,
   isColumnVisible
 }: TicketRowProps) {
@@ -95,14 +117,29 @@ export function TicketRow({
   const getInitials = getUserInitials;
   const getAvatarColor = getAvatarColorClass;
 
+  // État pour gérer les modals depuis le menu contextuel
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const { open: analysisOpen, isLoading: analysisLoading, error: analysisError, analysis, openModal: openAnalysisModal, closeModal: closeAnalysisModal } = useAnalysisGenerator({
+    context: 'ticket',
+    id: ticket.id
+  });
+  
+  // Charger les participants pour le formulaire d'activité (lazy loading)
+  const { profiles: participants } = useProfiles({ enabled: showActivityDialog });
+
   return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
     <tr
       key={ticket.id}
       id={ticket.id}
       data-ticket-id={ticket.id}
       className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
     >
-      {/* Checkbox de sélection */}
+      {/* Checkbox de sélection - Masquée si canSelectMultiple est false */}
+      {canSelectMultiple && (
       <td className="w-12 py-2.5 pr-2">
         <div className="flex items-center justify-center">
           <Checkbox
@@ -112,6 +149,7 @@ export function TicketRow({
           />
         </div>
       </td>
+      )}
 
       {/* Titre avec tooltip */}
       {isColumnVisible('title') && (
@@ -343,16 +381,20 @@ export function TicketRow({
 
       {/* Actions */}
       <td className="py-2.5 text-right">
-        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* ✅ Desktop: visible au hover | Mobile: toujours visible */}
+        <div className="flex items-center justify-end gap-1 
+                        opacity-100 
+                        md:opacity-0 md:group-hover:opacity-100 
+                        transition-opacity">
           {/* Voir les détails */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
                 href={`/gestion/tickets/${ticket.id}`}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 touch-manipulation"
                 aria-label="Voir les détails"
               >
-                <Eye className="h-3.5 w-3.5" />
+                <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
               </Link>
             </TooltipTrigger>
             <TooltipContent>
@@ -366,11 +408,11 @@ export function TicketRow({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => handleEdit(ticket.id)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                  className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 touch-manipulation"
                   aria-label="Éditer le ticket"
                   type="button"
                 >
-                  <Edit className="h-3.5 w-3.5" />
+                  <Edit className="h-4 w-4 md:h-3.5 md:w-3.5" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
@@ -389,9 +431,14 @@ export function TicketRow({
           {/* Ajouter un commentaire */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div>
-                <AddCommentDialog ticketId={ticket.id} ticketTitle={ticket.title} />
-              </div>
+              <button
+                onClick={() => setShowCommentDialog(true)}
+                className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 touch-manipulation"
+                aria-label="Ajouter un commentaire"
+                type="button"
+              >
+                <MessageSquare className="h-4 w-4 md:h-3.5 md:w-3.5" />
+              </button>
             </TooltipTrigger>
             <TooltipContent>
               <p>Ajouter un commentaire</p>
@@ -400,6 +447,96 @@ export function TicketRow({
         </div>
       </td>
     </tr>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem asChild>
+          <Link href={`/gestion/tickets/${ticket.id}`} className="flex items-center">
+            <Eye className="h-4 w-4 mr-2" />
+            Voir les détails
+          </Link>
+        </ContextMenuItem>
+        
+        {canEdit && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={() => handleEdit(ticket.id)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Éditer
+            </ContextMenuItem>
+          </>
+        )}
+        
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={openAnalysisModal}>
+          <Sparkles className="h-4 w-4 mr-2" />
+          Générer une analyse IA
+        </ContextMenuItem>
+        
+        <ContextMenuItem onClick={() => setShowCommentDialog(true)}>
+          <MessageSquare className="h-4 w-4 mr-2" />
+          Relance/Commentaire
+        </ContextMenuItem>
+        
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => setShowActivityDialog(true)}>
+          <Calendar className="h-4 w-4 mr-2" />
+          Créer une activité
+        </ContextMenuItem>
+      </ContextMenuContent>
+      
+      {/* Modals pour les actions du menu contextuel - en dehors du ContextMenuContent */}
+      <AnalysisModal
+        open={analysisOpen}
+        onOpenChange={closeAnalysisModal}
+        isLoading={analysisLoading}
+        error={analysisError}
+        analysis={analysis}
+        title="Analyse du ticket"
+        context="ticket"
+        id={ticket.id}
+      />
+      
+      <Dialog open={showCommentDialog} onOpenChange={setShowCommentDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ajouter un commentaire</DialogTitle>
+            <DialogDescription>
+              Ajouter un commentaire au ticket : {ticket.title}
+            </DialogDescription>
+          </DialogHeader>
+          <CommentForm 
+            onSubmit={async (content: string, files?: File[], commentType?: 'comment' | 'followup') => {
+              setIsSubmittingComment(true);
+              try {
+                const commentId = await addCommentAction(ticket.id, content, commentType || 'comment');
+                if (files && files.length > 0) {
+                  const { uploadCommentAttachments } = await import('@/services/tickets/comments/attachments.client');
+                  await uploadCommentAttachments(commentId, files);
+                }
+                toast.success(commentType === 'followup' ? 'Relance ajoutée avec succès' : 'Commentaire ajouté avec succès');
+                setShowCommentDialog(false);
+              } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'ajout du commentaire';
+                toast.error(errorMessage);
+                throw error;
+              } finally {
+                setIsSubmittingComment(false);
+              }
+            }} 
+            isLoading={isSubmittingComment} 
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog pour créer une activité à partir du ticket */}
+      <CreateActivityFromTicketDialog
+        ticketId={ticket.id}
+        participants={participants}
+        onSubmit={createActivityAction}
+        open={showActivityDialog}
+        onOpenChange={setShowActivityDialog}
+      />
+    </ContextMenu>
   );
 }
 

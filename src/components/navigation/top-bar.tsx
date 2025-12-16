@@ -24,16 +24,6 @@ export const TopBar = () => {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
-        <div className="hidden sm:block">
-          <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">OnpointDoc</p>
-          <h1 className="text-base font-semibold text-slate-900 dark:text-white">
-            Pilotage Support & Activités
-          </h1>
-        </div>
-        <div className="sm:hidden">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">OnpointDoc</p>
-        </div>
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />

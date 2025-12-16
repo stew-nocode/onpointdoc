@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useSidebar } from './sidebar-context';
 import { NavigationMenu } from './navigation-menu';
 import { ConfigurationMenu } from './configuration-menu';
+import { Logo } from './logo';
 
 type SidebarProps = {
   role?: 'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'director' | 'admin';
@@ -14,6 +15,7 @@ type SidebarProps = {
 
 export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
   const [ticketsOpen, setTicketsOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
   const { isOpen, close } = useSidebar();
 
   /**
@@ -62,32 +64,34 @@ export const Sidebar = ({ role = 'agent' }: SidebarProps) => {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Bouton fermer sur mobile */}
-        <div className="mb-4 flex items-center justify-between lg:hidden">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Navigation
-          </p>
+        {/* Logo et bouton fermer sur mobile */}
+        <div className="mb-6 flex items-center justify-between gap-2 lg:hidden">
+          <div className="flex-shrink-0">
+            <Logo width={110} height={30} />
+          </div>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={close}
-            className="h-8 w-8"
+            className="h-8 w-8 flex-shrink-0"
             aria-label="Fermer le menu"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
-        <div className="hidden lg:block">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            Navigation
-          </p>
+
+        {/* Logo sur desktop */}
+        <div className="mb-6 hidden lg:block">
+          <Logo width={130} height={35} />
         </div>
 
         <NavigationMenu
           role={role}
           ticketsOpen={ticketsOpen}
           onTicketsToggle={() => setTicketsOpen((v) => !v)}
+          marketingOpen={marketingOpen}
+          onMarketingToggle={() => setMarketingOpen((v) => !v)}
           onLinkClick={handleLinkClick}
         />
 

@@ -1,9 +1,9 @@
 /**
- * Composant de transition de page amélioré
- * 
- * Orchestre la barre de progression, l'overlay et le fade du contenu.
- * Utilise le contexte de navigation pour détecter les transitions au clic.
- * 
+ * Composant de transition de page avec LogoLoader
+ *
+ * Affiche une animation élégante du logo ON.NEXT style Brevo
+ * lors des changements de route.
+ *
  * Respecte les principes Clean Code :
  * - SRP : Orchestration de la transition complète
  * - DRY : Réutilisation des composants
@@ -15,45 +15,43 @@
 import { useEffect, useRef } from 'react';
 import { useNavigation } from '@/contexts/navigation-context';
 import { usePathname } from 'next/navigation';
-import { PageTransitionBar } from './page-transition-bar';
-import { cn } from '@/lib/utils';
+import { LogoLoader } from './logo-loader';
 
 type PageTransitionProps = {
   /**
-   * Durée de la transition en millisecondes
-   * @default 1200
-   */
-  duration?: number;
-
-  /**
    * Délai avant de considérer la transition comme terminée
-   * @default 300
+   * @default 100
    */
   completionDelay?: number;
+
+  /**
+   * Texte à afficher sous le logo
+   * @default "Chargement"
+   */
+  loadingText?: string;
 };
 
 /**
- * Composant de transition de page amélioré
- * 
- * Affiche une barre de progression, un overlay et gère le fade
- * lors des changements de route.
- * 
- * @param duration - Durée de la transition en ms (défaut: 1200ms)
- * @param completionDelay - Délai de complétion en ms (défaut: 300ms)
- * 
+ * Composant de transition de page avec LogoLoader
+ *
+ * Affiche le logo ON.NEXT animé lors des changements de route.
+ *
+ * @param completionDelay - Délai de complétion en ms (défaut: 100ms)
+ * @param loadingText - Texte sous le logo
+ *
  * @example
  * <PageTransition />
  */
 export function PageTransition({
-  duration = 1200,
-  completionDelay = 300,
+  completionDelay = 100,
+  loadingText = 'Chargement',
 }: PageTransitionProps) {
   const { isNavigating, completeNavigation } = useNavigation();
   const pathname = usePathname();
 
   /**
    * Compléter la transition quand le pathname change pendant une navigation
-   * 
+   *
    * Attend un peu pour que la nouvelle page se charge complètement
    * avant de terminer la transition.
    */
@@ -84,20 +82,6 @@ export function PageTransition({
     }
   }, [pathname, isNavigating, completeNavigation, completionDelay]);
 
-  return (
-    <>
-      {/* Barre de progression */}
-      <PageTransitionBar isTransitioning={isNavigating} duration={duration} />
-
-      {/* Overlay avec fade pour effet de chargement */}
-      <div
-        className={cn(
-          'fixed inset-0 z-[9998] bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm transition-opacity duration-500 pointer-events-none',
-          isNavigating ? 'opacity-100' : 'opacity-0'
-        )}
-        aria-hidden="true"
-      />
-    </>
-  );
+  return <LogoLoader isLoading={isNavigating} loadingText={loadingText} />;
 }
 

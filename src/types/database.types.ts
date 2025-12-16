@@ -35,6 +35,9 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          location_mode:
+            | Database["public"]["Enums"]["activity_location_mode_t"]
+            | null
           planned_end: string | null
           planned_start: string | null
           report_content: string | null
@@ -49,6 +52,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          location_mode?:
+            | Database["public"]["Enums"]["activity_location_mode_t"]
+            | null
           planned_end?: string | null
           planned_start?: string | null
           report_content?: string | null
@@ -63,6 +69,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          location_mode?:
+            | Database["public"]["Enums"]["activity_location_mode_t"]
+            | null
           planned_end?: string | null
           planned_start?: string | null
           report_content?: string | null
@@ -221,6 +230,146 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      brevo_config: {
+        Row: {
+          api_key: string
+          api_key_encrypted: boolean | null
+          api_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          smtp_host: string | null
+          smtp_port: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          api_key_encrypted?: boolean | null
+          api_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          api_key_encrypted?: boolean | null
+          api_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brevo_config_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brevo_email_campaigns: {
+        Row: {
+          ab_test_config: Json | null
+          brevo_campaign_id: number
+          campaign_name: string
+          campaign_type: string | null
+          click_rate: number | null
+          clickers_count: number | null
+          created_at: string
+          email_subject: string | null
+          emails_delivered: number | null
+          emails_sent: number | null
+          hard_bounces: number | null
+          id: string
+          last_synced_at: string | null
+          open_rate: number | null
+          recipient_lists: Json | null
+          scheduled_at: string | null
+          sender_email: string | null
+          sender_id: number | null
+          sender_name: string | null
+          sent_at: string | null
+          soft_bounces: number | null
+          spam_complaints: number | null
+          status: string | null
+          total_recipients: number | null
+          unique_clicks: number | null
+          unique_opens: number | null
+          unsubscribes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ab_test_config?: Json | null
+          brevo_campaign_id: number
+          campaign_name: string
+          campaign_type?: string | null
+          click_rate?: number | null
+          clickers_count?: number | null
+          created_at?: string
+          email_subject?: string | null
+          emails_delivered?: number | null
+          emails_sent?: number | null
+          hard_bounces?: number | null
+          id?: string
+          last_synced_at?: string | null
+          open_rate?: number | null
+          recipient_lists?: Json | null
+          scheduled_at?: string | null
+          sender_email?: string | null
+          sender_id?: number | null
+          sender_name?: string | null
+          sent_at?: string | null
+          soft_bounces?: number | null
+          spam_complaints?: number | null
+          status?: string | null
+          total_recipients?: number | null
+          unique_clicks?: number | null
+          unique_opens?: number | null
+          unsubscribes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ab_test_config?: Json | null
+          brevo_campaign_id?: number
+          campaign_name?: string
+          campaign_type?: string | null
+          click_rate?: number | null
+          clickers_count?: number | null
+          created_at?: string
+          email_subject?: string | null
+          emails_delivered?: number | null
+          emails_sent?: number | null
+          hard_bounces?: number | null
+          id?: string
+          last_synced_at?: string | null
+          open_rate?: number | null
+          recipient_lists?: Json | null
+          scheduled_at?: string | null
+          sender_email?: string | null
+          sender_id?: number | null
+          sender_name?: string | null
+          sent_at?: string | null
+          soft_bounces?: number | null
+          spam_complaints?: number | null
+          status?: string | null
+          total_recipients?: number | null
+          unique_clicks?: number | null
+          unique_opens?: number | null
+          unsubscribes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       comment_attachments: {
         Row: {
@@ -1480,6 +1629,7 @@ export type Database = {
       }
       tickets: {
         Row: {
+          action_menee: string | null
           affects_all_companies: boolean | null
           assigned_to: string | null
           bug_type: Database["public"]["Enums"]["bug_type_enum"] | null
@@ -1495,15 +1645,20 @@ export type Database = {
           feature_id: string | null
           fix_version: string | null
           id: string
+          internal_ticket_key: string | null
+          is_relance: boolean | null
           issue_type: string | null
           jira_issue_id: string | null
           jira_issue_key: string | null
           jira_metadata: Json | null
           last_update_source: string | null
           module_id: string | null
+          objet_principal: string | null
+          old: boolean
           origin: Database["public"]["Enums"]["origin_t"] | null
           priority: Database["public"]["Enums"]["priority_t"] | null
           product_id: string | null
+          relance_type: string | null
           related_ticket_id: string | null
           related_ticket_key: string | null
           resolution: string | null
@@ -1521,6 +1676,7 @@ export type Database = {
           workflow_status: string | null
         }
         Insert: {
+          action_menee?: string | null
           affects_all_companies?: boolean | null
           assigned_to?: string | null
           bug_type?: Database["public"]["Enums"]["bug_type_enum"] | null
@@ -1536,15 +1692,20 @@ export type Database = {
           feature_id?: string | null
           fix_version?: string | null
           id?: string
+          internal_ticket_key?: string | null
+          is_relance?: boolean | null
           issue_type?: string | null
           jira_issue_id?: string | null
           jira_issue_key?: string | null
           jira_metadata?: Json | null
           last_update_source?: string | null
           module_id?: string | null
+          objet_principal?: string | null
+          old?: boolean
           origin?: Database["public"]["Enums"]["origin_t"] | null
           priority?: Database["public"]["Enums"]["priority_t"] | null
           product_id?: string | null
+          relance_type?: string | null
           related_ticket_id?: string | null
           related_ticket_key?: string | null
           resolution?: string | null
@@ -1562,6 +1723,7 @@ export type Database = {
           workflow_status?: string | null
         }
         Update: {
+          action_menee?: string | null
           affects_all_companies?: boolean | null
           assigned_to?: string | null
           bug_type?: Database["public"]["Enums"]["bug_type_enum"] | null
@@ -1577,15 +1739,20 @@ export type Database = {
           feature_id?: string | null
           fix_version?: string | null
           id?: string
+          internal_ticket_key?: string | null
+          is_relance?: boolean | null
           issue_type?: string | null
           jira_issue_id?: string | null
           jira_issue_key?: string | null
           jira_metadata?: Json | null
           last_update_source?: string | null
           module_id?: string | null
+          objet_principal?: string | null
+          old?: boolean
           origin?: Database["public"]["Enums"]["origin_t"] | null
           priority?: Database["public"]["Enums"]["priority_t"] | null
           product_id?: string | null
+          relance_type?: string | null
           related_ticket_id?: string | null
           related_ticket_key?: string | null
           resolution?: string | null
@@ -1721,6 +1888,7 @@ export type Database = {
         }
         Returns: number
       }
+      exec_sql: { Args: { query_text: string }; Returns: Json }
       get_feature_id_from_jira: {
         Args: { p_jira_custom_field_id?: string; p_jira_feature_value: string }
         Returns: string
@@ -1792,6 +1960,7 @@ export type Database = {
       }
     }
     Enums: {
+      activity_location_mode_t: "Presentiel" | "En_ligne"
       activity_status_t:
         | "Brouillon"
         | "Planifie"
@@ -1847,7 +2016,7 @@ export type Database = {
         | "En prsentiel"
       comment_origin_t: "app" | "jira_comment"
       dashboardwidget: "mttr" | "flux" | "workload" | "health" | "alerts"
-      department_t: "Support" | "IT" | "Marketing"
+      department_t: "Support" | "IT" | "Marketing" | "Commercial"
       origin_t: "supabase" | "jira"
       priority_t: "Low" | "Medium" | "High" | "Critical"
       task_status_t: "A_faire" | "En_cours" | "Termine" | "Annule" | "Bloque"
@@ -1989,6 +2158,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_location_mode_t: ["Presentiel", "En_ligne"],
       activity_status_t: [
         "Brouillon",
         "Planifie",
@@ -2048,7 +2218,7 @@ export const Constants = {
       ],
       comment_origin_t: ["app", "jira_comment"],
       dashboardwidget: ["mttr", "flux", "workload", "health", "alerts"],
-      department_t: ["Support", "IT", "Marketing"],
+      department_t: ["Support", "IT", "Marketing", "Commercial"],
       origin_t: ["supabase", "jira"],
       priority_t: ["Low", "Medium", "High", "Critical"],
       task_status_t: ["A_faire", "En_cours", "Termine", "Annule", "Bloque"],

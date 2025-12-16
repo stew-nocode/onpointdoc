@@ -14,6 +14,7 @@ import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
 // ✅ PHASE 5 - ÉTAPE 4 : Les fonctions utilitaires sont maintenant utilisées dans TicketRow
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
+import type { TicketViewConfig } from '@/types/ticket-view-config';
 import { useAuth, useTicketSelection } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { useStableSearchParams } from '@/hooks/use-stable-search-params';
@@ -38,6 +39,13 @@ type TicketsInfiniteScrollProps = {
   search?: string;
   quickFilter?: QuickFilter;
   currentProfileId?: string;
+  agentId?: string; // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string; // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
+  /**
+   * Configuration de la vue selon le rôle utilisateur
+   * Si non fourni, utilise les valeurs par défaut (comportement existant)
+   */
+  viewConfig?: TicketViewConfig;
 };
 
 // ✅ PHASE 5 - ÉTAPE 1 : ITEMS_PER_PAGE est maintenant dans useTicketsInfiniteLoad
@@ -55,7 +63,8 @@ function TicketsInfiniteScrollComponent({
   status,
   search,
   quickFilter,
-  currentProfileId
+  currentProfileId,
+  viewConfig
 }: TicketsInfiniteScrollProps) {
   const router = useRouter();
   const searchParams = useStableSearchParams();
@@ -70,18 +79,20 @@ function TicketsInfiniteScrollComponent({
     sortDirectionValue
   } = useTicketsSort();
   
-  // Mémoriser le rôle avec une ref pour éviter les re-renders
-  // Comparer les valeurs réelles plutôt que la référence de l'objet
-  const roleRef = useRef(authState.role);
-  if (roleRef.current !== authState.role) {
-    roleRef.current = authState.role;
-  }
-  const role = roleRef.current;
-  
-  // Mémoriser canEdit pour éviter les recalculs
+  // ✅ Utiliser viewConfig pour canEdit si fourni, sinon fallback sur le rôle
   const canEdit = useMemo(() => {
+    if (viewConfig) {
+      return viewConfig.canEdit;
+    }
+    // Fallback : comportement existant basé sur le rôle
+    const role = authState.role;
     return role === 'admin' || role === 'manager';
-  }, [role]);
+  }, [viewConfig, authState.role]);
+  
+  // ✅ Utiliser viewConfig pour canSelectMultiple si fourni
+  const canSelectMultiple = useMemo(() => {
+    return viewConfig?.canSelectMultiple ?? true; // Par défaut, autoriser la sélection
+  }, [viewConfig]);
   
   // searchParams est déjà stabilisé par useStableSearchParams()
   // Pas besoin de duplication supplémentaire
@@ -94,6 +105,12 @@ function TicketsInfiniteScrollComponent({
   //   warningThreshold: 10,
   //   logToConsole: process.env.NODE_ENV === 'development',
   // });
+  
+  // ✅ Extraire agentId depuis searchParams pour le filtrage par agent support
+  const agentId = searchParams.get('agent') || undefined;
+  
+  // ✅ Extraire companyId depuis searchParams pour le filtrage par entreprise
+  const companyId = searchParams.get('company') || undefined;
   
   // ✅ PHASE 5 - ÉTAPE 1 : La logique de chargement est maintenant dans useTicketsInfiniteLoad()
   const {
@@ -111,14 +128,20 @@ function TicketsInfiniteScrollComponent({
     search,
     quickFilter,
     currentProfileId,
+    agentId, // ✅ Passer agentId au hook
+    companyId, // ✅ Passer companyId au hook
     currentSort,
     currentSortDirection,
     searchParams
   });
-  // Initialiser avec toutes les colonnes par défaut pour éviter l'erreur d'hydratation
+  // ✅ Initialiser avec les colonnes de viewConfig si fourni, sinon toutes les colonnes
   // Les préférences seront chargées après le montage côté client uniquement
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
-    // Toujours retourner toutes les colonnes par défaut pour l'hydratation
+    if (viewConfig?.defaultVisibleColumns) {
+      // Utiliser les colonnes par défaut de la configuration
+      return new Set(viewConfig.defaultVisibleColumns);
+    }
+    // Fallback : toutes les colonnes par défaut pour l'hydratation
     return new Set(['title', 'type', 'status', 'priority', 'canal', 'company', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
   });
   const [isMounted, setIsMounted] = useState(false);
@@ -244,7 +267,8 @@ function TicketsInfiniteScrollComponent({
     <TooltipProvider>
       <div className="space-y-3" style={{ overflowAnchor: 'none' }} data-scroll-container>
         {/* Barre d'actions flottante pour les tickets sélectionnés */}
-        {selectedCount > 0 && (
+        {/* ✅ Afficher seulement si canSelectMultiple est activé */}
+        {canSelectMultiple && selectedCount > 0 && (
           <BulkActionsBar
             selectedTicketIds={selectedTicketIdsArray}
             tickets={tickets}
@@ -267,6 +291,7 @@ function TicketsInfiniteScrollComponent({
               currentSortDirection={currentSortDirection}
               handleSort={handleSort}
               isColumnVisible={isColumnVisible}
+              canSelectMultiple={canSelectMultiple}
             />
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {tickets.map((ticket) => (
@@ -277,6 +302,7 @@ function TicketsInfiniteScrollComponent({
                 toggleTicketSelection={toggleTicketSelection}
                 handleEdit={handleEdit}
                 canEdit={canEdit}
+                canSelectMultiple={canSelectMultiple}
                 search={search}
                 isColumnVisible={isColumnVisible}
               />
@@ -342,7 +368,9 @@ function arePropsEqual(
     normalize(prevProps.status) !== normalize(nextProps.status) ||
     normalize(prevProps.search) !== normalize(nextProps.search) ||
     normalize(prevProps.quickFilter) !== normalize(nextProps.quickFilter) ||
-    normalize(prevProps.currentProfileId) !== normalize(nextProps.currentProfileId)
+    normalize(prevProps.currentProfileId) !== normalize(nextProps.currentProfileId) ||
+    normalize(prevProps.agentId) !== normalize(nextProps.agentId) ||
+    normalize(prevProps.companyId) !== normalize(nextProps.companyId)
   ) {
     return false; // Props différentes = re-render
   }

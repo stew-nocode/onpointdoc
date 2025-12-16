@@ -30,6 +30,7 @@ import { buildTicketListParams } from '@/components/tickets/tickets-infinite-scr
 import { mergeTicketsWithoutDuplicates } from '@/components/tickets/tickets-infinite-scroll/utils/tickets-state-updater';
 import { logTicketsLoadPerformance } from '@/components/tickets/tickets-infinite-scroll/utils/performance-logger';
 import { areTicketIdsEqual } from '@/components/tickets/tickets-infinite-scroll/utils/tickets-reset';
+import { useRetryFetch } from '@/hooks/use-retry-fetch';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -52,6 +53,8 @@ type UseTicketsInfiniteLoadProps = {
   search?: string;
   quickFilter?: QuickFilter;
   currentProfileId?: string;
+  agentId?: string; // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string; // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
 
   /**
    * Paramètres de tri
@@ -133,6 +136,8 @@ export function useTicketsInfiniteLoad({
   search,
   quickFilter,
   currentProfileId,
+  agentId, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId, // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
   currentSort,
   currentSortDirection,
   searchParams
@@ -140,13 +145,30 @@ export function useTicketsInfiniteLoad({
   // État des tickets
   const [tickets, setTickets] = useState<TicketWithRelations[]>(initialTickets);
   const [hasMore, setHasMore] = useState(initialHasMore);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Hook de retry pour les requêtes fetch
+  const { fetchWithRetry, isLoading, error: fetchError } = useRetryFetch({
+    maxRetries: 2,
+    retryDelay: 1000,
+    timeout: 30000,
+    onRetry: (attemptNumber) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[useTicketsInfiniteLoad] Retry ${attemptNumber}/2`);
+      }
+    }
+  });
 
   // Refs pour optimiser les performances et éviter les re-renders
   const ticketsLengthRef = useRef(initialTickets.length);
-  const isLoadingRef = useRef(false);
   const hasMoreRef = useRef(initialHasMore);
+  
+  // Synchroniser l'erreur du hook avec l'état local
+  useEffect(() => {
+    if (fetchError) {
+      setError(fetchError);
+    }
+  }, [fetchError]);
 
   // Référence stable pour les filtres (évite les re-créations de loadMore)
   const filtersRef = useRef({
@@ -155,6 +177,8 @@ export function useTicketsInfiniteLoad({
     search,
     quickFilter,
     currentProfileId,
+    agentId, // ✅ Inclure agentId dans les refs
+    companyId, // ✅ Inclure companyId dans les refs
     currentSort,
     currentSortDirection,
   });
@@ -165,11 +189,13 @@ export function useTicketsInfiniteLoad({
     const normalizedStatus = status || '';
     const normalizedSearch = search || '';
     const normalizedQuickFilter = quickFilter || '';
+    const normalizedAgentId = agentId || ''; // ✅ Inclure agentId dans la clé
+    const normalizedCompanyId = companyId || ''; // ✅ Inclure companyId dans la clé
     const normalizedSortColumn = currentSort || '';
     const normalizedSortDirection = currentSortDirection || '';
     
-    return `${normalizedType}-${normalizedStatus}-${normalizedSearch}-${normalizedQuickFilter}-${normalizedSortColumn}-${normalizedSortDirection}`;
-  }, [type, status, search, quickFilter, currentSort, currentSortDirection]);
+    return `${normalizedType}-${normalizedStatus}-${normalizedSearch}-${normalizedQuickFilter}-${normalizedAgentId}-${normalizedCompanyId}-${normalizedSortColumn}-${normalizedSortDirection}`;
+  }, [type, status, search, quickFilter, agentId, companyId, currentSort, currentSortDirection]);
 
   // Réinitialiser les tickets quand les filtres changent OU quand initialTickets/initialHasMore changent
   // (par exemple après une revalidation du Server Component)
@@ -234,16 +260,14 @@ export function useTicketsInfiniteLoad({
       search,
       quickFilter,
       currentProfileId,
+      agentId, // ✅ Inclure agentId dans les refs
+      companyId, // ✅ Inclure companyId dans les refs
       currentSort,
       currentSortDirection,
     };
-  }, [type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
+  }, [type, status, search, quickFilter, currentProfileId, agentId, companyId, currentSort, currentSortDirection]);
 
-  // Mettre à jour les refs pour isLoading et hasMore
-  useEffect(() => {
-    isLoadingRef.current = isLoading;
-  }, [isLoading]);
-
+  // Mettre à jour la ref pour hasMore
   useEffect(() => {
     if (hasMoreRef.current !== hasMore) {
       hasMoreRef.current = hasMore;
@@ -254,14 +278,14 @@ export function useTicketsInfiniteLoad({
    * Charge plus de tickets via l'API
    * 
    * Gère automatiquement :
-   * - Les retries en cas d'erreur réseau
+   * - Les retries en cas d'erreur réseau (via useRetryFetch)
    * - La fusion des tickets sans doublons
    * - La mise à jour de l'état (hasMore, error)
    * - Les logs de performance (dev uniquement)
    */
   const loadMore = useCallback(async () => {
     // Utiliser les refs pour éviter les dépendances
-    if (isLoadingRef.current || !hasMoreRef.current) return;
+    if (isLoading || !hasMoreRef.current) return;
 
     // Mesure du temps de chargement (dev uniquement)
     const loadStartTime = performance.now();
@@ -269,8 +293,6 @@ export function useTicketsInfiniteLoad({
       console.time('⏱️ TicketsLoadMore');
     }
 
-    isLoadingRef.current = true;
-    setIsLoading(true);
     setError(null);
 
     try {
@@ -288,73 +310,13 @@ export function useTicketsInfiniteLoad({
         filters.search,
         filters.quickFilter,
         filters.currentProfileId,
-        searchParams
+        searchParams,
+        filters.agentId, // ✅ Passer agentId dans les paramètres
+        filters.companyId // ✅ Passer companyId dans les paramètres
       );
 
-      // Gestion d'erreur avec retry pour les erreurs réseau
-      let response: Response | null = null;
-      let retries = 0;
-      const maxRetries = 2;
-      let lastError: Error | null = null;
-      
-      while (retries <= maxRetries) {
-        try {
-          response = await fetch(`/api/tickets/list?${params.toString()}`, {
-            signal: AbortSignal.timeout(30000) // Timeout de 30 secondes
-          });
-          
-          if (!response.ok) {
-            // Si erreur serveur (500), retry une fois
-            if (response.status >= 500 && retries < maxRetries) {
-              retries++;
-              await new Promise(resolve => setTimeout(resolve, 1000 * retries)); // Backoff exponentiel
-              continue;
-            }
-            throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-          }
-          
-          // Succès, sortir de la boucle
-          break;
-        } catch (fetchError: unknown) {
-          // Gérer différents types d'erreurs réseau
-          let errorMessage = 'Erreur réseau inconnue';
-          if (fetchError instanceof TypeError) {
-            errorMessage = fetchError.message || 'Erreur réseau';
-          } else if (fetchError instanceof Error) {
-            errorMessage = fetchError.message;
-          }
-          
-          lastError = fetchError instanceof Error 
-            ? fetchError 
-            : new Error(errorMessage);
-          
-          // Si c'est une erreur réseau et qu'on peut retry
-          if (retries < maxRetries && (
-            fetchError instanceof TypeError ||
-            (fetchError instanceof Error && (
-              fetchError.name === 'AbortError' ||
-              fetchError.message.toLowerCase().includes('network') ||
-              fetchError.message.toLowerCase().includes('fetch')
-            ))
-          )) {
-            retries++;
-            if (process.env.NODE_ENV === 'development') {
-              console.warn(`[DEBUG] Tentative ${retries}/${maxRetries + 1} après erreur réseau:`, fetchError);
-            }
-            await new Promise(resolve => setTimeout(resolve, 1000 * retries)); // Backoff exponentiel
-            continue;
-          }
-          
-          // Erreur finale ou non retryable
-          throw lastError;
-        }
-      }
-      
-      // Vérifier que response est défini
-      if (!response) {
-        throw lastError || new Error('Erreur réseau lors du chargement des tickets');
-      }
-      
+      // Utiliser le hook useRetryFetch pour gérer les retries automatiquement
+      const response = await fetchWithRetry(`/api/tickets/list?${params.toString()}`);
       const data = await response.json();
 
       // Fusionner les tickets avec les utilitaires extraits
@@ -390,7 +352,8 @@ export function useTicketsInfiniteLoad({
         logTicketsLoadPerformance(loadDuration, data.tickets.length);
       }
     } catch (err: unknown) {
-      // Gérer différents types d'erreurs réseau
+      // L'erreur est déjà gérée par useRetryFetch et mise à jour dans fetchError
+      // On synchronise avec l'état local pour compatibilité
       let message = 'Erreur lors du chargement';
       if (err instanceof TypeError) {
         message = err.message.includes('network') 
@@ -407,11 +370,8 @@ export function useTicketsInfiniteLoad({
         console.error('[ERROR] Erreur lors du chargement des tickets:', err);
         console.timeEnd('⏱️ TicketsLoadMore');
       }
-    } finally {
-      isLoadingRef.current = false;
-      setIsLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, isLoading, fetchWithRetry]);
 
   return {
     tickets,

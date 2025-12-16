@@ -6,6 +6,7 @@ import { NewSubmoduleDialogLazy } from '@/components/submodules/new-submodule-di
 import { SubmodulesTableClient, type SubmoduleRow } from '@/components/submodules/submodules-table-client';
 import type { Module } from '@/types/module';
 import type { Submodule } from '@/types/submodule';
+import { StandardPageHeader } from '@/components/layout/page';
 
 async function loadData(): Promise<{ rows: SubmoduleRow[]; modules: Record<string, string> }> {
   noStore();
@@ -28,12 +29,16 @@ export default async function SubmodulesIndexPage() {
   const { rows, modules } = await loadData();
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Sous-modules</h1>
-        <NewSubmoduleDialogLazy>
-          <Button>Nouveau sous-module</Button>
-        </NewSubmoduleDialogLazy>
-      </div>
+      <StandardPageHeader
+        icon="Layers"
+        title="Sous-modules"
+        description="Gérez les sous-modules des modules"
+        actions={
+          <NewSubmoduleDialogLazy>
+            <Button>Nouveau sous-module</Button>
+          </NewSubmoduleDialogLazy>
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle>Liste des sous-modules</CardTitle>

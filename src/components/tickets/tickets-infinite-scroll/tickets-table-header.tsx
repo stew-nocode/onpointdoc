@@ -99,21 +99,21 @@ export function TicketsTableHeader({
         {/* Colonne checkbox Select All - Masquée si canSelectMultiple est false */}
         {canSelectMultiple && (
           <th className="w-12 pb-2 pr-2">
-            <div className="flex items-center justify-center">
-              <Checkbox
-                checked={areAllTicketsSelected(tickets)}
-                indeterminate={areSomeTicketsSelected(tickets)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    selectAllTickets(tickets);
-                  } else {
-                    clearSelection();
-                  }
-                }}
-                aria-label="Sélectionner tous les tickets"
-              />
-            </div>
-          </th>
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={areAllTicketsSelected(tickets)}
+              indeterminate={areSomeTicketsSelected(tickets)}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  selectAllTickets(tickets);
+                } else {
+                  clearSelection();
+                }
+              }}
+              aria-label="Sélectionner tous les tickets"
+            />
+          </div>
+        </th>
         )}
 
         {/* Titre - Triable */}

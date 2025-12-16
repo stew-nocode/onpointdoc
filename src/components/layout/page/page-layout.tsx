@@ -8,6 +8,7 @@ import type { PageHeaderConfig, PageCardConfig } from './types';
 type PageLayoutProps = {
   sidebar?: ReactNode;
   header: PageHeaderConfig;
+  banner?: ReactNode;
   kpis?: ReactNode;
   card: PageCardConfig;
   children: ReactNode;
@@ -19,6 +20,7 @@ type PageLayoutProps = {
  * Structure commune :
  * - Sidebar optionnelle (filtres, navigation, etc.)
  * - Header standardisé (label, titre, description, action)
+ * - Banner optionnel (affiché entre Header et KPIs)
  * - Section KPIs optionnelle
  * - Card principale avec slots (titre, recherche, filtres, contenu)
  * 
@@ -30,6 +32,7 @@ type PageLayoutProps = {
  * 
  * @param sidebar - Sidebar optionnelle (utilise PageSidebarWrapper)
  * @param header - Configuration du header
+ * @param banner - Banner optionnel (affiché entre Header et KPIs)
  * @param kpis - Section KPIs optionnelle
  * @param card - Configuration de la card principale
  * @param children - Contenu principal de la card
@@ -37,12 +40,13 @@ type PageLayoutProps = {
 export function PageLayout({
   sidebar,
   header,
+  banner,
   kpis,
   card,
   children
 }: PageLayoutProps) {
   const content = (
-    <PageContent header={header} kpis={kpis} card={card}>
+    <PageContent header={header} banner={banner} kpis={kpis} card={card}>
       {children}
     </PageContent>
   );

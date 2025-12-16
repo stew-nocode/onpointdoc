@@ -133,7 +133,7 @@ export function CreateContactDialog({
               </div>
               <div className="grid gap-2">
                 <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Email <span className="text-status-danger">*</span>
+                  Email
                 </label>
                 <input
                   id="email"
@@ -142,7 +142,6 @@ export function CreateContactDialog({
                   placeholder="Ex: jean.dupont@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                 />
               </div>
             </div>
@@ -150,7 +149,7 @@ export function CreateContactDialog({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
                 <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Mot de passe <span className="text-status-danger">*</span>
+                  Mot de passe
                 </label>
                 <input
                   id="password"
@@ -159,11 +158,10 @@ export function CreateContactDialog({
                   placeholder="Minimum 8 caractères"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                   minLength={8}
                 />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Le mot de passe sera communiqué au contact pour se connecter.
+                  Le mot de passe sera communiqué au contact pour se connecter. Si non renseigné, le contact ne pourra pas se connecter.
                 </p>
               </div>
               <div className="grid gap-2">

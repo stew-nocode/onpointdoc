@@ -53,19 +53,20 @@ export function AddCommentDialog({ ticketId, ticketTitle }: AddCommentDialogProp
    * 
    * @param content - Contenu du commentaire
    * @param files - Fichiers joints (optionnels)
+   * @param commentType - Type de commentaire ('comment' ou 'followup')
    */
-  const handleSubmit = async (content: string, files?: File[]): Promise<void> => {
+  const handleSubmit = async (content: string, files?: File[], commentType?: 'comment' | 'followup'): Promise<void> => {
     setIsSubmitting(true);
 
     try {
       // ✅ Utiliser la Server Action directement (revalidatePath inclus)
-      const commentId = await addCommentAction(ticketId, content);
+      const commentId = await addCommentAction(ticketId, content, commentType || 'comment');
 
       if (files && files.length > 0) {
         await uploadAttachments(commentId, files);
       }
 
-      toast.success('Commentaire ajouté avec succès');
+      toast.success(commentType === 'followup' ? 'Relance ajoutée avec succès' : 'Commentaire ajouté avec succès');
       setOpen(false);
       // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (error) {

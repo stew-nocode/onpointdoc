@@ -167,7 +167,8 @@ export const mockProfile = {
   auth_uid: 'user-123',
   full_name: 'Test User',
   email: 'test@example.com',
-  role: 'agent_support' as const,
+  role: 'agent' as const,
+  department: 'Support' as const,
   company_id: 'company-123'
 };
 

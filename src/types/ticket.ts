@@ -73,5 +73,10 @@ export type Ticket = {
   team_id?: string | null;
   contact_user_id?: string | null;
   bug_type?: BugType | null;
+  /**
+   * Indique si le ticket a été mis à jour lors de la migration des données historiques.
+   * Utilisé pour distinguer les anciens tickets des nouveaux.
+   */
+  old?: boolean;
 };
 

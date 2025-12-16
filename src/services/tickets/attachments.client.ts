@@ -21,6 +21,7 @@ export async function uploadTicketAttachments(ticketId: string, files: File[]) {
     const { error: metaErr } = await supabase.from('ticket_attachments').insert({
       ticket_id: ticketId,
       file_path: path,
+      file_name: file.name,
       mime_type: file.type,
       size_kb: Math.ceil(file.size / 1024)
     });

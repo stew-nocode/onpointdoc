@@ -223,6 +223,11 @@ export type AgentDashboardData = {
   periodEnd: string;
 };
 
+// === Types pour KPIs Statiques (temps réel, non filtrés) ===
+import type { BugHistoryStats } from '@/services/dashboard/bug-history-stats';
+
+export type { BugHistoryStats };
+
 /**
  * Données unifiées du dashboard (chargées selon le rôle)
  */
@@ -236,4 +241,8 @@ export type UnifiedDashboardData = {
   period: Period;
   periodStart: string;
   periodEnd: string;
+  // === KPIs Statiques (temps réel, non filtrés - Admin/Direction) ===
+  bugHistoryStats?: BugHistoryStats;
+  // reqHistoryStats?: ReqHistoryStats;      // À implémenter
+  // assistanceHistoryStats?: AssistanceHistoryStats; // À implémenter
 };

@@ -6,6 +6,7 @@ import { NewFeatureDialogLazy } from '@/components/features/new-feature-dialog-l
 import { FeaturesTableClient, type FeatureRow } from '@/components/features/features-table-client';
 import type { Submodule } from '@/types/submodule';
 import type { Feature } from '@/types/feature';
+import { StandardPageHeader } from '@/components/layout/page';
 
 async function loadData(): Promise<{ rows: FeatureRow[]; submodules: Record<string, string> }> {
   noStore();
@@ -26,12 +27,16 @@ export default async function FeaturesIndexPage() {
   const { rows, submodules } = await loadData();
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Fonctionnalités</h1>
-        <NewFeatureDialogLazy>
-          <Button>Nouvelle fonctionnalité</Button>
-        </NewFeatureDialogLazy>
-      </div>
+      <StandardPageHeader
+        icon="Sparkles"
+        title="Fonctionnalités"
+        description="Gérez les fonctionnalités des sous-modules"
+        actions={
+          <NewFeatureDialogLazy>
+            <Button>Nouvelle fonctionnalité</Button>
+          </NewFeatureDialogLazy>
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle>Liste des fonctionnalités</CardTitle>

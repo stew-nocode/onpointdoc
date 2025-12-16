@@ -30,7 +30,8 @@ export function TicketDepartmentSection({
 }: TicketDepartmentSectionProps) {
   const selectedDepartmentIds = form.watch('selectedDepartmentIds') || [];
 
-  if (departments.length === 0) {
+  // ✅ Protection : vérifier que departments est défini avant d'accéder à .length
+  if (!departments || departments.length === 0) {
     return null;
   }
 

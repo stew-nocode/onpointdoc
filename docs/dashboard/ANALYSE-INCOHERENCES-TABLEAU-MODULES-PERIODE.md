@@ -289,3 +289,8 @@ if (data.bugsResolus > data.bugsSignales) {
 
 
 
+
+
+
+
+

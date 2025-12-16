@@ -29,6 +29,7 @@ export type TicketComment = {
   user_id: string | null;
   content: string;
   origin: 'app' | 'jira' | null;
+  comment_type?: 'comment' | 'followup';
   created_at: string;
   user?: {
     id: string;
@@ -85,7 +86,7 @@ export async function loadTicketComments(ticketId: string): Promise<TicketCommen
 
   const { data: comments, error: commentsError } = await supabase
     .from('ticket_comments')
-    .select('id, ticket_id, user_id, content, origin, created_at')
+    .select('id, ticket_id, user_id, content, origin, comment_type, created_at')
     .eq('ticket_id', ticketId)
     .order('created_at', { ascending: true });
 
@@ -115,6 +116,7 @@ export async function loadTicketComments(ticketId: string): Promise<TicketCommen
     user_id: comment.user_id,
     content: comment.content,
     origin: comment.origin as 'app' | 'jira' | null,
+    comment_type: (comment.comment_type as 'comment' | 'followup' | undefined) || 'comment',
     created_at: comment.created_at,
     user: comment.user_id ? profilesMap.get(comment.user_id) : undefined,
     attachments: attachmentsMap.get(comment.id) || []

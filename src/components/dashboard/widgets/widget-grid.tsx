@@ -53,6 +53,7 @@ export function DashboardWidgetGrid({
   // Grouper les widgets par type de layout
   const groupedWidgets = useMemo(() => {
     const groups: Record<WidgetLayoutType, WidgetGroup['widgets']> = {
+      'kpi-static': [],  // KPIs Statiques (non filtrés, Admin/Direction)
       kpi: [],
       chart: [],
       table: [],
@@ -90,7 +91,14 @@ export function DashboardWidgetGrid({
 
   return (
     <div className="space-y-6">
-      {/* Section KPIs */}
+      {/* Section KPIs Statiques (temps réel, non filtrés) - Admin/Direction only */}
+      {groupedWidgets['kpi-static'].length > 0 && (
+        <div className="space-y-4">
+          <KPIsStaticSection widgets={groupedWidgets['kpi-static']} />
+        </div>
+      )}
+
+      {/* Section KPIs Filtrés */}
       {groupedWidgets.kpi.length > 0 && (
         <div className="space-y-4">
           <KPIsSection widgets={groupedWidgets.kpi} />
@@ -151,6 +159,37 @@ const MemoizedWidget = memo(
   areWidgetPropsEqual // Comparaison personnalisée optimisée
 );
 MemoizedWidget.displayName = 'MemoizedWidget';
+
+/**
+ * Section pour les widgets KPI Statiques (temps réel)
+ * 
+ * Non soumis aux filtres de période, visible uniquement Admin/Direction.
+ * Utilise Flexbox avec largeur minimale de 300px pour permettre
+ * plusieurs cartes par ligne.
+ */
+function KPIsStaticSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+          Temps réel
+        </span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+          Non filtré
+        </span>
+      </div>
+      <div className="kpi-static-grid-responsive gap-4">
+        {widgets.map((widget) => (
+          <MemoizedWidget
+            key={widget.id}
+            component={widget.component}
+            props={widget.props}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Section pour les widgets KPI

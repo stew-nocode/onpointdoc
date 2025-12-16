@@ -4,18 +4,25 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 export async function createContact(input: ContactCreateInput): Promise<string> {
   const payload = contactCreateSchema.parse(input);
   try {
+    // Construire le body avec email/password seulement s'ils sont fournis
+    const body: Record<string, unknown> = {
+      fullName: payload.fullName,
+      role: 'client',
+      companyId: payload.companyId,
+      isActive: payload.isActive,
+      jobTitle: payload.jobTitle ?? null
+    };
+    
+    // Ajouter email et password seulement s'ils sont tous les deux fournis
+    if (payload.email && payload.password) {
+      body.email = payload.email;
+      body.password = payload.password;
+    }
+    
     const res = await fetch('/api/admin/users/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName: payload.fullName,
-        email: payload.email,
-        password: payload.password,
-        role: 'client',
-        companyId: payload.companyId,
-        isActive: payload.isActive,
-        jobTitle: payload.jobTitle ?? null
-      })
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const text = await res.text();

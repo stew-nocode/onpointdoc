@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Zalando+Sans+Expanded:wght@200;300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -95,6 +97,24 @@ body {
 /* Grille responsive pour les widgets Dashboard avec Flexbox */
 @layer components {
   /**
+   * Conteneur Flexbox pour les widgets KPI Statiques (temps réel)
+   * 
+   * Section visible uniquement Admin/Direction
+   * Largeur minimale : 300px par carte (cartes plus larges que KPIs filtrés)
+   */
+  .kpi-static-grid-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .kpi-static-grid-responsive > * {
+    flex: 1 1 300px;
+    min-width: 300px;
+    max-width: 400px;
+  }
+
+  /**
    * Conteneur Flexbox pour les widgets KPI
    * 
    * Utilise flex-wrap pour permettre le retour automatique à la ligne
@@ -171,11 +191,13 @@ body {
 
   /* Sur petits écrans (mobile), toutes les widgets prennent 100% de la largeur */
   @media (max-width: 639px) {
+    .kpi-static-grid-responsive > *,
     .kpi-grid-responsive > *,
     .chart-grid-responsive > *,
     .table-grid-responsive > * {
       flex-basis: 100%;
       min-width: 100%;
+      max-width: 100%;
     }
   }
 }
@@ -401,5 +423,120 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+/* ========================================
+   Animations pour LogoLoader (style Brevo)
+   ======================================== */
+
+@layer utilities {
+  /* Animation de pulse du logo (plus subtile que animate-pulse par défaut) */
+  @keyframes logo-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  }
+
+  .animate-logo-pulse {
+    animation: logo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Animation de glow derrière le logo */
+  @keyframes logo-glow {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-logo-glow {
+    animation: logo-glow 3s ease-in-out infinite;
+  }
+
+  /* Animation de barre de chargement (va et vient) */
+  @keyframes loading-bar {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(300%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .animate-loading-bar {
+    animation: loading-bar 2s ease-in-out infinite;
+  }
+
+  /* Animation de gradient horizontal (pour le texte ON) */
+  @keyframes gradient-x {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 3s ease infinite;
+  }
+
+  /* Animation de gradient horizontal inverse (pour le texte NEXT) */
+  @keyframes gradient-x-reverse {
+    0%, 100% {
+      background-position: 100% 50%;
+    }
+    50% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient-x-reverse {
+    background-size: 200% 200%;
+    animation: gradient-x-reverse 3s ease infinite;
+  }
+
+  /* Animation de pulse lent pour le point séparateur */
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.2);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Animation shimmer pour les skeletons (plus réaliste que pulse) */
+  @keyframes shimmer {
+    0% {
+      background-position: -400% 0;
+    }
+    100% {
+      background-position: 400% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+  }
 }
 

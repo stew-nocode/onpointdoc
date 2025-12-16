@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votre demande a été reçue - Ticket #{{params.ticket_id}}</title>
+  <style>
+    /* Reset email */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+    
+    /* Base styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fa;
+      color: #333333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .header .logo {
+      margin-bottom: 16px;
+    }
+    
+    .content {
+      padding: 32px 24px;
+    }
+    
+    .ticket-card {
+      background-color: #f8fafc;
+      border-left: 4px solid #2563eb;
+      padding: 20px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .ticket-card h2 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      color: #1e293b;
+    }
+    
+    .ticket-info {
+      margin: 8px 0;
+      color: #64748b;
+    }
+    
+    .ticket-info strong {
+      color: #334155;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .badge-bug { background-color: #fef2f2; color: #dc2626; }
+    .badge-req { background-color: #fef9c3; color: #ca8a04; }
+    .badge-assistance { background-color: #f0fdf4; color: #16a34a; }
+    
+    .badge-low { background-color: #f0fdf4; color: #16a34a; }
+    .badge-medium { background-color: #fef9c3; color: #ca8a04; }
+    .badge-high { background-color: #fff7ed; color: #ea580c; }
+    .badge-critical { background-color: #fef2f2; color: #dc2626; }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 24px 0;
+    }
+    
+    .cta-button:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+    
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .footer p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #64748b;
+    }
+    
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    
+    .social-links {
+      margin-top: 16px;
+    }
+    
+    .social-links a {
+      display: inline-block;
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <!-- Logo Onpoint -->
+          <img src="https://app.onpointdoc.com/logo-white.png" alt="OnpointDoc" width="150" style="max-width: 150px;">
+        </div>
+        <h1>✅ Demande reçue !</h1>
+      </div>
+      
+      <!-- Content -->
+      <div class="content">
+        <p>Bonjour,</p>
+        
+        <p>Nous avons bien reçu votre demande et notre équipe support va la traiter dans les meilleurs délais.</p>
+        
+        <!-- Ticket Card -->
+        <div class="ticket-card">
+          <h2>{{params.ticket_title}}</h2>
+          
+          <p class="ticket-info">
+            <strong>Numéro :</strong> #{{params.ticket_id}}
+          </p>
+          
+          <p class="ticket-info">
+            <strong>Type :</strong> 
+            <span class="badge badge-{{params.ticket_type | downcase}}">{{params.ticket_type}}</span>
+          </p>
+          
+          <p class="ticket-info">
+            <strong>Priorité :</strong> 
+            <span class="badge badge-{{params.ticket_priority | downcase}}">{{params.ticket_priority}}</span>
+          </p>
+          
+          <p class="ticket-info">
+            <strong>Créé le :</strong> {{params.ticket_created_at}}
+          </p>
+        </div>
+        
+        <p><strong>Prochaines étapes :</strong></p>
+        <ul>
+          <li>Un agent va analyser votre demande</li>
+          <li>Vous recevrez un email dès qu'un agent sera assigné</li>
+          <li>Vous pouvez suivre l'avancement depuis le portail</li>
+        </ul>
+        
+        <div style="text-align: center;">
+          <a href="{{params.portal_url}}" class="cta-button">
+            📋 Voir mon ticket
+          </a>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px;">
+          En cas d'urgence, n'hésitez pas à nous contacter directement à 
+          <a href="mailto:{{params.support_email}}">{{params.support_email}}</a>
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div class="footer">
+        <p><strong>{{params.company_name}}</strong></p>
+        <p>L'équipe Support vous accompagne du lundi au vendredi, de 8h à 18h.</p>
+        <p>
+          <a href="mailto:{{params.support_email}}">{{params.support_email}}</a>
+        </p>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 16px;">
+          Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

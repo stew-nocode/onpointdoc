@@ -1,35 +1,55 @@
 /**
- * Type de rôle dashboard (identique à DashboardRole de dashboard.ts mais isolé pour éviter les dépendances circulaires)
+ * Type de rôle dashboard
  */
 export type DashboardRole = 'direction' | 'manager' | 'agent' | 'admin';
 
 /**
  * Identifiants des widgets disponibles dans le dashboard
  * 
- * Chaque widget est indépendant et peut être activé/désactivé individuellement
+ * Chaque widget est indépendant et peut être activé/désactivé individuellement.
+ * Les widgets seront ajoutés section par section selon la documentation de refonte.
+ * 
+ * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md
+ * 
+ * Sections prévues :
+ * - KPIs Statiques (non filtrés, Admin/Direction only)
+ * - KPIs Filtrés (selon période)
+ * - Charts
+ * - Tables
+ * - Full-width
  */
 export type DashboardWidget = 
-  | 'mttr'                  // Temps moyen de résolution (KPI)
-  | 'tickets-ouverts'       // Tickets ouverts sur la période (KPI)
-  | 'tickets-resolus'       // Tickets résolus sur la période (KPI)
-  | 'workload'              // Charge de travail (KPI)
-  | 'health'                // Santé des produits (KPI)
-  | 'alerts'                // Alertes opérationnelles (full-width)
-  | 'mttrEvolution'         // Évolution MTTR dans le temps (Chart)
-  | 'ticketsDistribution'   // Distribution tickets par type (Chart)
-  | 'topBugsModules'        // Top modules avec bugs (Table)
-  | 'workloadByAgent'       // Charge par agent (Table)
-  | 'supportEvolutionChart' // Évolution Performance Support (Graphique temporel)
-  | 'ticketsByTypePieChart' // Répartition par type (Pie Chart avec filtre agent)
-  | 'ticketsByCompanyPieChart'; // Répartition par entreprise (Pie Chart avec filtre type de ticket)
+  // === SECTION : KPIs STATIQUES (non filtrés, Admin/Direction only) ===
+  | 'bug-history'              // Historique des BUGs (temps réel)
+  // | 'req-history'           // Historique des REQs (à implémenter)
+  // | 'assistance-history'    // Historique des Assistances (à implémenter)
+  
+  // === SECTION : KPIs FILTRÉS (selon période) ===
+  // | 'mttr'                    // Temps moyen de résolution
+  // | 'tickets-ouverts'         // Tickets ouverts sur la période
+  // | 'tickets-resolus'         // Tickets résolus sur la période
+  
+  // === SECTION : CHARTS ===
+  // | 'mttr-evolution'          // Évolution MTTR
+  // | 'tickets-distribution'    // Distribution par type
+  
+  // === SECTION : TABLES ===
+  // | 'top-bugs-modules'        // Top modules avec bugs
+  // | 'workload-by-agent'       // Charge par agent
+  
+  // === SECTION : FULL-WIDTH ===
+  // | 'alerts'                  // Alertes opérationnelles
+  ;
 
 /**
  * Type de layout pour chaque widget
+ * Détermine automatiquement la section de placement
  */
 export type WidgetLayoutType = 
-  | 'kpi'           // 1 colonne (petit)
-  | 'chart'         // 2 colonnes (moyen)
-  | 'table'         // 2 colonnes (moyen)
+  | 'kpi-static'    // KPIs non filtrés (haut, Admin/Direction only)
+  | 'kpi'           // KPIs filtrés
+  | 'chart'         // Graphiques
+  | 'table'         // Tableaux
   | 'full-width';   // Pleine largeur (alertes)
 
 /**
@@ -60,4 +80,3 @@ export type UserDashboardConfig = {
   visibleWidgets: DashboardWidget[];    // Widgets visibles (available - hidden)
   hiddenWidgets: DashboardWidget[];     // Widgets désactivés par l'utilisateur
 };
-

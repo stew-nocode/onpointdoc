@@ -7,7 +7,7 @@ import { listProducts } from '@/services/products';
 import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
 import { getCurrentUserProfile } from '@/services/users/server';
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
-import type { UnifiedDashboardData } from '@/types/dashboard';
+import type { UnifiedDashboardData, Period } from '@/types/dashboard';
 import type { DashboardRole } from '@/types/dashboard-widgets';
 
 type DashboardPageProps = {
@@ -40,7 +40,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const resolvedSearchParams = await searchParams;
   const params = resolvedSearchParams || {};
   const filters = parseDashboardFiltersFromParams(params);
-  const period = filters?.period || 'month';
+  // Valider que period est bien de type Period (et non une année string)
+  const periodValue = filters?.period || 'month';
+  const period: Period = ['week', 'month', 'quarter', 'year'].includes(periodValue as string)
+    ? (periodValue as Period)
+    : 'month';
 
   // Charger la configuration des widgets (affectation par rôle + préférences utilisateur)
   // ✅ OPTIMISÉ : Utilise React.cache() pour éviter les appels répétés
@@ -49,6 +53,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   // Charger les données selon le rôle (directement via les services)
   const { getCEODashboardData } = await import('@/services/dashboard/ceo-kpis');
   const { getOperationalAlerts } = await import('@/services/dashboard/operational-alerts');
+  const { getBugHistoryStats } = await import('@/services/dashboard/bug-history-stats');
   const alerts = await getOperationalAlerts();
 
   let initialData: UnifiedDashboardData = {
@@ -58,6 +63,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     periodStart: new Date().toISOString(), // TODO: calculer selon période
     periodEnd: new Date().toISOString(),
   };
+
+  // === KPIs STATIQUES (temps réel, non filtrés) - Admin & Direction uniquement ===
+  if (dashboardRole === 'admin' || dashboardRole === 'direction') {
+    // Charger les stats BUG en parallèle avec les autres données
+    initialData.bugHistoryStats = await getBugHistoryStats();
+  }
 
   if (dashboardRole === 'direction') {
     // Direction : données stratégiques globales

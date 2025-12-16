@@ -1,29 +1,49 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { StandardPageHeader } from './standard-page-header';
+import type { PageHeaderConfig } from './types';
 
-type PageHeaderProps = {
-  label?: string;
-  title: string;
-  description?: string;
-  action?: ReactNode;
-};
+type PageHeaderProps = PageHeaderConfig;
 
 /**
  * Header standardisé pour les pages de gestion
  * 
- * Structure :
- * - Label (optionnel, uppercase, tracking-wide)
- * - Titre principal (H2)
- * - Description (optionnelle)
- * - Action à droite (optionnelle, ex: bouton de création)
+ * Supporte deux styles :
+ * - Style classique : label + title (H2) + description + action
+ * - Style standardisé : icon + title (H1) + description + actions
  * 
- * @param label - Label au-dessus du titre (ex: "Tickets")
+ * Utilise automatiquement le style standardisé si une icône est fournie,
+ * sinon utilise le style classique pour la rétrocompatibilité.
+ * 
+ * @param label - Label au-dessus du titre (style classique)
  * @param title - Titre principal de la page
  * @param description - Description optionnelle sous le titre
- * @param action - Action à droite (ex: bouton de création)
+ * @param action - Action unique à droite (style classique)
+ * @param icon - Icône à côté du titre (style standardisé)
+ * @param actions - Actions multiples à droite (style standardisé)
  */
-export function PageHeader({ label, title, description, action }: PageHeaderProps) {
+export function PageHeader({
+  label,
+  title,
+  description,
+  action,
+  icon,
+  actions
+}: PageHeaderProps) {
+  // Si une icône est fournie, utiliser le style standardisé
+  if (icon || actions) {
+    return (
+      <StandardPageHeader
+        icon={icon}
+        title={title}
+        description={description}
+        actions={actions || action}
+      />
+    );
+  }
+
+  // Sinon, utiliser le style classique (rétrocompatibilité)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>

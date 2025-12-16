@@ -1,0 +1,910 @@
+{
+  "total_matches": 858,
+  "total_mismatches": 109,
+  "not_in_csv": 33,
+  "not_in_supabase": 6293,
+  "mismatches": [
+    {
+      "jira_issue_key": "OBCS-8200",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-22",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-22T19:00:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8184",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-22",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-22T11:24:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8179",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-20",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-20T17:00:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10741",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-25",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-25T07:08:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10698",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-24",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-24T15:22:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10652",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-14",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-14T18:29:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10641",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-14",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-14T18:11:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10640",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-14",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-14T18:05:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10589",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-08",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-08T19:31:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10574",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-08",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-08T18:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10561",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-08",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-08T15:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8937",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-14",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-14T17:50:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8936",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-14",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-14T17:46:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8935",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-14",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-14T17:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8934",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-14",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-14T17:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8913",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-14",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-14T16:26:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8908",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-13",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-13T11:48:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8082",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-13",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-13T10:21:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8058",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-12",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-12T15:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8057",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-12",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-12T15:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8056",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-12",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-12T15:43:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8055",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-12",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-12T15:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8038",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-09",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-09T15:09:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8037",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-09",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-09T15:08:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8034",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8033",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:43:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8032",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8030",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8029",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:36:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8014",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T18:13:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8013",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T18:09:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8012",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T18:02:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8011",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T17:59:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8010",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T17:54:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6489",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-16",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-16T19:38:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8841",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T19:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8830",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T19:25:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8808",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T18:19:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8803",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T18:13:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8794",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T18:00:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8788",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T17:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8786",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-02-07",
+      "supabase_full": "2025-12-09T19:44:02.850083+00:00",
+      "csv_full": "2025-02-07T17:34:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8737",
+      "supabase_date": "2025-01-28",
+      "csv_date": "2025-02-02",
+      "supabase_full": "2025-01-28T00:00:00+00:00",
+      "csv_full": "2025-02-02T19:31:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8723",
+      "supabase_date": "2025-01-29",
+      "csv_date": "2025-02-02",
+      "supabase_full": "2025-01-29T00:00:00+00:00",
+      "csv_full": "2025-02-02T19:00:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8719",
+      "supabase_date": "2025-01-28",
+      "csv_date": "2025-02-02",
+      "supabase_full": "2025-01-28T00:00:00+00:00",
+      "csv_full": "2025-02-02T18:58:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8255",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-28",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-28T15:57:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8254",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-28",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-28T15:52:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6331",
+      "supabase_date": "2024-07-30",
+      "csv_date": "2024-08-02",
+      "supabase_full": "2024-07-30T00:00:00+00:00",
+      "csv_full": "2024-08-02T15:47:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6330",
+      "supabase_date": "2024-07-29",
+      "csv_date": "2024-08-02",
+      "supabase_full": "2024-07-29T00:00:00+00:00",
+      "csv_full": "2024-08-02T15:43:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8236",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-27",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-27T11:39:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8235",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-27",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-27T11:37:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8218",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-22",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-22T20:36:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8217",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-22",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-22T20:35:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8097",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-13",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-13T10:37:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8059",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-12",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-12T15:46:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8036",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-09",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-09T14:56:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8031",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-08",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-08T12:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8009",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T17:49:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8006",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T17:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8003",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T17:34:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7992",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:24:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8164",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-19",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-19T11:26:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8151",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-17",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-17T09:10:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-8122",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-13",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-13T16:59:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7991",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:24:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7990",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:24:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7989",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:22:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7988",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:22:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7987",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T16:20:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-7976",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-12-06",
+      "supabase_full": "2025-12-09T20:05:20.451036+00:00",
+      "csv_full": "2024-12-06T15:19:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6600",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-30",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-30T17:17:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6566",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-27",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-27T14:53:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6530",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:25:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6521",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:14:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6506",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-21",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-21T11:04:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6444",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-16",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-16T15:14:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6401",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-09",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-09T23:30:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6362",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-05",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-05T18:15:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6344",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-02",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-02T18:34:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6332",
+      "supabase_date": "2024-07-31",
+      "csv_date": "2024-08-02",
+      "supabase_full": "2024-07-31T00:00:00+00:00",
+      "csv_full": "2024-08-02T16:02:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10769",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-31",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-31T15:01:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10564",
+      "supabase_date": "2025-07-31",
+      "csv_date": "2025-08-08",
+      "supabase_full": "2025-07-31T00:00:00+00:00",
+      "csv_full": "2025-08-08T16:21:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10791",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-31",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-31T19:36:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10782",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-31",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-31T19:05:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-10669",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2025-08-14",
+      "supabase_full": "2025-12-09T20:16:11.399784+00:00",
+      "csv_full": "2025-08-14T19:08:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6532",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:25:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6527",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:22:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6526",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:20:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6525",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:19:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6524",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:18:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6523",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:16:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6522",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-23",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-23T17:15:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6400",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-09",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-09T23:30:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6399",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-09",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-09T23:29:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6384",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-09",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-09T17:26:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6379",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-09",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-09T17:13:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6369",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-06",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-06T15:46:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6361",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-05",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-05T18:00:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6360",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-05",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-05T17:58:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-6358",
+      "supabase_date": "2025-12-09",
+      "csv_date": "2024-08-05",
+      "supabase_full": "2025-12-09T20:26:44.159777+00:00",
+      "csv_full": "2024-08-05T14:42:00.000Z"
+    }
+  ],
+  "not_in_supabase_sample": [
+    {
+      "jira_issue_key": "OBCS-12156",
+      "csv_date": "2025-12-07T10:51:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12155",
+      "csv_date": "2025-12-07T10:47:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12154",
+      "csv_date": "2025-12-07T10:46:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12153",
+      "csv_date": "2025-12-07T10:42:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12152",
+      "csv_date": "2025-12-07T10:40:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12151",
+      "csv_date": "2025-12-07T10:35:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12150",
+      "csv_date": "2025-12-07T10:34:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12149",
+      "csv_date": "2025-12-07T10:31:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12148",
+      "csv_date": "2025-12-07T10:29:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12147",
+      "csv_date": "2025-12-07T10:25:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12146",
+      "csv_date": "2025-12-07T10:22:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12145",
+      "csv_date": "2025-12-07T10:20:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12144",
+      "csv_date": "2025-12-07T10:18:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12143",
+      "csv_date": "2025-12-07T10:15:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12142",
+      "csv_date": "2025-12-07T10:13:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12141",
+      "csv_date": "2025-12-06T13:48:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12140",
+      "csv_date": "2025-12-06T13:47:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12139",
+      "csv_date": "2025-12-06T13:47:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12138",
+      "csv_date": "2025-12-06T13:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12137",
+      "csv_date": "2025-12-06T13:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12136",
+      "csv_date": "2025-12-06T13:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12135",
+      "csv_date": "2025-12-06T13:44:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12134",
+      "csv_date": "2025-12-06T13:43:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12131",
+      "csv_date": "2025-12-06T09:39:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12130",
+      "csv_date": "2025-12-06T09:38:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12129",
+      "csv_date": "2025-12-06T09:36:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12128",
+      "csv_date": "2025-12-06T09:35:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12127",
+      "csv_date": "2025-12-06T08:30:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12126",
+      "csv_date": "2025-12-06T08:29:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12125",
+      "csv_date": "2025-12-06T08:17:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12124",
+      "csv_date": "2025-12-06T08:16:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12123",
+      "csv_date": "2025-12-06T08:07:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12122",
+      "csv_date": "2025-12-06T08:06:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12121",
+      "csv_date": "2025-12-06T08:04:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12120",
+      "csv_date": "2025-12-05T21:16:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12119",
+      "csv_date": "2025-12-05T21:14:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12118",
+      "csv_date": "2025-12-05T21:08:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12117",
+      "csv_date": "2025-12-05T21:05:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12116",
+      "csv_date": "2025-12-05T21:03:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12115",
+      "csv_date": "2025-12-05T20:57:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12114",
+      "csv_date": "2025-12-05T20:55:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12113",
+      "csv_date": "2025-12-05T20:51:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12112",
+      "csv_date": "2025-12-05T20:50:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12111",
+      "csv_date": "2025-12-05T20:48:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12110",
+      "csv_date": "2025-12-05T20:46:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12109",
+      "csv_date": "2025-12-05T20:45:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12108",
+      "csv_date": "2025-12-05T20:38:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12107",
+      "csv_date": "2025-12-05T20:34:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12106",
+      "csv_date": "2025-12-05T20:32:00.000Z"
+    },
+    {
+      "jira_issue_key": "OBCS-12105",
+      "csv_date": "2025-12-05T20:30:00.000Z"
+    }
+  ]
+}

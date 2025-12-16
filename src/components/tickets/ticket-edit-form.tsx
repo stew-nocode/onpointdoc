@@ -17,6 +17,7 @@ import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
 import type { BasicCompany } from '@/services/companies';
+import type { BasicDepartment } from '@/components/forms/ticket-form/sections';
 import { updateTicketAction } from '@/app/(main)/gestion/tickets/actions';
 
 type TicketEditFormProps = {
@@ -43,6 +44,7 @@ type TicketEditFormProps = {
   features: Feature[];
   contacts: BasicProfile[];
   companies: BasicCompany[];
+  departments: BasicDepartment[];
 };
 
 /**
@@ -65,7 +67,8 @@ export function TicketEditForm({
   submodules,
   features,
   contacts,
-  companies
+  companies,
+  departments
 }: TicketEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -174,6 +177,7 @@ export function TicketEditForm({
           features={features}
           contacts={contacts}
           companies={companies}
+          departments={departments}
           initialValues={initialValues}
           mode="edit"
         />
