@@ -276,3 +276,9 @@ Deux approches sont possibles pour la synchronisation JIRA ↔ Supabase :
 **Recommandation finale** : **Garder Direct pour JIRA, utiliser N8N pour les workflows avancés (notifications, reporting, etc.)**
 
 
+
+
+
+
+
+

@@ -63,3 +63,8 @@ export async function updateCompany(input: CompanyUpdateInput): Promise<void> {
 // Il doit être importé directement depuis './list-companies-paginated' dans les
 // Server Components ou routes API uniquement.
 
+// Services serveur (à importer directement depuis leurs fichiers)
+// - getCompanyById (depuis './get-company-by-id')
+// - loadCompanyHistory (depuis './company-history')
+// - getAdjacentCompanies (depuis './navigation')
+

@@ -139,3 +139,9 @@ ORDER BY sent_at DESC;
 - [Documentation API Brevo SMTP](https://developers.brevo.com/reference/sendtransacemail)
 
 
+
+
+
+
+
+

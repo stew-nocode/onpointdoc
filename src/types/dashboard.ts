@@ -225,8 +225,24 @@ export type AgentDashboardData = {
 
 // === Types pour KPIs Statiques (temps réel, non filtrés) ===
 import type { BugHistoryStats } from '@/services/dashboard/bug-history-stats';
+import type { ReqHistoryStats } from '@/services/dashboard/req-history-stats';
+import type { AssistanceHistoryStats } from '@/services/dashboard/assistance-history-stats';
 
-export type { BugHistoryStats };
+// === Types pour Charts (filtrés par période) ===
+import type { TicketsDistributionStats } from '@/services/dashboard/tickets-distribution-stats';
+import type { TicketsEvolutionStats } from '@/services/dashboard/tickets-evolution-stats';
+import type { TicketsByCompanyStats } from '@/services/dashboard/tickets-by-company-stats';
+import type { BugsByTypeStats } from '@/services/dashboard/bugs-by-type-stats';
+import type { CampaignsResultsStats } from '@/services/dashboard/campaigns-results-stats';
+import type { TicketsByModuleStats } from '@/services/dashboard/tickets-by-module-stats';
+import type { BugsByTypeAndModuleStats } from '@/services/dashboard/bugs-by-type-and-module-stats';
+import type { AssistanceTimeByCompanyStats } from '@/services/dashboard/assistance-time-by-company-stats';
+import type { AssistanceTimeEvolutionStats } from '@/services/dashboard/assistance-time-evolution-stats';
+import type { SupportAgentsStats } from '@/services/dashboard/support-agents-stats';
+import type { SupportAgentsRadarStats } from '@/services/dashboard/support-agents-radar-stats';
+import type { CompaniesCardsStats } from '@/services/dashboard/companies-cards-stats';
+
+export type { BugHistoryStats, ReqHistoryStats, AssistanceHistoryStats, TicketsDistributionStats, TicketsEvolutionStats, TicketsByCompanyStats, BugsByTypeStats, CampaignsResultsStats, TicketsByModuleStats, BugsByTypeAndModuleStats, AssistanceTimeByCompanyStats, AssistanceTimeEvolutionStats, SupportAgentsStats, SupportAgentsRadarStats, CompaniesCardsStats };
 
 /**
  * Données unifiées du dashboard (chargées selon le rôle)
@@ -243,6 +259,20 @@ export type UnifiedDashboardData = {
   periodEnd: string;
   // === KPIs Statiques (temps réel, non filtrés - Admin/Direction) ===
   bugHistoryStats?: BugHistoryStats;
-  // reqHistoryStats?: ReqHistoryStats;      // À implémenter
-  // assistanceHistoryStats?: AssistanceHistoryStats; // À implémenter
+  reqHistoryStats?: ReqHistoryStats;
+  assistanceHistoryStats?: AssistanceHistoryStats;
+  // === Charts (filtrés par période) ===
+  ticketsDistributionStats?: TicketsDistributionStats;
+  ticketsEvolutionStats?: TicketsEvolutionStats;
+  ticketsByCompanyStats?: TicketsByCompanyStats;
+  bugsByTypeStats?: BugsByTypeStats;
+  campaignsResultsStats?: CampaignsResultsStats;
+  ticketsByModuleStats?: TicketsByModuleStats;
+  bugsByTypeAndModuleStats?: BugsByTypeAndModuleStats;
+  assistanceTimeByCompanyStats?: AssistanceTimeByCompanyStats;
+  assistanceTimeEvolutionStats?: AssistanceTimeEvolutionStats;
+  // === Agents (filtrés par période) ===
+  supportAgentsStats?: SupportAgentsStats;
+  supportAgentsRadarStats?: SupportAgentsRadarStats;
+  companiesCardsStats?: CompaniesCardsStats;
 };

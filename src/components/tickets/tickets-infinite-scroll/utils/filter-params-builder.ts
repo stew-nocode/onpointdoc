@@ -64,7 +64,9 @@ export function addSimpleFilters(
   if (type) params.set('type', type);
   if (status) params.set('status', status);
   if (search) params.set('search', search);
-  if (quickFilter) params.set('quick', quickFilter);
+  // ✅ Ne pas ajouter 'quick' si la valeur est 'all' (doit être omis pour correspondre au schéma Zod)
+  // Cela correspond à la logique dans tickets-quick-filters.tsx qui supprime le paramètre quand on sélectionne "all"
+  if (quickFilter && quickFilter !== 'all') params.set('quick', quickFilter);
   if (currentProfileId) params.set('currentProfileId', currentProfileId);
   if (agentId) params.set('agent', agentId); // ✅ Ajouter le paramètre agent
   if (companyId) params.set('company', companyId); // ✅ Ajouter le paramètre company

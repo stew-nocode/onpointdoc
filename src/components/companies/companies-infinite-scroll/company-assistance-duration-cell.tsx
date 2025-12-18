@@ -8,7 +8,6 @@
  * - Utilise formatAssistanceDuration pour le formatage
  */
 
-import { Clock } from 'lucide-react';
 import { formatAssistanceDuration } from '../utils/format-assistance-duration';
 import { CompanyInsightCell } from './company-insight-cell';
 
@@ -34,10 +33,8 @@ export function CompanyAssistanceDurationCell({
   
   return (
     <CompanyInsightCell
-      icon={<Clock className="h-3.5 w-3.5 text-slate-500" />}
       value={durationMinutes === 0 ? "-" : formatted}
       tooltip={tooltip}
-      variant={durationMinutes > 0 ? 'info' : 'default'}
     />
   );
 }

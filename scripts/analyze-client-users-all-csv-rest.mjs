@@ -329,3 +329,9 @@ console.log('   → affects_all_companies = true pour tous les tickets');
 
 
 
+
+
+
+
+
+

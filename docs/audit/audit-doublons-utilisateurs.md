@@ -85,8 +85,8 @@
 | Mr KOFFI | 2 | 2 | EJARA, FIRST CAPITAL | 2 profils |
 | Ousseyni Oumarou | 2 | 2 | CILAGRI, EJARA | 2 profils |
 | Raïssa CAMARA | 2 | 2 | ETRAKOM-CI, JOEL K PROPERTIES | 2 profils |
-| Mme OUAYOU
-| Serge
+| Mme OUAYOU | 2 | 2 | ALL, SCI RIMY | 2 profils |
+| Serge | 2 | 2 | ALL, ECORIGINE | 2 profils |
 
 
 ## 🔍 Observations
@@ -100,6 +100,43 @@
 3. **Noms génériques** : Des noms comme "SUPPORT", "Inconnu", "MONSIEUR KOUASSI" apparaissent dans plusieurs entreprises, ce qui peut être intentionnel ou problématique.
 
 4. **Entreprise ONPOINT** : Plusieurs doublons impliquent l'entreprise ONPOINT, souvent avec un profil sans entreprise associée.
+
+### Clarification (clients vs internes)
+
+Les doublons listés ici concernent **des profils `profiles`** au sens large (donc **clients/contacts** et **internes**).
+
+- **Clients/contacts** : rôle typiquement `client` (utilisés comme `contact_user_id` sur les tickets).
+- **Internes** : rôles typiquement `agent`, `manager`, `admin`, `director` (créateurs/assignés de tickets, etc.).
+
+➡️ **Pour le nettoyage**, on doit donc traiter **deux cas séparés** :
+1. **Doublons clients/contacts** (objectif : un contact unique par entreprise, cohérent avec la “référence métier”).  
+2. **Doublons internes** (objectif : un compte interne unique, souvent email Onpoint, et jamais de suppression sans réaffectation).
+
+## ✅ Référence métier (liste validée par l'équipe)
+
+Cette liste est la **référence à retenir** pour le nettoyage : elle indique l’entreprise attendue pour chaque utilisateur (même si la base contient des doublons ou des rattachements historiques).
+
+| Nom Utilisateur | Entreprise (référence) | Note |
+|---|---|---|
+| Diane N'GBLA | KOFFI & DIABATE | |
+| Estelle BOA | JOEL K PROPERTIES | |
+| KADIA KOFFI | KOFFI & DIABATE | |
+| MONSIEUR KOUASSI | FALCON | |
+| Raïssa CAMARA | JOEL K PROPERTIES | |
+| COULIBALY EVE | IVOIRE DEVELOPPEMENT | |
+| Edwige MESSOU | SIAM | |
+| KONE Mamadou | ETRAKOM-CI | |
+| KOUAME KONAN GUY ROGER | SIE-TRAVAUX | |
+| Kouamé Stéphane | SIE-TRAVAUX | |
+| Léa N'GUESSAN | CILAGRI | |
+| M. Coulibaly | KORI TRANSPORT | |
+| M. ECARE | KORI TRANSPORT | |
+| FOUSSENI KONE | EGBV | |
+| Mr KOFFI | EJARA | |
+| Ousseyni Oumarou | EJARA | |
+| Mme OUAYOU | SCI RIMY | auparavant à First Capital |
+| Serge | Ecorigine | |
+| Koné SEYDOU | VENUS DISTRIBUTION | |
 
 ### Recommandations
 
@@ -116,5 +153,3 @@
 ## 📝 Requêtes SQL de Référence
 
 Les requêtes SQL utilisées pour cet audit sont disponibles dans `docs/audit/queries-audit-doublons.sql`.
-
-

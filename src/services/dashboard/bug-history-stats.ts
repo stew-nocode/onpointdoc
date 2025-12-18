@@ -5,6 +5,8 @@
  * Fournit des statistiques temps réel (non filtrées par période) 
  * pour la section KPIs Statiques du dashboard.
  * 
+ * Utilise des requêtes de count pour contourner la limite de 1000 lignes de Supabase.
+ * 
  * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md - Section 3.1
  */
 import { cache } from 'react';
@@ -39,73 +41,57 @@ async function getBugHistoryStatsInternal(
 ): Promise<BugHistoryStats> {
   const supabase = await createSupabaseServerClient();
 
-  // Construction de la requête de base
-  let query = supabase
+  // Requête 1: Count total des BUG
+  let totalQuery = supabase
     .from('tickets')
-    .select('id, status, priority, created_at, resolved_at')
+    .select('*', { count: 'exact', head: true })
     .eq('ticket_type', 'BUG');
-
-  // Filtre par produit si spécifié
+  
   if (productId) {
-    query = query.eq('product_id', productId);
+    totalQuery = totalQuery.eq('product_id', productId);
   }
 
-  const { data, error } = await query;
+  const { count: total, error: totalError } = await totalQuery;
 
-  if (error) {
-    console.error('[getBugHistoryStats] Erreur Supabase:', error);
+  if (totalError) {
+    console.error('[getBugHistoryStats] Error fetching total count:', totalError);
     return getEmptyStats();
   }
 
-  if (!data || data.length === 0) {
+  // Requête 2: Count des BUG résolus
+  let resolusQuery = supabase
+    .from('tickets')
+    .select('*', { count: 'exact', head: true })
+    .eq('ticket_type', 'BUG')
+    .in('status', RESOLVED_STATUSES);
+
+  if (productId) {
+    resolusQuery = resolusQuery.eq('product_id', productId);
+  }
+
+  const { count: resolus, error: resolusError } = await resolusQuery;
+
+  if (resolusError) {
+    console.error('[getBugHistoryStats] Error fetching resolus count:', resolusError);
     return getEmptyStats();
   }
 
-  // Calculs des statistiques
-  const total = data.length;
-  const resolus = data.filter(t => RESOLVED_STATUSES.includes(t.status)).length;
-  const ouverts = total - resolus;
-  const tauxResolution = total > 0 ? Math.round((resolus / total) * 100) : 0;
+  const totalCount = total ?? 0;
+  const resolusCount = resolus ?? 0;
+  const ouvertsCount = totalCount - resolusCount;
+  const tauxResolution = totalCount > 0 ? Math.round((resolusCount / totalCount) * 100) : 0;
 
-  // Comptage par priorité (ouverts uniquement)
-  const ouvertsData = data.filter(t => !RESOLVED_STATUSES.includes(t.status));
-  const critiquesOuverts = ouvertsData.filter(t => t.priority === 'Critical').length;
-  const highOuverts = ouvertsData.filter(t => t.priority === 'High').length;
-
-  // Calcul MTTR (Mean Time To Resolution)
-  const mttrHeures = calculateMTTR(data);
+  console.log(`[getBugHistoryStats] BUG stats: total=${totalCount}, ouverts=${ouvertsCount}, resolus=${resolusCount}`);
 
   return {
-    total,
-    ouverts,
-    resolus,
+    total: totalCount,
+    ouverts: ouvertsCount,
+    resolus: resolusCount,
     tauxResolution,
-    critiquesOuverts,
-    highOuverts,
-    mttrHeures,
+    critiquesOuverts: 0, // Retiré de l'affichage
+    highOuverts: 0,      // Retiré de l'affichage
+    mttrHeures: null,    // Retiré de l'affichage
   };
-}
-
-/**
- * Calcule le MTTR moyen en heures
- */
-function calculateMTTR(
-  tickets: Array<{ created_at: string | null; resolved_at: string | null; status: string }>
-): number | null {
-  const resolvedTickets = tickets.filter(
-    t => t.resolved_at && t.created_at && RESOLVED_STATUSES.includes(t.status)
-  );
-
-  if (resolvedTickets.length === 0) return null;
-
-  const totalHours = resolvedTickets.reduce((acc, ticket) => {
-    const created = new Date(ticket.created_at!);
-    const resolved = new Date(ticket.resolved_at!);
-    const hours = (resolved.getTime() - created.getTime()) / (1000 * 60 * 60);
-    return acc + hours;
-  }, 0);
-
-  return Math.round(totalHours / resolvedTickets.length);
 }
 
 /**
@@ -127,5 +113,3 @@ function getEmptyStats(): BugHistoryStats {
  * Service avec React.cache() pour éviter les appels redondants
  */
 export const getBugHistoryStats = cache(getBugHistoryStatsInternal);
-
-

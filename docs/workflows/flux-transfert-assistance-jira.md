@@ -414,3 +414,9 @@ Si la création JIRA échoue :
 Le flux est opérationnel. Le seul point à vérifier est que le webhook JIRA est bien configuré pour pointer vers `/api/webhooks/jira`.
 
 
+
+
+
+
+
+

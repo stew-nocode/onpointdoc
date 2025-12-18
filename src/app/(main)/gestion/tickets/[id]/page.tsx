@@ -39,9 +39,19 @@ import { listActiveDepartments } from '@/services/departments/server';
 async function loadTicket(id: string) {
   noStore();
   try {
-    return await getTicketById(id);
+    // Valider que l'ID est présent et non vide
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      console.error('[loadTicket] ID de ticket invalide:', id);
+      return null;
+    }
+    
+    const ticket = await getTicketById(id);
+    return ticket;
   } catch (error) {
-    console.error('Erreur lors du chargement du ticket:', error);
+    console.error('[loadTicket] Erreur lors du chargement du ticket:', error);
+    console.error('[loadTicket] ID du ticket:', id);
+    console.error('[loadTicket] Type de l\'erreur:', error instanceof Error ? error.constructor.name : typeof error);
+    console.error('[loadTicket] Message d\'erreur:', error instanceof Error ? error.message : String(error));
     return null;
   }
 }

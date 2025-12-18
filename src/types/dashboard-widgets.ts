@@ -19,10 +19,16 @@ export type DashboardRole = 'direction' | 'manager' | 'agent' | 'admin';
  * - Full-width
  */
 export type DashboardWidget = 
+  // === SECTION : AGENTS (cartes par agent) ===
+  | 'agents-support-cards'       // Cartes Agents Support (photo + résumé période)
+
+  // === SECTION : ENTREPRISES (cartes par entreprise) ===
+  | 'companies-cards'            // Cartes Entreprises (activité par entreprise)
+
   // === SECTION : KPIs STATIQUES (non filtrés, Admin/Direction only) ===
   | 'bug-history'              // Historique des BUGs (temps réel)
-  // | 'req-history'           // Historique des REQs (à implémenter)
-  // | 'assistance-history'    // Historique des Assistances (à implémenter)
+  | 'req-history'              // Historique des REQs (temps réel)
+  | 'assistance-history'       // Historique des Assistances (temps réel)
   
   // === SECTION : KPIs FILTRÉS (selon période) ===
   // | 'mttr'                    // Temps moyen de résolution
@@ -30,8 +36,17 @@ export type DashboardWidget =
   // | 'tickets-resolus'         // Tickets résolus sur la période
   
   // === SECTION : CHARTS ===
+  | 'tickets-distribution'       // Distribution par type (PieChart Donut)
+  | 'tickets-evolution'          // Évolution des tickets (AreaChart)
+  | 'tickets-by-company'         // Top entreprises (Horizontal Stacked Bar)
+  | 'bugs-by-type'               // Répartition des BUGs par type (PieChart Donut)
+  | 'campaigns-results'          // Résultats campagnes emails (Horizontal Bar)
+  | 'tickets-by-module'          // Tickets par module (Vertical Grouped Bar)
+  | 'bugs-by-type-module'        // BUGs par type et module (Horizontal Stacked)
+  | 'assistance-time-by-company' // Temps d'assistance par entreprise (Horizontal Bar)
+  | 'assistance-time-evolution'  // Évolution du temps d'assistance (AreaChart dégradé)
+  | 'support-agents-radar'       // Radar agents Support (comparaison dimensions)
   // | 'mttr-evolution'          // Évolution MTTR
-  // | 'tickets-distribution'    // Distribution par type
   
   // === SECTION : TABLES ===
   // | 'top-bugs-modules'        // Top modules avec bugs
@@ -46,6 +61,8 @@ export type DashboardWidget =
  * Détermine automatiquement la section de placement
  */
 export type WidgetLayoutType = 
+  | 'agents'        // Cartes agents (photo + résumé activité) - au-dessus des KPIs statiques
+  | 'companies'     // Cartes entreprises (activité par entreprise) - sous la section agents
   | 'kpi-static'    // KPIs non filtrés (haut, Admin/Direction only)
   | 'kpi'           // KPIs filtrés
   | 'chart'         // Graphiques

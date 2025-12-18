@@ -131,3 +131,9 @@ SUPABASE_SERVICE_ROLE_KEY=votre_cle_service_role
 La clé se trouve dans : Supabase Dashboard > Settings > API > service_role key
 
 
+
+
+
+
+
+

@@ -16,6 +16,7 @@ import { Button } from '@/ui/button';
 import { TooltipProvider } from '@/ui/tooltip';
 import { useRouter } from 'next/navigation';
 import { useCompaniesInfiniteLoad } from '@/hooks/data/use-companies-infinite-load';
+import { useStableSearchParams } from '@/hooks/use-stable-search-params';
 import { CompanyRow } from './company-row';
 import { CompaniesTableHeader } from './companies-table-header';
 import { LoadMoreButton } from '@/components/activities/activities-infinite-scroll/load-more-button';
@@ -23,7 +24,6 @@ import type { CompanyWithRelations } from '@/types/company-with-relations';
 import type { CompanyQuickFilter } from '@/types/company-filters';
 import type { CompanySortColumn, SortDirection } from '@/types/company-sort';
 import { parseCompanySort } from '@/types/company-sort';
-import { useSearchParams } from 'next/navigation';
 
 type CompaniesInfiniteScrollProps = {
   initialCompanies: CompanyWithRelations[];

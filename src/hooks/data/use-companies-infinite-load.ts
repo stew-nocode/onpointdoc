@@ -2,22 +2,22 @@
 
 /**
  * Hook personnalisé pour charger les entreprises avec infinite scroll
- * 
- * Pattern similaire à useTasksInfiniteLoad pour cohérence
- * 
- * Principe Clean Code :
+ *
+ * Pattern similaire à `useTasksInfiniteLoad` pour cohérence.
+ *
+ * Principes Clean Code :
  * - SRP : Gestion du chargement paginé des entreprises
- * - Utilise useCallback pour mémoriser les fonctions
- * - Gestion d'erreur avec état dédié
- * - Évite les re-renders inutiles avec useMemo
+ * - Gestion complète de l'état (companies, hasMore, isLoading, error, total)
+ * - Retry automatique en cas d'erreur réseau
+ * - Réinitialisation automatique lors des changements de filtres
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 import type { CompanyWithRelations } from '@/types/company-with-relations';
 import type { CompanyQuickFilter } from '@/types/company-filters';
 import type { CompanySortColumn, SortDirection } from '@/types/company-sort';
-import { parseCompanySort } from '@/types/company-sort';
 import { useRetryFetch } from '@/hooks/use-retry-fetch';
 
 const DEFAULT_LIMIT = 25;
@@ -113,6 +113,43 @@ type UseCompaniesInfiniteLoadResult = {
 };
 
 /**
+ * Construit les paramètres de requête pour charger des entreprises.
+ */
+function buildCompanyListParams(
+  offset: number,
+  limit: number,
+  search?: string,
+  quickFilter?: CompanyQuickFilter,
+  sort?: { column: CompanySortColumn; direction: SortDirection },
+  searchParams?: ReadonlyURLSearchParams
+): URLSearchParams {
+  const params = new URLSearchParams(searchParams?.toString() || '');
+
+  params.set('offset', offset.toString());
+  params.set('limit', limit.toString());
+
+  if (search && search.trim().length > 0) {
+    params.set('search', search.trim());
+  } else {
+    params.delete('search');
+  }
+
+  if (quickFilter) {
+    params.set('quick', quickFilter);
+  } else {
+    params.delete('quick');
+  }
+
+  if (sort?.column) {
+    params.set('sort', `${sort.column}:${sort.direction}`);
+  } else {
+    params.delete('sort');
+  }
+
+  return params;
+}
+
+/**
  * Hook pour charger les entreprises avec infinite scroll
  * 
  * @param options - Options de configuration
@@ -124,16 +161,19 @@ export function useCompaniesInfiniteLoad(
   const {
     initialCompanies = [],
     initialHasMore = false,
-    limit = DEFAULT_LIMIT
+    limit = DEFAULT_LIMIT,
+    initialTotal = 0,
+    search,
+    quickFilter,
+    sort,
+    searchParams
   } = options;
-
-  const searchParams = useSearchParams();
   
   // États
   const [companies, setCompanies] = useState<CompanyWithRelations[]>(initialCompanies);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(initialTotal);
 
   // Hook de retry pour les requêtes fetch
   const { fetchWithRetry, isLoading, error: fetchError } = useRetryFetch({
@@ -142,19 +182,35 @@ export function useCompaniesInfiniteLoad(
     timeout: 30000
   });
 
-  // Extraire les paramètres de l'URL
-  const search = useMemo(() => searchParams.get('search') || undefined, [searchParams]);
-  const quickFilter = useMemo(() => {
-    const filter = searchParams.get('quick');
-    return filter && ['all', 'with_users', 'without_users', 'with_tickets', 'with_open_tickets', 'with_assistance'].includes(filter)
-      ? (filter as CompanyQuickFilter)
-      : undefined;
-  }, [searchParams]);
-  
-  const sort = useMemo(() => {
-    const sortParam = searchParams.get('sort');
-    return sortParam ? parseCompanySort(sortParam) : { column: 'name' as CompanySortColumn, direction: 'asc' as SortDirection };
-  }, [searchParams]);
+  // Refs pour optimiser les performances et éviter les re-renders
+  const companiesLengthRef = useRef(initialCompanies.length);
+  const hasMoreRef = useRef(initialHasMore);
+
+  // Référence stable pour les filtres (évite les re-créations de loadMore)
+  const filtersRef = useRef({
+    search,
+    quickFilter,
+    sort,
+  });
+
+  // Créer une clé de filtrage pour détecter les changements
+  const filterKey = useMemo(() => {
+    const normalizedSearch = search || '';
+    const normalizedQuickFilter = quickFilter || '';
+    const normalizedSort = sort?.column ? `${sort.column}:${sort.direction}` : '';
+
+    // Inclure aussi la string des params URL pour capturer des filtres additionnels éventuels
+    const normalizedParams = searchParams?.toString() || '';
+
+    return `${normalizedSearch}-${normalizedQuickFilter}-${normalizedSort}-${normalizedParams}`;
+  }, [search, quickFilter, sort?.column, sort?.direction, searchParams]);
+
+  // Réinitialiser les entreprises quand les filtres changent OU quand initialCompanies/initialHasMore changent
+  const prevFilterKeyRef = useRef<string | null>(null);
+  const prevInitialCompaniesIdsRef = useRef<string>(
+    initialCompanies.map((c) => c.id).join(',')
+  );
+  const prevInitialHasMoreRef = useRef<boolean>(initialHasMore);
 
   // Synchroniser l'erreur du hook avec l'état local
   useEffect(() => {
@@ -162,6 +218,63 @@ export function useCompaniesInfiniteLoad(
       setError(fetchError);
     }
   }, [fetchError]);
+
+  useEffect(() => {
+    const currentInitialCompaniesIds = initialCompanies.map((c) => c.id).join(',');
+
+    const filterKeyChanged =
+      prevFilterKeyRef.current !== null && prevFilterKeyRef.current !== filterKey;
+    const initialCompaniesIdsChanged =
+      prevInitialCompaniesIdsRef.current !== currentInitialCompaniesIds;
+    const initialHasMoreChanged = prevInitialHasMoreRef.current !== initialHasMore;
+
+    if (filterKeyChanged) {
+      setCompanies(initialCompanies);
+      setHasMore(initialHasMore);
+      companiesLengthRef.current = initialCompanies.length;
+      hasMoreRef.current = initialHasMore;
+      setError(null);
+
+      prevFilterKeyRef.current = filterKey;
+      prevInitialCompaniesIdsRef.current = currentInitialCompaniesIds;
+      prevInitialHasMoreRef.current = initialHasMore;
+      return;
+    }
+
+    if (initialCompaniesIdsChanged) {
+      setCompanies(initialCompanies);
+      setHasMore(initialHasMore);
+      companiesLengthRef.current = initialCompanies.length;
+      hasMoreRef.current = initialHasMore;
+      setError(null);
+
+      prevInitialCompaniesIdsRef.current = currentInitialCompaniesIds;
+      prevInitialHasMoreRef.current = initialHasMore;
+      return;
+    }
+
+    if (initialHasMoreChanged) {
+      setHasMore(initialHasMore);
+      hasMoreRef.current = initialHasMore;
+      prevInitialHasMoreRef.current = initialHasMore;
+    }
+  }, [filterKey, initialCompanies, initialHasMore]);
+
+  // Mettre à jour les refs quand les filtres changent
+  useEffect(() => {
+    filtersRef.current = {
+      search,
+      quickFilter,
+      sort,
+    };
+  }, [search, quickFilter, sort]);
+
+  // Mettre à jour la ref pour hasMore
+  useEffect(() => {
+    if (hasMoreRef.current !== hasMore) {
+      hasMoreRef.current = hasMore;
+    }
+  }, [hasMore]);
 
   /**
    * Charge plus d'entreprises via l'API
@@ -259,7 +372,7 @@ export function useCompaniesInfiniteLoad(
         console.timeEnd('⏱️ CompaniesLoadMore');
       }
     }
-  }, [searchParams, isLoading, fetchWithRetry, limit, total]);
+  }, [fetchWithRetry, isLoading, limit, searchParams, total]);
 
   return {
     companies,

@@ -4,20 +4,14 @@
  * Composant générique pour afficher une cellule d'insight
  * 
  * Principe Clean Code :
- * - SRP : Affichage d'un insight avec icône, valeur et tooltip
+ * - SRP : Affichage d'un insight avec valeur et tooltip
  * - Réutilisable pour tous les types d'insights
  */
 
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
-import { Badge } from '@/ui/badge';
 
 type CompanyInsightCellProps = {
-  /**
-   * Icône à afficher (React node)
-   */
-  icon: React.ReactNode;
-  
   /**
    * Valeur à afficher (nombre ou texte formaté)
    */
@@ -27,11 +21,6 @@ type CompanyInsightCellProps = {
    * Texte du tooltip
    */
   tooltip: string;
-  
-  /**
-   * Variante de badge pour le style
-   */
-  variant?: 'default' | 'secondary' | 'danger' | 'success' | 'info';
 };
 
 /**
@@ -40,20 +29,15 @@ type CompanyInsightCellProps = {
  * @param props - Propriétés du composant
  */
 export function CompanyInsightCell({
-  icon,
   value,
-  tooltip,
-  variant = 'default'
+  tooltip
 }: CompanyInsightCellProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex items-center gap-1.5">
-          {icon}
-          <Badge variant={variant} className="text-[10px] px-1.5 py-0.5">
-            {value}
-          </Badge>
-        </div>
+        <span className="text-xs text-slate-600 dark:text-slate-300">
+          {value}
+        </span>
       </TooltipTrigger>
       <TooltipContent>
         <p>{tooltip}</p>

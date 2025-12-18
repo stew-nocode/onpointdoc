@@ -26,3 +26,9 @@ CREATE INDEX IF NOT EXISTS idx_tickets_is_relance ON public.tickets(is_relance) 
 CREATE INDEX IF NOT EXISTS idx_tickets_relance_type ON public.tickets(relance_type) WHERE relance_type IS NOT NULL;
 
 
+
+
+
+
+
+

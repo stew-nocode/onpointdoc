@@ -138,3 +138,9 @@ L'application est **techniquement prête** pour un déploiement basique, mais n�
 **Recommandation** : Déployer d'abord en **staging** pour valider toutes les fonctionnalités avant la production.
 
 
+
+
+
+
+
+
