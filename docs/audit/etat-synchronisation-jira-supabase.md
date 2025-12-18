@@ -270,3 +270,9 @@ JIRA_SUPABASE_TICKET_ID_FIELD=customfield_10001
 **Prochaine étape recommandée** : Automatiser la création BUG/REQ → JIRA
 
 
+
+
+
+
+
+

@@ -18,18 +18,24 @@ export const DASHBOARD_ROLES = ['direction', 'manager', 'agent', 'admin'] as con
 
 /**
  * Liste des widgets dashboard valides
+ * 
+ * ⚠️ REFONTE EN COURS : Validation temporairement assouplie
+ * Les widgets seront ajoutés progressivement selon la documentation de refonte
+ * 
+ * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md
  */
 export const DASHBOARD_WIDGETS = [
-  'mttr',
-  'tickets-ouverts',
-  'tickets-resolus',
-  'workload',
-  'health',
-  'alerts',
-  'mttrEvolution',
-  'ticketsDistribution',
-  'topBugsModules',
-  'workloadByAgent',
+  // === KPIs STATIQUES ===
+  'bug-history',
+  'req-history',
+  'assistance-history',
+  // === KPIs FILTRÉS (à implémenter) ===
+  // === CHARTS ===
+  'tickets-distribution',
+  'tickets-evolution',
+  'tickets-by-company',
+  // === TABLES (à implémenter) ===
+  // === FULL-WIDTH (à implémenter) ===
 ] as const;
 
 /**
@@ -39,8 +45,11 @@ export const dashboardRoleSchema = z.enum(DASHBOARD_ROLES);
 
 /**
  * Schéma de validation pour un widget dashboard
+ * 
+ * ⚠️ REFONTE EN COURS : Utilise z.string() au lieu de z.enum()
+ * pour permettre la coexistence des anciens et nouveaux widgets pendant la migration
  */
-export const dashboardWidgetSchema = z.enum(DASHBOARD_WIDGETS);
+export const dashboardWidgetSchema = z.string();
 
 /**
  * Schéma de validation pour la configuration dashboard d'un utilisateur

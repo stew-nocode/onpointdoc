@@ -324,3 +324,9 @@ Les tickets d'assistance ont des caractéristiques différentes des BUG/REQ :
 
 
 
+
+
+
+
+
+

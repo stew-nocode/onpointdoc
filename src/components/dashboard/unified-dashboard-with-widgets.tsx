@@ -22,6 +22,8 @@ type UnifiedDashboardWithWidgetsProps = {
   initialData: UnifiedDashboardData;
   initialPeriod: Period;
   initialWidgetConfig: UserDashboardConfig;
+  staticOnly?: boolean;     // Afficher uniquement les KPIs statiques
+  filteredOnly?: boolean;   // Afficher uniquement les widgets filtrés (sans KPIs statiques)
 };
 
 /**
@@ -47,6 +49,8 @@ function UnifiedDashboardWithWidgetsComponent({
   initialData,
   initialPeriod,
   initialWidgetConfig,
+  staticOnly = false,
+  filteredOnly = false,
 }: UnifiedDashboardWithWidgetsProps) {
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [data, setData] = useState<UnifiedDashboardData>(initialData);
@@ -279,9 +283,11 @@ function UnifiedDashboardWithWidgetsComponent({
     loadWidgetConfigRef.current?.();
   }, []);
 
-  // Écouter les changements temps réel des données
+  // ✅ OPTIMISÉ : Écouter uniquement les tickets pertinents (produit + période)
+  const OBC_PRODUCT_ID = '91304e02-2ce6-4811-b19d-1cae091a6fde'; // TODO: Rendre configurable
   useRealtimeDashboardData({
     period,
+    productId: OBC_PRODUCT_ID, // ✅ Filtre par produit
     onDataChange: stableOnDataChange,
   });
 
@@ -297,6 +303,30 @@ function UnifiedDashboardWithWidgetsComponent({
     () => filterAlertsByRole(data.alerts, role),
     [data.alerts, role]
   );
+
+  // Séparer les widgets statiques (temps réel) des widgets filtrés
+  // Les widgets statiques s'affichent AVANT les filtres de période
+  const { staticWidgets, filteredWidgets } = useMemo(() => {
+    const staticKPIs: typeof widgetConfig.visibleWidgets = [];
+    const filtered: typeof widgetConfig.visibleWidgets = [];
+
+    widgetConfig.visibleWidgets.forEach((widgetId) => {
+      // Importer dynamiquement le registry pour vérifier le layoutType
+      const { WIDGET_REGISTRY } = require('./widgets/registry');
+      const widgetDef = WIDGET_REGISTRY[widgetId];
+      
+      if (widgetDef?.layoutType === 'kpi-static') {
+        staticKPIs.push(widgetId);
+      } else {
+        filtered.push(widgetId);
+      }
+    });
+
+    return {
+      staticWidgets: staticKPIs,
+      filteredWidgets: filtered,
+    };
+  }, [widgetConfig.visibleWidgets]);
 
   // Déterminer quel sélecteur est actif pour l'affichage visuel
   // Priorité : dateRange > selectedYear > aucun (période standard)
@@ -387,8 +417,86 @@ function UnifiedDashboardWithWidgetsComponent({
     activeFilterType,
   ]); // Dépendances granulaires au lieu de l'objet complet
 
+  // Mode "staticOnly" : afficher uniquement les KPIs statiques (pour la section kpis)
+  if (staticOnly) {
+    return (
+      <div>
+        {staticWidgets.length > 0 && (
+          <Suspense fallback={null}>
+            <DashboardWidgetGrid
+              widgets={staticWidgets}
+              dashboardData={dashboardDataWithFilteredAlerts}
+              hideSectionLabels={false}
+            />
+          </Suspense>
+        )}
+      </div>
+    );
+  }
+
+  // Mode "filteredOnly" : afficher uniquement les widgets filtrés (pour la card principale)
+  if (filteredOnly) {
+    return (
+      <div className="space-y-6">
+        {/* === Filtres de période === */}
+        <div className="flex items-center justify-between">
+          <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
+          <div className="flex items-center gap-3">
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+            <YearSelector 
+              key={`year-selector-${selectedYear || 'none'}`}
+              value={selectedYear} 
+              onValueChange={handleYearChange} 
+              className="w-[120px]"
+              isActive={activeFilterType === 'year'}
+            />
+            <CustomPeriodSelector 
+              key={`custom-period-${dateRange?.from?.toISOString() || 'none'}-${dateRange?.to?.toISOString() || 'none'}`}
+              date={dateRange} 
+              onSelect={handleDateRangeChange}
+              isActive={activeFilterType === 'custom-period'}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+            {error}
+          </div>
+        )}
+
+        {/* === Widgets filtrés (KPIs, Charts, Tables, Full-width) === */}
+        {filteredWidgets.length > 0 ? (
+          <Suspense fallback={<DashboardSkeleton />}>
+            <DashboardWidgetGrid
+              widgets={filteredWidgets}
+              dashboardData={dashboardDataWithFilteredAlerts}
+            />
+          </Suspense>
+        ) : widgetConfig.visibleWidgets.length === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            Aucun widget configuré pour votre rôle. Contactez un administrateur pour activer des widgets.
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  // Mode "complet" : afficher tout (KPIs statiques + filtres + widgets filtrés)
   return (
     <div className="space-y-6">
+      {/* === SECTION 1 : KPIs STATIQUES (Temps réel, non filtrés) - Admin/Direction only === */}
+      {staticWidgets.length > 0 && (
+        <Suspense fallback={null}>
+          <DashboardWidgetGrid
+            widgets={staticWidgets}
+            dashboardData={dashboardDataWithFilteredAlerts}
+            hideSectionLabels={false}
+          />
+        </Suspense>
+      )}
+
+      {/* === SECTION 2 : Filtres de période === */}
       <div className="flex items-center justify-between">
         <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
         <div className="flex items-center gap-3">
@@ -415,19 +523,19 @@ function UnifiedDashboardWithWidgetsComponent({
         </div>
       )}
 
-      {/* Affichage des widgets via DashboardWidgetGrid avec Suspense pour streaming */}
-      {widgetConfig.visibleWidgets.length > 0 ? (
+      {/* === SECTION 3 : Widgets filtrés (KPIs, Charts, Tables, Full-width) === */}
+      {filteredWidgets.length > 0 ? (
         <Suspense fallback={<DashboardSkeleton />}>
           <DashboardWidgetGrid
-            widgets={widgetConfig.visibleWidgets}
+            widgets={filteredWidgets}
             dashboardData={dashboardDataWithFilteredAlerts}
           />
         </Suspense>
-      ) : (
+      ) : widgetConfig.visibleWidgets.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           Aucun widget configuré pour votre rôle. Contactez un administrateur pour activer des widgets.
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

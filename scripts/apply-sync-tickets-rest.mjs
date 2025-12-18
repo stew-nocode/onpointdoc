@@ -39,3 +39,9 @@ console.log('💡 Utilisez Supabase CLI ou l\'interface web pour appliquer la mi
 
 
 
+
+
+
+
+
+

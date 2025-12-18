@@ -141,4 +141,142 @@ GROUP BY c.name
 HAVING COUNT(*) > COUNT(DISTINCT p.full_name)
 ORDER BY nombre_doublons DESC, c.name;
 
+-- 6. Liste ciblée (référence métier) : retrouver profils + entreprise + liens tickets
+-- Objectif: pour chaque nom "validé", lister les profils existants, leurs entreprises, et les volumes de tickets liés.
+WITH reference_names(full_name, expected_company, note) AS (
+    VALUES
+        ('Diane N''GBLA', 'KOFFI & DIABATE', NULL),
+        ('Estelle BOA', 'JOEL K PROPERTIES', NULL),
+        ('KADIA KOFFI', 'KOFFI & DIABATE', NULL),
+        ('MONSIEUR KOUASSI', 'FALCON', NULL),
+        ('Raïssa CAMARA', 'JOEL K PROPERTIES', NULL),
+        ('COULIBALY EVE', 'IVOIRE DEVELOPPEMENT', NULL),
+        ('Edwige MESSOU', 'SIAM', NULL),
+        ('KONE Mamadou', 'ETRAKOM-CI', NULL),
+        ('KOUAME KONAN GUY ROGER', 'SIE-TRAVAUX', NULL),
+        ('Kouamé Stéphane', 'SIE-TRAVAUX', NULL),
+        ('Léa N''GUESSAN', 'CILAGRI', NULL),
+        ('M. Coulibaly', 'KORI TRANSPORT', NULL),
+        ('M. ECARE', 'KORI TRANSPORT', NULL),
+        ('FOUSSENI KONE', 'EGBV', NULL),
+        ('Mr KOFFI', 'EJARA', NULL),
+        ('Ousseyni Oumarou', 'EJARA', NULL),
+        ('Mme OUAYOU', 'SCI RIMY', 'auparavant à First Capital'),
+        ('Serge', 'ECORIGINE', NULL),
+        ('Koné  SEYDOU', 'VENUS DISTRIBUTION', NULL)
+),
+profiles_scoped AS (
+    SELECT
+        rn.full_name AS reference_full_name,
+        rn.expected_company,
+        rn.note,
+        p.id AS profile_id,
+        p.full_name,
+        p.email,
+        p.role,
+        p.department,
+        p.created_at,
+        c.name AS company_name,
+        p.company_id
+    FROM reference_names rn
+    LEFT JOIN profiles p ON p.full_name = rn.full_name
+    LEFT JOIN companies c ON p.company_id = c.id
+),
+ticket_counts AS (
+    SELECT
+        p.profile_id,
+        COUNT(*) FILTER (WHERE t.created_by = p.profile_id) AS tickets_created_by,
+        COUNT(*) FILTER (WHERE t.assigned_to = p.profile_id) AS tickets_assigned_to,
+        COUNT(*) FILTER (WHERE t.contact_user_id = p.profile_id) AS tickets_as_contact
+    FROM profiles_scoped p
+    LEFT JOIN tickets t
+        ON t.created_by = p.profile_id
+        OR t.assigned_to = p.profile_id
+        OR t.contact_user_id = p.profile_id
+    GROUP BY p.profile_id
+)
+SELECT
+    p.reference_full_name,
+    p.expected_company,
+    p.note,
+    p.profile_id,
+    p.email,
+    p.role,
+    p.department,
+    p.company_name,
+    p.company_id,
+    COALESCE(tc.tickets_created_by, 0) AS tickets_created_by,
+    COALESCE(tc.tickets_assigned_to, 0) AS tickets_assigned_to,
+    COALESCE(tc.tickets_as_contact, 0) AS tickets_as_contact,
+    p.created_at
+FROM profiles_scoped p
+LEFT JOIN ticket_counts tc ON tc.profile_id = p.profile_id
+ORDER BY p.reference_full_name, p.company_name NULLS LAST, p.created_at;
+
+-- 7. Doublons CLIENTS uniquement (role = 'client')
+-- Objectif: isoler les doublons "contacts" (ceux qui polluent company/contact_user_id).
+WITH duplicates_clients_same_company AS (
+    SELECT
+        p.full_name,
+        p.company_id,
+        c.name AS company_name,
+        COUNT(*) AS nombre_occurrences,
+        ARRAY_AGG(p.id ORDER BY p.created_at) AS profile_ids,
+        ARRAY_AGG(p.email ORDER BY p.created_at) AS emails,
+        ARRAY_AGG(p.created_at::text ORDER BY p.created_at) AS dates_creation
+    FROM profiles p
+    LEFT JOIN companies c ON p.company_id = c.id
+    WHERE p.full_name IS NOT NULL
+      AND p.full_name != ''
+      AND p.company_id IS NOT NULL
+      AND p.role = 'client'
+    GROUP BY p.full_name, p.company_id, c.name
+    HAVING COUNT(*) > 1
+)
+SELECT
+    'DOUBLONS CLIENTS (MÊME ENTREPRISE)' AS type_audit,
+    full_name AS nom_utilisateur,
+    company_name AS entreprise,
+    nombre_occurrences,
+    profile_ids,
+    emails,
+    dates_creation
+FROM duplicates_clients_same_company
+ORDER BY nombre_occurrences DESC, full_name, company_name;
+
+-- 8. Doublons INTERNES uniquement (role IN agent/manager/admin/director)
+-- Objectif: isoler les doublons "équipe" (à traiter avec réaffectation systématique avant suppression).
+WITH duplicates_internal_same_company AS (
+    SELECT
+        p.full_name,
+        p.company_id,
+        c.name AS company_name,
+        COUNT(*) AS nombre_occurrences,
+        ARRAY_AGG(p.id ORDER BY p.created_at) AS profile_ids,
+        ARRAY_AGG(p.email ORDER BY p.created_at) AS emails,
+        ARRAY_AGG(p.created_at::text ORDER BY p.created_at) AS dates_creation
+    FROM profiles p
+    LEFT JOIN companies c ON p.company_id = c.id
+    WHERE p.full_name IS NOT NULL
+      AND p.full_name != ''
+      AND p.company_id IS NOT NULL
+      AND p.role IN ('agent', 'manager', 'admin', 'director')
+    GROUP BY p.full_name, p.company_id, c.name
+    HAVING COUNT(*) > 1
+)
+SELECT
+    'DOUBLONS INTERNES (MÊME ENTREPRISE)' AS type_audit,
+    full_name AS nom_utilisateur,
+    company_name AS entreprise,
+    nombre_occurrences,
+    profile_ids,
+    emails,
+    dates_creation
+FROM duplicates_internal_same_company
+ORDER BY nombre_occurrences DESC, full_name, company_name;
+
+
+
+
+
 

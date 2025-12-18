@@ -142,3 +142,9 @@ console.log('3. Adapter ce script pour utiliser l\'API Supabase directement\n');
 
 
 
+
+
+
+
+
+

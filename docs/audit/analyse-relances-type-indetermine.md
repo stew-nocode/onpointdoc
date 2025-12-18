@@ -185,3 +185,9 @@ UPDATE tickets SET relance_type = 'requete' WHERE id IN (
 **Prochaine étape :** Attendre validation avant d'appliquer les classifications.
 
 
+
+
+
+
+
+

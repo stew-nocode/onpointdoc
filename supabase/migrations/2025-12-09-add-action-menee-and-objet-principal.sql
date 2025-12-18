@@ -30,3 +30,9 @@ CREATE INDEX IF NOT EXISTS idx_tickets_objet_principal ON public.tickets(objet_p
 
 
 
+
+
+
+
+
+

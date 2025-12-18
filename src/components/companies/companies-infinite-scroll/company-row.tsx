@@ -13,7 +13,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Eye, Edit, User, MapPin, Clock, Ticket, AlertCircle } from 'lucide-react';
+import { Eye, Edit, User, MapPin } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 import {
   ContextMenu,
@@ -112,30 +112,24 @@ export function CompanyRow({
           {/* Nombre d'utilisateurs (Insight) */}
           <td className="py-2.5 pr-4">
             <CompanyInsightCell
-              icon={<User className="h-3.5 w-3.5 text-slate-500" />}
               value={company.users_count}
               tooltip={`${company.users_count} utilisateur${company.users_count > 1 ? 's' : ''} associé${company.users_count > 1 ? 's' : ''}`}
-              variant={company.users_count > 0 ? 'info' : 'default'}
             />
           </td>
 
           {/* Total tickets (Insight) */}
           <td className="py-2.5 pr-4">
             <CompanyInsightCell
-              icon={<Ticket className="h-3.5 w-3.5 text-slate-500" />}
               value={company.tickets_count}
               tooltip={`${company.tickets_count} ticket${company.tickets_count > 1 ? 's' : ''} au total`}
-              variant={company.tickets_count > 0 ? 'default' : 'secondary'}
             />
           </td>
 
           {/* Tickets ouverts (Insight) */}
           <td className="py-2.5 pr-4">
             <CompanyInsightCell
-              icon={<AlertCircle className="h-3.5 w-3.5 text-status-danger" />}
               value={company.open_tickets_count}
               tooltip={`${company.open_tickets_count} ticket${company.open_tickets_count > 1 ? 's' : ''} ouvert${company.open_tickets_count > 1 ? 's' : ''}`}
-              variant={company.open_tickets_count > 0 ? 'danger' : 'secondary'}
             />
           </td>
 

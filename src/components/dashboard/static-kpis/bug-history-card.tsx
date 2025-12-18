@@ -1,6 +1,6 @@
 'use client';
 
-import { Bug, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Bug, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { cn } from '@/lib/utils';
 import type { BugHistoryStats } from '@/services/dashboard/bug-history-stats';
@@ -33,69 +33,53 @@ export function BugHistoryCard({ data, className }: BugHistoryCardProps) {
       'hover:shadow-md transition-shadow',
       className
     )}>
-      {/* Header */}
-      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-4">
-        <CardTitle className="text-xs font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wide flex items-center gap-2">
-          <Bug className="h-4 w-4" />
+      {/* Header - même hauteur que KPICard standard */}
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+        <CardTitle className="text-[10px] font-medium text-rose-700 dark:text-rose-400 uppercase tracking-wide flex items-center gap-1">
+          <Bug className="h-3 w-3" />
           BUG
         </CardTitle>
-        <div className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+        <div className="text-[9px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
           Temps réel
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pb-4 space-y-3">
-        {/* Total principal */}
-        <div className="text-center pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            {total.toLocaleString('fr-FR')}
+      <CardContent className="px-3 pb-3 flex-1 flex flex-col justify-center">
+        <div className="space-y-1">
+          {/* Ligne 1 : Total principal à gauche */}
+          <div className="flex items-baseline justify-between">
+            <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              {total.toLocaleString('fr-FR')}
+            </div>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+
+          {/* Ligne 2 : Description du total */}
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
             tickets au total
-          </div>
-        </div>
+          </p>
 
-        {/* Ouverts / Résolus */}
-        <div className="grid grid-cols-2 gap-3">
-          <StatLine
-            icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-500" />}
-            label="Ouverts"
-            value={ouverts}
-            percentage={total > 0 ? Math.round((ouverts / total) * 100) : 0}
-            variant="warning"
-          />
-          <StatLine
-            icon={<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
-            label="Résolus"
-            value={resolus}
-            percentage={tauxResolution}
-            variant="success"
-          />
-        </div>
-
-        {/* Priorités critiques */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="text-[10px] text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">
-            Priorités ouvertes
-          </div>
-          <div className="flex gap-3">
-            <PriorityBadge label="Critical" count={critiquesOuverts} variant="critical" />
-            <PriorityBadge label="High" count={highOuverts} variant="high" />
-          </div>
-        </div>
-
-        {/* MTTR */}
-        {mttrHeures !== null && (
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-              <Clock className="h-3.5 w-3.5" />
-              <span>MTTR moyen</span>
+          {/* Ligne 3 : Stats Ouverts/Résolus inline */}
+          <div className="flex items-center gap-3 pt-0.5">
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-amber-500" />
+              <span className="text-[10px] text-slate-600 dark:text-slate-400">
+                {ouverts.toLocaleString('fr-FR')} ouverts
+              </span>
+              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">
+                ({total > 0 ? Math.round((ouverts / total) * 100) : 0}%)
+              </span>
             </div>
-            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {formatMTTR(mttrHeures)}
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              <span className="text-[10px] text-slate-600 dark:text-slate-400">
+                {resolus.toLocaleString('fr-FR')} résolus
+              </span>
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium">
+                ({tauxResolution}%)
+              </span>
             </div>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -103,7 +87,7 @@ export function BugHistoryCard({ data, className }: BugHistoryCardProps) {
 
 // === Sous-composants ===
 
-type StatLineProps = {
+type CompactStatProps = {
   icon: React.ReactNode;
   label: string;
   value: number;
@@ -111,22 +95,25 @@ type StatLineProps = {
   variant: 'warning' | 'success';
 };
 
-function StatLine({ icon, label, value, percentage, variant }: StatLineProps) {
+/**
+ * Statistique ultra compacte - format inline
+ */
+function CompactStat({ icon, label, value, percentage, variant }: CompactStatProps) {
   const percentageColor = variant === 'success' 
     ? 'text-emerald-600 dark:text-emerald-400' 
     : 'text-amber-600 dark:text-amber-400';
 
   return (
-    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded-lg px-3 py-2">
-      <div className="flex items-center gap-2">
+    <div className="flex-1 flex items-center justify-between bg-slate-50 dark:bg-slate-900 rounded px-2 py-1">
+      <div className="flex items-center gap-1">
         {icon}
-        <span className="text-xs text-slate-600 dark:text-slate-400">{label}</span>
+        <span className="text-[9px] text-slate-600 dark:text-slate-400">{label}</span>
       </div>
       <div className="text-right">
-        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
           {value.toLocaleString('fr-FR')}
         </div>
-        <div className={cn('text-[10px] font-medium', percentageColor)}>
+        <div className={cn('text-[9px] font-medium', percentageColor)}>
           {percentage}%
         </div>
       </div>
@@ -134,13 +121,16 @@ function StatLine({ icon, label, value, percentage, variant }: StatLineProps) {
   );
 }
 
-type PriorityBadgeProps = {
+type CompactPriorityBadgeProps = {
   label: string;
   count: number;
   variant: 'critical' | 'high';
 };
 
-function PriorityBadge({ label, count, variant }: PriorityBadgeProps) {
+/**
+ * Badge de priorité ultra compact
+ */
+function CompactPriorityBadge({ label, count, variant }: CompactPriorityBadgeProps) {
   const colors = {
     critical: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800',
     high: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800',
@@ -148,11 +138,11 @@ function PriorityBadge({ label, count, variant }: PriorityBadgeProps) {
 
   return (
     <div className={cn(
-      'flex-1 flex items-center justify-between px-3 py-1.5 rounded-md border',
+      'flex-1 flex items-center justify-between px-2 py-1 rounded border',
       colors[variant]
     )}>
-      <span className="text-[10px] font-medium">{label}</span>
-      <span className="text-sm font-bold">{count}</span>
+      <span className="text-[9px] font-medium">{label}</span>
+      <span className="text-xs font-bold">{count}</span>
     </div>
   );
 }

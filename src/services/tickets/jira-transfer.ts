@@ -111,21 +111,53 @@ export const transferTicketToJira = async (ticketId: string) => {
  */
 export const getTicketById = async (ticketId: string) => {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  
+  // Valider l'ID avant de faire la requête
+  if (!ticketId || typeof ticketId !== 'string' || ticketId.trim() === '') {
+    throw new Error('ID de ticket invalide');
+  }
+  
+  // Charger le ticket avec ses relations principales
+  const { data: ticket, error: ticketError } = await supabase
     .from('tickets')
     .select(`
       *,
       product:products(id, name),
-      module:modules(id, name),
-      jira_sync:jira_sync(jira_issue_key, last_synced_at, sync_error)
+      module:modules(id, name)
     `)
     .eq('id', ticketId)
     .single();
 
-  if (error) {
-    throw new Error(`Erreur lors de la récupération du ticket: ${error.message}`);
+  if (ticketError) {
+    console.error('[getTicketById] Erreur Supabase:', ticketError);
+    console.error('[getTicketById] Code:', ticketError.code);
+    console.error('[getTicketById] Message:', ticketError.message);
+    console.error('[getTicketById] Détails:', ticketError.details);
+    console.error('[getTicketById] Hint:', ticketError.hint);
+    
+    // Si le ticket n'existe pas, retourner null au lieu de lancer une erreur
+    if (ticketError.code === 'PGRST116') {
+      return null;
+    }
+    
+    throw new Error(`Erreur lors de la récupération du ticket: ${ticketError.message}`);
   }
 
-  return data;
+  if (!ticket) {
+    return null;
+  }
+
+  // Charger jira_sync séparément (relation inverse)
+  const { data: jiraSync } = await supabase
+    .from('jira_sync')
+    .select('jira_issue_key, last_synced_at, sync_error')
+    .eq('ticket_id', ticketId)
+    .maybeSingle();
+
+  // Combiner les données
+  return {
+    ...ticket,
+    jira_sync: jiraSync || null
+  };
 };
 

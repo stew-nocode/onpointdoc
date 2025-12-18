@@ -157,22 +157,30 @@ export function TicketRow({
           <LazyTooltipWrapper
             trigger={
               <div className="flex items-center gap-2 min-w-0">
-                <Link
-                  href={`/gestion/tickets/${ticket.id}`}
-                  className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
-                >
-                  {search ? highlightText(ticket.title, search) : ticket.title}
-                </Link>
+                {ticket.id ? (
+                  <Link
+                    href={`/gestion/tickets/${ticket.id}`}
+                    className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
+                  >
+                    {search ? highlightText(ticket.title, search) : ticket.title}
+                  </Link>
+                ) : (
+                  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate block max-w-[300px]">
+                    {search ? highlightText(ticket.title, search) : ticket.title}
+                  </span>
+                )}
               </div>
             }
             content={
-              <TicketStatsTooltip
-                ticketId={ticket.id}
-                createdAt={ticket.created_at}
-                title={ticket.title}
-                description={ticket.description}
-                jiraIssueKey={ticket.jira_issue_key ?? null}
-              />
+              ticket.id ? (
+                <TicketStatsTooltip
+                  ticketId={ticket.id}
+                  createdAt={ticket.created_at}
+                  title={ticket.title}
+                  description={ticket.description}
+                  jiraIssueKey={ticket.jira_issue_key ?? null}
+                />
+              ) : null
             }
           />
         </td>
@@ -387,20 +395,37 @@ export function TicketRow({
                         md:opacity-0 md:group-hover:opacity-100 
                         transition-opacity">
           {/* Voir les détails */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href={`/gestion/tickets/${ticket.id}`}
-                className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 touch-manipulation"
-                aria-label="Voir les détails"
-              >
-                <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Voir les détails</p>
-            </TooltipContent>
-          </Tooltip>
+          {ticket.id ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={`/gestion/tickets/${ticket.id}`}
+                  className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 touch-manipulation"
+                  aria-label="Voir les détails"
+                >
+                  <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Voir les détails</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  disabled
+                  className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-400 dark:text-slate-500 cursor-not-allowed touch-manipulation"
+                  aria-label="ID de ticket manquant"
+                >
+                  <Eye className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>ID de ticket manquant</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Éditer - Admin/Manager uniquement */}
           {canEdit && (
@@ -449,12 +474,19 @@ export function TicketRow({
     </tr>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem asChild>
-          <Link href={`/gestion/tickets/${ticket.id}`} className="flex items-center">
+        {ticket.id ? (
+          <ContextMenuItem asChild>
+            <Link href={`/gestion/tickets/${ticket.id}`} className="flex items-center">
+              <Eye className="h-4 w-4 mr-2" />
+              Voir les détails
+            </Link>
+          </ContextMenuItem>
+        ) : (
+          <ContextMenuItem disabled>
             <Eye className="h-4 w-4 mr-2" />
-            Voir les détails
-          </Link>
-        </ContextMenuItem>
+            ID de ticket manquant
+          </ContextMenuItem>
+        )}
         
         {canEdit && (
           <>

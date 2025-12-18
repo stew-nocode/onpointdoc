@@ -99,3 +99,9 @@ Les templates utilisent `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif` pour u
 4. **Garder les emails < 100KB** pour éviter le clipping Gmail
 
 
+
+
+
+
+
+

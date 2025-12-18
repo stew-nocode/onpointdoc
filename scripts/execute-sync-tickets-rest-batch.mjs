@@ -84,3 +84,9 @@ console.log(`   ${batches.length + 1}. temp_sql_upsert_final.sql`);
 
 
 
+
+
+
+
+
+

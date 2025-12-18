@@ -68,4 +68,32 @@ export function WidgetSkeleton() {
   );
 }
 
+/**
+ * ✅ OPTIMISATION Phase 2 : Skeleton pour les KPIs statiques
+ * 
+ * Utilisé dans Suspense boundaries granulaire pour les KPIs temps réel
+ */
+export function KPIsSkeleton() {
+  return (
+    <div className="kpi-static-grid-responsive gap-4 animate-pulse">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+        >
+          <div className="space-y-2">
+            <div className="h-3 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-6 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="h-2.5 w-24 rounded bg-slate-200 dark:bg-slate-800" />
+            <div className="flex gap-2 pt-1">
+              <div className="h-2.5 flex-1 rounded bg-slate-100 dark:bg-slate-800" />
+              <div className="h-2.5 flex-1 rounded bg-slate-100 dark:bg-slate-800" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
