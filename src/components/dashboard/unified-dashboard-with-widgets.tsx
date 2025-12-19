@@ -341,6 +341,52 @@ function UnifiedDashboardWithWidgetsComponent({
     periodRef.current = period;
   }, [period]);
 
+  /**
+   * Synchroniser l'état local avec les paramètres URL après router.refresh()
+   *
+   * Quand router.refresh() est appelé, le Server Component se recharge avec les nouvelles données
+   * basées sur les paramètres URL. On surveille les changements d'URL pour synchroniser l'état.
+   */
+  useEffect(() => {
+    const urlPeriod = searchParams.get('period');
+    const urlStartDate = searchParams.get('startDate');
+    const urlEndDate = searchParams.get('endDate');
+
+    // Si l'URL contient des dates personnalisées
+    if (urlStartDate && urlEndDate) {
+      const newDateRange: DateRange = {
+        from: new Date(urlStartDate),
+        to: new Date(urlEndDate)
+      };
+      setDateRange(newDateRange);
+      setSelectedYear(undefined); // Désactiver le sélecteur d'année
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Dashboard] Dates personnalisées détectées dans URL:', {
+          startDate: urlStartDate,
+          endDate: urlEndDate,
+        });
+      }
+    }
+    // Si l'URL contient une période
+    else if (urlPeriod) {
+      setPeriod(urlPeriod);
+
+      // Vérifier si c'est une année (4 chiffres)
+      if (/^\d{4}$/.test(urlPeriod)) {
+        setSelectedYear(urlPeriod);
+        setDateRange(undefined); // Désactiver le sélecteur de dates personnalisées
+      } else {
+        setSelectedYear(undefined);
+        setDateRange(undefined);
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Dashboard] Période détectée dans URL:', urlPeriod);
+      }
+    }
+  }, [searchParams]); // Se déclenche quand searchParams change (après router.push/refresh)
+
   // Callbacks stables pour les hooks realtime (évite les réabonnements)
   // Utilise periodRef pour éviter la dépendance à period
   const stableOnDataChange = useCallback(() => {
