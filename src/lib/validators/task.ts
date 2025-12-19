@@ -106,13 +106,13 @@ export const createTaskSchema = z
     // Assigné à un utilisateur (optionnel)
     assignedTo: z.string().uuid().optional(),
     // Tickets liés : tableau d'IDs de tickets (optionnel)
-    linkedTicketIds: z.array(z.string().uuid()).optional().default([]),
+    linkedTicketIds: z.array(z.string().uuid()).optional(),
     // Activités liées : tableau d'IDs d'activités (optionnel)
-    linkedActivityIds: z.array(z.string().uuid()).optional().default([]),
+    linkedActivityIds: z.array(z.string().uuid()).optional(),
     // Compte-rendu optionnel
     reportContent: z.string().optional(),
     // Indicateur de planification (boolean)
-    isPlanned: z.boolean().optional().default(false)
+    isPlanned: z.boolean().optional()
   })
   .superRefine((data, ctx) => {
     validateStartDate(data.startDate, ctx);

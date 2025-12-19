@@ -100,5 +100,6 @@ export const TicketsPageClientWrapper =
         }
       );
 
-TicketsPageClientWrapper.displayName = 'TicketsPageClientWrapper';
+// Assigner displayName avec assertion de type pour compatibilité TypeScript
+(TicketsPageClientWrapper as React.NamedExoticComponent | React.FunctionComponent).displayName = 'TicketsPageClientWrapper';
 

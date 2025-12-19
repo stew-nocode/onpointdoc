@@ -279,7 +279,7 @@ export const listActivitiesPaginated = async (
 
   // Transformer les données brutes en ActivityWithRelations
   const transformedActivities = (data || []).map(
-    (activity: SupabaseActivityRaw) => transformActivity(activity)
+    (activity) => transformActivity(activity as SupabaseActivityRaw)
   );
 
   return {

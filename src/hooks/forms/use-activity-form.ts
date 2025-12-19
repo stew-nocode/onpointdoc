@@ -12,10 +12,15 @@ import {
   createActivitySchema,
   type CreateActivityInput,
 } from '@/lib/validators/activity';
-import type { BasicProfile } from '@/services/users';
+
+type ParticipantProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
 
 type UseActivityFormOptions = {
-  participants: BasicProfile[];
+  participants: ParticipantProfile[];
   onSubmit: (values: CreateActivityInput) => Promise<void | string>;
   initialValues?: Partial<CreateActivityInput>;
 };

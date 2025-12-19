@@ -37,7 +37,7 @@ export function useAuth(): AuthState {
   });
 
   // Utiliser une ref pour éviter les re-créations de la fonction
-  const refreshAuthRef = useRef<() => Promise<void>>();
+  const refreshAuthRef = useRef<() => Promise<void>>(async () => {});
   
   refreshAuthRef.current = async () => {
     try {

@@ -20,7 +20,7 @@ import type {
  * @returns true si l'utilisateur peut modifier le ticket
  */
 async function canUserModifyTicket(
-  supabase: ReturnType<typeof createSupabaseServerClient>,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   ticketId: string,
   userId: string
 ): Promise<boolean> {

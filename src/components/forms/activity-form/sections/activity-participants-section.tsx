@@ -10,11 +10,16 @@ import { useWatch } from 'react-hook-form';
 import { MultiSelect } from '@/ui/multi-select';
 import type { CreateActivityInput } from '@/lib/validators/activity';
 import type { UseFormReturn } from 'react-hook-form';
-import type { BasicProfile } from '@/services/users';
+
+type ParticipantProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
 
 type ActivityParticipantsSectionProps = {
   form: UseFormReturn<CreateActivityInput>;
-  participants: BasicProfile[];
+  participants: ParticipantProfile[];
 };
 
 /**
@@ -39,10 +44,8 @@ export function ActivityParticipantsSection({ form, participants }: ActivityPart
       <MultiSelect
         options={participants.map((participant) => ({
           value: participant.id,
-          label: participant.company_name 
-            ? `${participant.full_name || 'Sans nom'} (${participant.company_name})`
-            : participant.full_name || 'Sans nom',
-          searchable: `${participant.full_name || ''} ${participant.email || ''} ${participant.company_name || ''}`.trim()
+          label: participant.full_name || participant.email || 'Sans nom',
+          searchable: `${participant.full_name || ''} ${participant.email || ''}`.trim()
         }))}
         value={selectedParticipantIds}
         onValueChange={(ids) => form.setValue('participantIds', ids)}

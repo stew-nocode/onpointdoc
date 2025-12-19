@@ -110,25 +110,33 @@ export const getCompanyTicketsByProductModuleStats = cache(
       const directTicketIds = new Set((ticketsDirect || []).map((t) => t.id || ''));
 
       // Filtrer les tickets liés par période et type, et exclure les doublons
+      type LinkedTicket = {
+        id: string;
+        ticket_type: string;
+        product_id: string | null;
+        module_id: string | null;
+        created_at: string;
+      };
+
       const linkedTickets = (ticketLinks || [])
-        .map((link) => link.ticket)
-        .filter((ticket): ticket is { 
-          id: string; 
-          ticket_type: string; 
-          product_id: string | null;
-          module_id: string | null;
-          created_at: string;
-        } => 
-          ticket !== null &&
-          ticket.id !== null &&
-          ticket.ticket_type !== null &&
-          ['BUG', 'REQ', 'ASSISTANCE'].includes(ticket.ticket_type) &&
-          ticket.created_at >= periodStart &&
-          ticket.created_at <= periodEnd &&
-          ticket.product_id !== null &&
-          ticket.module_id !== null &&
-          !directTicketIds.has(ticket.id)
-        );
+        .flatMap((link) => {
+          const ticket = Array.isArray(link.ticket) ? link.ticket[0] : link.ticket;
+          return ticket ? [ticket] : [];
+        })
+        .filter((ticket): ticket is LinkedTicket => {
+          if (!ticket || typeof ticket !== 'object') return false;
+          const t = ticket as any;
+          return (
+            t.id !== null &&
+            t.ticket_type !== null &&
+            ['BUG', 'REQ', 'ASSISTANCE'].includes(t.ticket_type) &&
+            t.created_at >= periodStart &&
+            t.created_at <= periodEnd &&
+            t.product_id !== null &&
+            t.module_id !== null &&
+            !directTicketIds.has(t.id)
+          );
+        });
 
       // Combiner tous les tickets
       const allTickets = [

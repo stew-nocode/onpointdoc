@@ -72,7 +72,7 @@ type UseCompaniesInfiniteLoadOptions = {
   /**
    * SearchParams de l'URL (stabilisés)
    */
-  searchParams: ReadonlyURLSearchParams;
+  searchParams?: ReadonlyURLSearchParams;
 };
 
 type UseCompaniesInfiniteLoadResult = {

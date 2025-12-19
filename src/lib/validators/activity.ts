@@ -34,10 +34,10 @@ export const createActivitySchema = z
     // Dates optionnelles : l'activité peut être créée sans planification
     plannedStart: z.string().optional(),
     plannedEnd: z.string().optional(),
-    // Participants : tableau d'IDs utilisateurs (optionnel, défaut: [])
-    participantIds: z.array(z.string().uuid()).default([]),
-    // Tickets liés : tableau d'IDs de tickets (optionnel, défaut: [])
-    linkedTicketIds: z.array(z.string().uuid()).default([]),
+    // Participants : tableau d'IDs utilisateurs (optionnel)
+    participantIds: z.array(z.string().uuid()).optional(),
+    // Tickets liés : tableau d'IDs de tickets (optionnel)
+    linkedTicketIds: z.array(z.string().uuid()).optional(),
     // Mode de localisation : présentiel ou en ligne (optionnel)
     locationMode: z.enum(activityLocationModes).optional(),
     // Compte-rendu optionnel

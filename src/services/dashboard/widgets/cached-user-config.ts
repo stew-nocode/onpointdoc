@@ -64,7 +64,7 @@ export const getCachedUserDashboardConfig = cache(
       }
       
       // Retourner la config validée
-      return validationResult.data;
+      return validationResult.data as UserDashboardConfig;
     } catch (error) {
       // Logger l'erreur en développement
       if (process.env.NODE_ENV === 'development') {

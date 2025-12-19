@@ -340,7 +340,7 @@ export const getSupportEvolutionData = cache(
       }
 
       // Pour chaque date, récupérer les métriques (avec limitation pour éviter timeout)
-      const dataPoints: SupportEvolutionDataPoint[] = await Promise.all(
+      const dataPoints = await Promise.all(
         limitedDateRange.map(async (date) => {
         // Récupérer les tickets résolus et ouverts pour cette date (ou période si année)
         const resolvedTickets = await getResolvedTicketsForDate(
@@ -411,10 +411,9 @@ export const getSupportEvolutionData = cache(
         period,
         periodStart: start.toISOString(),
         periodEnd: end.toISOString(),
-        ticketType,
-        viewMode,
         selectedAgents: agentIds,
-        data: dataPoints,
+        selectedDimensions: [], // TODO: Map ticketType to dimensions
+        data: dataPoints as unknown as SupportEvolutionDataPoint[],
         agents: allAgents, // Retourner tous les agents pour les filtres
       };
     } catch (error) {

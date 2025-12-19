@@ -83,10 +83,11 @@ export function useRealtimeDashboardData({
         },
         (payload) => {
           if (process.env.NODE_ENV === 'development') {
+            const record = (payload.new || payload.old) as Record<string, any> | undefined;
             console.log('[Realtime] Ticket changed:', {
               event: payload.eventType,
-              ticketId: payload.new?.id || payload.old?.id,
-              ticketType: payload.new?.ticket_type || payload.old?.ticket_type,
+              ticketId: record?.id,
+              ticketType: record?.ticket_type,
             });
           }
           debouncedOnChange();

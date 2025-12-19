@@ -94,10 +94,12 @@ export const getCompaniesCardsStats = cache(
         }
       >();
 
-      (tickets as TicketRow[]).forEach((t) => {
+      (tickets as any[]).forEach((t) => {
         if (!t.company_id) return;
         const companyId = t.company_id;
-        const companyName = t.company?.name ?? 'Entreprise';
+        // Handle company being array or object
+        const company = Array.isArray(t.company) ? t.company[0] : t.company;
+        const companyName = company?.name ?? 'Entreprise';
 
         if (!byCompany.has(companyId)) {
           byCompany.set(companyId, {
@@ -121,7 +123,9 @@ export const getCompaniesCardsStats = cache(
           entry.bugsReported += 1;
         }
 
-        const moduleName = t.module?.name ?? null;
+        // Handle module being array or object
+        const module = Array.isArray(t.module) ? t.module[0] : t.module;
+        const moduleName = module?.name ?? null;
         if (moduleName) {
           entry.modules.set(moduleName, (entry.modules.get(moduleName) ?? 0) + 1);
         }

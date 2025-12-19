@@ -146,7 +146,7 @@ async function countTicketsByTypeFallback(
     tickets.forEach((ticket) => {
       const type = ticket.ticket_type;
       if (type === 'BUG' || type === 'REQ' || type === 'ASSISTANCE') {
-        distribution[type]++;
+        distribution[type as 'BUG' | 'REQ' | 'ASSISTANCE']++;
         distribution.total++;
       }
     });

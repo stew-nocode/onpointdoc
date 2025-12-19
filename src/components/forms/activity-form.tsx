@@ -9,7 +9,6 @@
 
 import { useCallback } from 'react';
 import type { CreateActivityInput } from '@/lib/validators/activity';
-import type { BasicProfile } from '@/services/users';
 import { useActivityForm } from '@/hooks/forms/use-activity-form';
 import {
   ActivityTitleSection,
@@ -22,11 +21,17 @@ import {
   ActivitySubmitButtons,
 } from './activity-form/sections';
 
+type ParticipantProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
+
 type ActivityFormProps = {
   onSubmit: (values: CreateActivityInput) => Promise<void | string>;
   onSubmitAndContinue?: (values: CreateActivityInput) => Promise<void | string>;
   isSubmitting?: boolean;
-  participants: BasicProfile[];
+  participants: ParticipantProfile[];
   initialValues?: Partial<CreateActivityInput>;
   /**
    * Si true, masque la section de sélection des tickets liés

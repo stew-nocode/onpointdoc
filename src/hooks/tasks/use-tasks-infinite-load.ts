@@ -42,6 +42,11 @@ type UseTasksInfiniteLoadProps = {
   currentProfileId?: string | null;
 
   /**
+   * Tri pour le chargement (colonne et direction)
+   */
+  sort?: { column: TaskSortColumn; direction: SortDirection };
+
+  /**
    * SearchParams de l'URL (stabilisés)
    */
   searchParams: ReadonlyURLSearchParams;
@@ -271,8 +276,9 @@ export function useTasksInfiniteLoad({
       search,
       quickFilter,
       currentProfileId,
+      sort,
     };
-  }, [search, quickFilter, currentProfileId]);
+  }, [search, quickFilter, currentProfileId, sort]);
 
   // Mettre à jour la ref pour hasMore
   useEffect(() => {

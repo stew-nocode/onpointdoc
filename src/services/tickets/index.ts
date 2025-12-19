@@ -474,9 +474,15 @@ export const listTicketsPaginated = async (
         product: transformRelation(relation?.product),
         module: transformRelation(relation?.module),
         // ✅ Company chargée via nested select (pas de requête séparée)
-        company: relation?.contact_user?.company
-          ? transformRelation(relation.contact_user.company)
-          : null
+        company: (() => {
+          const contactUser = Array.isArray(relation?.contact_user)
+            ? relation.contact_user[0]
+            : relation?.contact_user;
+          const company = contactUser && Array.isArray(contactUser.company)
+            ? contactUser.company[0]
+            : contactUser?.company;
+          return company ? transformRelation(company) : null;
+        })()
       };
     });
 

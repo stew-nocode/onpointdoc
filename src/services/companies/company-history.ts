@@ -94,7 +94,10 @@ export const loadCompanyHistory = cache(async (companyId: string): Promise<Compa
   // Charger les profils des créateurs des tickets
   const ticketCreatorIds = [
     ...(ticketsDirect?.map((t) => t.created_by).filter((id): id is string => id !== null) || []),
-    ...(ticketLinks?.map((link) => link.ticket?.created_by).filter((id): id is string => id !== null) || [])
+    ...(ticketLinks?.flatMap((link) => {
+      const ticket = Array.isArray(link.ticket) ? link.ticket[0] : link.ticket;
+      return ticket?.created_by ? [ticket.created_by] : [];
+    }) || [])
   ];
   const profilesMap = await loadProfilesByIds([...new Set(ticketCreatorIds)]);
 
@@ -125,7 +128,7 @@ export const loadCompanyHistory = cache(async (companyId: string): Promise<Compa
   // Transformer les tickets liés via ticket_company_link
   if (ticketLinks) {
     for (const link of ticketLinks) {
-      const ticket = link.ticket;
+      const ticket = Array.isArray(link.ticket) ? link.ticket[0] : link.ticket;
       if (ticket && !ticketsDirect?.some((t) => t.id === ticket.id)) {
         // Éviter les doublons avec les tickets directs
         const profile = ticket.created_by ? profilesMap.get(ticket.created_by) : undefined;

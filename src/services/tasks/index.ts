@@ -18,17 +18,17 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 async function getCurrentUserProfileId(supabase: SupabaseClient): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    throw createError('UNAUTHORIZED', 'Non authentifié');
+    throw createError.unauthorized('Non authentifié');
   }
-  
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
     .eq('auth_uid', user.id)
     .single();
-    
+
   if (!profile) {
-    throw createError('NOT_FOUND', 'Profil utilisateur introuvable');
+    throw createError.notFound('Profil utilisateur');
   }
 
   return profile.id;
@@ -340,7 +340,7 @@ export const listTasksPaginated = async (
 
   // Transformer les données brutes en TaskWithRelations
   const transformedTasks = (data || []).map(
-    (task: SupabaseTaskRaw) => transformTask(task)
+    (task) => transformTask(task as SupabaseTaskRaw)
   );
 
   return {

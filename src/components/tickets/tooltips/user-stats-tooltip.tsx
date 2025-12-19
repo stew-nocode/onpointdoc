@@ -164,10 +164,13 @@ export function UserStatsTooltip({ profileId, type, isOpen = false }: UserStatsT
 
     /**
      * Charge les statistiques de l'utilisateur
-     * 
+     *
      * Principe Clean Code - Fonction pure et async/await propre
      */
     async function loadStats(): Promise<void> {
+      // Guard clause pour TypeScript (profileId est vérifié dans le useEffect mais TypeScript ne le sait pas)
+      if (!profileId) return;
+
       setIsLoading(true);
       try {
         const loadedStats = await fetchUserStats(profileId, type);

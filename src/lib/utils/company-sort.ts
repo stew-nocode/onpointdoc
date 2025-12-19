@@ -7,7 +7,11 @@ export function mapCompanySortColumnToSupabase(column: CompanySortColumn): strin
   const columnMap: Record<CompanySortColumn, string> = {
     name: 'name',
     country: 'country_id',
-    created_at: 'created_at'
+    created_at: 'created_at',
+    users_count: 'users_count',
+    tickets_count: 'tickets_count',
+    open_tickets_count: 'open_tickets_count',
+    assistance_duration: 'assistance_duration'
   };
 
   return columnMap[column];

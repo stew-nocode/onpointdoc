@@ -19,19 +19,24 @@ import {
   DialogTitle,
 } from '@/ui/dialog';
 import type { CreateActivityInput } from '@/lib/validators/activity';
-import type { BasicProfile } from '@/services/users';
+
+type ParticipantProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
 
 type CreateActivityFromTicketDialogProps = {
   /**
    * ID du ticket à partir duquel créer l'activité
    */
   ticketId: string;
-  
-  
+
+
   /**
    * Liste des participants disponibles
    */
-  participants: BasicProfile[];
+  participants: ParticipantProfile[];
   
   /**
    * Fonction de soumission du formulaire

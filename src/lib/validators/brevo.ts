@@ -158,7 +158,7 @@ export const sendTransactionalEmailSchema = z.object({
 
   templateId: z.number().int().positive().optional(),
 
-  params: z.record(z.string()).optional(),
+  params: z.record(z.string(), z.string()).optional(),
 
   cc: z.array(emailRecipientSchema).max(10).optional(),
   bcc: z.array(emailRecipientSchema).max(10).optional(),
@@ -192,7 +192,7 @@ export const brevoContactSchema = z.object({
   email: z.string().email('Email invalide'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  attributes: z.record(z.any()).optional(),
+  attributes: z.record(z.string(), z.any()).optional(),
   listIds: z.array(z.number().int().positive()).optional(),
   companyId: z.string().uuid().optional()
 });
@@ -350,7 +350,7 @@ export const brevoCampaignResponseSchema = z.object({
     segmentIds: z.array(z.number().int()).optional()
   }).optional(),
   tag: z.string().optional(),
-  params: z.record(z.string()).optional()
+  params: z.record(z.string(), z.string()).optional()
 });
 
 export type BrevoCampaignResponseInput = z.infer<typeof brevoCampaignResponseSchema>;

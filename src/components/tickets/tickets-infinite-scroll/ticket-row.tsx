@@ -154,25 +154,19 @@ export function TicketRow({
       {/* Titre avec tooltip */}
       {isColumnVisible('title') && (
         <td className="py-2.5 pr-4">
-          <LazyTooltipWrapper
-            trigger={
-              <div className="flex items-center gap-2 min-w-0">
-                {ticket.id ? (
+          {ticket.id ? (
+            <LazyTooltipWrapper
+              trigger={
+                <div className="flex items-center gap-2 min-w-0">
                   <Link
                     href={`/gestion/tickets/${ticket.id}`}
                     className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
                   >
                     {search ? highlightText(ticket.title, search) : ticket.title}
                   </Link>
-                ) : (
-                  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate block max-w-[300px]">
-                    {search ? highlightText(ticket.title, search) : ticket.title}
-                  </span>
-                )}
-              </div>
-            }
-            content={
-              ticket.id ? (
+                </div>
+              }
+              content={
                 <TicketStatsTooltip
                   ticketId={ticket.id}
                   createdAt={ticket.created_at}
@@ -180,9 +174,15 @@ export function TicketRow({
                   description={ticket.description}
                   jiraIssueKey={ticket.jira_issue_key ?? null}
                 />
-              ) : null
-            }
-          />
+              }
+            />
+          ) : (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate block max-w-[300px]">
+                {search ? highlightText(ticket.title, search) : ticket.title}
+              </span>
+            </div>
+          )}
         </td>
       )}
 

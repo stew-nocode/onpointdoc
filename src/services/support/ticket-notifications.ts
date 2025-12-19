@@ -381,7 +381,6 @@ async function logNotification(
 
 export {
   NOTIFICATION_CONFIGS,
-  type TicketNotificationEvent,
   type SendNotificationParams,
   type NotificationResult
 };
