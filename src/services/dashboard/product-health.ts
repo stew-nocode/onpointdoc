@@ -222,21 +222,21 @@ function calculateModuleBugsMetrics(
   // Traiter les bugs de la période actuelle
   currentBugs.forEach((bug) => {
     if (!bug.module_id) return;
-    
-    const module = extractModule(bug.module);
-    if (!module) return;
-    
+
+    const ticketModule = extractModule(bug.module);
+    if (!ticketModule) return;
+
     const key = bug.module_id;
     if (!moduleMap.has(key)) {
       moduleMap.set(key, {
-        moduleName: module.name,
+        moduleName: ticketModule.name,
         bugsSignales: 0,
         bugsCritiques: 0,
         bugsOuverts: 0,
         bugsResolus: 0
       });
     }
-    
+
     const data = moduleMap.get(key)!;
     data.bugsSignales++;
     
@@ -250,10 +250,10 @@ function calculateModuleBugsMetrics(
   // Traiter les bugs résolus (créés ET résolus dans la période)
   resolvedBugsInPeriod.forEach((bug) => {
     if (!bug.module_id) return;
-    
-    const module = extractModule(bug.module);
-    if (!module) return;
-    
+
+    const ticketModule = extractModule(bug.module);
+    if (!ticketModule) return;
+
     const key = bug.module_id;
     if (moduleMap.has(key)) {
       moduleMap.get(key)!.bugsResolus++;
@@ -402,15 +402,15 @@ function buildModuleMap(
 
   tickets.forEach((ticket) => {
     if (!ticket.module_id) return;
-    
-    const module = extractModule(ticket.module);
+
+    const ticketModule = extractModule(ticket.module);
     const product = extractProduct(ticket.product);
-    if (!module || !product) return;
-    
+    if (!ticketModule || !product) return;
+
     const key = ticket.module_id;
     if (!moduleMap.has(key)) {
       moduleMap.set(key, {
-        moduleName: module.name,
+        moduleName: ticketModule.name,
         productName: product.name,
         bugCount: 0,
         totalCount: 0

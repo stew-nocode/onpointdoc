@@ -136,20 +136,20 @@ export const getTicketsByModuleStats = cache(
           });
         }
 
-        const module = moduleDataMap.get(moduleId)!;
-        
+        const dataModule = moduleDataMap.get(moduleId)!;
+
         switch (ticket.ticket_type) {
           case 'BUG':
-            module.bug++;
+            dataModule.bug++;
             break;
           case 'REQ':
-            module.req++;
+            dataModule.req++;
             break;
           case 'ASSISTANCE':
-            module.assistance++;
+            dataModule.assistance++;
             break;
         }
-        module.total++;
+        dataModule.total++;
       });
 
       // 5. Trier et limiter
