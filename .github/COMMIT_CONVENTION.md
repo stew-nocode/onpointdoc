@@ -127,7 +127,7 @@ Closes #42
 
 ## ✅ Exemples Complets
 
-### Feature
+### Feature (Format standard)
 
 ```
 feat(tickets): ajout pagination infinite scroll
@@ -137,6 +137,27 @@ utilisant Intersection Observer pour améliorer l'UX.
 
 Closes #123
 ```
+
+### Feature (Format avec Claude Code - Si généré par IA)
+
+```
+feat(tickets): ajout pagination infinite scroll
+
+Remplace la pagination traditionnelle par un scroll infini 
+utilisant Intersection Observer pour améliorer l'UX.
+
+- Implémentation Intersection Observer
+- Optimisation performance avec debounce
+- Ajout indicateur de chargement
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+
+Closes #123
+```
+
+**Note** : Si le code est généré ou fortement assisté par Claude Code, inclure les lignes "🤖 Generated with Claude Code" et "Co-Authored-By" pour traçabilité.
 
 ### Fix
 

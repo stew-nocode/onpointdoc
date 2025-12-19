@@ -24,13 +24,18 @@ Closes #
 
 - [ ] ✅ Code review effectué (ou auto-review si seul)
 - [ ] ✅ Tests passent (si tests existants)
-- [ ] ✅ TypeScript check passe (`npm run typecheck`)
+- [ ] ✅ TypeScript check passe (`npm run typecheck`) - **0 erreurs obligatoire**
 - [ ] ✅ Lint passe (`npm run lint`)
-- [ ] ✅ Build réussit (`npm run build`)
+- [ ] ✅ Build réussit (`npm run build`) - **0 erreurs obligatoire**
 - [ ] ✅ Documentation mise à jour (si nécessaire)
 - [ ] ✅ Commits suivent conventional commits (feat:, fix:, docs:, etc.)
 - [ ] ✅ Pas de secrets/credentials dans le code
 - [ ] ✅ Variables d'environnement documentées (si nouvelles)
+- [ ] ✅ Tests manuels effectués sur DEV (si merge vers develop)
+- [ ] ✅ Tests manuels effectués sur STAGING (si merge vers staging)
+- [ ] ✅ Pas de régression détectée
+
+**⚠️ Pour PR vers `main`** : Voir [WORKFLOW-DEPLOIEMENT-PRODUCTION.md](../docs/WORKFLOW-DEPLOIEMENT-PRODUCTION.md) - Processus en 10 étapes obligatoire
 
 ## 🧪 Tests
 

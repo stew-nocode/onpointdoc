@@ -141,7 +141,7 @@ export function transformTicket(
   const createdUser = transformSimpleRelation(ticket.created_user);
   const assignedUser = transformSimpleRelation(ticket.assigned_user);
   const product = transformSimpleRelation(ticket.product);
-  const module = transformSimpleRelation(ticket.module);
+  const ticketModule = transformSimpleRelation(ticket.module);
   
   // Créer le ticket transformé directement (pas de JSON.parse/stringify)
   return {
@@ -166,7 +166,7 @@ export function transformTicket(
     contact_user: contactUser as TicketWithRelations['contact_user'],
     company,
     product: product as TicketWithRelations['product'],
-    module: module as TicketWithRelations['module'],
+    module: ticketModule as TicketWithRelations['module'],
   } satisfies TicketWithRelations;
 }
 

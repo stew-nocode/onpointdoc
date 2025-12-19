@@ -124,8 +124,8 @@ export const getCompaniesCardsStats = cache(
         }
 
         // Handle module being array or object
-        const module = Array.isArray(t.module) ? t.module[0] : t.module;
-        const moduleName = module?.name ?? null;
+        const ticketModule = Array.isArray(t.module) ? t.module[0] : t.module;
+        const moduleName = ticketModule?.name ?? null;
         if (moduleName) {
           entry.modules.set(moduleName, (entry.modules.get(moduleName) ?? 0) + 1);
         }
