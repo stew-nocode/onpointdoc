@@ -14,8 +14,7 @@ async function loadContacts(): Promise<{ rows: ContactRow[]; companies: Record<s
     supabase
       .from('profiles')
       .select('id, email, full_name, company_id, is_active, role')
-      .order('full_name', { ascending: true })
-      .limit(200),
+      .order('full_name', { ascending: true }),
     supabase.from('companies').select('id, name').order('name', { ascending: true })
   ]);
   if (cErr || pErr) throw new Error(cErr?.message || pErr?.message || 'Load error');

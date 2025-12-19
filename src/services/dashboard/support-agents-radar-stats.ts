@@ -1,0 +1,182 @@
+/**
+ * Statistiques pour Radar Chart - comparaison des agents Support (uniquement role=agent).
+ *
+ * Dimensions demandées :
+ * - Total tickets créés
+ * - Temps d'assistance (heures)
+ * - Nombre d'assistances (créées)
+ * - Total assistances résolues
+ *
+ * Données filtrées par :
+ * - produit (OBC)
+ * - période (periodStart/periodEnd)
+ */
+import { cache } from 'react';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+export type SupportAgentRadarDimension =
+  | 'totalTicketsCreated'
+  | 'assistanceHours'
+  | 'assistanceCount'
+  | 'assistanceResolvedCount';
+
+export type SupportAgentRadarRow = {
+  agentId: string;
+  agentName: string;
+  values: Record<SupportAgentRadarDimension, number>;
+};
+
+export type SupportAgentsRadarStats = {
+  dimensions: Array<{
+    key: SupportAgentRadarDimension;
+    label: string;
+  }>;
+  agents: SupportAgentRadarRow[];
+  /** Data formatée pour Recharts RadarChart */
+  chartData: Array<Record<string, number | string>>;
+  /** Agents retenus (top N) */
+  limit: number;
+};
+
+const DIMENSIONS: SupportAgentsRadarStats['dimensions'] = [
+  { key: 'totalTicketsCreated', label: 'Total tickets créés' },
+  { key: 'assistanceHours', label: 'Temps assistance (h)' },
+  { key: 'assistanceCount', label: "Nb d'assistances" },
+  { key: 'assistanceResolvedCount', label: "Assistances résolues" },
+];
+
+type TicketRow = {
+  created_by: string | null;
+  ticket_type: 'BUG' | 'REQ' | 'ASSISTANCE';
+  duration_minutes: number | null;
+  created_at: string | null;
+  resolved_at: string | null;
+};
+
+function toHours(minutes: number): number {
+  return Math.round((minutes / 60) * 10) / 10;
+}
+
+function safeMinutes(ticket: Pick<TicketRow, 'duration_minutes' | 'created_at' | 'resolved_at'>): number {
+  if (ticket.duration_minutes && ticket.duration_minutes > 0) return ticket.duration_minutes;
+  if (!ticket.created_at || !ticket.resolved_at) return 0;
+  const created = new Date(ticket.created_at).getTime();
+  const resolved = new Date(ticket.resolved_at).getTime();
+  const diff = Math.round((resolved - created) / (1000 * 60));
+  return Math.max(0, diff);
+}
+
+function normalize(value: number, max: number): number {
+  if (max <= 0) return 0;
+  return Math.round((value / max) * 100);
+}
+
+export const getSupportAgentsRadarStats = cache(
+  async (
+    productId: string,
+    periodStart: string,
+    periodEnd: string,
+    limit: number = 6
+  ): Promise<SupportAgentsRadarStats | null> => {
+    const supabase = await createSupabaseServerClient();
+
+    try {
+      // 1) Agents Support (uniquement role=agent)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('department', 'Support')
+        .eq('role', 'agent');
+      if (profilesError) {
+        console.error('[getSupportAgentsRadarStats] profilesError:', profilesError);
+        return null;
+      }
+
+      const agentIds = (profiles ?? []).map((p) => p.id);
+      if (agentIds.length === 0) {
+        return { dimensions: DIMENSIONS, agents: [], chartData: [], limit };
+      }
+
+      // 2) Tickets créés sur la période par ces agents (produit filtré)
+      const { data: tickets, error: ticketsError } = await supabase
+        .from('tickets')
+        .select('created_by, ticket_type, duration_minutes, created_at, resolved_at')
+        .eq('product_id', productId)
+        .in('created_by', agentIds)
+        .gte('created_at', periodStart)
+        .lte('created_at', periodEnd);
+      if (ticketsError) {
+        console.error('[getSupportAgentsRadarStats] ticketsError:', ticketsError);
+        return null;
+      }
+
+      const nameById = new Map<string, string>(
+        (profiles ?? []).map((p) => [p.id, p.full_name ?? p.email ?? 'Agent'])
+      );
+
+      const statsByAgent = new Map<string, SupportAgentRadarRow>();
+      agentIds.forEach((id) => {
+        statsByAgent.set(id, {
+          agentId: id,
+          agentName: nameById.get(id) ?? 'Agent',
+          values: {
+            totalTicketsCreated: 0,
+            assistanceHours: 0,
+            assistanceCount: 0,
+            assistanceResolvedCount: 0,
+          },
+        });
+      });
+
+      (tickets as TicketRow[] | null | undefined)?.forEach((t) => {
+        if (!t.created_by) return;
+        const row = statsByAgent.get(t.created_by);
+        if (!row) return;
+
+        row.values.totalTicketsCreated += 1;
+
+        if (t.ticket_type === 'ASSISTANCE') {
+          row.values.assistanceCount += 1;
+          row.values.assistanceHours += toHours(safeMinutes(t));
+          if (t.resolved_at) row.values.assistanceResolvedCount += 1;
+        }
+      });
+
+      // 3) Garder un top N agents (lisibilité radar) : tri par totalTicketsCreated
+      const agents = Array.from(statsByAgent.values())
+        .sort((a, b) => b.values.totalTicketsCreated - a.values.totalTicketsCreated)
+        .slice(0, limit);
+
+      // 4) Normaliser par dimension (0-100)
+      const maxByDim: Record<SupportAgentRadarDimension, number> = {
+        totalTicketsCreated: 0,
+        assistanceHours: 0,
+        assistanceCount: 0,
+        assistanceResolvedCount: 0,
+      };
+
+      agents.forEach((a) => {
+        (Object.keys(maxByDim) as SupportAgentRadarDimension[]).forEach((k) => {
+          maxByDim[k] = Math.max(maxByDim[k], a.values[k]);
+        });
+      });
+
+      // Data Recharts : une ligne par dimension, une colonne par agentId (valeur normalisée)
+      const chartData = DIMENSIONS.map((dim) => {
+        const row: Record<string, string | number> = { subject: dim.label };
+        agents.forEach((a) => {
+          row[a.agentId] = normalize(a.values[dim.key], maxByDim[dim.key]);
+        });
+        return row;
+      });
+
+      return { dimensions: DIMENSIONS, agents, chartData, limit };
+    } catch (e) {
+      console.error('[getSupportAgentsRadarStats] Unexpected error:', e);
+      return null;
+    }
+  }
+);
+
+
+

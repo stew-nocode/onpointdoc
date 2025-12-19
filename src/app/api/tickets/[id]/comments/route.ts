@@ -34,7 +34,7 @@ export async function POST(
     }
 
     // Valider le body
-    const bodyValidation = createCommentSchema.pick({ content: true }).safeParse(body);
+    const bodyValidation = createCommentSchema.pick({ content: true, comment_type: true }).safeParse(body);
 
     if (!bodyValidation.success) {
       return handleApiError(
@@ -44,11 +44,11 @@ export async function POST(
       );
     }
 
-    const { content } = bodyValidation.data;
+    const { content, comment_type } = bodyValidation.data;
     const { ticket_id } = paramsValidation.data;
 
     // Créer le commentaire
-    const comment = await createComment(ticket_id, content);
+    const comment = await createComment(ticket_id, content, comment_type || 'comment');
 
     return NextResponse.json(
       {

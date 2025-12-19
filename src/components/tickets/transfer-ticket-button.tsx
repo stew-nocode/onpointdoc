@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/ui/alert';
 
@@ -16,7 +15,6 @@ export const TransferTicketButton = ({
 }: TransferTicketButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleTransfer = async () => {
     if (
@@ -32,9 +30,7 @@ export const TransferTicketButton = ({
 
     try {
       await onTransfer();
-      router.refresh();
-      // Optionnel : rediriger vers la liste des tickets
-      // router.push('/gestion/tickets');
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Erreur lors du transfert'

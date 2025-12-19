@@ -24,18 +24,34 @@ export type Department = (typeof departments)[number];
 
 /**
  * Schéma pour créer un utilisateur (via API)
+ * Email et password sont optionnels : si non fournis, seul le profil sera créé (pas d'utilisateur auth)
  */
 export const userCreateSchema = z.object({
   fullName: z.string().min(2).max(100),
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
   role: z.enum(profileRoles),
   companyId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().optional(),
   moduleIds: z.array(z.string().uuid()).optional(),
   department: z.string().optional().nullable(),
   jobTitle: z.string().optional().nullable()
-});
+}).refine(
+  (data) => {
+    // Si email est fourni, password doit aussi être fourni (et vice versa)
+    if (data.email && !data.password) {
+      return false;
+    }
+    if (data.password && !data.email) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Email et mot de passe doivent être fournis ensemble',
+    path: ['password']
+  }
+);
 
 export type UserCreateInput = z.infer<typeof userCreateSchema>;
 
@@ -75,15 +91,31 @@ export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
 
 /**
  * Schéma pour créer un contact (client externe)
+ * Email et password sont optionnels : si non fournis, le contact ne pourra pas se connecter
  */
 export const contactCreateSchema = z.object({
   fullName: z.string().min(2).max(100),
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
   jobTitle: z.string().optional(),
   companyId: z.string().uuid(),
   isActive: z.boolean().optional()
-});
+}).refine(
+  (data) => {
+    // Si email est fourni, password doit aussi être fourni (et vice versa)
+    if (data.email && !data.password) {
+      return false;
+    }
+    if (data.password && !data.email) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Email et mot de passe doivent être fournis ensemble',
+    path: ['password']
+  }
+);
 
 export type ContactCreateInput = z.infer<typeof contactCreateSchema>;
 

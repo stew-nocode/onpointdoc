@@ -1,0 +1,161 @@
+{
+  "timestamp": "2025-12-10T13:26:43.102Z",
+  "total_files": 15,
+  "files": [
+    {
+      "file": "2025-12-10-import-all-assistance-part-01.sql",
+      "part_number": 1,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2025-10-12T10:16:00.000Z",
+        "newest": "2025-12-07T10:51:00.000Z"
+      },
+      "file_size_kb": 230
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-02.sql",
+      "part_number": 2,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2025-07-25T19:56:00.000Z",
+        "newest": "2025-10-12T09:48:00.000Z"
+      },
+      "file_size_kb": 217
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-03.sql",
+      "part_number": 3,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2025-05-09T15:21:00.000Z",
+        "newest": "2025-07-25T19:53:00.000Z"
+      },
+      "file_size_kb": 214
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-04.sql",
+      "part_number": 4,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2025-02-07T18:00:00.000Z",
+        "newest": "2025-05-09T15:21:00.000Z"
+      },
+      "file_size_kb": 206
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-05.sql",
+      "part_number": 5,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-11-29T19:11:00.000Z",
+        "newest": "2025-02-07T18:00:00.000Z"
+      },
+      "file_size_kb": 211
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-06.sql",
+      "part_number": 6,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-09-29T14:59:00.000Z",
+        "newest": "2024-11-29T19:08:00.000Z"
+      },
+      "file_size_kb": 206
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-07.sql",
+      "part_number": 7,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-07-12T17:31:00.000Z",
+        "newest": "2024-09-29T14:58:00.000Z"
+      },
+      "file_size_kb": 210
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-08.sql",
+      "part_number": 8,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T11:24:00.000Z",
+        "newest": "2024-07-12T17:30:00.000Z"
+      },
+      "file_size_kb": 211
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-09.sql",
+      "part_number": 9,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T11:16:00.000Z",
+        "newest": "2024-06-19T11:24:00.000Z"
+      },
+      "file_size_kb": 211
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-10.sql",
+      "part_number": 10,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T11:08:00.000Z",
+        "newest": "2024-06-19T11:16:00.000Z"
+      },
+      "file_size_kb": 218
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-11.sql",
+      "part_number": 11,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T11:01:00.000Z",
+        "newest": "2024-06-19T11:08:00.000Z"
+      },
+      "file_size_kb": 215
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-12.sql",
+      "part_number": 12,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T10:53:00.000Z",
+        "newest": "2024-06-19T11:01:00.000Z"
+      },
+      "file_size_kb": 217
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-13.sql",
+      "part_number": 13,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T10:36:00.000Z",
+        "newest": "2024-06-19T10:53:00.000Z"
+      },
+      "file_size_kb": 219
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-14.sql",
+      "part_number": 14,
+      "ticket_count": 500,
+      "date_range": {
+        "oldest": "2024-06-19T09:59:00.000Z",
+        "newest": "2024-06-19T10:36:00.000Z"
+      },
+      "file_size_kb": 219
+    },
+    {
+      "file": "2025-12-10-import-all-assistance-part-15.sql",
+      "part_number": 15,
+      "ticket_count": 203,
+      "date_range": {
+        "oldest": "2024-06-18T19:14:00.000Z",
+        "newest": "2024-06-19T09:59:00.000Z"
+      },
+      "file_size_kb": 95
+    }
+  ],
+  "instructions": [
+    "Pour appliquer ces migrations, utilisez le MCP Supabase apply_migration pour chaque fichier",
+    "OU appliquez-les via le SQL Editor de Supabase",
+    "Les migrations utilisent ON CONFLICT sur jira_issue_key pour éviter les doublons"
+  ]
+}

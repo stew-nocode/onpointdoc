@@ -2,10 +2,10 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { UserPlus } from 'lucide-react';
 import { NewUserDialogLazy } from '@/components/users/new-user-dialog-lazy';
 import { UsersTableClient, type UserRow } from '@/components/users/users-table-client';
 import type { Company } from '@/types/company';
+import { StandardPageHeader } from '@/components/layout/page';
 
 async function loadUsers(): Promise<UserRow[]> {
   noStore();
@@ -30,15 +30,16 @@ export default async function UsersIndexPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Utilisateurs</h1>
-        <NewUserDialogLazy>
-          <Button>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Nouvel utilisateur
-          </Button>
-        </NewUserDialogLazy>
-      </div>
+      <StandardPageHeader
+        icon="Users"
+        title="Utilisateurs"
+        description="Gérez les utilisateurs de l'application"
+        actions={
+          <NewUserDialogLazy>
+            <Button>Nouvel utilisateur</Button>
+          </NewUserDialogLazy>
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle>Liste des utilisateurs</CardTitle>

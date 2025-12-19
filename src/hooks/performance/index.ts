@@ -9,4 +9,7 @@ export { usePerformanceMeasure, measureExecution } from './use-performance-measu
 
 export { useRenderCount, usePropsComparison } from './use-render-count';
 
+export { usePageLoadTime } from './use-page-load-time';
+export type { PageLoadMetrics } from './use-page-load-time';
+
 

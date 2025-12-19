@@ -9,7 +9,9 @@ import {
   listModulesForCurrentUser,
   listProductsForCurrentUserDepartment
 } from '@/services/products';
-import { listBasicProfiles } from '@/services/users/server';
+import { listBasicProfiles, listSupportAgents } from '@/services/users/server';
+import { listCompanies } from '@/services/companies/server';
+import { listActiveDepartments } from '@/services/departments/server';
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import { CreateTicketDialogLazy } from '@/components/tickets/create-ticket-dialog-lazy';
 import { TicketsInfiniteScroll } from '@/components/tickets/tickets-infinite-scroll';
@@ -19,10 +21,18 @@ import { TicketsKPISectionLazy } from '@/components/tickets/tickets-kpi-section-
 import { TicketsPageClientWrapper } from '@/components/tickets/tickets-page-client-wrapper';
 import { getSupportTicketKPIs } from '@/services/tickets/support-kpis';
 import type { QuickFilter } from '@/types/ticket-filters';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getCachedCurrentUserProfileId, getCachedCurrentUserRole, getCachedIsSupportAgent } from '@/lib/auth/cached-auth';
+import { AgentSelector } from '@/components/tickets/agent-selector';
+import { CompanySelector } from '@/components/tickets/company-selector';
+import { isApplicationError } from '@/lib/errors/types';
 import { parseAdvancedFiltersFromParams } from '@/lib/validators/advanced-filters';
+import { getTicketViewRole, TICKET_VIEW_CONFIGS } from '@/types/ticket-view-config';
 import { FiltersSidebarClientLazy } from '@/components/tickets/filters/filters-sidebar-client-lazy';
 import { PageLayoutWithFilters } from '@/components/layout/page';
+import { createTicketAction } from './actions';
+import { getCachedSearchParams, stabilizeSearchParams } from '@/lib/utils/search-params';
+import { Alert, AlertDescription, AlertTitle } from '@/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 type TicketsPageProps = {
   searchParams?: Promise<{
@@ -38,7 +48,33 @@ type TicketsPageProps = {
 /**
  * Charge les tickets initiaux pour la page
  * 
- * Optimisé : noStore() seulement ici pour éviter le cache des tickets (données temps réel)
+ * ✅ PHASE 4 OPTIMISÉE (correction) :
+ * - noStore() nécessaire car les tickets dépendent de cookies() (authentification)
+ * - unstable_cache() ne peut pas être utilisé avec cookies() (limitation Next.js)
+ * - Les tickets sont des données dynamiques dépendantes de l'utilisateur (RLS)
+ * - revalidatePath() dans les Server Actions reste efficace pour les mises à jour
+ * 
+ * Principe Clean Code - Niveau Senior :
+ * - noStore() utilisé seulement pour les tickets (données temps réel + dynamiques)
+ * - Les optimisations des phases précédentes restent (Server Actions, searchParams)
+ * - revalidatePath() assure la fraîcheur des données après modifications
+ */
+/**
+ * Charge les tickets initiaux pour la page
+ * 
+ * ✅ PHASE 4 OPTIMISÉE (correction) :
+ * - noStore() nécessaire car les tickets dépendent de cookies() (authentification)
+ * - unstable_cache() ne peut pas être utilisé avec cookies() (limitation Next.js)
+ * - Les tickets sont des données dynamiques dépendantes de l'utilisateur (RLS)
+ * - revalidatePath() dans les Server Actions reste efficace pour les mises à jour
+ * 
+ * Principe Clean Code - Niveau Senior :
+ * - noStore() utilisé seulement pour les tickets (données temps réel + dynamiques)
+ * - Les optimisations des phases précédentes restent (Server Actions, searchParams)
+ * - revalidatePath() assure la fraîcheur des données après modifications
+ * - Gestion d'erreur améliorée : propage l'erreur au lieu de retourner un résultat vide
+ * 
+ * @throws ApplicationError si une erreur survient lors du chargement
  */
 async function loadInitialTickets(
   typeParam?: string,
@@ -48,10 +84,14 @@ async function loadInitialTickets(
   currentProfileId?: string | null,
   sortColumnParam?: string,
   sortDirectionParam?: string,
-  advancedFilters?: ReturnType<typeof parseAdvancedFiltersFromParams>
+  advancedFilters?: ReturnType<typeof parseAdvancedFiltersFromParams>,
+  agentParam?: string, // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyParam?: string // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
 ): Promise<TicketsPaginatedResult> {
-  // noStore() uniquement pour les tickets (données temps réel)
+  // ✅ noStore() nécessaire : tickets dépendent de cookies() (authentification)
+  // Impossible d'utiliser unstable_cache() avec cookies() selon Next.js
   noStore();
+  
   try {
     const normalizedType =
       typeParam === 'BUG' || typeParam === 'REQ' || typeParam === 'ASSISTANCE'
@@ -65,43 +105,47 @@ async function loadInitialTickets(
     const { parseTicketSort } = await import('@/types/ticket-sort');
     const sort = parseTicketSort(sortColumnParam, sortDirectionParam);
 
-    return await listTicketsPaginated(
+    const result = await listTicketsPaginated(
       normalizedType,
       normalizedStatus,
       0,
       25,
       searchParam,
       quickFilterParam,
-      currentProfileId,
+      currentProfileId ?? undefined,
       sort.column,
       sort.direction,
-      advancedFilters || undefined
+      advancedFilters || undefined,
+      agentParam, // ✅ Passer le paramètre agent pour le filtrage
+      companyParam // ✅ Passer le paramètre company pour le filtrage
     );
-  } catch {
-    return { tickets: [], hasMore: false, total: 0 };
+    
+    return result;
+  } catch (error) {
+    // Logger l'erreur pour le débogage
+    console.error('[ERROR] Erreur dans loadInitialTickets:', error);
+    
+    // Normaliser l'erreur en ApplicationError si ce n'est pas déjà le cas
+    const { normalizeError, createError } = await import('@/lib/errors/types');
+    const normalizedError = isApplicationError(error) 
+      ? error 
+      : normalizeError(error);
+    
+    // Logger les détails supplémentaires si c'est une ApplicationError
+    if (isApplicationError(normalizedError)) {
+      console.error('[ERROR] Code:', normalizedError.code);
+      console.error('[ERROR] StatusCode:', normalizedError.statusCode);
+      if (normalizedError.details) {
+        console.error('[ERROR] Details:', normalizedError.details);
+      }
+    }
+    
+    // Propager l'erreur pour qu'elle soit gérée par le composant parent
+    // Cela permet d'afficher un message d'erreur à l'utilisateur
+    throw normalizedError;
   }
 }
 
-async function getCurrentUserProfileId() {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('auth_uid', user.id)
-      .single();
-
-    return profile?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Charge les produits et modules pour les formulaires
@@ -119,12 +163,14 @@ async function loadProductsAndModules() {
     // Si aucun produit n'est lié au département, utiliser tous les produits (fallback)
     const products = departmentProducts.length > 0 ? departmentProducts : await listProducts();
     
-    const [allModules, submodules, features, contacts, allowedModules] = await Promise.all([
+    const [allModules, submodules, features, contacts, companies, allowedModules, departments] = await Promise.all([
       listModules(),
       listSubmodules(),
       listFeatures(),
       listBasicProfiles(),
-      listModulesForCurrentUser()
+      listCompanies(),
+      listModulesForCurrentUser(),
+      listActiveDepartments()
     ]);
 
     // Si l'utilisateur a des modules affectés, filtrer la liste
@@ -133,106 +179,158 @@ async function loadProductsAndModules() {
         ? allModules.filter((m) => allowedModules.some((am) => am.id === m.id))
         : allModules;
 
-    return { products, modules, submodules, features, contacts };
+    return { products, modules, submodules, features, contacts, companies, departments };
   } catch {
-    return { products: [], modules: [], submodules: [], features: [], contacts: [] };
+    return { products: [], modules: [], submodules: [], features: [], contacts: [], companies: [], departments: [] };
   }
 }
+
 
 /**
  * Page principale de gestion des tickets
  * 
- * Optimisé : noStore() déplacé uniquement dans loadInitialTickets
- * pour permettre le cache des données statiques (produits, modules)
+ * Optimisations appliquées (Niveau Senior) :
+ * - noStore() déplacé uniquement dans loadInitialTickets (données temps réel uniquement)
+ * - cache() utilisé pour mémoriser la résolution des searchParams
+ * - searchParams stabilisés pour éviter les recompilations inutiles
+ * - Parallélisme optimisé pour les requêtes indépendantes
  */
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  // Résoudre la Promise searchParams pour Next.js 15
-  const resolvedSearchParams = await searchParams;
-  const quickFilter = resolvedSearchParams?.quick as QuickFilter | undefined;
+  // ✅ PHASE 3 : Utiliser cache() pour mémoriser la résolution des searchParams
+  // Évite de résoudre plusieurs fois les mêmes params dans le même render tree
+  const resolvedSearchParams = searchParams ? await getCachedSearchParams(searchParams) : {};
   
-  // Parser les filtres avancés depuis les URL params
-  // Next.js 15 retourne les searchParams comme un objet, mais pour les valeurs multiples,
-  // il faut les extraire manuellement depuis l'URL
-  const allParams: Record<string, string | string[] | undefined> = {};
+  // Stabiliser et normaliser les searchParams pour une comparaison stable
+  const stabilizedParams = await stabilizeSearchParams(resolvedSearchParams);
   
-  // Pour les paramètres simples, utiliser directement
-  if (resolvedSearchParams?.type) allParams.type = resolvedSearchParams.type;
-  if (resolvedSearchParams?.status) allParams.status = resolvedSearchParams.status;
-  if (resolvedSearchParams?.search) allParams.search = resolvedSearchParams.search;
-  if (resolvedSearchParams?.quick) allParams.quick = resolvedSearchParams.quick;
+  // Extraire les paramètres avec types appropriés
+  // ✅ NOUVEAU : Si aucun filtre rapide n'est dans l'URL, utiliser 'all' par défaut
+  const quickFilter = (stabilizedParams.quick as QuickFilter | undefined) || 'all';
+  const typeParam = stabilizedParams.type;
+  const statusParam = stabilizedParams.status;
+  const searchParam = stabilizedParams.search;
+  const sortColumnParam = stabilizedParams.sortColumn;
+  const sortDirectionParam = stabilizedParams.sortDirection;
+  const agentParam = stabilizedParams.agent as string | undefined; // Paramètre agent pour les managers
+  const companyParam = stabilizedParams.company as string | undefined; // ✅ Paramètre company pour filtrer par entreprise
   
-  // Pour les paramètres de filtres avancés, on doit les extraire depuis l'URL directement
-  // car Next.js 15 ne les expose pas comme arrays dans searchParams
-  // On utilisera parseAdvancedFiltersFromParams côté client dans FiltersSidebarClient
-  const advancedFilters = null; // Sera géré côté client via FiltersSidebarClient
+  // Parser les filtres avancés depuis les searchParams
+  // Next.js 15 expose les paramètres multiples comme arrays dans searchParams
+  const advancedFilters = parseAdvancedFiltersFromParams(resolvedSearchParams);
   
   // Optimiser le parallélisme : démarrer toutes les requêtes en parallèle
-  // Le profileId est nécessaire pour les KPIs et tickets, donc on l'attend d'abord
-  const [currentProfileId, productsData] = await Promise.all([
-    getCurrentUserProfileId(),
+  // Le profileId et le rôle sont nécessaires pour les KPIs, tickets et configuration
+  // ✅ OPTIMISÉ : Utilise getCachedCurrentUserProfileId et getCachedCurrentUserRole pour éviter le rate limit
+  const [currentProfileId, userRole, isSupportAgent, productsData] = await Promise.all([
+    getCachedCurrentUserProfileId(),
+    getCachedCurrentUserRole(),
+    getCachedIsSupportAgent(), // Vérifier si l'utilisateur est un agent support
     loadProductsAndModules(), // Pas de dépendance, peut être en parallèle
   ]);
 
+  // Déterminer le rôle de vue et récupérer la configuration
+  const viewRole = getTicketViewRole(userRole);
+  const viewConfig = TICKET_VIEW_CONFIGS[viewRole];
+  
+  // ✅ Adapter les filtres disponibles : "mine" uniquement pour les agents support
+  const availableQuickFilters = isSupportAgent 
+    ? viewConfig.availableQuickFilters 
+    : viewConfig.availableQuickFilters.filter(filter => filter !== 'mine');
+
+  // Charger les agents support pour les managers, admins et agents support
+  const supportAgents = (viewRole === 'manager' || viewRole === 'admin' || viewRole === 'agent')
+    ? await listSupportAgents() 
+    : [];
+  
   // Ensuite, charger les tickets et KPIs en parallèle (dépendent de currentProfileId)
   try {
     const [initialTicketsData, kpis] = await Promise.all([
       loadInitialTickets(
-        resolvedSearchParams?.type,
-        resolvedSearchParams?.status,
-        resolvedSearchParams?.search,
+        typeParam,
+        statusParam,
+        searchParam,
         quickFilter,
         currentProfileId,
-        resolvedSearchParams?.sortColumn,
-        resolvedSearchParams?.sortDirection,
-        null // TODO: Réintégrer les filtres avancés après repositionnement de la sidebar
+        sortColumnParam,
+        sortDirectionParam,
+        advancedFilters,
+        agentParam, // ✅ Passer le paramètre agent pour le filtrage
+        companyParam // ✅ Passer le paramètre company pour le filtrage
       ),
       getSupportTicketKPIs(currentProfileId),
     ]);
-    const { products, modules, submodules, features, contacts } = productsData;
+    const { products, modules, submodules, features, contacts, companies, departments } = productsData;
 
-    async function handleTicketSubmit(values: CreateTicketInput) {
-      'use server';
-      const created = await createTicket(values);
-      return created?.id as string;
-    }
+    // ✅ Server Action extraite dans actions.ts pour éviter les recompilations
+    // La fonction inline était recréée à chaque recompilation du Server Component
 
     return (
       <TicketsPageClientWrapper>
         <PageLayoutWithFilters
           sidebar={
+            // ✅ Afficher la sidebar seulement si configuré (masquée pour agents)
+            viewConfig.showAdvancedFilters ? (
             <FiltersSidebarClientLazy
               users={contacts}
               products={products}
               modules={modules}
             />
+            ) : null
           }
           header={{
-            label: 'Tickets',
-            title: 'Gestion des tickets Support',
-            description: 'Cycle de vie : Nouveau → En cours → Transféré → Résolu',
-            action: (
+            icon: 'Ticket',
+            title: viewConfig.pageTitle,
+            description: viewConfig.pageDescription,
+            actions: (
               <CreateTicketDialogLazy
                 products={products}
                 modules={modules}
                 submodules={submodules}
                 features={features}
                 contacts={contacts}
-                onSubmit={handleTicketSubmit}
+                companies={companies}
+                departments={departments}
+                onSubmit={createTicketAction}
               />
             )
           }}
-          kpis={<TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />}
+          kpis={
+            // ✅ Afficher les KPIs seulement si configuré
+            viewConfig.showKPIs ? (
+              <TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />
+            ) : null
+          }
           card={{
             title: 'Tickets récents',
             titleSuffix:
               initialTicketsData.total > 0
                 ? `(${initialTicketsData.total} au total)`
                 : undefined,
-            search: <TicketsSearchBar initialSearch={resolvedSearchParams?.search} />,
+            search: (
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-stretch">
+                <TicketsSearchBar initialSearch={searchParam} className="flex-[1.3] min-w-[200px]" />
+                {/* ✅ Afficher les sélecteurs pour les managers, admins et agents support */}
+                {(viewRole === 'manager' || viewRole === 'admin' || viewRole === 'agent') && (
+                  <>
+                    <AgentSelector 
+                      agents={supportAgents} 
+                      initialAgentId={agentParam}
+                      className="flex-[1.3] min-w-[200px]"
+                    />
+                    <CompanySelector 
+                      companies={companies} 
+                      initialCompanyId={companyParam}
+                      className="flex-[1.3] min-w-[200px]"
+                    />
+                  </>
+                )}
+              </div>
+            ),
             quickFilters: (
               <TicketsQuickFilters
                 activeFilter={quickFilter}
                 currentProfileId={currentProfileId}
+                availableFilters={availableQuickFilters} // ✅ Utiliser les filtres adaptés
               />
             )
           }}
@@ -241,25 +339,60 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
             initialTickets={initialTicketsData.tickets}
             initialHasMore={initialTicketsData.hasMore}
             initialTotal={initialTicketsData.total}
-            type={resolvedSearchParams?.type}
-            status={resolvedSearchParams?.status}
-            search={resolvedSearchParams?.search}
+            type={typeParam}
+            status={statusParam}
+            search={searchParam}
             quickFilter={quickFilter}
             currentProfileId={currentProfileId ?? undefined}
+            viewConfig={viewConfig}
           />
         </PageLayoutWithFilters>
       </TicketsPageClientWrapper>
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des tickets:', error);
+    
+    // Extraire le message d'erreur selon le type
+    let errorMessage = 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.';
+    let errorTitle = 'Erreur lors du chargement';
+    let errorDetails: string | undefined;
+    
+    if (isApplicationError(error)) {
+      errorMessage = error.message;
+      errorTitle = `Erreur ${error.statusCode || 500}`;
+      
+      // Messages d'erreur plus user-friendly selon le code
+      if (error.code === 'NETWORK_ERROR') {
+        errorMessage = 'Erreur de connexion réseau. Vérifiez votre connexion internet et réessayez.';
+      } else if (error.code === 'SUPABASE_ERROR') {
+        errorMessage = 'Erreur lors de la récupération des données. Veuillez réessayer dans quelques instants.';
+      } else if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
+        errorMessage = 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page.';
+      }
+      
+      // Ajouter les détails techniques en mode développement
+      if (process.env.NODE_ENV === 'development' && error.details) {
+        errorDetails = `Code: ${error.code} | Status: ${error.statusCode}`;
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return (
-      <div className="space-y-6">
-        <div className="rounded-lg border border-status-danger bg-status-danger/10 p-4 text-status-danger">
-          <p className="font-semibold">Erreur lors du chargement</p>
-          <p className="text-sm">
-            {error?.message || 'Une erreur est survenue lors du chargement des tickets. Veuillez réessayer.'}
-          </p>
-        </div>
+      <div className="space-y-6 p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{errorTitle}</AlertTitle>
+          <AlertDescription>
+            <p className="mb-2">{errorMessage}</p>
+            {errorDetails && (
+              <p className="mt-2 text-xs opacity-75">{errorDetails}</p>
+            )}
+            <p className="mt-4 text-sm">
+              Si le problème persiste, veuillez contacter le support technique.
+            </p>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

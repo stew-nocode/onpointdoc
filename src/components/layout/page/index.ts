@@ -18,6 +18,7 @@ export { PageLayoutWithFilters } from './page-layout-with-filters';
 export { PageLayoutWithDashboardFilters } from './page-layout-with-dashboard-filters';
 export { PageContent } from './page-content';
 export { PageHeader } from './page-header';
+export { StandardPageHeader } from './standard-page-header';
 export { PageKPISection } from './page-kpi-section';
 export { PageCard } from './page-card';
 export { PageSidebarWrapper } from './page-sidebar-wrapper';

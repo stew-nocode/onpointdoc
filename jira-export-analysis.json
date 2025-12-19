@@ -1,0 +1,116 @@
+{
+  "sheet_url": "https://docs.google.com/spreadsheets/d/1ASCYRKkEzwneb_14e66LhIZ42inAnugneYw7VMHGvXI/export?format=csv&gid=1666703735",
+  "analysis_date": "2025-12-10T08:29:11.358Z",
+  "total_columns": 15,
+  "total_rows": 7314,
+  "columns": {
+    "headers": [
+      "Résumé",
+      "Clé de ticket",
+      "Type de ticket",
+      "État",
+      "Priorité",
+      "Rapporteur",
+      "Durée(mn)",
+      "Création",
+      "Description",
+      "Champs personnalisés (Action menée)",
+      "Canal",
+      "Entreprise",
+      "Utilisateur",
+      "Objet principal",
+      "Champs personnalisés (Module)\r"
+    ],
+    "relevant": {
+      "jira_issue_key": {
+        "index": 1,
+        "name": "Clé de ticket",
+        "sample": "OBCS-12156"
+      },
+      "ticket_type": {
+        "index": 2,
+        "name": "Type de ticket",
+        "sample": "Assistance"
+      },
+      "status": {
+        "index": 3,
+        "name": "État",
+        "sample": "Terminé"
+      },
+      "priority": {
+        "index": 4,
+        "name": "Priorité",
+        "sample": "Priorité 3"
+      },
+      "reporter": {
+        "index": 5,
+        "name": "Rapporteur",
+        "sample": "Vivien DAKPOGAN"
+      },
+      "duration": {
+        "index": 6,
+        "name": "Durée(mn)",
+        "sample": "9.34"
+      },
+      "created": {
+        "index": 7,
+        "name": "Création",
+        "sample": "07/déc./25 10:51"
+      },
+      "description": {
+        "index": 8,
+        "name": "Description",
+        "sample": "Appel pour point d'étape sur les blocages RH et Compta"
+      },
+      "dates": [],
+      "custom_fields": [
+        {
+          "index": 9,
+          "name": "Champs personnalisés (Action menée)",
+          "sample": "Explication en ligne"
+        },
+        {
+          "index": 14,
+          "name": "Champs personnalisés (Module)\r",
+          "sample": "Finance\r"
+        }
+      ]
+    }
+  },
+  "sample_data": {
+    "first_row": [
+      "Appel pour point d'étape sur les blocages RH et Compta",
+      "OBCS-12156",
+      "Assistance",
+      "Terminé",
+      "Priorité 3",
+      "Vivien DAKPOGAN",
+      "9.34",
+      "07/déc./25 10:51",
+      "Appel pour point d'étape sur les blocages RH et Compta",
+      "Explication en ligne",
+      "Appel Téléphonique",
+      "KOFFI & DIABATE",
+      "KADIA KOFFI",
+      "Autres",
+      "Finance\r"
+    ],
+    "second_row": [
+      "Appel pour confirmation séance de travail du Vendredi 05/12",
+      "OBCS-12155",
+      "Assistance",
+      "Terminé",
+      "Priorité 3",
+      "Vivien DAKPOGAN",
+      "0.57",
+      "07/déc./25 10:47",
+      "Appel pour confirmation séance de travail du Vendredi 05/12",
+      "Explication en ligne",
+      "Appel Téléphonique",
+      "ARIC",
+      "NADIA CISSE",
+      "Planning Séance de travail",
+      "Finance\r"
+    ]
+  }
+}

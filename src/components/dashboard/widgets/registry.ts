@@ -2,35 +2,57 @@ import type { DashboardWidget, WidgetLayoutType } from '@/types/dashboard-widget
 import type { ComponentType } from 'react';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import type { WidgetProps } from '@/types/dashboard-widget-props';
-import { MTTRKPICard } from '../ceo/mttr-kpi-card';
-import { TicketsOuvertsKPICard } from '../ceo/tickets-ouverts-kpi-card';
-import { TicketsResolusKPICard } from '../ceo/tickets-resolus-kpi-card';
-import { WorkloadKPICard } from '../ceo/workload-kpi-card';
-import { HealthKPICard } from '../ceo/health-kpi-card';
-import { MTTREvolutionChart } from '../ceo/mttr-evolution-chart';
-import { TicketsDistributionChart } from '../ceo/tickets-distribution-chart';
-import { TopBugsModulesTable } from '../ceo/top-bugs-modules-table';
-import { WorkloadByAgentTable } from '../ceo/workload-by-agent-table';
-import { OperationalAlertsSection } from '../ceo/operational-alerts-section';
+
+// === IMPORTS DES WIDGETS ===
+// Agents
+import { AgentsSupportCards } from '@/components/dashboard/agents/support/agents-support-cards';
+// Entreprises
+import { CompaniesCards } from '@/components/dashboard/companies/companies-cards';
+// KPIs Statiques
+import { BugHistoryCard } from '@/components/dashboard/static-kpis/bug-history-card';
+import { ReqHistoryCard } from '@/components/dashboard/static-kpis/req-history-card';
+import { AssistanceHistoryCard } from '@/components/dashboard/static-kpis/assistance-history-card';
+// Charts - ✅ Lazy loaded pour réduire le bundle initial
+import {
+  TicketsDistributionChart,
+  TicketsEvolutionChart,
+  TicketsByCompanyChart,
+  BugsByTypeChart,
+  CampaignsResultsChart,
+  TicketsByModuleChart,
+  BugsByTypeAndModuleChart,
+  AssistanceTimeByCompanyChart,
+  AssistanceTimeEvolutionChart,
+  SupportAgentsRadarChart,
+} from './lazy-widgets';
 
 /**
  * Définition d'un widget avec son composant et son type de layout
  * 
- * Utilise ComponentType<any> car chaque widget a ses propres props spécifiques.
- * La sécurité de type est assurée par les types spécifiques de chaque composant widget.
+ * layoutType détermine automatiquement la section où le widget sera placé :
+ * - 'kpi-static' → Section KPIs Statiques (non filtrés, Admin/Direction only)
+ * - 'kpi' → Section KPIs Filtrés (selon période)
+ * - 'chart' → Section Charts
+ * - 'table' → Section Tables
+ * - 'full-width' → Section Full-width (bas de page)
  */
 export type WidgetDefinition = {
   component: ComponentType<any>;
   layoutType: WidgetLayoutType;
   title: string;
   description?: string;
+  /** Tags pour filtrage et affectation granulaire */
+  tags?: {
+    products: ('OBC' | 'SNI' | 'CREDIT_FACTORY' | 'ALL')[];
+    departments: ('SUPPORT' | 'MARKETING' | 'IT' | 'ALL')[];
+    roles: ('direction' | 'manager' | 'agent' | 'admin' | 'ALL')[];
+  };
 };
 
 /**
  * Mapping des données aux widgets
  * 
  * Retourne un objet avec les props à passer au composant widget.
- * Chaque mapper garantit le type correct via les types spécifiques des props.
  */
 type WidgetDataMapper = (data: UnifiedDashboardData) => WidgetProps;
 
@@ -38,157 +60,244 @@ type WidgetDataMapper = (data: UnifiedDashboardData) => WidgetProps;
  * Registry centralisé de tous les widgets disponibles
  * 
  * Pour ajouter un nouveau widget :
- * 1. Créer le composant du widget
+ * 1. Créer le composant du widget (suivre les best practices de la doc)
  * 2. L'importer ici
- * 3. L'ajouter dans WIDGET_REGISTRY
- * 4. Ajouter l'ID dans le type DashboardWidget
+ * 3. L'ajouter dans WIDGET_REGISTRY avec layoutType approprié
+ * 4. Ajouter l'ID dans le type DashboardWidget (dashboard-widgets.ts)
+ * 5. Ajouter le mapper dans WIDGET_DATA_MAPPERS
+ * 
+ * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md
  */
 export const WIDGET_REGISTRY: Record<DashboardWidget, WidgetDefinition> = {
-  mttr: {
-    component: MTTRKPICard,
-    layoutType: 'kpi',
-    title: 'Temps moyen de résolution (MTTR)',
-    description: 'Temps moyen nécessaire pour résoudre un ticket',
+  // === SECTION : AGENTS ===
+  'agents-support-cards': {
+    component: AgentsSupportCards,
+    layoutType: 'agents',
+    title: 'Agents Support',
+    description: 'Cartes par agent (photo + résumé activité sur la période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-  'tickets-ouverts': {
-    component: TicketsOuvertsKPICard,
-    layoutType: 'kpi',
-    title: 'Tickets Ouverts',
-    description: 'Nombre de tickets créés sur la période',
+
+  // === SECTION : ENTREPRISES ===
+  'companies-cards': {
+    component: CompaniesCards,
+    layoutType: 'companies',
+    title: 'Entreprises',
+    description: 'Cartes par entreprise (résumé activité sur la période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-  'tickets-resolus': {
-    component: TicketsResolusKPICard,
-    layoutType: 'kpi',
-    title: 'Tickets Résolus',
-    description: 'Nombre de tickets résolus sur la période avec taux de résolution',
+
+  // === SECTION : KPIs STATIQUES ===
+  'bug-history': {
+    component: BugHistoryCard,
+    layoutType: 'kpi-static',
+    title: 'Historique BUG',
+    description: 'Vue historique complète des tickets BUG (temps réel)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT', 'IT'],
+      roles: ['admin', 'direction'],  // Visible uniquement Admin & Direction
+    },
   },
-  workload: {
-    component: WorkloadKPICard,
-    layoutType: 'kpi',
-    title: 'Charge de travail',
-    description: 'Répartition de la charge par équipe et agent',
+  'req-history': {
+    component: ReqHistoryCard,
+    layoutType: 'kpi-static',
+    title: 'Historique REQ',
+    description: 'Vue historique complète des tickets REQ (temps réel)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT', 'IT'],
+      roles: ['admin', 'direction'],  // Visible uniquement Admin & Direction
+    },
   },
-  health: {
-    component: HealthKPICard,
-    layoutType: 'kpi',
-    title: 'Santé des produits',
-    description: 'Taux de bugs et modules les plus affectés',
+  'assistance-history': {
+    component: AssistanceHistoryCard,
+    layoutType: 'kpi-static',
+    title: 'Historique ASSISTANCE',
+    description: 'Vue historique complète des tickets ASSISTANCE (temps réel)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction'],  // Visible uniquement Admin & Direction
+    },
   },
-  alerts: {
-    component: OperationalAlertsSection,
-    layoutType: 'full-width',
-    title: 'Alertes opérationnelles',
-    description: 'Alertes critiques nécessitant une attention immédiate',
-  },
-  mttrEvolution: {
-    component: MTTREvolutionChart,
-    layoutType: 'chart',
-    title: 'Évolution MTTR',
-    description: 'Tendance du temps moyen de résolution dans le temps',
-  },
-  ticketsDistribution: {
+
+  // === SECTION : CHARTS ===
+  'tickets-distribution': {
     component: TicketsDistributionChart,
     layoutType: 'chart',
-    title: 'Distribution des tickets',
-    description: 'Répartition des tickets par type (BUG/REQ/ASSISTANCE)',
+    title: 'Distribution par Type',
+    description: 'Répartition des tickets BUG/REQ/Assistance (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['ALL'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-  topBugsModules: {
-    component: TopBugsModulesTable,
-    layoutType: 'table',
-    title: 'Top modules avec bugs',
-    description: 'Modules les plus affectés par des bugs avec taux et tendance',
+  'tickets-evolution': {
+    component: TicketsEvolutionChart,
+    layoutType: 'chart',
+    title: 'Évolution des tickets',
+    description: 'Tendance des tickets créés (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['ALL'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-  workloadByAgent: {
-    component: WorkloadByAgentTable,
-    layoutType: 'table',
-    title: 'Charge par agent',
-    description: 'Détails de la charge de travail par agent',
+  'tickets-by-company': {
+    component: TicketsByCompanyChart,
+    layoutType: 'chart',
+    title: 'Top entreprises',
+    description: 'Répartition des tickets par entreprise (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['ALL'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-};
-
-/**
- * Données par défaut pour éviter les erreurs quand les données sont manquantes
- */
-const DEFAULT_MTTR_DATA = {
-  global: 0,
-  byProduct: [],
-  byType: [],
-  trend: 0,
-};
-
-const DEFAULT_FLUX_DATA = {
-  opened: 0,
-  resolved: 0,
-  resolutionRate: 0,
-  byProduct: [],
-  trend: {
-    openedTrend: 0,
-    resolvedTrend: 0,
+  'bugs-by-type': {
+    component: BugsByTypeChart,
+    layoutType: 'chart',
+    title: 'BUGs par Type',
+    description: 'Répartition des BUGs par type de dysfonctionnement (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT', 'IT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
   },
-};
-
-const DEFAULT_WORKLOAD_DATA = {
-  byTeam: [],
-  byAgent: [],
-  totalActive: 0,
-};
-
-const DEFAULT_HEALTH_DATA = {
-  byProduct: [],
-  topBugModules: [],
+  'campaigns-results': {
+    component: CampaignsResultsChart,
+    layoutType: 'chart',
+    title: 'Campagnes Emails',
+    description: 'Résultats des campagnes emails : Envoyés | Ouverts | Cliqués (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['MARKETING'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
+  'tickets-by-module': {
+    component: TicketsByModuleChart,
+    layoutType: 'chart',
+    title: 'Tickets par Module',
+    description: 'Répartition des tickets par module : BUG | REQ | ASSISTANCE (filtré par période)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT', 'IT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
+  'bugs-by-type-module': {
+    component: BugsByTypeAndModuleChart,
+    layoutType: 'chart',
+    title: 'BUGs par Type et Module',
+    description: 'Répartition des types de BUG par module (barres empilées)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT', 'IT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
+  'assistance-time-by-company': {
+    component: AssistanceTimeByCompanyChart,
+    layoutType: 'chart',
+    title: 'Temps d\'assistance par entreprise',
+    description: 'Répartition du temps d\'assistance par entreprise (en heures)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
+  'assistance-time-evolution': {
+    component: AssistanceTimeEvolutionChart,
+    layoutType: 'chart',
+    title: 'Évolution du temps d\'assistance',
+    description: 'Tendance du temps d\'assistance avec granularité adaptative',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
+  'support-agents-radar': {
+    component: SupportAgentsRadarChart,
+    layoutType: 'chart',
+    title: 'Radar Agents Support',
+    description: 'Comparaison des agents Support (tickets créés & assistances)',
+    tags: {
+      products: ['ALL'],
+      departments: ['SUPPORT'],
+      roles: ['admin', 'direction', 'manager'],
+    },
+  },
 };
 
 /**
  * Mappe les données du dashboard aux props nécessaires pour chaque widget
- * Retourne des données par défaut si les données sont manquantes pour éviter les erreurs
  */
 export const WIDGET_DATA_MAPPERS: Record<DashboardWidget, WidgetDataMapper> = {
-  mttr: (data) => {
-    if (data.strategic) return { data: data.strategic.mttr };
-    if (data.team) return { data: data.team.mttr };
-    return { data: DEFAULT_MTTR_DATA };
-  },
-  'tickets-ouverts': (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
-  },
-  'tickets-resolus': (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
-  },
-  workload: (data) => {
-    if (data.strategic) return { data: data.strategic.workload };
-    if (data.team) return { data: data.team.workload };
-    return { data: DEFAULT_WORKLOAD_DATA };
-  },
-  health: (data) => {
-    if (data.strategic) return { data: data.strategic.health };
-    if (data.team) return { data: data.team.health };
-    return { data: DEFAULT_HEALTH_DATA };
-  },
-  alerts: (data) => ({ alerts: data.alerts || [] }),
-  mttrEvolution: (data) => {
-    if (data.strategic) return { data: data.strategic.mttr };
-    if (data.team) return { data: data.team.mttr };
-    return { data: DEFAULT_MTTR_DATA };
-  },
-  ticketsDistribution: (data) => {
-    if (data.strategic) return { data: data.strategic.flux };
-    if (data.team) return { data: data.team.flux };
-    return { data: DEFAULT_FLUX_DATA };
-  },
-  topBugsModules: (data) => {
-    if (data.strategic) return { data: data.strategic.health.topBugModules };
-    if (data.team) return { data: data.team.health.topBugModules };
-    return { data: [] };
-  },
-  workloadByAgent: (data) => {
-    if (data.strategic) return { data: data.strategic.workload.byAgent };
-    if (data.team) return { data: data.team.workload.byAgent };
-    return { data: [] };
-  },
+  // === SECTION : AGENTS ===
+  'agents-support-cards': (data) => ({
+    data: data.supportAgentsStats || null,
+  }),
+  // === SECTION : ENTREPRISES ===
+  'companies-cards': (data) => ({
+    data: data.companiesCardsStats || null,
+  }),
+
+  // === SECTION : KPIs STATIQUES ===
+  'bug-history': (data) => ({
+    data: data.bugHistoryStats || null,
+  }),
+  'req-history': (data) => ({
+    data: data.reqHistoryStats || null,
+  }),
+  'assistance-history': (data) => ({
+    data: data.assistanceHistoryStats || null,
+  }),
+
+  // === SECTION : CHARTS ===
+  'tickets-distribution': (data) => ({
+    data: data.ticketsDistributionStats || null,
+  }),
+  'tickets-evolution': (data) => ({
+    data: data.ticketsEvolutionStats || null,
+  }),
+  'tickets-by-company': (data) => ({
+    data: data.ticketsByCompanyStats || null,
+  }),
+  'bugs-by-type': (data) => ({
+    data: data.bugsByTypeStats || null,
+  }),
+  'campaigns-results': (data) => ({
+    data: data.campaignsResultsStats || null,
+  }),
+  'tickets-by-module': (data) => ({
+    data: data.ticketsByModuleStats || null,
+  }),
+  'bugs-by-type-module': (data) => ({
+    data: data.bugsByTypeAndModuleStats || null,
+  }),
+  'assistance-time-by-company': (data) => ({
+    data: data.assistanceTimeByCompanyStats || null,
+  }),
+  'assistance-time-evolution': (data) => ({
+    data: data.assistanceTimeEvolutionStats || null,
+  }),
+  'support-agents-radar': (data) => ({
+    data: data.supportAgentsRadarStats || null,
+  }),
 };
 
 /**
@@ -216,4 +325,3 @@ export function getWidgetProps(
   if (!mapper) return { alerts: [] };
   return mapper(dashboardData);
 }
-

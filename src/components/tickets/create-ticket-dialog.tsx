@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TicketForm } from '@/components/forms/ticket-form';
@@ -16,6 +16,8 @@ import {
 import type { CreateTicketInput } from '@/lib/validators/ticket';
 import type { Product, Module, Submodule, Feature } from '@/services/products';
 import type { BasicProfile } from '@/services/users';
+import type { BasicCompany } from '@/services/companies';
+import type { BasicDepartment } from '@/components/forms/ticket-form/sections';
 
 type CreateTicketDialogProps = {
   products: Product[];
@@ -23,6 +25,8 @@ type CreateTicketDialogProps = {
   submodules: Submodule[];
   features: Feature[];
   contacts: BasicProfile[];
+  companies: BasicCompany[];
+  departments: BasicDepartment[];
   onSubmit: (values: CreateTicketInput) => Promise<string | void>;
 };
 
@@ -31,15 +35,30 @@ export const CreateTicketDialog = ({
   modules,
   submodules,
   features,
-  contacts,
+  contacts: initialContacts,
+  companies,
+  departments,
   onSubmit
 }: CreateTicketDialogProps) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [contacts, setContacts] = useState<BasicProfile[]>(initialContacts);
 
-  const handleSubmit = async (values: CreateTicketInput, files?: File[]) => {
+  // Synchroniser les contacts avec les props lorsque le dialog est rafraîchi
+  useEffect(() => {
+    setContacts(initialContacts);
+  }, [initialContacts]);
+
+  /**
+   * Gère la soumission du formulaire avec possibilité de continuer ou fermer
+   * 
+   * @param values - Valeurs du formulaire
+   * @param files - Fichiers joints (optionnel)
+   * @param shouldClose - Si true, ferme le dialog après création (défaut: true)
+   */
+  const handleSubmit = async (values: CreateTicketInput, files?: File[], shouldClose: boolean = true) => {
     setIsSubmitting(true);
     setError(null);
     try {
@@ -47,6 +66,7 @@ export const CreateTicketDialog = ({
       if (!id) {
         throw new Error('Aucun ID de ticket retourné');
       }
+      
       // Upload attachments si présents
       if (files && files.length) {
         try {
@@ -58,9 +78,21 @@ export const CreateTicketDialog = ({
           toast.warning('Ticket créé mais erreur lors de l\'upload des pièces jointes');
         }
       }
-      toast.success('Ticket créé avec succès');
-      setOpen(false);
-      router.refresh();
+      
+      // Afficher un toast avec message adapté selon le mode
+      if (shouldClose) {
+        toast.success('Ticket créé avec succès');
+      } else {
+        toast.success('Ticket créé avec succès. Le formulaire a été réinitialisé pour créer un autre ticket.', {
+          duration: 4000
+        });
+      }
+      
+      // Fermer le dialog uniquement si shouldClose est true
+      if (shouldClose) {
+        setOpen(false);
+      }
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (error: any) {
       console.error('Erreur lors de la création du ticket:', error);
       const errorMessage = error?.message ?? 'Erreur lors de la création du ticket';
@@ -89,13 +121,20 @@ export const CreateTicketDialog = ({
           </div>
         )}
         <TicketForm
-          onSubmit={handleSubmit}
+          onSubmit={(values, files) => handleSubmit(values, files, true)}
+          onSubmitAndContinue={(values, files) => handleSubmit(values, files, false)}
           products={products}
           modules={modules}
           submodules={submodules}
           features={features}
           contacts={contacts}
+          companies={companies}
+          departments={departments}
           isSubmitting={isSubmitting}
+          onContactsRefresh={() => {
+            // Rafraîchir les contacts depuis le serveur
+            router.refresh();
+          }}
         />
       </DialogContent>
     </Dialog>

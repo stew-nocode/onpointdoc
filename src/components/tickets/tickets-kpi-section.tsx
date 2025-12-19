@@ -20,7 +20,7 @@ function isTrendPositive(trendValue: number, isDecreasingPositive = false): bool
 }
 
 /**
- * Section affichant les 4 KPIs pour les agents support
+ * Section affichant les 5 KPIs pour les agents support
  * Affichée au-dessus du tableau des tickets en grille responsive
  * Client Component car utilise des icônes Lucide (composants React)
  */
@@ -38,9 +38,22 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
   const transferredTrendIsPositive = kpis.trends
     ? isTrendPositive(kpis.trends.bugAndReqTransferredTrend, false)
     : true;
+  const interactionTimeTrendIsPositive = kpis.trends
+    ? isTrendPositive(kpis.trends.totalInteractionTimeTrend, false)
+    : true;
+
+  // Formater le temps d'interaction en heures et minutes
+  const formatInteractionTime = (minutes: number): string => {
+    if (minutes === 0) return '0 min';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins} min`;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}min`;
+  };
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="kpi-grid-responsive gap-4">
       {/* Mes tickets en retard */}
       <div className="w-full">
         <KPICard
@@ -62,15 +75,15 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
         />
       </div>
       
-      {/* Nombre d'ASSISTANCE ce mois */}
+      {/* Mes ASSISTANCE ce mois */}
       <div className="w-full">
         <KPICard
-          title="ASSISTANCE ce mois"
+          title="Mes ASSISTANCE ce mois"
           value={kpis.assistanceCountThisMonth}
-          description="Tickets ASSISTANCE créés"
+          description="Créées ou assignées"
           icon="message-square"
           variant="info"
-          subtitle="vs mois dernier"
+          subtitle={hasProfile ? "vs mois dernier" : "Connexion requise"}
           trend={
             kpis.trends
               ? {
@@ -104,15 +117,15 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
         />
       </div>
       
-      {/* BUG et REQ transférés */}
+      {/* Mes BUG et REQ transférés */}
       <div className="w-full">
         <KPICard
-          title="BUG et REQ transférés"
+          title="Mes BUG et REQ transférés"
           value={kpis.bugAndReqTransferred}
-          description="Transférés vers JIRA"
+          description="Créés ou assignés"
           icon="git-branch"
           variant="default"
-          subtitle="vs mois dernier"
+          subtitle={hasProfile ? "vs mois dernier" : "Connexion requise"}
           trend={
             kpis.trends
               ? {
@@ -122,6 +135,27 @@ export function TicketsKPISection({ kpis, hasProfile }: TicketsKPISectionProps) 
               : undefined
           }
           chartData={kpis.chartData?.transferredData}
+        />
+      </div>
+      
+      {/* Temps d'interaction */}
+      <div className="w-full">
+        <KPICard
+          title="Temps d'interaction"
+          value={formatInteractionTime(kpis.totalInteractionTime)}
+          description="Cumul du temps passé"
+          icon="clock"
+          variant="warning"
+          subtitle={hasProfile ? "vs mois dernier" : "Connexion requise"}
+          trend={
+            kpis.trends
+              ? {
+                  value: kpis.trends.totalInteractionTimeTrend,
+                  isPositive: interactionTimeTrendIsPositive
+                }
+              : undefined
+          }
+          chartData={kpis.chartData?.interactionTimeData}
         />
       </div>
     </div>

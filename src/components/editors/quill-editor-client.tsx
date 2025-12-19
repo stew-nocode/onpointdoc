@@ -35,7 +35,7 @@ export function QuillEditorClient({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Import dynamique du CSS uniquement côté client
-      import('react-quill/dist/quill.snow.css').catch(() => {
+      import('react-quill/dist/quill.snow.css' as string).catch(() => {
         // Ignorer les erreurs de chargement CSS silencieusement
       });
     }

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/ui/alert';
 import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { validateTicketAction } from '@/app/(main)/gestion/tickets/actions';
 
 type ValidateTicketButtonProps = {
   ticketId: string;
@@ -24,7 +24,6 @@ export const ValidateTicketButton = ({
 }: ValidateTicketButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleValidate = async () => {
     if (isValidated) {
@@ -44,18 +43,11 @@ export const ValidateTicketButton = ({
     setError(null);
 
     try {
-      const response = await fetch(`/api/tickets/${ticketId}/validate`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Erreur inconnue' }));
-        throw new Error(errorData.message || `Erreur ${response.status}`);
-      }
-
+      // ✅ Utiliser la Server Action directement (revalidatePath inclus)
+      await validateTicketAction(ticketId);
+      
       toast.success('Ticket validé avec succès');
-      router.refresh();
+      // ✅ Plus besoin de router.refresh() - revalidatePath est appelé dans la Server Action
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la validation';
       setError(errorMessage);

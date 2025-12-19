@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votre demande a été résolue - Ticket #{{params.ticket_id}}</title>
+  <style>
+    /* Reset email */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+    
+    /* Base styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fa;
+      color: #333333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: #ffffff;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .header .logo {
+      margin-bottom: 16px;
+    }
+    
+    .content {
+      padding: 32px 24px;
+    }
+    
+    .ticket-card {
+      background-color: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      padding: 20px;
+      margin: 24px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .ticket-card h2 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+      color: #1e293b;
+    }
+    
+    .ticket-info {
+      margin: 8px 0;
+      color: #64748b;
+    }
+    
+    .ticket-info strong {
+      color: #334155;
+    }
+    
+    .resolution-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 8px;
+    }
+    
+    .resolution-box h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: #1e293b;
+    }
+    
+    .resolution-box p {
+      margin: 0;
+      color: #475569;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background-color: #dcfce7;
+      color: #16a34a;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 12px 8px;
+    }
+    
+    .cta-button.secondary {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .footer p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #64748b;
+    }
+    
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    
+    .celebration {
+      font-size: 48px;
+      text-align: center;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <div style="padding: 24px;">
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <img src="https://app.onpointdoc.com/logo-white.png" alt="OnpointDoc" width="150" style="max-width: 150px;">
+        </div>
+        <h1>🎉 Demande résolue !</h1>
+      </div>
+      
+      <!-- Content -->
+      <div class="content">
+        <div class="celebration">🎊</div>
+        
+        <p>Bonjour,</p>
+        
+        <p>Bonne nouvelle ! Votre demande a été <strong>résolue avec succès</strong> par notre équipe support.</p>
+        
+        <!-- Ticket Card -->
+        <div class="ticket-card">
+          <h2>{{params.ticket_title}}</h2>
+          
+          <p class="ticket-info">
+            <strong>Numéro :</strong> #{{params.ticket_id}}
+          </p>
+          
+          <p class="ticket-info">
+            <strong>Statut :</strong> 
+            <span class="status-badge">✓ Résolu</span>
+          </p>
+        </div>
+        
+        <!-- Resolution Summary -->
+        {% if params.resolution_summary %}
+        <div class="resolution-box">
+          <h3>📝 Résumé de la résolution</h3>
+          <p>{{params.resolution_summary}}</p>
+        </div>
+        {% endif %}
+        
+        <p><strong>Que faire maintenant ?</strong></p>
+        <ul>
+          <li>Vérifiez que le problème est bien résolu de votre côté</li>
+          <li>Si vous avez besoin de précisions, rouvrez le ticket</li>
+          <li>Donnez-nous votre avis pour améliorer notre service</li>
+        </ul>
+        
+        <div style="text-align: center;">
+          <a href="{{params.portal_url}}" class="cta-button">
+            📋 Voir les détails
+          </a>
+          <a href="{{params.feedback_url}}" class="cta-button secondary">
+            ⭐ Donner mon avis
+          </a>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px; margin-top: 24px;">
+          Vous rencontrez encore des difficultés ? Contactez-nous à 
+          <a href="mailto:{{params.support_email}}">{{params.support_email}}</a>
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div class="footer">
+        <p><strong>{{params.company_name}}</strong></p>
+        <p>Merci pour votre confiance ! 🙏</p>
+        <p>
+          <a href="mailto:{{params.support_email}}">{{params.support_email}}</a>
+        </p>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 16px;">
+          Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+

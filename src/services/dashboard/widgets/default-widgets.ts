@@ -4,43 +4,82 @@ import type { DashboardRole, DashboardWidget } from '@/types/dashboard-widgets';
  * Configuration par défaut des widgets affectés à chaque rôle
  * 
  * Ces valeurs sont utilisées lors de l'initialisation ou en cas d'absence de configuration en DB
+ * 
+ * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md
  */
 export const DEFAULT_ROLE_WIDGETS: Record<DashboardRole, DashboardWidget[]> = {
   direction: [
-    'mttr',
-    'tickets-ouverts',
-    'tickets-resolus',
-    'workload',
-    'health',
-    'mttrEvolution',
-    'ticketsDistribution',
-    'topBugsModules',
-    'workloadByAgent',
-    'alerts',
+    // === AGENTS (Support) ===
+    'agents-support-cards',
+    // === ENTREPRISES (Support) ===
+    'companies-cards',
+    // === KPIs STATIQUES (temps réel, non filtrés) ===
+    'bug-history',
+    'req-history',
+    'assistance-history',
+    // === KPIs FILTRÉS (à implémenter) ===
+    // === CHARTS ===
+    'tickets-distribution',
+    'tickets-evolution',
+    'tickets-by-company',
+    'bugs-by-type',
+    'campaigns-results',
+    'tickets-by-module',
+    'bugs-by-type-module',
+    'assistance-time-by-company',
+    'assistance-time-evolution',
+    'support-agents-radar',
+    // === TABLES (à implémenter) ===
+    // === FULL-WIDTH (à implémenter) ===
   ],
   manager: [
-    'mttr',
-    'tickets-ouverts',
-    'tickets-resolus',
-    'workload',
-    'mttrEvolution',
-    'ticketsDistribution',
-    'workloadByAgent',
-    'alerts',
+    // === AGENTS (Support) ===
+    'agents-support-cards',
+    // === ENTREPRISES (Support) ===
+    'companies-cards',
+    // === KPIs FILTRÉS (à implémenter) ===
+    // === CHARTS ===
+    'tickets-distribution',
+    'tickets-evolution',
+    'tickets-by-company',
+    'bugs-by-type',
+    'campaigns-results',
+    'tickets-by-module',
+    'bugs-by-type-module',
+    'assistance-time-by-company',
+    'assistance-time-evolution',
+    'support-agents-radar',
+    // === TABLES (à implémenter) ===
+    // === FULL-WIDTH (à implémenter) ===
   ],
-  agent: ['alerts'], // Agents voient uniquement les alertes par défaut
+  agent: [
+    // === KPIs PERSONNELS (à implémenter) ===
+    // === FULL-WIDTH (à implémenter) ===
+  ],
   admin: [
-    'mttr',
-    'tickets-ouverts',
-    'tickets-resolus',
-    'workload',
-    'health',
-    'mttrEvolution',
-    'ticketsDistribution',
-    'topBugsModules',
-    'workloadByAgent',
-    'alerts',
-  ], // Admin voit tout
+    // === AGENTS (Support) ===
+    'agents-support-cards',
+    // === ENTREPRISES (Support) ===
+    'companies-cards',
+    // === KPIs STATIQUES (temps réel, non filtrés) ===
+    'bug-history',
+    'req-history',
+    'assistance-history',
+    // === KPIs FILTRÉS (à implémenter) ===
+    // === CHARTS ===
+    'tickets-distribution',
+    'tickets-evolution',
+    'tickets-by-company',
+    'bugs-by-type',
+    'campaigns-results',
+    'tickets-by-module',
+    'bugs-by-type-module',
+    'assistance-time-by-company',
+    'assistance-time-evolution',
+    'support-agents-radar',
+    // === TABLES (à implémenter) ===
+    // === FULL-WIDTH (à implémenter) ===
+  ],
 };
 
 /**

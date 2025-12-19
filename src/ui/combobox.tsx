@@ -55,14 +55,14 @@ export function Combobox({
   };
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={setOpen} modal={false}>
       <PopoverPrimitive.Trigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'w-full justify-between font-normal',
+            'w-full justify-between font-normal text-[0.7rem]',
             !selectedOption && 'text-slate-500',
             className
           )}
@@ -97,9 +97,10 @@ export function Combobox({
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           className={cn(
-            'z-50 w-[var(--radix-popover-trigger-width)] rounded-md border border-slate-200 bg-white p-1 shadow-md dark:border-slate-800 dark:bg-slate-950'
+            'z-[100] w-[var(--radix-popover-trigger-width)] rounded-md border border-slate-200 bg-white p-1 shadow-md dark:border-slate-800 dark:bg-slate-950'
           )}
           align="start"
+          sideOffset={4}
         >
           <div className="flex items-center border-b border-slate-200 px-3 dark:border-slate-800">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -108,7 +109,7 @@ export function Combobox({
               placeholder={searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 dark:placeholder:text-slate-400"
+              className="flex h-10 w-full rounded-md bg-transparent py-3 text-[0.7rem] outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 dark:placeholder:text-slate-400"
             />
           </div>
           <div
@@ -120,7 +121,7 @@ export function Combobox({
             }}
           >
             {filteredOptions.length === 0 ? (
-              <div className="py-6 text-center text-sm text-slate-500">{emptyText}</div>
+              <div className="py-6 text-center text-[0.7rem] text-slate-500">{emptyText}</div>
             ) : (
               <>
                 {filteredOptions.map((option) => (
@@ -133,7 +134,7 @@ export function Combobox({
                       setSearch('');
                     }}
                     className={cn(
-                      'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors',
+                      'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-[0.7rem] outline-none transition-colors',
                       'hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-slate-800 dark:focus:bg-slate-800',
                       value === option.value && 'bg-slate-100 dark:bg-slate-800'
                     )}
@@ -155,7 +156,7 @@ export function Combobox({
                       setOpen(false);
                       setSearch('');
                     }}
-                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm text-slate-500 outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-[0.7rem] text-slate-500 outline-none transition-colors hover:bg-slate-100 focus:bg-slate-100 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
                   >
                     <span className="mr-2 h-4 w-4" />
                     Effacer la sélection

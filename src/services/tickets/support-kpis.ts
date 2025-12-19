@@ -5,17 +5,20 @@ export type SupportTicketKPIs = {
   assistanceCountThisMonth: number;
   myTicketsResolvedThisMonth: number;
   bugAndReqTransferred: number;
+  totalInteractionTime: number; // Temps total d'interaction en minutes
   trends?: {
     myTicketsOverdueTrend: number;
     assistanceCountTrend: number;
     myTicketsResolvedTrend: number;
     bugAndReqTransferredTrend: number;
+    totalInteractionTimeTrend: number;
   };
   chartData?: {
     overdueData: number[];
     assistanceData: number[];
     resolvedData: number[];
     transferredData: number[];
+    interactionTimeData: number[]; // Données des 7 derniers jours
   };
 };
 
@@ -114,43 +117,57 @@ async function getOverdueTicketsLastMonth(
 }
 
 /**
- * Récupère le nombre de tickets ASSISTANCE créés ce mois
+ * Récupère le nombre de tickets ASSISTANCE de l'agent ce mois
+ * (créés par l'agent OU assignés à l'agent)
  * 
  * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
  * @param startOfMonth - Date de début du mois
  * @returns Nombre de tickets ASSISTANCE
  */
-async function getAssistanceCountThisMonth(
+async function getMyAssistanceCountThisMonth(
   supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
   startOfMonth: Date
 ) {
+  if (!profileId) return 0;
+  
   const { count } = await supabase
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .eq('ticket_type', 'ASSISTANCE')
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
     .gte('created_at', startOfMonth.toISOString());
+  
   return count || 0;
 }
 
 /**
- * Récupère le nombre de tickets ASSISTANCE créés le mois précédent
+ * Récupère le nombre de tickets ASSISTANCE de l'agent le mois précédent
+ * (créés par l'agent OU assignés à l'agent)
  * 
  * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
  * @param startOfLastMonth - Date de début du mois précédent
  * @param startOfMonth - Date de début du mois actuel
  * @returns Nombre de tickets ASSISTANCE du mois précédent
  */
-async function getAssistanceCountLastMonth(
+async function getMyAssistanceCountLastMonth(
   supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
   startOfLastMonth: Date,
   startOfMonth: Date
 ) {
+  if (!profileId) return 0;
+  
   const { count } = await supabase
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .eq('ticket_type', 'ASSISTANCE')
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
     .gte('created_at', startOfLastMonth.toISOString())
     .lt('created_at', startOfMonth.toISOString());
+  
   return count || 0;
 }
 
@@ -204,46 +221,253 @@ async function getResolvedTicketsLastMonth(
 }
 
 /**
- * Récupère le nombre de tickets BUG et REQ transférés ce mois
+ * Récupère le nombre de tickets BUG et REQ transférés de l'agent ce mois
+ * (créés par l'agent OU assignés à l'agent)
  * 
  * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
  * @param startOfMonth - Date de début du mois
  * @returns Nombre de tickets transférés
  */
-async function getBugAndReqTransferredThisMonth(
+async function getMyBugAndReqTransferredThisMonth(
   supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
   startOfMonth: Date
 ) {
+  if (!profileId) return 0;
+  
   const { count } = await supabase
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .in('ticket_type', ['BUG', 'REQ'])
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
     .not('jira_issue_key', 'is', null)
     .gte('created_at', startOfMonth.toISOString());
+  
   return count || 0;
 }
 
 /**
- * Récupère le nombre de tickets BUG et REQ transférés le mois précédent
+ * Récupère le nombre de tickets BUG et REQ transférés de l'agent le mois précédent
+ * (créés par l'agent OU assignés à l'agent)
  * 
  * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
  * @param startOfLastMonth - Date de début du mois précédent
  * @param startOfMonth - Date de début du mois actuel
  * @returns Nombre de tickets transférés du mois précédent
  */
-async function getBugAndReqTransferredLastMonth(
+async function getMyBugAndReqTransferredLastMonth(
   supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
   startOfLastMonth: Date,
   startOfMonth: Date
 ) {
+  if (!profileId) return 0;
+  
   const { count } = await supabase
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .in('ticket_type', ['BUG', 'REQ'])
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
     .not('jira_issue_key', 'is', null)
     .gte('created_at', startOfLastMonth.toISOString())
     .lt('created_at', startOfMonth.toISOString());
+  
   return count || 0;
+}
+
+/**
+ * Récupère les données réelles des 7 derniers jours pour le mini graphique ASSISTANCE
+ * (créés par l'agent OU assignés à l'agent)
+ * 
+ * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
+ * @returns Tableau de 7 valeurs (une par jour, du plus ancien au plus récent)
+ */
+async function getMyAssistanceLast7Days(
+  supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null
+): Promise<number[]> {
+  if (!profileId) return [0, 0, 0, 0, 0, 0, 0];
+  
+  const data: number[] = [];
+  const today = new Date();
+  
+  // Parcourir les 7 derniers jours (du plus ancien au plus récent)
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // Début et fin de journée
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const { count } = await supabase
+      .from('tickets')
+      .select('*', { count: 'exact', head: true })
+      .eq('ticket_type', 'ASSISTANCE')
+      .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
+      .gte('created_at', startOfDay.toISOString())
+      .lte('created_at', endOfDay.toISOString());
+    
+    data.push(count || 0);
+  }
+  
+  return data;
+}
+
+/**
+ * Récupère les données réelles des 7 derniers jours pour le mini graphique BUG/REQ transférés
+ * (créés par l'agent OU assignés à l'agent)
+ * 
+ * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
+ * @returns Tableau de 7 valeurs (une par jour, du plus ancien au plus récent)
+ */
+async function getMyBugAndReqTransferredLast7Days(
+  supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null
+): Promise<number[]> {
+  if (!profileId) return [0, 0, 0, 0, 0, 0, 0];
+  
+  const data: number[] = [];
+  const today = new Date();
+  
+  // Parcourir les 7 derniers jours (du plus ancien au plus récent)
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // Début et fin de journée
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const { count } = await supabase
+      .from('tickets')
+      .select('*', { count: 'exact', head: true })
+      .in('ticket_type', ['BUG', 'REQ'])
+      .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
+      .not('jira_issue_key', 'is', null)
+      .gte('created_at', startOfDay.toISOString())
+      .lte('created_at', endOfDay.toISOString());
+    
+    data.push(count || 0);
+  }
+  
+  return data;
+}
+
+/**
+ * Récupère le temps total d'interaction de l'agent ce mois
+ * (somme des duration_minutes pour les tickets créés OU assignés à l'agent)
+ * 
+ * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
+ * @param startOfMonth - Date de début du mois
+ * @returns Temps total en minutes
+ */
+async function getMyTotalInteractionTimeThisMonth(
+  supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
+  startOfMonth: Date
+): Promise<number> {
+  if (!profileId) return 0;
+  
+  const { data } = await supabase
+    .from('tickets')
+    .select('duration_minutes')
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
+    .not('duration_minutes', 'is', null)
+    .gte('created_at', startOfMonth.toISOString());
+  
+  if (!data) return 0;
+  
+  return data.reduce((sum, ticket) => sum + (ticket.duration_minutes || 0), 0);
+}
+
+/**
+ * Récupère le temps total d'interaction de l'agent le mois précédent
+ * (somme des duration_minutes pour les tickets créés OU assignés à l'agent)
+ * 
+ * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
+ * @param startOfLastMonth - Date de début du mois précédent
+ * @param startOfMonth - Date de début du mois actuel
+ * @returns Temps total en minutes
+ */
+async function getMyTotalInteractionTimeLastMonth(
+  supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null,
+  startOfLastMonth: Date,
+  startOfMonth: Date
+): Promise<number> {
+  if (!profileId) return 0;
+  
+  const { data } = await supabase
+    .from('tickets')
+    .select('duration_minutes')
+    .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
+    .not('duration_minutes', 'is', null)
+    .gte('created_at', startOfLastMonth.toISOString())
+    .lt('created_at', startOfMonth.toISOString());
+  
+  if (!data) return 0;
+  
+  return data.reduce((sum, ticket) => sum + (ticket.duration_minutes || 0), 0);
+}
+
+/**
+ * Récupère les données réelles des 7 derniers jours pour le mini graphique temps d'interaction
+ * (somme des duration_minutes pour les tickets créés OU assignés à l'agent)
+ * 
+ * @param supabase - Client Supabase
+ * @param profileId - ID du profil de l'agent (optionnel)
+ * @returns Tableau de 7 valeurs (une par jour, du plus ancien au plus récent) en minutes
+ */
+async function getMyInteractionTimeLast7Days(
+  supabase: ReturnType<typeof createSupabaseServerClient> extends Promise<infer T> ? Awaited<T> : never,
+  profileId: string | null
+): Promise<number[]> {
+  if (!profileId) return [0, 0, 0, 0, 0, 0, 0];
+  
+  const data: number[] = [];
+  const today = new Date();
+  
+  // Parcourir les 7 derniers jours (du plus ancien au plus récent)
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    
+    // Début et fin de journée
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const { data: ticketsData } = await supabase
+      .from('tickets')
+      .select('duration_minutes')
+      .or(`created_by.eq.${profileId},assigned_to.eq.${profileId}`)
+      .not('duration_minutes', 'is', null)
+      .gte('created_at', startOfDay.toISOString())
+      .lte('created_at', endOfDay.toISOString());
+    
+    const dayTotal = ticketsData
+      ? ticketsData.reduce((sum, ticket) => sum + (ticket.duration_minutes || 0), 0)
+      : 0;
+    
+    data.push(dayTotal);
+  }
+  
+  return data;
 }
 
 /**
@@ -263,35 +487,47 @@ export async function getSupportTicketKPIs(
   const [
     myTicketsOverdue,
     myTicketsOverdueLastMonth,
-    assistanceCountThisMonth,
-    assistanceCountLastMonth,
+    myAssistanceCountThisMonth,
+    myAssistanceCountLastMonth,
     myTicketsResolvedThisMonth,
     myTicketsResolvedLastMonth,
-    bugAndReqTransferred,
-    bugAndReqTransferredLastMonth
+    myBugAndReqTransferred,
+    myBugAndReqTransferredLastMonth,
+    myTotalInteractionTime,
+    myTotalInteractionTimeLastMonth,
+    assistanceLast7Days,
+    bugAndReqTransferredLast7Days,
+    interactionTimeLast7Days
   ] = await Promise.all([
     getOverdueTickets(supabase, profileId, today),
     getOverdueTicketsLastMonth(supabase, profileId, endOfLastMonth, startOfMonth),
-    getAssistanceCountThisMonth(supabase, startOfMonth),
-    getAssistanceCountLastMonth(supabase, startOfLastMonth, startOfMonth),
+    getMyAssistanceCountThisMonth(supabase, profileId, startOfMonth),
+    getMyAssistanceCountLastMonth(supabase, profileId, startOfLastMonth, startOfMonth),
     getResolvedTicketsThisMonth(supabase, profileId, startOfMonth),
     getResolvedTicketsLastMonth(supabase, profileId, startOfLastMonth, startOfMonth),
-    getBugAndReqTransferredThisMonth(supabase, startOfMonth),
-    getBugAndReqTransferredLastMonth(supabase, startOfLastMonth, startOfMonth)
+    getMyBugAndReqTransferredThisMonth(supabase, profileId, startOfMonth),
+    getMyBugAndReqTransferredLastMonth(supabase, profileId, startOfLastMonth, startOfMonth),
+    getMyTotalInteractionTimeThisMonth(supabase, profileId, startOfMonth),
+    getMyTotalInteractionTimeLastMonth(supabase, profileId, startOfLastMonth, startOfMonth),
+    getMyAssistanceLast7Days(supabase, profileId),
+    getMyBugAndReqTransferredLast7Days(supabase, profileId),
+    getMyInteractionTimeLast7Days(supabase, profileId)
   ]);
 
   const current = {
     myTicketsOverdue,
-    assistanceCountThisMonth,
+    assistanceCountThisMonth: myAssistanceCountThisMonth,
     myTicketsResolvedThisMonth,
-    bugAndReqTransferred
+    bugAndReqTransferred: myBugAndReqTransferred,
+    totalInteractionTime: myTotalInteractionTime
   };
 
   const lastMonth = {
     myTicketsOverdue: myTicketsOverdueLastMonth,
-    assistanceCount: assistanceCountLastMonth,
+    assistanceCount: myAssistanceCountLastMonth,
     myTicketsResolved: myTicketsResolvedLastMonth,
-    bugAndReqTransferred: bugAndReqTransferredLastMonth
+    bugAndReqTransferred: myBugAndReqTransferredLastMonth,
+    totalInteractionTime: myTotalInteractionTimeLastMonth
   };
 
   // Calculer les tendances
@@ -299,15 +535,17 @@ export async function getSupportTicketKPIs(
     myTicketsOverdueTrend: calculateTrend(current.myTicketsOverdue, lastMonth.myTicketsOverdue),
     assistanceCountTrend: calculateTrend(current.assistanceCountThisMonth, lastMonth.assistanceCount),
     myTicketsResolvedTrend: calculateTrend(current.myTicketsResolvedThisMonth, lastMonth.myTicketsResolved),
-    bugAndReqTransferredTrend: calculateTrend(current.bugAndReqTransferred, lastMonth.bugAndReqTransferred)
+    bugAndReqTransferredTrend: calculateTrend(current.bugAndReqTransferred, lastMonth.bugAndReqTransferred),
+    totalInteractionTimeTrend: calculateTrend(current.totalInteractionTime, lastMonth.totalInteractionTime)
   };
 
   // Générer les données de graphique
   const chartData = {
     overdueData: generateChartData(current.myTicketsOverdue, lastMonth.myTicketsOverdue),
-    assistanceData: generateChartData(current.assistanceCountThisMonth, lastMonth.assistanceCount),
+    assistanceData: assistanceLast7Days, // ✅ Utiliser données réelles au lieu de simulation
     resolvedData: generateChartData(current.myTicketsResolvedThisMonth, lastMonth.myTicketsResolved),
-    transferredData: generateChartData(current.bugAndReqTransferred, lastMonth.bugAndReqTransferred)
+    transferredData: bugAndReqTransferredLast7Days, // ✅ Utiliser données réelles au lieu de simulation
+    interactionTimeData: interactionTimeLast7Days // ✅ Utiliser données réelles
   };
 
   return {

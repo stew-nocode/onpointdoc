@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewModuleDialogLazy } from '@/components/modules/new-module-dialog-lazy';
 import { ModulesTableClient, type ModuleRow } from '@/components/modules/modules-table-client';
 import type { Product } from '@/types/product';
+import { StandardPageHeader } from '@/components/layout/page';
 
 async function loadModules(): Promise<{ rows: ModuleRow[]; products: Record<string, string> }> {
   noStore();
@@ -27,12 +28,16 @@ export default async function ModulesIndexPage() {
   const { rows, products } = await loadModules();
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Modules</h1>
-        <NewModuleDialogLazy>
-          <Button>Nouveau module</Button>
-        </NewModuleDialogLazy>
-      </div>
+      <StandardPageHeader
+        icon="Package"
+        title="Modules"
+        description="Gérez les modules des produits"
+        actions={
+          <NewModuleDialogLazy>
+            <Button>Nouveau module</Button>
+          </NewModuleDialogLazy>
+        }
+      />
       <Card>
         <CardHeader>
           <CardTitle>Liste des modules</CardTitle>

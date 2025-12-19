@@ -59,11 +59,11 @@ export function AnalysisButton({
             <button
               onClick={openModal}
               disabled={isLoading}
-              className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+              className={`inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation ${className}`}
               aria-label={tooltip}
               type="button"
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-4 w-4 md:h-3.5 md:w-3.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent>

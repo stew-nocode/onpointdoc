@@ -49,6 +49,7 @@ function buildBaseComment(comment: {
   user_id: string | null;
   content: string;
   origin: string | null;
+  comment_type?: string | null;
   created_at: string;
 }) {
   return {
@@ -57,6 +58,7 @@ function buildBaseComment(comment: {
     user_id: comment.user_id,
     content: comment.content,
     origin: comment.origin as 'app' | 'jira' | null,
+    comment_type: (comment.comment_type as 'comment' | 'followup' | undefined) || 'comment',
     created_at: comment.created_at
   };
 }
@@ -75,6 +77,7 @@ export async function buildCommentResponse(
     user_id: string | null;
     content: string;
     origin: string | null;
+    comment_type?: string | null;
     created_at: string;
   },
   profileId: string

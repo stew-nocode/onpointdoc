@@ -13,6 +13,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { SidebarProvider } from '@/components/layout/sidebar-context';
 import { TopBar } from '@/components/navigation/top-bar';
 import { PageTransition } from '@/components/navigation/page-transition';
+import { LogoLoader } from '@/components/navigation/logo-loader';
 import { useNavigation } from '@/contexts/navigation-context';
 import { useLinkInterceptor } from '@/hooks/navigation/use-link-interceptor';
 import { cn } from '@/lib/utils';
@@ -44,14 +45,7 @@ export const AppShell = ({ children }: AppShellProps) => {
 
   // Afficher un état de chargement pendant l'authentification
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent mx-auto mb-4" />
-          <p className="text-sm text-slate-600 dark:text-slate-400">Chargement...</p>
-        </div>
-      </div>
-    );
+    return <LogoLoader isLoading={true} loadingText="Authentification" showDots={true} />;
   }
 
   // Mapper le rôle pour Sidebar (exclure 'client' qui n'est pas un rôle interne, mapper 'director' à 'direction')
@@ -74,10 +68,7 @@ export const AppShell = ({ children }: AppShellProps) => {
             <TopBar />
           </div>
           <main
-            className={cn(
-              'flex-1 overflow-y-auto p-4 sm:p-6 lg:min-h-0 bg-slate-50 dark:bg-slate-950 transition-opacity duration-500',
-              isNavigating ? 'opacity-60' : 'opacity-100'
-            )}
+            className="flex-1 overflow-y-auto p-4 sm:p-6 lg:min-h-0 bg-slate-50 dark:bg-slate-950"
           >
             {children}
           </main>

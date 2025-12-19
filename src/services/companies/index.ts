@@ -2,6 +2,9 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { CompanyCreateInput, CompanyUpdateInput } from '@/lib/validators/company';
 import { companyCreateSchema, companyUpdateSchema } from '@/lib/validators/company';
 
+// Réexporter uniquement le type (pas la fonction serveur pour éviter l'import de next/headers dans les composants clients)
+export type { BasicCompany } from './server';
+
 /**
  * Crée une compagnie et ses liaisons de secteurs côté client (Supabase Browser).
  * Valide l'entrée via Zod avant insertion.
@@ -55,4 +58,13 @@ export async function updateCompany(input: CompanyUpdateInput): Promise<void> {
   }
 }
 
+// NOTE: listCompaniesPaginated n'est PAS exporté ici car c'est un service serveur
+// qui utilise createSupabaseServerClient (next/headers).
+// Il doit être importé directement depuis './list-companies-paginated' dans les
+// Server Components ou routes API uniquement.
+
+// Services serveur (à importer directement depuis leurs fichiers)
+// - getCompanyById (depuis './get-company-by-id')
+// - loadCompanyHistory (depuis './company-history')
+// - getAdjacentCompanies (depuis './navigation')
 

@@ -39,34 +39,62 @@ export async function POST(req: Request) {
     }
     const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
 
-    // create Auth user
-    const { data: created, error: authErr } = await admin.auth.admin.createUser({
-      email, password, email_confirm: true
-    });
-    if (authErr || !created?.user) {
-      return handleApiError(createError.supabaseError('Erreur lors de la création de l\'utilisateur', authErr ? new Error(authErr.message) : undefined));
+    let authUid: string | null = null;
+    
+    // Créer l'utilisateur auth seulement si email et password sont fournis
+    if (email && password) {
+      const { data: created, error: authErr } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true
+      });
+      if (authErr || !created?.user) {
+        return handleApiError(createError.supabaseError('Erreur lors de la création de l\'utilisateur', authErr ? new Error(authErr.message) : undefined));
+      }
+      authUid = created.user.id;
     }
 
-    const authUid = created.user.id;
-    // upsert profile
-    const { error: upErr } = await admin.from('profiles').upsert({
-      auth_uid: authUid, 
-      email, 
-      full_name: fullName, 
-      role, 
-      company_id: companyId || null, 
-      is_active: isActive ?? true,
-      department: department || null,
-      job_title: jobTitle || null
-    }, { onConflict: 'auth_uid' });
-    if (upErr) {
-      return handleApiError(createError.supabaseError('Erreur lors de la création du profil', new Error(upErr.message)));
+    // Créer ou mettre à jour le profil
+    let profileId: string | null = null;
+    
+    if (authUid) {
+      // Si auth_uid existe, utiliser upsert avec onConflict sur auth_uid
+      const { data: prof, error: upErr } = await admin.from('profiles').upsert({
+        auth_uid: authUid, 
+        email: email || null, 
+        full_name: fullName, 
+        role, 
+        company_id: companyId || null, 
+        is_active: isActive ?? true,
+        department: department || null,
+        job_title: jobTitle || null
+      }, { onConflict: 'auth_uid' }).select('id').single();
+      
+      if (upErr) {
+        return handleApiError(createError.supabaseError('Erreur lors de la création du profil', new Error(upErr.message)));
+      }
+      profileId = (prof as { id: string } | null)?.id ?? null;
+    } else {
+      // Si pas d'auth_uid, utiliser insert (création uniquement)
+      const { data: prof, error: insErr } = await admin.from('profiles').insert({
+        auth_uid: null, 
+        email: email || null, 
+        full_name: fullName, 
+        role, 
+        company_id: companyId || null, 
+        is_active: isActive ?? true,
+        department: department || null,
+        job_title: jobTitle || null
+      }).select('id').single();
+      
+      if (insErr) {
+        return handleApiError(createError.supabaseError('Erreur lors de la création du profil', new Error(insErr.message)));
+      }
+      profileId = (prof as { id: string } | null)?.id ?? null;
     }
-
-    // fetch profile id
-    const { data: prof } = await admin.from('profiles').select('id').eq('auth_uid', authUid).single();
-    const profileId = (prof as { id: string } | null)?.id;
-    if (profileId && Array.isArray(moduleIds) && moduleIds.length) {
+    if (!profileId) {
+      return handleApiError(createError.internalError('Impossible de récupérer l\'ID du profil créé'));
+    }
+    
+    if (Array.isArray(moduleIds) && moduleIds.length) {
       const rows = moduleIds.map((m: string) => ({ user_id: profileId, module_id: m }));
       await admin.from('user_module_assignments').upsert(rows);
     }

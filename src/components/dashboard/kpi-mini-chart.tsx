@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 type KPIMiniChartProps = {
   data: number[];
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'secondary';
   className?: string;
 };
 
@@ -46,8 +46,13 @@ export function KPIMiniChart({ data, variant = 'default', className }: KPIMiniCh
     success: 'stroke-green-400 fill-green-50 dark:stroke-green-500 dark:fill-green-800/30',
     warning: 'stroke-orange-400 fill-orange-50 dark:stroke-orange-500 dark:fill-orange-800/30',
     danger: 'stroke-red-400 fill-red-50 dark:stroke-red-500 dark:fill-red-800/30',
-    info: 'stroke-blue-400 fill-blue-50 dark:stroke-blue-500 dark:fill-blue-800/30'
+    info: 'stroke-blue-400 fill-blue-50 dark:stroke-blue-500 dark:fill-blue-800/30',
+    secondary: 'stroke-slate-400 fill-slate-50 dark:stroke-slate-500 dark:fill-slate-800/30' // Alias pour default
   };
+
+  // Sélectionner les couleurs en s'assurant que le variant existe
+  const colors = variantColors[variant] || variantColors.default;
+  const strokeClass = colors.split(' ')[0];
 
   return (
     <div className={cn('w-full h-6', className)}>
@@ -55,13 +60,13 @@ export function KPIMiniChart({ data, variant = 'default', className }: KPIMiniCh
         {/* Zone remplie sous la ligne */}
         <path
           d={`${pathData} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`}
-          className={variantColors[variant]}
+          className={colors}
           opacity={0.3}
         />
         {/* Ligne de tendance */}
         <path
           d={pathData}
-          className={variantColors[variant].split(' ')[0]}
+          className={strokeClass}
           fill="none"
           strokeWidth="2"
           strokeLinecap="round"

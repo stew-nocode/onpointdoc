@@ -27,6 +27,8 @@ export const DEFAULT_SORT_COLUMN: TicketSortColumn = 'created_at';
 
 /**
  * Direction de tri par défaut
+ * 'desc' = du plus récent au plus vieux (par date de création)
+ * Les tickets les plus récents apparaissent en haut de la liste
  */
 export const DEFAULT_SORT_DIRECTION: SortDirection = 'desc';
 

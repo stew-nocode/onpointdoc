@@ -4,11 +4,13 @@ import { useState, FormEvent } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Textarea } from '@/ui/textarea';
+import { Switch } from '@/ui/switch';
+import { Label } from '@/ui/label';
 import { toast } from 'sonner';
 import { useFileUpload, type FileWithPreview } from '@/hooks';
 
 type CommentFormProps = {
-  onSubmit: (content: string, files?: File[]) => Promise<void>;
+  onSubmit: (content: string, files?: File[], commentType?: 'comment' | 'followup') => Promise<void>;
   isLoading?: boolean;
 };
 
@@ -21,6 +23,7 @@ type CommentFormProps = {
  */
 export function CommentForm({ onSubmit, isLoading = false }: CommentFormProps) {
   const [content, setContent] = useState('');
+  const [isFollowup, setIsFollowup] = useState(false);
   const {
     files,
     fileInputRef,
@@ -52,10 +55,12 @@ export function CommentForm({ onSubmit, isLoading = false }: CommentFormProps) {
     }
 
     try {
-      await onSubmit(trimmedContent, files.length > 0 ? files : undefined);
+      const commentType = isFollowup ? 'followup' : 'comment';
+      await onSubmit(trimmedContent, files.length > 0 ? files : undefined, commentType);
       setContent('');
+      setIsFollowup(false);
       clearFiles();
-      toast.success('Commentaire ajouté avec succès');
+      toast.success(isFollowup ? 'Relance ajoutée avec succès' : 'Commentaire ajouté avec succès');
     } catch (error) {
       toast.error('Erreur lors de l\'ajout du commentaire');
     }
@@ -103,7 +108,21 @@ export function CommentForm({ onSubmit, isLoading = false }: CommentFormProps) {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="followup-switch"
+              checked={isFollowup}
+              onCheckedChange={setIsFollowup}
+              disabled={isLoading}
+            />
+            <Label
+              htmlFor="followup-switch"
+              className="text-sm text-slate-700 dark:text-slate-300 cursor-pointer"
+            >
+              Relance
+            </Label>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -136,7 +155,7 @@ export function CommentForm({ onSubmit, isLoading = false }: CommentFormProps) {
           )}
           <Button type="submit" disabled={isDisabled} size="sm">
             <Send className="mr-2 h-4 w-4" />
-            {isLoading ? 'Envoi...' : 'Ajouter'}
+            {isLoading ? 'Envoi...' : isFollowup ? 'Relancer' : 'Ajouter'}
           </Button>
         </div>
       </div>

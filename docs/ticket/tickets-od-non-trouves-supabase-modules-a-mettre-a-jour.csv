@@ -1,0 +1,21 @@
+# Tickets OD non trouvés dans Supabase - Modules à mettre à jour après synchronisation
+# Date de génération: 29/11/2025
+# Objet: Ces tickets n'existent pas encore dans Supabase mais ont un module défini dans le Google Sheet.
+# Action: Mettre à jour le champ module_id de ces tickets une fois qu'ils seront synchronisés depuis Jira.
+#
+OD_KEY,MODULE
+OD-3026,RH
+OD-3025,RH
+OD-3024,Finance
+OD-3023,Finance
+OD-3022,CRM
+OD-3021,Opérations
+OD-3020,Finance
+OD-3019,CRM
+OD-3010,RH
+OD-3009,RH
+OD-3008,RH
+OD-3007,RH
+OD-3006,RH
+OD-3005,RH
+OD-3004,RH

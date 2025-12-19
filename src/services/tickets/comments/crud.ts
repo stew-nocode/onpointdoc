@@ -12,6 +12,7 @@ import { buildCommentResponse } from './utils/build-response';
  * @param ticketId - UUID du ticket
  * @param profileId - ID du profil utilisateur
  * @param content - Contenu du commentaire
+ * @param commentType - Type de commentaire ('comment' ou 'followup')
  * @returns Données brutes du commentaire créé
  * @throws ApplicationError si l'insertion échoue
  */
@@ -19,7 +20,8 @@ async function insertComment(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   ticketId: string,
   profileId: string,
-  content: string
+  content: string,
+  commentType: 'comment' | 'followup' = 'comment'
 ) {
   const { data: comment, error: insertError } = await supabase
     .from('ticket_comments')
@@ -27,9 +29,10 @@ async function insertComment(
       ticket_id: ticketId,
       user_id: profileId,
       content,
-      origin: 'app'
+      origin: 'app',
+      comment_type: commentType
     })
-    .select('id, ticket_id, user_id, content, origin, created_at')
+    .select('id, ticket_id, user_id, content, origin, comment_type, created_at')
     .single();
 
   if (insertError || !comment) {
@@ -45,20 +48,50 @@ async function insertComment(
 /**
  * Crée un nouveau commentaire sur un ticket
  * 
+ * Si le ticket est lié à JIRA (a une jira_issue_key), le commentaire
+ * est également créé dans JIRA pour maintenir la synchronisation bidirectionnelle.
+ * 
  * @param ticketId - UUID du ticket
  * @param content - Contenu du commentaire
+ * @param commentType - Type de commentaire ('comment' ou 'followup'), défaut: 'comment'
  * @returns Le commentaire créé
  * @throws ApplicationError si l'utilisateur n'est pas authentifié ou si la création échoue
  */
 export async function createComment(
   ticketId: string,
-  content: string
+  content: string,
+  commentType: 'comment' | 'followup' = 'comment'
 ): Promise<TicketComment> {
   const { profileId } = await verifyUserAuthentication();
   await verifyTicketExists(ticketId);
 
   const supabase = await createSupabaseServerClient();
-  const comment = await insertComment(supabase, ticketId, profileId, content);
+  
+  // Vérifier si le ticket est lié à JIRA
+  const { data: ticket } = await supabase
+    .from('tickets')
+    .select('jira_issue_key')
+    .eq('id', ticketId)
+    .single();
+
+  // Créer le commentaire dans Supabase
+  const comment = await insertComment(supabase, ticketId, profileId, content, commentType);
+
+  // Si le ticket est lié à JIRA, créer aussi le commentaire dans JIRA
+  if (ticket?.jira_issue_key) {
+    try {
+      const { createJiraComment } = await import('@/services/jira/comments/create');
+      await createJiraComment(ticket.jira_issue_key, content, comment.id);
+    } catch (jiraError) {
+      // Ne pas faire échouer la création Supabase si JIRA échoue
+      // Le commentaire a été créé avec succès dans Supabase
+      // Logger l'erreur pour diagnostic
+      console.error(
+        `Erreur lors de la création du commentaire JIRA pour le ticket ${ticketId}:`,
+        jiraError
+      );
+    }
+  }
 
   return buildCommentResponse(comment, profileId);
 }

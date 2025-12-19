@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { ProfileRole } from '@/types/profile';
 
@@ -36,19 +36,40 @@ export function useAuth(): AuthState {
     error: null
   });
 
-  const refreshAuth = useCallback(async () => {
+  // Utiliser une ref pour éviter les re-créations de la fonction
+  const refreshAuthRef = useRef<() => Promise<void>>(async () => {});
+  
+  refreshAuthRef.current = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState(prev => {
+        // Ne mettre à jour que si nécessaire (évite les re-renders inutiles)
+        if (prev.isLoading) return prev;
+        return { ...prev, isLoading: true, error: null };
+      });
       
       const supabase = createSupabaseBrowserClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        setState({
-          user: null,
-          role: null,
-          isLoading: false,
-          error: authError ? new Error(authError.message) : null
+        setState(prev => {
+          // Ne mettre à jour que si les valeurs ont changé
+          const newError = authError ? authError.message : null;
+          const prevError = prev.error?.message || null;
+          
+          if (
+            prev.user === null && 
+            prev.role === null && 
+            !prev.isLoading && 
+            prevError === newError
+          ) {
+            return prev;
+          }
+          return {
+            user: null,
+            role: null,
+            isLoading: false,
+            error: authError ? new Error(authError.message) : null
+          };
         });
         return;
       }
@@ -61,38 +82,88 @@ export function useAuth(): AuthState {
         .single();
 
       if (profileError || !profile) {
-        setState({
-          user: { id: user.id, email: user.email ?? '' },
-          role: null,
-          isLoading: false,
-          error: profileError ? new Error(profileError.message) : null
+        const newError = profileError ? profileError.message : null;
+        setState(prev => {
+          // Ne mettre à jour que si les valeurs ont changé
+          const prevError = prev.error?.message || null;
+          if (
+            prev.user?.id === user.id &&
+            prev.user?.email === (user.email ?? '') &&
+            prev.role === null &&
+            !prev.isLoading &&
+            prevError === newError
+          ) {
+            return prev;
+          }
+          return {
+            user: { id: user.id, email: user.email ?? '' },
+            role: null,
+            isLoading: false,
+            error: profileError ? new Error(profileError.message) : null
+          };
         });
         return;
       }
 
-      setState({
-        user: { id: user.id, email: user.email ?? '' },
-        role: profile.role as ProfileRole,
-        isLoading: false,
-        error: null
+      const newRole = profile.role as ProfileRole;
+      setState(prev => {
+        // Ne mettre à jour que si les valeurs ont changé
+        if (
+          prev.user?.id === user.id &&
+          prev.user?.email === (user.email ?? '') &&
+          prev.role === newRole &&
+          !prev.isLoading &&
+          prev.error === null
+        ) {
+          return prev;
+        }
+        return {
+          user: { id: user.id, email: user.email ?? '' },
+          role: newRole,
+          isLoading: false,
+          error: null
+        };
       });
     } catch (error) {
-      setState({
-        user: null,
-        role: null,
-        isLoading: false,
-        error: error instanceof Error ? error : new Error('Erreur d\'authentification')
+      const errorObj = error instanceof Error ? error : new Error('Erreur d\'authentification');
+      const errorMessage = errorObj.message;
+      setState(prev => {
+        const prevError = prev.error?.message || null;
+        if (
+          prev.user === null && 
+          prev.role === null && 
+          !prev.isLoading && 
+          prevError === errorMessage
+        ) {
+          return prev;
+        }
+        return {
+          user: null,
+          role: null,
+          isLoading: false,
+          error: errorObj
+        };
       });
     }
-  }, []);
+  };
 
   useEffect(() => {
-    // Utiliser setTimeout pour éviter l'appel synchrone de setState
-    const timer = setTimeout(() => {
-      refreshAuth();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [refreshAuth]);
+    // Appeler refreshAuth une seule fois au montage
+    let isMounted = true;
+    
+    const initAuth = async () => {
+      if (refreshAuthRef.current) {
+        await refreshAuthRef.current();
+      }
+    };
+    
+    initAuth();
+    
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Pas de dépendances - s'exécute une seule fois au montage
 
   return state;
 }

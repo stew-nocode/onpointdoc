@@ -14,4 +14,5 @@ export {
 } from './user-preferences';
 
 export { getUserDashboardConfig } from './user-config';
+export { getCachedUserDashboardConfig } from './cached-user-config';
 

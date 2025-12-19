@@ -9,6 +9,7 @@ import type { PageHeaderConfig, PageCardConfig } from './types';
 type PageLayoutWithFiltersProps = {
   sidebar: ReactNode;
   header: PageHeaderConfig;
+  banner?: ReactNode;
   kpis?: ReactNode;
   card: PageCardConfig;
   children: ReactNode;
@@ -21,6 +22,7 @@ type PageLayoutWithFiltersProps = {
  * 
  * @param sidebar - Sidebar de filtres (doit être FiltersSidebarClient)
  * @param header - Configuration du header
+ * @param banner - Banner optionnel (affiché entre Header et KPIs)
  * @param kpis - Section KPIs optionnelle
  * @param card - Configuration de la card principale
  * @param children - Contenu principal de la card
@@ -28,12 +30,13 @@ type PageLayoutWithFiltersProps = {
 export function PageLayoutWithFilters({
   sidebar,
   header,
+  banner,
   kpis,
   card,
   children
 }: PageLayoutWithFiltersProps) {
   const content = (
-    <PageContent header={header} kpis={kpis} card={card}>
+    <PageContent header={header} banner={banner} kpis={kpis} card={card}>
       {children}
     </PageContent>
   );

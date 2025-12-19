@@ -34,6 +34,7 @@ export function CommentItem({
 }: CommentItemProps) {
   const isOwner = comment.user_id === currentUserId;
   const isFromJira = comment.origin === 'jira';
+  const isFollowup = comment.comment_type === 'followup';
   const canDelete = isOwner && !isFromJira;
 
   const handleDelete = async () => {
@@ -59,6 +60,11 @@ export function CommentItem({
               <Badge variant="info" className="text-xs">
                 <GitBranch className="mr-1 h-3 w-3" />
                 JIRA
+              </Badge>
+            )}
+            {isFollowup && !isFromJira && (
+              <Badge variant="warning" className="text-xs">
+                Relance
               </Badge>
             )}
           </div>

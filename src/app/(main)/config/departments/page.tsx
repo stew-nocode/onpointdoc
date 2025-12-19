@@ -4,6 +4,7 @@ import { Button } from '@/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { NewDepartmentDialogLazy } from '@/components/departments/new-department-dialog-lazy';
 import { DepartmentsTableClient, type DepartmentRow } from '@/components/departments/departments-table-client';
+import { StandardPageHeader } from '@/components/layout/page';
 
 async function loadDepartments(): Promise<DepartmentRow[]> {
   noStore();
@@ -23,12 +24,16 @@ export default async function DepartmentsIndexPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Départements</h1>
-        <NewDepartmentDialogLazy>
-          <Button>Nouveau département</Button>
-        </NewDepartmentDialogLazy>
-      </div>
+      <StandardPageHeader
+        icon="Building2"
+        title="Départements"
+        description="Gérez les départements de l'organisation"
+        actions={
+          <NewDepartmentDialogLazy>
+            <Button>Nouveau département</Button>
+          </NewDepartmentDialogLazy>
+        }
+      />
 
       <Card>
         <CardHeader>

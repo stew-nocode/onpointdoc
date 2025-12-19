@@ -2,17 +2,19 @@
 
 import { useMemo, memo } from 'react';
 import type { ComponentType } from 'react';
-import { cn } from '@/lib/utils';
 import type { DashboardWidget, WidgetLayoutType } from '@/types/dashboard-widgets';
 import type { UnifiedDashboardData } from '@/types/dashboard';
+import type { WidgetProps } from '@/types/dashboard-widget-props';
 import { WIDGET_REGISTRY, getWidgetProps } from './registry';
+import { areWidgetPropsEqual } from './utils/widget-props-comparison';
+import { ViewportLazyWidget } from './viewport-lazy-widget';
+import { Skeleton } from '@/ui/skeleton';
 
 type DashboardWidgetGridProps = {
   widgets: DashboardWidget[];
   dashboardData: UnifiedDashboardData;
+  hideSectionLabels?: boolean; // Masquer les labels de section (ex: "Temps réel")
 };
-
-import type { WidgetProps } from '@/types/dashboard-widget-props';
 
 /**
  * Groupe de widgets par type de layout
@@ -50,10 +52,14 @@ type WidgetGroup = {
 export function DashboardWidgetGrid({
   widgets,
   dashboardData,
+  hideSectionLabels = true,
 }: DashboardWidgetGridProps) {
   // Grouper les widgets par type de layout
   const groupedWidgets = useMemo(() => {
     const groups: Record<WidgetLayoutType, WidgetGroup['widgets']> = {
+      agents: [],        // Cartes agents (photo + résumé activité)
+      companies: [],     // Cartes entreprises (activité par entreprise)
+      'kpi-static': [],  // KPIs Statiques (non filtrés, Admin/Direction)
       kpi: [],
       chart: [],
       table: [],
@@ -91,7 +97,28 @@ export function DashboardWidgetGrid({
 
   return (
     <div className="space-y-6">
-      {/* Section KPIs */}
+      {/* Section Agents (cartes avec photo + résumé activité) */}
+      {groupedWidgets.agents.length > 0 && (
+        <div className="space-y-4">
+          <AgentsSection widgets={groupedWidgets.agents} />
+        </div>
+      )}
+
+      {/* Section Entreprises (cartes avec résumé activité par entreprise) */}
+      {groupedWidgets.companies.length > 0 && (
+        <div className="space-y-4">
+          <CompaniesSection widgets={groupedWidgets.companies} />
+        </div>
+      )}
+
+      {/* Section KPIs Statiques (temps réel, non filtrés) - Admin/Direction only */}
+      {groupedWidgets['kpi-static'].length > 0 && (
+        <div className="space-y-4">
+          <KPIsStaticSection widgets={groupedWidgets['kpi-static']} hideLabel={hideSectionLabels} />
+        </div>
+      )}
+
+      {/* Section KPIs Filtrés */}
       {groupedWidgets.kpi.length > 0 && (
         <div className="space-y-4">
           <KPIsSection widgets={groupedWidgets.kpi} />
@@ -123,22 +150,121 @@ export function DashboardWidgetGrid({
 }
 
 /**
- * Widget individuel mémorisé pour éviter les re-renders inutiles
+ * Comparaison optimisée pour React.memo
  * 
- * Utilise React.memo avec comparaison shallow par défaut pour éviter les re-renders
- * si les props n'ont pas changé.
+ * Détecte les changements de :
+ * - component : comparaison par référence
+ * - period (string) : comparaison par valeur
+ * - autres props : comparaison par référence
+ * 
+ * La logique est extraite dans `widget-props-comparison.ts` pour respecter Clean Code.
  */
+
 const MemoizedWidget = memo(
   ({ component: WidgetComponent, props }: {
     component: ComponentType<WidgetProps>;
     props: WidgetProps;
-  }) => (
-    <div className="w-full h-full">
-      <WidgetComponent {...props} />
-    </div>
-  )
+  }) => {
+    // Debug: Logger les changements de props pour les graphiques
+    if (process.env.NODE_ENV === 'development' && 'period' in props) {
+      console.log('[MemoizedWidget] Rendering widget with period:', props.period);
+    }
+    
+    return (
+      <div className="w-full h-full">
+        <WidgetComponent {...props} />
+      </div>
+    );
+  },
+  areWidgetPropsEqual // Comparaison personnalisée optimisée
 );
 MemoizedWidget.displayName = 'MemoizedWidget';
+
+/**
+ * Section pour les cartes agents (photo + résumé activité)
+ * 
+ * Affiche les cartes spéciales par agent avec photo et résumé d'activité sur la période.
+ * Positionnée au-dessus de la section KPIs Statiques.
+ * Utilise Flexbox avec largeur minimale pour permettre plusieurs cartes par ligne.
+ */
+function AgentsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+          Équipe
+        </span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+          Activité par agent
+        </span>
+      </div>
+      {/* IMPORTANT: le scroll horizontal est géré à l'intérieur du widget (cartes),
+          ici on laisse le widget occuper toute la largeur disponible */}
+      <div className="w-full">
+        {widgets.map((widget) => (
+          <MemoizedWidget
+            key={widget.id}
+            component={widget.component}
+            props={widget.props}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompaniesSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+          Entreprises
+        </span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+          Activité par entreprise
+        </span>
+      </div>
+      <div className="w-full">
+        {widgets.map((widget) => (
+          <MemoizedWidget key={widget.id} component={widget.component} props={widget.props} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Section pour les widgets KPI Statiques (temps réel)
+ * 
+ * Non soumis aux filtres de période, visible uniquement Admin/Direction.
+ * Utilise Flexbox avec largeur minimale de 300px pour permettre
+ * plusieurs cartes par ligne.
+ */
+function KPIsStaticSection({ widgets, hideLabel = false }: { widgets: WidgetGroup['widgets']; hideLabel?: boolean }) {
+  return (
+    <div className="space-y-2">
+      {!hideLabel && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            Temps réel
+          </span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+            Non filtré
+          </span>
+        </div>
+      )}
+      <div className="kpi-static-grid-responsive gap-4">
+        {widgets.map((widget) => (
+          <MemoizedWidget
+            key={widget.id}
+            component={widget.component}
+            props={widget.props}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * Section pour les widgets KPI
@@ -168,6 +294,8 @@ function KPIsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
 /**
  * Section pour les widgets Chart
  * 
+ * ✅ OPTIMISATION Phase 2 : Lazy loading avec Intersection Observer
+ * 
  * Utilise Flexbox pour :
  * - Occuper toute la largeur disponible
  * - Largeur minimale de 400px par Chart (permet maximum 3 par ligne sur desktop standard)
@@ -176,18 +304,31 @@ function KPIsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
  * - Adaptation automatique si des widgets sont désactivés
  * - Hauteur fixe de 420px pour tous les charts
  * - 1 colonne sur mobile (< 640px)
+ * 
+ * Les charts sont chargés uniquement quand ils entrent dans le viewport.
  */
 function ChartsSection({ widgets }: { widgets: WidgetGroup['widgets'] }) {
   if (widgets.length === 0) return null;
 
+  const ChartSkeleton = () => (
+    <div className="space-y-3">
+      <Skeleton className="h-[280px] w-full" />
+    </div>
+  );
+
   return (
     <div className="chart-grid-responsive gap-4">
       {widgets.map((widget) => (
-        <MemoizedWidget
+        <ViewportLazyWidget
           key={widget.id}
-          component={widget.component}
-          props={widget.props}
-        />
+          fallback={<ChartSkeleton />}
+          rootMargin="200px"
+        >
+          <MemoizedWidget
+            component={widget.component}
+            props={widget.props}
+          />
+        </ViewportLazyWidget>
       ))}
     </div>
   );

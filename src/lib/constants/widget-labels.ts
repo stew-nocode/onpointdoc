@@ -14,15 +14,27 @@ export const ROLE_LABELS: Record<DashboardRole, string> = {
  * Labels des widgets pour l'affichage (centralisé)
  */
 export const WIDGET_LABELS: Record<DashboardWidget, string> = {
-  mttr: 'MTTR (Temps moyen de résolution)',
-  'tickets-ouverts': 'Tickets Ouverts',
-  'tickets-resolus': 'Tickets Résolus',
-  workload: 'Charge de travail',
-  health: 'Santé des produits',
-  alerts: 'Alertes opérationnelles',
-  mttrEvolution: 'Évolution MTTR',
-  ticketsDistribution: 'Distribution des tickets',
-  topBugsModules: 'Top modules avec bugs',
-  workloadByAgent: 'Charge par agent',
+  // === AGENTS ===
+  'agents-support-cards': 'Agents Support',
+
+  // === ENTREPRISES ===
+  'companies-cards': 'Entreprises',
+
+  // === KPIs STATIQUES ===
+  'bug-history': 'Historique BUGs',
+  'req-history': 'Historique REQs',
+  'assistance-history': 'Historique Assistance',
+
+  // === CHARTS ===
+  'tickets-distribution': 'Distribution tickets',
+  'tickets-evolution': 'Évolution tickets',
+  'tickets-by-company': 'Tickets par entreprise',
+  'bugs-by-type': 'BUGs par type',
+  'campaigns-results': 'Résultats campagnes',
+  'tickets-by-module': 'Tickets par module',
+  'bugs-by-type-module': 'BUGs par type/module',
+  'assistance-time-by-company': 'Temps assistance par entreprise',
+  'assistance-time-evolution': 'Évolution temps assistance',
+  'support-agents-radar': 'Radar agents support',
 };
 

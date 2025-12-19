@@ -1,0 +1,460 @@
+{
+  "ticketKey": "OD-2373",
+  "ticketSummary": "CRM > DASHBOARD > ETAT DES DEALS : Corriger le bug lié à l'affichage de l'état des deals.",
+  "names": {
+    "statuscategorychangedate": "Catégorie d'état modifiée",
+    "fixVersions": "Versions corrigées",
+    "statusCategory": "Catégorie d'état",
+    "customfield_10111": "Date d'enregistrement",
+    "resolution": "Résolution",
+    "lastViewed": "Dernier affichage",
+    "priority": "Priorité",
+    "customfield_10102": "Stock",
+    "labels": "Étiquettes",
+    "timeestimate": "Estimation restante",
+    "aggregatetimeoriginalestimate": "Σ Estimation originale",
+    "versions": "Versions affectées",
+    "issuelinks": "Tickets liés",
+    "assignee": "Personne assignée",
+    "status": "État",
+    "components": "Composants",
+    "customfield_10052": "Sous-Module(s) (ancien)",
+    "customfield_10053": "Interlocuteur",
+    "customfield_10054": "Poste",
+    "customfield_10330": "Fonctionnalités Offres (CRM)",
+    "customfield_10055": "Canal",
+    "customfield_10297": "Sous-Module(s) Opérations",
+    "customfield_10298": "Sous-Module(s) Finance",
+    "customfield_10056": "Type de bugs",
+    "customfield_10331": "Fonctionnalités Pilotage commercial (CRM)",
+    "customfield_10057": "Code Trello",
+    "customfield_10332": "Fonctionnalités Activité commerciale (CRM)",
+    "customfield_10299": "Sous-Module(s) Projet",
+    "customfield_10333": "Fonctionnalités Souscription/Paiement (CRM)",
+    "customfield_10324": "Fonctionnalités Gestion employé (RH)",
+    "customfield_10325": "Fonctionnalités Salaire (RH)",
+    "customfield_10326": "Fonctionnalités Documents (RH)",
+    "customfield_10327": "Fonctionnalités Rapports (RH)",
+    "customfield_10328": "Fonctionnalités Paramétrage (CRM)",
+    "aggregatetimeestimate": "Σ Estimation restante",
+    "customfield_10329": "Fonctionnalités Client (CRM)",
+    "creator": "Créateur",
+    "subtasks": "Sous-tâches",
+    "reporter": "Rapporteur",
+    "aggregateprogress": "Σ Progrès",
+    "customfield_10320": "Fonctionnalités Rapports (Finance)",
+    "customfield_10045": "Client(s)",
+    "customfield_10321": "Fonctionnalités Centre de paiement (Paiements)",
+    "customfield_10046": "Module",
+    "customfield_10322": "Fonctionnalités Point de paiement (Paiements)",
+    "customfield_10323": "Fonctionnalités Paramétrage (RH)",
+    "customfield_10313": "Fonctionnalités Comptabilité générale (Finance)",
+    "customfield_10314": "Fonctionnalités Comptabilité Analytique (Finance)",
+    "customfield_10315": "Fonctionnalités Etats financiers (Finance)",
+    "customfield_10316": "Fonctionnalités Trésorerie (Finance)",
+    "customfield_10317": "Fonctionnalités Impôts et taxes(Finance)",
+    "customfield_10318": "Fonctionnalités Budget (Finance)",
+    "customfield_10319": "Fonctionnalités Planification trésorerie (Finance)",
+    "progress": "Progression",
+    "votes": "Votes",
+    "worklog": "Journal de travail",
+    "issuetype": "Type de ticket",
+    "timespent": "Temps consacré",
+    "project": "Projet",
+    "aggregatetimespent": "Σ Temps consacré",
+    "customfield_10310": "Fonctionnalités Processus métier (Opération)",
+    "customfield_10311": "Fonctionnalités Rapports (Opération)",
+    "customfield_10312": "Fonctionnalités Gérer mes projets (Projet)",
+    "customfield_10302": "Sous-Module(s) Paiement",
+    "customfield_10303": "Fonctionnalités AGRO (Opération)",
+    "customfield_10304": "Fonctionnalités Immobilisations (Opération)",
+    "customfield_10305": "Fonctionnalités Achat (Opération)",
+    "customfield_10306": "Fonctionnalités Vente (Opération)",
+    "customfield_10307": "Fonctionnalités Gestion de stock (Opération)",
+    "customfield_10308": "Fonctionnalités Production (Opération)",
+    "resolutiondate": "Résolu",
+    "customfield_10309": "Fonctionnalités Parc automobile (Opération)",
+    "workratio": "Ratio du travail réel comparé à l'estimation",
+    "watches": "Observateurs",
+    "issuerestriction": "Limiter à",
+    "created": "Création",
+    "customfield_10020": "Sprint",
+    "customfield_10021": "Flagged",
+    "customfield_10300": "Sous-Module(s) RH",
+    "customfield_10301": "Sous-Module(s) CRM",
+    "customfield_10016": "Story point estimate",
+    "customfield_10019": "Rank",
+    "updated": "Mise à jour",
+    "timeoriginalestimate": "Estimation originale",
+    "description": "Description",
+    "customfield_10495": "Sous-module (test)",
+    "customfield_10133": "% État d'avancement",
+    "customfield_10496": "Fonctionnalité test",
+    "customfield_10530": "Interlocuteurs",
+    "timetracking": "Suivi temporel",
+    "security": "Niveau de sécurité",
+    "attachment": "Pièce jointe",
+    "summary": "Résumé",
+    "customfield_10083": "Statut du traitement",
+    "customfield_10084": "Statut des tests",
+    "customfield_10364": "Autres",
+    "customfield_10002": "Organizations",
+    "customfield_10003": "Testeurs",
+    "customfield_10115": "Date cible de résolution",
+    "customfield_10116": "Design",
+    "environment": "Environnement",
+    "duedate": "Date d'échéance",
+    "comment": "Commentaire"
+  },
+  "fields": {
+    "customfield_10111": {
+      "name": "Date d'enregistrement",
+      "value": "2025-01-29"
+    },
+    "customfield_10102": {
+      "name": "Stock",
+      "value": null
+    },
+    "customfield_10052": {
+      "name": "Sous-Module(s) (ancien)",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10084",
+          "value": "CRM - Analytique",
+          "id": "10084"
+        }
+      ]
+    },
+    "customfield_10053": {
+      "name": "Interlocuteur",
+      "value": "M.SANANKOUA"
+    },
+    "customfield_10054": {
+      "name": "Poste",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10134",
+          "value": "Directeur général",
+          "id": "10134"
+        }
+      ]
+    },
+    "customfield_10330": {
+      "name": "Fonctionnalités Offres (CRM)",
+      "value": null
+    },
+    "customfield_10055": {
+      "name": "Canal",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10143",
+          "value": "En présentiel",
+          "id": "10143"
+        }
+      ]
+    },
+    "customfield_10297": {
+      "name": "Sous-Module(s) Opérations",
+      "value": null
+    },
+    "customfield_10298": {
+      "name": "Sous-Module(s) Finance",
+      "value": null
+    },
+    "customfield_10056": {
+      "name": "Type de bugs",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10366",
+          "value": "Page d'erreur",
+          "id": "10366"
+        }
+      ]
+    },
+    "customfield_10331": {
+      "name": "Fonctionnalités Pilotage commercial (CRM)",
+      "value": null
+    },
+    "customfield_10057": {
+      "name": "Code Trello",
+      "value": null
+    },
+    "customfield_10332": {
+      "name": "Fonctionnalités Activité commerciale (CRM)",
+      "value": null
+    },
+    "customfield_10299": {
+      "name": "Sous-Module(s) Projet",
+      "value": null
+    },
+    "customfield_10333": {
+      "name": "Fonctionnalités Souscription/Paiement (CRM)",
+      "value": null
+    },
+    "customfield_10324": {
+      "name": "Fonctionnalités Gestion employé (RH)",
+      "value": null
+    },
+    "customfield_10325": {
+      "name": "Fonctionnalités Salaire (RH)",
+      "value": null
+    },
+    "customfield_10326": {
+      "name": "Fonctionnalités Documents (RH)",
+      "value": null
+    },
+    "customfield_10327": {
+      "name": "Fonctionnalités Rapports (RH)",
+      "value": null
+    },
+    "customfield_10328": {
+      "name": "Fonctionnalités Paramétrage (CRM)",
+      "value": null
+    },
+    "customfield_10329": {
+      "name": "Fonctionnalités Client (CRM)",
+      "value": null
+    },
+    "customfield_10320": {
+      "name": "Fonctionnalités Rapports (Finance)",
+      "value": null
+    },
+    "customfield_10045": {
+      "name": "Client(s)",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10028",
+          "value": "ONPOINT",
+          "id": "10028"
+        }
+      ]
+    },
+    "customfield_10321": {
+      "name": "Fonctionnalités Centre de paiement (Paiements)",
+      "value": null
+    },
+    "customfield_10046": {
+      "name": "Module",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10034",
+          "value": "Paiement",
+          "id": "10034"
+        }
+      ]
+    },
+    "customfield_10322": {
+      "name": "Fonctionnalités Point de paiement (Paiements)",
+      "value": null
+    },
+    "customfield_10323": {
+      "name": "Fonctionnalités Paramétrage (RH)",
+      "value": null
+    },
+    "customfield_10313": {
+      "name": "Fonctionnalités Comptabilité générale (Finance)",
+      "value": null
+    },
+    "customfield_10314": {
+      "name": "Fonctionnalités Comptabilité Analytique (Finance)",
+      "value": null
+    },
+    "customfield_10315": {
+      "name": "Fonctionnalités Etats financiers (Finance)",
+      "value": null
+    },
+    "customfield_10316": {
+      "name": "Fonctionnalités Trésorerie (Finance)",
+      "value": null
+    },
+    "customfield_10317": {
+      "name": "Fonctionnalités Impôts et taxes(Finance)",
+      "value": null
+    },
+    "customfield_10318": {
+      "name": "Fonctionnalités Budget (Finance)",
+      "value": null
+    },
+    "customfield_10319": {
+      "name": "Fonctionnalités Planification trésorerie (Finance)",
+      "value": null
+    },
+    "customfield_10310": {
+      "name": "Fonctionnalités Processus métier (Opération)",
+      "value": null
+    },
+    "customfield_10311": {
+      "name": "Fonctionnalités Rapports (Opération)",
+      "value": null
+    },
+    "customfield_10312": {
+      "name": "Fonctionnalités Gérer mes projets (Projet)",
+      "value": null
+    },
+    "customfield_10302": {
+      "name": "Sous-Module(s) Paiement",
+      "value": null
+    },
+    "customfield_10303": {
+      "name": "Fonctionnalités AGRO (Opération)",
+      "value": null
+    },
+    "customfield_10304": {
+      "name": "Fonctionnalités Immobilisations (Opération)",
+      "value": null
+    },
+    "customfield_10305": {
+      "name": "Fonctionnalités Achat (Opération)",
+      "value": null
+    },
+    "customfield_10306": {
+      "name": "Fonctionnalités Vente (Opération)",
+      "value": null
+    },
+    "customfield_10307": {
+      "name": "Fonctionnalités Gestion de stock (Opération)",
+      "value": null
+    },
+    "customfield_10308": {
+      "name": "Fonctionnalités Production (Opération)",
+      "value": null
+    },
+    "customfield_10309": {
+      "name": "Fonctionnalités Parc automobile (Opération)",
+      "value": null
+    },
+    "customfield_10020": {
+      "name": "Sprint",
+      "value": [
+        {
+          "id": 54,
+          "name": "Tableau Sprint 34",
+          "state": "closed",
+          "boardId": 5,
+          "goal": "",
+          "startDate": "2025-01-24T15:58:46.000Z",
+          "endDate": "2025-02-07T15:53:06.000Z",
+          "completeDate": "2025-02-07T16:10:33.455Z"
+        }
+      ]
+    },
+    "customfield_10021": {
+      "name": "Flagged",
+      "value": null
+    },
+    "customfield_10300": {
+      "name": "Sous-Module(s) RH",
+      "value": null
+    },
+    "customfield_10301": {
+      "name": "Sous-Module(s) CRM",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10862",
+          "value": "CRM - Analytique",
+          "id": "10862"
+        }
+      ]
+    },
+    "customfield_10016": {
+      "name": "Story point estimate",
+      "value": null
+    },
+    "customfield_10019": {
+      "name": "Rank",
+      "value": "1|i028ob:"
+    },
+    "customfield_10495": {
+      "name": "Sous-module (test)",
+      "value": null
+    },
+    "customfield_10133": {
+      "name": "% État d'avancement",
+      "value": null
+    },
+    "customfield_10496": {
+      "name": "Fonctionnalité test",
+      "value": null
+    },
+    "customfield_10530": {
+      "name": "Interlocuteurs",
+      "value": null
+    },
+    "customfield_10083": {
+      "name": "Statut du traitement",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10186",
+          "value": "Analyse terminée",
+          "id": "10186"
+        },
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10187",
+          "value": "Développement terminé",
+          "id": "10187"
+        },
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10188",
+          "value": "Déploiement en test terminé",
+          "id": "10188"
+        }
+      ]
+    },
+    "customfield_10084": {
+      "name": "Statut des tests",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10190",
+          "value": "Test Concluant",
+          "id": "10190"
+        },
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/customFieldOption/10191",
+          "value": "Déploiement en production terminé",
+          "id": "10191"
+        }
+      ]
+    },
+    "customfield_10364": {
+      "name": "Autres",
+      "value": null
+    },
+    "customfield_10002": {
+      "name": "Organizations",
+      "value": []
+    },
+    "customfield_10003": {
+      "name": "Testeurs",
+      "value": [
+        {
+          "self": "https://onpointdigital.atlassian.net/rest/api/3/user?accountId=712020%3A5c9548c8-e063-4cc7-b9e3-98eb370e0d9e",
+          "accountId": "712020:5c9548c8-e063-4cc7-b9e3-98eb370e0d9e",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/d852334700ab1daff7fd5c29c6b1c75d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVD-6.png"
+          },
+          "displayName": "Vivien DAKPOGAN",
+          "active": true,
+          "timeZone": "Africa/Abidjan",
+          "accountType": "atlassian"
+        }
+      ]
+    },
+    "customfield_10115": {
+      "name": "Date cible de résolution",
+      "value": null
+    },
+    "customfield_10116": {
+      "name": "Design",
+      "value": null
+    }
+  },
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "outwardIssue": "OBCS-8648"
+    }
+  ]
+}

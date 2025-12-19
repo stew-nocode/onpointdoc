@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { Period, ProductHealthData } from '@/types/dashboard';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
@@ -11,45 +12,98 @@ import { MAX_TOP_BUG_MODULES } from './constants/limits';
 /**
  * Calcule la santé des produits (taux de BUGs par produit/module)
  * 
+ * ⚠️ IMPORTANT : Cette fonction utilise `cookies()` via `createSupabaseServerClient()`,
+ * donc elle ne peut PAS utiliser `unstable_cache()`. On utilise uniquement `React.cache()`
+ * pour éviter les appels redondants dans le même render tree.
+ * 
  * @param period - Type de période
  * @param filters - Filtres optionnels (produits, types, équipes)
  * @returns Données de santé (par produit, top modules avec bugs)
  */
-export async function getProductHealth(period: Period, filters?: Partial<DashboardFiltersInput>): Promise<ProductHealthData> {
-  const { startDate, endDate } = getPeriodDates(period);
-  const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period);
+async function getProductHealthInternal(
+  period: Period | string, 
+  filters?: Partial<DashboardFiltersInput>,
+  customStartDate?: string,
+  customEndDate?: string
+): Promise<ProductHealthData> {
+  const { startDate, endDate } = getPeriodDates(period, customStartDate, customEndDate);
+  const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDates(period, customStartDate, customEndDate);
 
   const supabase = await createSupabaseServerClient();
 
-  // Tous les tickets de la période
+  // Tous les tickets BUG de la période (avec priority, resolved_at, status)
   let allTicketsQuery = supabase
     .from('tickets')
-    .select('id, ticket_type, product_id, product:products!left(id, name), module_id, module:modules!left(id, name)')
+    .select('id, ticket_type, priority, resolved_at, status, created_at, product_id, product:products!left(id, name), module_id, module:modules!left(id, name)')
+    .eq('ticket_type', 'BUG')
     .gte('created_at', startDate)
     .lte('created_at', endDate);
   
   allTicketsQuery = applyDashboardFilters(allTicketsQuery, filters);
   const { data: allTickets } = await allTicketsQuery;
 
+  // Tickets résolus dans la période (pour calculer les bugs résolus créés ET résolus dans la période)
+  let resolvedTicketsQuery = supabase
+    .from('tickets')
+    .select('id, ticket_type, priority, resolved_at, status, created_at, module_id, module:modules!left(id, name)')
+    .eq('ticket_type', 'BUG')
+    .not('resolved_at', 'is', null)
+    .gte('resolved_at', startDate)
+    .lte('resolved_at', endDate)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate);
+  
+  resolvedTicketsQuery = applyDashboardFilters(resolvedTicketsQuery, filters);
+  const { data: resolvedTickets } = await resolvedTicketsQuery;
+
   // Tickets de la période précédente (pour tendance)
   let prevTicketsQuery = supabase
     .from('tickets')
-    .select('id, ticket_type, module_id')
+    .select('id, ticket_type, priority, resolved_at, status, created_at, module_id')
+    .eq('ticket_type', 'BUG')
     .gte('created_at', prevStart)
     .lte('created_at', prevEnd);
   
   prevTicketsQuery = applyDashboardFilters(prevTicketsQuery, filters);
   const { data: prevTickets } = await prevTicketsQuery;
 
-  const byProduct = calculateHealthByProduct(allTickets || []);
-  const topBugModules = calculateTopBugModules(
+  // Tickets résolus de la période précédente (créés ET résolus)
+  let prevResolvedTicketsQuery = supabase
+    .from('tickets')
+    .select('id, ticket_type, priority, resolved_at, status, created_at, module_id')
+    .eq('ticket_type', 'BUG')
+    .not('resolved_at', 'is', null)
+    .gte('resolved_at', prevStart)
+    .lte('resolved_at', prevEnd)
+    .gte('created_at', prevStart)
+    .lte('created_at', prevEnd);
+  
+  prevResolvedTicketsQuery = applyDashboardFilters(prevResolvedTicketsQuery, filters);
+  const { data: prevResolvedTickets } = await prevResolvedTicketsQuery;
+
+  // Récupérer tous les tickets (pas seulement BUG) pour calculer byProduct
+  let allTicketsForProductQuery = supabase
+    .from('tickets')
+    .select('id, ticket_type, product_id, product:products!left(id, name), module_id, module:modules!left(id, name)')
+    .gte('created_at', startDate)
+    .lte('created_at', endDate);
+  
+  allTicketsForProductQuery = applyDashboardFilters(allTicketsForProductQuery, filters);
+  const { data: allTicketsForProduct } = await allTicketsForProductQuery;
+
+  const byProduct = calculateHealthByProduct(allTicketsForProduct || []);
+  const moduleBugsMetrics = calculateModuleBugsMetrics(
     allTickets || [],
-    prevTickets || []
+    resolvedTickets || [],
+    prevTickets || [],
+    prevResolvedTickets || [],
+    startDate,
+    endDate
   );
 
   return {
     byProduct,
-    topBugModules
+    topBugModules: moduleBugsMetrics
   };
 }
 
@@ -116,39 +170,208 @@ function calculateHealthStatus(bugRate: number): 'good' | 'warning' | 'critical'
 }
 
 /**
- * Calcule les top modules avec le plus de bugs
+ * Calcule les métriques de bugs par module pour la période filtrée
  */
-function calculateTopBugModules(
-  currentTickets: Array<{
-    ticket_type: string;
+function calculateModuleBugsMetrics(
+  currentBugs: Array<{
+    id: string;
+    priority: string | null;
+    resolved_at: string | null;
+    status: string;
+    created_at: string;
     module_id: string | null;
     module: SupabaseModuleRelation;
-    product: SupabaseProductRelation;
   }>,
-  prevTickets: Array<{ ticket_type: string; module_id: string | null }>
+  resolvedBugsInPeriod: Array<{
+    id: string;
+    priority: string | null;
+    resolved_at: string | null;
+    status: string;
+    created_at: string;
+    module_id: string | null;
+    module: SupabaseModuleRelation;
+  }>,
+  prevBugs: Array<{
+    priority: string | null;
+    resolved_at: string | null;
+    status: string;
+    created_at: string;
+    module_id: string | null;
+  }>,
+  prevResolvedBugs: Array<{
+    priority: string | null;
+    resolved_at: string | null;
+    status: string;
+    created_at: string;
+    module_id: string | null;
+  }>,
+  startDate: string,
+  endDate: string
 ): ProductHealthData['topBugModules'] {
-  const moduleMap = buildModuleMap(currentTickets);
-  const prevBugCountByModule = buildPreviousBugCountMap(prevTickets);
+  const RESOLVED_STATUSES = ['Resolue', 'Résolu', 'Terminé', 'Terminé(e)', 'Termine', 'Done', 'Closed'];
+  
+  // Construire la map des modules actuels
+  const moduleMap = new Map<string, {
+    moduleName: string;
+    bugsSignales: number;
+    bugsCritiques: number;
+    bugsOuverts: number;
+    bugsResolus: number;
+  }>();
 
-  return Array.from(moduleMap.entries())
-    .map(([moduleId, data]) => {
-      const bugRate = data.totalCount > 0
-        ? Math.round((data.bugCount / data.totalCount) * 100)
-        : 0;
-      const prevBugCount = prevBugCountByModule.get(moduleId) || 0;
-      const trendValue = calculateTrend(data.bugCount, prevBugCount);
+  // Traiter les bugs de la période actuelle
+  currentBugs.forEach((bug) => {
+    if (!bug.module_id) return;
+    
+    const module = extractModule(bug.module);
+    if (!module) return;
+    
+    const key = bug.module_id;
+    if (!moduleMap.has(key)) {
+      moduleMap.set(key, {
+        moduleName: module.name,
+        bugsSignales: 0,
+        bugsCritiques: 0,
+        bugsOuverts: 0,
+        bugsResolus: 0
+      });
+    }
+    
+    const data = moduleMap.get(key)!;
+    data.bugsSignales++;
+    
+    if (bug.priority === 'Critical') {
+      data.bugsCritiques++;
+    }
+    
+    // Les bugs ouverts seront calculés après : bugs signalés - bugs résolus
+  });
 
-      return {
-        moduleId,
-        moduleName: data.moduleName,
-        productName: data.productName,
-        bugCount: data.bugCount,
-        bugRate,
-        trend: trendValue
-      };
-    })
-    .sort((a, b) => b.bugCount - a.bugCount)
-    .slice(0, MAX_TOP_BUG_MODULES);
+  // Traiter les bugs résolus (créés ET résolus dans la période)
+  resolvedBugsInPeriod.forEach((bug) => {
+    if (!bug.module_id) return;
+    
+    const module = extractModule(bug.module);
+    if (!module) return;
+    
+    const key = bug.module_id;
+    if (moduleMap.has(key)) {
+      moduleMap.get(key)!.bugsResolus++;
+    }
+  });
+
+  // Calculer les bugs ouverts : bugs signalés - bugs résolus
+  moduleMap.forEach((data) => {
+    data.bugsOuverts = data.bugsSignales - data.bugsResolus;
+  });
+
+  // Construire la map de la période précédente
+  // IMPORTANT: Initialiser avec tous les modules de moduleMap pour que les tendances
+  // soient calculées correctement même si un module n'a pas de bugs dans la période précédente
+  const prevModuleMap = new Map<string, {
+    bugsSignales: number;
+    bugsCritiques: number;
+    bugsOuverts: number;
+    bugsResolus: number;
+  }>();
+
+  // Initialiser prevModuleMap avec tous les modules de moduleMap
+  moduleMap.forEach((data, moduleId) => {
+    prevModuleMap.set(moduleId, {
+      bugsSignales: 0,
+      bugsCritiques: 0,
+      bugsOuverts: 0,
+      bugsResolus: 0
+    });
+  });
+
+  prevBugs.forEach((bug) => {
+    if (!bug.module_id) return;
+    
+    const key = bug.module_id;
+    if (!prevModuleMap.has(key)) {
+      prevModuleMap.set(key, {
+        bugsSignales: 0,
+        bugsCritiques: 0,
+        bugsOuverts: 0,
+        bugsResolus: 0
+      });
+    }
+    
+    const data = prevModuleMap.get(key)!;
+    data.bugsSignales++;
+    
+    if (bug.priority === 'Critical') {
+      data.bugsCritiques++;
+    }
+    
+    // Les bugs ouverts seront calculés après : bugs signalés - bugs résolus
+  });
+
+  prevResolvedBugs.forEach((bug) => {
+    if (!bug.module_id) return;
+    
+    const key = bug.module_id;
+    if (prevModuleMap.has(key)) {
+      prevModuleMap.get(key)!.bugsResolus++;
+    }
+  });
+
+  // Calculer les bugs ouverts de la période précédente
+  prevModuleMap.forEach((data) => {
+    data.bugsOuverts = data.bugsSignales - data.bugsResolus;
+  });
+
+  // Construire le résultat avec toutes les métriques
+  return Array.from(moduleMap.entries()).map(([moduleId, data]) => {
+    const prev = prevModuleMap.get(moduleId) || {
+      bugsSignales: 0,
+      bugsCritiques: 0,
+      bugsOuverts: 0,
+      bugsResolus: 0
+    };
+
+    // Calculer les pourcentages et tendances
+    // Plafonner à 100% maximum pour éviter les incohérences (un taux ne peut pas dépasser 100%)
+    const criticalRate = data.bugsSignales > 0
+      ? Math.min(Math.round((data.bugsCritiques / data.bugsSignales) * 100), 100)
+      : 0;
+
+    const resolutionRate = data.bugsSignales > 0
+      ? Math.min(Math.round((data.bugsResolus / data.bugsSignales) * 100), 100)
+      : 0;
+
+    const prevCriticalRate = prev.bugsSignales > 0
+      ? Math.min((prev.bugsCritiques / prev.bugsSignales) * 100, 100)
+      : 0;
+
+    const prevResolutionRate = prev.bugsSignales > 0
+      ? Math.min((prev.bugsResolus / prev.bugsSignales) * 100, 100)
+      : 0;
+
+    return {
+      moduleId,
+      moduleName: data.moduleName,
+      productName: '', // Pas de produit dans le nouveau tableau
+      bugCount: data.bugsSignales,
+      bugRate: resolutionRate, // Taux de résolution (pour compatibilité avec l'ancien type)
+      trend: calculateTrend(data.bugsSignales, prev.bugsSignales),
+      // Nouvelles métriques
+      bugsSignales: data.bugsSignales,
+      bugsCritiques: data.bugsCritiques,
+      criticalRate,
+      bugsOuverts: data.bugsOuverts,
+      bugsResolus: data.bugsResolus,
+      resolutionRate,
+      trends: {
+        bugsSignales: calculateTrend(data.bugsSignales, prev.bugsSignales),
+        criticalRate: calculateTrend(criticalRate, prevCriticalRate),
+        bugsOuverts: calculateTrend(data.bugsOuverts, prev.bugsOuverts),
+        bugsResolus: calculateTrend(data.bugsResolus, prev.bugsResolus),
+        resolutionRate: calculateTrend(resolutionRate, prevResolutionRate)
+      }
+    };
+  });
 }
 
 /**
@@ -221,3 +444,12 @@ function buildPreviousBugCountMap(
   return bugCountByModule;
 }
 
+/**
+ * Version exportée avec React.cache() pour éviter les appels redondants
+ * dans le même render tree
+ * 
+ * ⚠️ NOTE : On n'utilise pas `unstable_cache()` car cette fonction utilise
+ * `cookies()` via `createSupabaseServerClient()`, ce qui n'est pas supporté
+ * dans les fonctions mises en cache avec `unstable_cache()`.
+ */
+export const getProductHealth = cache(getProductHealthInternal);

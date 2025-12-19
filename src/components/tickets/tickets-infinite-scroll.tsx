@@ -1,45 +1,34 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import { Eye, Edit, Loader2, CheckSquare2, Square, MessageSquare } from 'lucide-react';
-import { Badge } from '@/ui/badge';
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from 'react';
+// ✅ PHASE 5 - ÉTAPE 1 : flushSync est maintenant utilisé dans useTicketsInfiniteLoad()
+// ✅ PHASE 5 - ÉTAPE 4 : Link, Eye, Edit, Badge sont maintenant utilisés dans TicketRow
+import { Loader2, CheckSquare2, Square, MessageSquare } from 'lucide-react';
 import { Button } from '@/ui/button';
-import { Checkbox } from '@/ui/checkbox';
+// ✅ PHASE 5 - ÉTAPE 5 : Checkbox est maintenant utilisé dans TicketsTableHeader
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip';
 import { ColumnsConfigDialog } from '@/components/tickets/columns-config-dialog';
 import { getVisibleColumns, type ColumnId } from '@/lib/utils/column-preferences';
 import { parseADFToText } from '@/lib/utils/adf-parser';
 import { getStatusBadgeVariant } from '@/lib/utils/ticket-status';
-import {
-  highlightText,
-  getTicketTypeIcon,
-  getPriorityColorClass,
-  getUserInitials,
-  getAvatarColorClass
-} from './utils/ticket-display';
+// ✅ PHASE 5 - ÉTAPE 4 : Les fonctions utilitaires sont maintenant utilisées dans TicketRow
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
+import type { TicketViewConfig } from '@/types/ticket-view-config';
 import { useAuth, useTicketSelection } from '@/hooks';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { AnalysisButton } from '@/components/n8n/analysis-button';
-import { SortableTableHeader } from './sortable-table-header';
-import { parseTicketSort, DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
-import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
+import { useRouter } from 'next/navigation';
+import { useStableSearchParams } from '@/hooks/use-stable-search-params';
+// ✅ PHASE 5 - ÉTAPE 4 : AnalysisButton, TicketStatsTooltip, UserStatsTooltip, AddCommentDialog sont maintenant utilisés dans TicketRow
+// ✅ PHASE 5 - ÉTAPE 5 : SortableTableHeader est maintenant utilisé dans TicketsTableHeader
+import { useTicketsSort } from '@/hooks/tickets/use-tickets-sort';
+import { useTicketsInfiniteLoad } from '@/hooks/tickets/use-tickets-infinite-load';
 import { BulkActionsBar } from './bulk-actions-bar';
-import { TicketStatsTooltip } from './tooltips/ticket-stats-tooltip';
-import { UserStatsTooltip } from './tooltips/user-stats-tooltip';
-import { AddCommentDialog } from './add-comment-dialog';
 import { useRenderCount, usePerformanceMeasure } from '@/hooks/performance';
-import {
-  buildTicketListParams,
-} from './tickets-infinite-scroll/utils/filter-params-builder';
-import {
-  mergeTicketsWithoutDuplicates,
-} from './tickets-infinite-scroll/utils/tickets-state-updater';
-import { areTicketIdsEqual } from './tickets-infinite-scroll/utils/tickets-reset';
-import { logTicketsLoadPerformance } from './tickets-infinite-scroll/utils/performance-logger';
+// ✅ PHASE 5 - ÉTAPE 1 : areTicketIdsEqual n'est plus utilisé (réinitialisation gérée par le hook)
+// ✅ PHASE 5 - ÉTAPE 1 : buildTicketListParams, mergeTicketsWithoutDuplicates, logTicketsLoadPerformance sont maintenant dans useTicketsInfiniteLoad
 import { LoadMoreButton } from './tickets-infinite-scroll/load-more-button';
+import { TicketRow } from './tickets-infinite-scroll/ticket-row';
+import { TicketsTableHeader } from './tickets-infinite-scroll/tickets-table-header';
 
 type TicketsInfiniteScrollProps = {
   initialTickets: TicketWithRelations[];
@@ -50,9 +39,16 @@ type TicketsInfiniteScrollProps = {
   search?: string;
   quickFilter?: QuickFilter;
   currentProfileId?: string;
+  agentId?: string; // ✅ Nouveau paramètre : ID de l'agent pour filtrer par agent support
+  companyId?: string; // ✅ Nouveau paramètre : ID de l'entreprise pour filtrer par entreprise
+  /**
+   * Configuration de la vue selon le rôle utilisateur
+   * Si non fourni, utilise les valeurs par défaut (comportement existant)
+   */
+  viewConfig?: TicketViewConfig;
 };
 
-const ITEMS_PER_PAGE = 25;
+// ✅ PHASE 5 - ÉTAPE 1 : ITEMS_PER_PAGE est maintenant dans useTicketsInfiniteLoad
 
 /**
  * Composant TicketsInfiniteScroll - Version interne non memoizée
@@ -67,51 +63,88 @@ function TicketsInfiniteScrollComponent({
   status,
   search,
   quickFilter,
-  currentProfileId
+  currentProfileId,
+  viewConfig
 }: TicketsInfiniteScrollProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { role } = useAuth();
+  const searchParams = useStableSearchParams();
+  const authState = useAuth();
   
-  // Stabiliser searchParams avec une ref pour éviter les re-renders
-  const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
+  // ✅ PHASE 5 - ÉTAPE 3 : Utiliser le hook de tri extrait
+  const {
+    currentSort,
+    currentSortDirection,
+    handleSort,
+    sortColumnValue,
+    sortDirectionValue
+  } = useTicketsSort();
+  
+  // ✅ Utiliser viewConfig pour canEdit si fourni, sinon fallback sur le rôle
+  const canEdit = useMemo(() => {
+    if (viewConfig) {
+      return viewConfig.canEdit;
+    }
+    // Fallback : comportement existant basé sur le rôle
+    const role = authState.role;
+    return role === 'admin' || role === 'manager';
+  }, [viewConfig, authState.role]);
+  
+  // ✅ Utiliser viewConfig pour canSelectMultiple si fourni
+  const canSelectMultiple = useMemo(() => {
+    return viewConfig?.canSelectMultiple ?? true; // Par défaut, autoriser la sélection
+  }, [viewConfig]);
+  
+  // searchParams est déjà stabilisé par useStableSearchParams()
+  // Pas besoin de duplication supplémentaire
   
   // Mesures de performance (dev uniquement)
-  const renderCount = useRenderCount({
-    componentName: 'TicketsInfiniteScroll',
-    warningThreshold: 10,
-    logToConsole: process.env.NODE_ENV === 'development',
+  // DÉSACTIVÉ TEMPORAIREMENT pour éviter les re-renders dus aux hooks de mesure
+  // Note: Les logs sont réduits automatiquement par le hook (seulement si > 1 render)
+  // const renderCount = useRenderCount({
+  //   componentName: 'TicketsInfiniteScroll',
+  //   warningThreshold: 10,
+  //   logToConsole: process.env.NODE_ENV === 'development',
+  // });
+  
+  // ✅ Extraire agentId depuis searchParams pour le filtrage par agent support
+  const agentId = searchParams.get('agent') || undefined;
+  
+  // ✅ Extraire companyId depuis searchParams pour le filtrage par entreprise
+  const companyId = searchParams.get('company') || undefined;
+  
+  // ✅ PHASE 5 - ÉTAPE 1 : La logique de chargement est maintenant dans useTicketsInfiniteLoad()
+  const {
+    tickets,
+    hasMore,
+    isLoading,
+    error,
+    loadMore,
+    filterKey
+  } = useTicketsInfiniteLoad({
+    initialTickets,
+    initialHasMore,
+    type,
+    status,
+    search,
+    quickFilter,
+    currentProfileId,
+    agentId, // ✅ Passer agentId au hook
+    companyId, // ✅ Passer companyId au hook
+    currentSort,
+    currentSortDirection,
+    searchParams
   });
-  
-  // Parser les paramètres de tri depuis l'URL (memoizé pour éviter les recalculs)
-  const sort = useMemo(() => {
-    const sortColumnParam = searchParamsRef.current.get('sortColumn') || undefined;
-    const sortDirectionParam = searchParamsRef.current.get('sortDirection') || undefined;
-    return parseTicketSort(sortColumnParam, sortDirectionParam);
-  }, [searchParams]); // Seulement si searchParams change (référence)
-  
-  const [currentSort, setCurrentSort] = useState<TicketSortColumn>(sort.column);
-  const [currentSortDirection, setCurrentSortDirection] = useState<SortDirection>(sort.direction);
-  const [tickets, setTickets] = useState<TicketWithRelations[]>(initialTickets);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const ticketsLengthRef = useRef(initialTickets.length);
-  
-  // Refs pour stabiliser les valeurs utilisées dans loadMore (évite les re-renders)
-  const isLoadingRef = useRef(false);
-  const hasMoreRef = useRef(hasMore);
-  // Initialiser avec toutes les colonnes par défaut pour éviter l'erreur d'hydratation
+  // ✅ Initialiser avec les colonnes de viewConfig si fourni, sinon toutes les colonnes
   // Les préférences seront chargées après le montage côté client uniquement
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(() => {
-    // Toujours retourner toutes les colonnes par défaut pour l'hydratation
+    if (viewConfig?.defaultVisibleColumns) {
+      // Utiliser les colonnes par défaut de la configuration
+      return new Set(viewConfig.defaultVisibleColumns);
+    }
+    // Fallback : toutes les colonnes par défaut pour l'hydratation
     return new Set(['title', 'type', 'status', 'priority', 'canal', 'company', 'product', 'module', 'jira', 'created_at', 'reporter', 'assigned'] as ColumnId[]);
   });
   const [isMounted, setIsMounted] = useState(false);
-  
-  // Vérifier les permissions pour l'édition (admin/manager)
-  const canEdit = role === 'admin' || role === 'manager';
 
   // Gestion de la sélection multiple
   const {
@@ -129,21 +162,24 @@ function TicketsInfiniteScrollComponent({
   const clearSelectionRef = useRef(clearSelection);
   clearSelectionRef.current = clearSelection;
 
-  /**
-   * Réinitialiser la sélection quand les filtres changent
-   * 
-   * Mémorisé pour éviter les re-renders inutiles.
-   */
-  const filterKey = useMemo(
-    () => `${type}-${status}-${search}-${quickFilter}-${currentSort}-${currentSortDirection}`,
-    [type, status, search, quickFilter, currentSort, currentSortDirection]
-  );
-
+  // ✅ PHASE 5 - ÉTAPE 1 : filterKey est maintenant fourni par useTicketsInfiniteLoad()
+  
   // Réinitialiser la sélection quand les filtres changent
-  // Utilise une ref pour éviter la dépendance à clearSelection
+  // Utilise une ref pour éviter la dépendance à clearSelection et les boucles
+  const prevFilterKeyForSelectionRef = useRef<string | null>(null);
+  
+  // Utiliser useEffect avec une garde stricte pour éviter les boucles
   useEffect(() => {
-    clearSelectionRef.current();
-  }, [filterKey]); // Pas de dépendance à clearSelection
+    // Ne réinitialiser que si filterKey a réellement changé
+    if (prevFilterKeyForSelectionRef.current !== filterKey) {
+      prevFilterKeyForSelectionRef.current = filterKey;
+      // Utiliser setTimeout pour éviter les mises à jour pendant le render
+      const timeoutId = setTimeout(() => {
+        clearSelectionRef.current();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [filterKey]); // Dépendance uniquement à filterKey, pas à clearSelection
 
   /**
    * Initialiser les colonnes visibles après le montage
@@ -154,44 +190,10 @@ function TicketsInfiniteScrollComponent({
     setVisibleColumns(getVisibleColumns());
   }, []);
 
-  /**
-   * Synchroniser le tri avec l'URL au montage uniquement
-   * Utilise une ref pour éviter les re-renders si le tri n'a pas changé
-   */
-  const sortInitializedRef = useRef(false);
-  useEffect(() => {
-    if (!sortInitializedRef.current) {
-      setCurrentSort(sort.column);
-      setCurrentSortDirection(sort.direction);
-      sortInitializedRef.current = true;
-    }
-  }, [sort.column, sort.direction]);
+  // ✅ PHASE 5 - ÉTAPE 3 : La logique de tri est maintenant dans useTicketsSort()
+  // handleSort, currentSort, currentSortDirection, sortColumnValue, sortDirectionValue sont fournis par le hook
 
-  /**
-   * Handler pour le tri d'une colonne
-   * Met à jour l'URL avec les nouveaux paramètres de tri
-   * 
-   * Optimisé : utilise searchParamsRef déjà défini plus haut
-   */
-  const handleSort = useCallback(
-    (column: TicketSortColumn, direction: SortDirection) => {
-      setCurrentSort(column);
-      setCurrentSortDirection(direction);
-
-      const params = new URLSearchParams(searchParamsRef.current.toString());
-      params.set('sortColumn', column);
-      params.set('sortDirection', direction);
-
-      router.push(`/gestion/tickets?${params.toString()}`, { scroll: false });
-    },
-    [router]
-  );
-
-  // Utiliser la fonction utilitaire pour mettre en surbrillance les termes recherchés
-  const highlightSearchTerm = useCallback(
-    (text: string, searchTerm?: string) => highlightText(text, searchTerm),
-    []
-  );
+  // ✅ PHASE 5 - ÉTAPE 4 : highlightSearchTerm est maintenant utilisé dans TicketRow
 
   /**
    * Handler pour l'édition d'un ticket
@@ -203,165 +205,43 @@ function TicketsInfiniteScrollComponent({
     router.push(`/gestion/tickets/${ticketId}?edit=true`);
   }, [router]);
 
-  /**
-   * Références stables pour les filtres (évite les re-créations de loadMore)
-   */
-  const filtersRef = useRef({
-    type,
-    status,
-    search,
-    quickFilter,
-    currentProfileId,
-    currentSort,
-    currentSortDirection,
-  });
+  // ✅ PHASE 5 - ÉTAPE 1 : La logique de chargement (filtersRef, loadMoreRef, etc.) est maintenant dans useTicketsInfiniteLoad()
 
-  // Mettre à jour les refs quand les filtres changent
-  useEffect(() => {
-    filtersRef.current = {
-      type,
-      status,
-      search,
-      quickFilter,
-      currentProfileId,
-      currentSort,
-      currentSortDirection,
-    };
-  }, [type, status, search, quickFilter, currentProfileId, currentSort, currentSortDirection]);
-
-  // Mettre à jour les refs pour isLoading et hasMore (évite les re-créations de loadMore)
-  useEffect(() => {
-    isLoadingRef.current = isLoading;
-  }, [isLoading]);
-
-  useEffect(() => {
-    hasMoreRef.current = hasMore;
-  }, [hasMore]);
-
-  /**
-   * Charge plus de tickets via l'API
-   * 
-   * Optimisé avec utilitaires extraits et refs stables pour respecter Clean Code.
-   * Utilise des refs pour isLoading et hasMore pour éviter les re-créations de la fonction.
-   */
-  const loadMoreRef = useRef<() => Promise<void>>();
-  
-  // Mettre à jour la fonction loadMore dans la ref
-  loadMoreRef.current = async () => {
-    // Utiliser les refs pour éviter les dépendances
-    if (isLoadingRef.current || !hasMoreRef.current) return;
-
-    // Mesure du temps de chargement (dev uniquement)
-    const loadStartTime = performance.now();
-    if (process.env.NODE_ENV === 'development') {
-      console.time('⏱️ TicketsLoadMore');
-    }
-
-    isLoadingRef.current = true;
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const currentLength = ticketsLengthRef.current;
-      const filters = filtersRef.current;
-
-      // Construire les paramètres avec les utilitaires extraits
-      const params = buildTicketListParams(
-        currentLength,
-        ITEMS_PER_PAGE,
-        filters.currentSort,
-        filters.currentSortDirection,
-        filters.type,
-        filters.status,
-        filters.search,
-        filters.quickFilter,
-        filters.currentProfileId,
-        searchParamsRef.current
-      );
-
-      const response = await fetch(`/api/tickets/list?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement des tickets');
-      }
-
-      const data = await response.json();
-
-      // Fusionner les tickets avec les utilitaires extraits
-      // Optimisation : vérifier s'il y a vraiment de nouveaux tickets avant de mettre à jour l'état
-      setTickets((prev) => {
-        // Vérifier rapidement si les nouveaux tickets existent déjà
-        const existingIds = new Set(prev.map((t) => t.id));
-        const trulyNewTickets = data.tickets.filter((t: TicketWithRelations) => !existingIds.has(t.id));
-        
-        // Si aucun nouveau ticket, ne pas déclencher de re-render
-        if (trulyNewTickets.length === 0) {
-          return prev;
+  // ✅ SIMPLIFIÉ : Avec le refactoring, les causes racines sont corrigées
+  // Plus besoin de protection agressive, juste la restauration après "Voir plus"
+  // 
+  // Le refactoring a corrigé :
+  // - Recompilations réduites → Plus de re-renders inutiles
+  // - searchParams stabilisés → Plus de changements de référence
+  // - router.refresh() supprimés → Plus de recompilations forcées
+  // - Composant simplifié → Moins de re-renders
+  //
+  // Next.js gère automatiquement le scroll restoration pour les client-side transitions,
+  // mais pour l'infinite scroll, on restaure manuellement après chargement.
+  useLayoutEffect(() => {
+    // Restaurer le scroll après le chargement de nouveaux tickets
+    // L'ID du ticket est sauvegardé dans LoadMoreButton avant le clic
+    const storedTicketId = sessionStorage.getItem('tickets-scroll-ticket-id');
+    if (storedTicketId && !isLoading && tickets.length > 0) {
+      // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      requestAnimationFrame(() => {
+        const ticketElement = document.getElementById(storedTicketId);
+        if (ticketElement) {
+          ticketElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+          sessionStorage.removeItem('tickets-scroll-ticket-id');
         }
-        
-        // Fusionner uniquement les nouveaux tickets
-        const updated = mergeTicketsWithoutDuplicates(prev, data.tickets);
-        ticketsLengthRef.current = updated.length;
-        return updated;
       });
-
-      // Mettre à jour hasMore seulement si la valeur a changé
-      if (hasMoreRef.current !== data.hasMore) {
-        hasMoreRef.current = data.hasMore;
-        setHasMore(data.hasMore);
-      }
-
-      // Logger avec l'utilitaire centralisé
-      if (process.env.NODE_ENV === 'development') {
-        const loadDuration = performance.now() - loadStartTime;
-        console.timeEnd('⏱️ TicketsLoadMore');
-        logTicketsLoadPerformance(loadDuration, data.tickets.length);
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erreur lors du chargement';
-      setError(message);
-      if (process.env.NODE_ENV === 'development') {
-        console.timeEnd('⏱️ TicketsLoadMore');
-      }
-    } finally {
-      isLoadingRef.current = false;
-      setIsLoading(false);
     }
-  };
+  }, [tickets, isLoading]);
 
   // Fonction wrapper stable pour compatibilité
-  const loadMore = useCallback(() => {
-    loadMoreRef.current?.();
-  }, []); // Pas de dépendances - utilise toujours la version actuelle dans la ref
+  // ✅ PHASE 5 - ÉTAPE 1 : loadMore est maintenant fourni directement par useTicketsInfiniteLoad()
+  // La sauvegarde de la position se fait dans le bouton lui-même (load-more-button.tsx)
 
   // Référence stable pour les tickets initiaux (évite les re-renders)
-  const initialTicketsRef = useRef(initialTickets);
-  const initialHasMoreRef = useRef(initialHasMore);
-
-  // Mettre à jour les refs quand les props changent (sans déclencher de re-render)
-  useEffect(() => {
-    initialTicketsRef.current = initialTickets;
-    initialHasMoreRef.current = initialHasMore;
-  }, [initialTickets, initialHasMore]);
-
-  /**
-   * Réinitialiser les tickets quand les filtres changent
-   * 
-   * Utilise une comparaison par IDs pour éviter les re-renders inutiles.
-   */
-  useEffect(() => {
-    setTickets((prev) => {
-      // Comparer par IDs uniquement (évite les re-renders si contenu identique)
-      if (areTicketIdsEqual(prev, initialTicketsRef.current)) {
-        return prev;
-      }
-
-      ticketsLengthRef.current = initialTicketsRef.current.length;
-      return initialTicketsRef.current;
-    });
-    setHasMore(initialHasMoreRef.current);
-    setError(null);
-  }, [type, status, search, quickFilter, currentSort, currentSortDirection]); // Pas de dépendance aux tickets
+  // Comparer par IDs plutôt que par référence pour éviter les mises à jour inutiles
+  // ✅ PHASE 5 - ÉTAPE 1 : La réinitialisation des tickets est maintenant gérée par useTicketsInfiniteLoad()
+  // Le hook réinitialise automatiquement les tickets quand filterKey ou initialTickets changent
 
 
   if (tickets.length === 0 && !isLoading) {
@@ -372,10 +252,7 @@ function TicketsInfiniteScrollComponent({
     );
   }
 
-  // Wrappers pour compatibilité avec le code existant
-  const getPriorityColor = getPriorityColorClass;
-  const getInitials = getUserInitials;
-  const getAvatarColor = getAvatarColorClass;
+  // ✅ PHASE 5 - ÉTAPE 4 : Les fonctions utilitaires sont maintenant utilisées dans TicketRow
 
   // Utiliser toutes les colonnes pendant l'hydratation, puis les préférences après le montage
   const isColumnVisible = (columnId: ColumnId) => {
@@ -388,9 +265,10 @@ function TicketsInfiniteScrollComponent({
 
   return (
     <TooltipProvider>
-      <div className="space-y-3">
+      <div className="space-y-3" style={{ overflowAnchor: 'none' }} data-scroll-container>
         {/* Barre d'actions flottante pour les tickets sélectionnés */}
-        {selectedCount > 0 && (
+        {/* ✅ Afficher seulement si canSelectMultiple est activé */}
+        {canSelectMultiple && selectedCount > 0 && (
           <BulkActionsBar
             selectedTicketIds={selectedTicketIdsArray}
             tickets={tickets}
@@ -402,405 +280,32 @@ function TicketsInfiniteScrollComponent({
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left">
-            <thead className="border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                {/* Colonne checkbox Select All */}
-                <th className="w-12 pb-2.5 pr-2">
-                  <div className="flex items-center justify-center">
-                    <Checkbox
-                      checked={areAllTicketsSelected(tickets)}
-                      indeterminate={areSomeTicketsSelected(tickets)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          selectAllTickets(tickets);
-                        } else {
-                          clearSelection();
-                        }
-                      }}
-                      aria-label="Sélectionner tous les tickets"
-                    />
-                  </div>
-                </th>
-                {isColumnVisible('title') && (
-                  <SortableTableHeader
-                    column="title"
-                    label="Titre"
-                    currentSortColumn={currentSort}
-                    currentSortDirection={currentSortDirection}
-                    onSort={handleSort}
-                  />
-                )}
-                {isColumnVisible('type') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Type
-                  </th>
-                )}
-                {isColumnVisible('status') && (
-                  <SortableTableHeader
-                    column="status"
-                    label="Statut"
-                    currentSortColumn={currentSort}
-                    currentSortDirection={currentSortDirection}
-                    onSort={handleSort}
-                  />
-                )}
-                {isColumnVisible('priority') && (
-                  <SortableTableHeader
-                    column="priority"
-                    label="Priorité"
-                    currentSortColumn={currentSort}
-                    currentSortDirection={currentSortDirection}
-                    onSort={handleSort}
-                  />
-                )}
-                {isColumnVisible('canal') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Canal
-                  </th>
-                )}
-                {isColumnVisible('company') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Entreprise
-                  </th>
-                )}
-                {isColumnVisible('product') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Produit
-                  </th>
-                )}
-                {isColumnVisible('module') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Module
-                  </th>
-                )}
-                {isColumnVisible('jira') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Jira
-                  </th>
-                )}
-                {isColumnVisible('created_at') && (
-                  <SortableTableHeader
-                    column="created_at"
-                    label="Créé le"
-                    currentSortColumn={currentSort}
-                    currentSortDirection={currentSortDirection}
-                    onSort={handleSort}
-                  />
-                )}
-                {isColumnVisible('reporter') && (
-                  <th className="pb-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Rapporteur
-                  </th>
-                )}
-                {isColumnVisible('assigned') && (
-                  <SortableTableHeader
-                    column="assigned_to"
-                    label="Assigné"
-                    currentSortColumn={currentSort}
-                    currentSortDirection={currentSortDirection}
-                    onSort={handleSort}
-                  />
-                )}
-                <th className="pb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" />
-              </tr>
-            </thead>
+            {/* ✅ PHASE 5 - ÉTAPE 5 : L'en-tête est maintenant dans le composant TicketsTableHeader */}
+            <TicketsTableHeader
+              tickets={tickets}
+              areAllTicketsSelected={areAllTicketsSelected}
+              areSomeTicketsSelected={areSomeTicketsSelected}
+              selectAllTickets={selectAllTickets}
+              clearSelection={clearSelection}
+              currentSort={currentSort}
+              currentSortDirection={currentSortDirection}
+              handleSort={handleSort}
+              isColumnVisible={isColumnVisible}
+              canSelectMultiple={canSelectMultiple}
+            />
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                    >
-                      {/* Checkbox de sélection */}
-                      <td className="w-12 py-2.5 pr-2">
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            checked={isTicketSelected(ticket.id)}
-                            onCheckedChange={() => toggleTicketSelection(ticket.id)}
-                            aria-label={`Sélectionner le ticket ${ticket.title}`}
-                          />
-                        </div>
-                      </td>
-                      {/* Titre avec tooltip */}
-                      {isColumnVisible('title') && (
-                  <td className="py-2.5 pr-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Link
-                            href={`/gestion/tickets/${ticket.id}`}
-                            className="text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info truncate block max-w-[300px]"
-                          >
-                            {search ? highlightSearchTerm(ticket.title, search) : ticket.title}
-                          </Link>
-                        </div>
-                      </TooltipTrigger>
-                      <TicketStatsTooltip
-                        ticketId={ticket.id}
-                        createdAt={ticket.created_at}
-                        title={ticket.title}
-                        description={ticket.description}
-                        jiraIssueKey={ticket.jira_issue_key ?? null}
-                      />
-                    </Tooltip>
-                  </td>
-                )}
-
-                {/* Type avec icône */}
-                {isColumnVisible('type') && (
-                  <td className="py-2.5 pr-4">
-                    <div className="flex items-center gap-1.5">
-                      {getTicketTypeIcon(ticket.ticket_type)}
-                      <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {ticket.ticket_type}
-                      </span>
-                    </div>
-                  </td>
-                )}
-
-                {/* Statut */}
-                {isColumnVisible('status') && (
-                  <td className="py-2.5 pr-4">
-                    <Badge
-                      variant={getStatusBadgeVariant(ticket.status)}
-                      className="text-[10px] px-2 py-0.5 whitespace-nowrap"
-                    >
-                      {ticket.status.replace('_', ' ')}
-                    </Badge>
-                  </td>
-                )}
-
-                {/* Priorité avec couleur */}
-                {isColumnVisible('priority') && (
-                  <td className="py-2.5 pr-4">
-                    <span className={`text-xs font-medium capitalize whitespace-nowrap ${getPriorityColor(ticket.priority)}`}>
-                      {ticket.priority}
-                    </span>
-                  </td>
-                )}
-
-                {/* Canal */}
-                {isColumnVisible('canal') && (
-                  <td className="py-2.5 pr-4">
-                    <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                      {ticket.canal || '-'}
-                    </span>
-                  </td>
-                )}
-
-                {/* Entreprise */}
-                {isColumnVisible('company') && (
-                  <td className="py-2.5 pr-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[150px]">
-                          {ticket.company?.name || '-'}
-                        </span>
-                      </TooltipTrigger>
-                      {ticket.company?.name && (
-                        <TooltipContent>
-                          <p>{ticket.company.name}</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </td>
-                )}
-
-                {/* Produit */}
-                {isColumnVisible('product') && (
-                  <td className="py-2.5 pr-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[120px]">
-                          {ticket.product?.name || '-'}
-                        </span>
-                      </TooltipTrigger>
-                      {ticket.product?.name && (
-                        <TooltipContent>
-                          <p>{ticket.product.name}</p>
-                          {ticket.module?.name && <p className="text-xs text-slate-400 mt-1">Module: {ticket.module.name}</p>}
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </td>
-                )}
-
-                {/* Module */}
-                {isColumnVisible('module') && (
-                  <td className="py-2.5 pr-4">
-                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate block max-w-[120px]">
-                      {ticket.module?.name || '-'}
-                    </span>
-                  </td>
-                )}
-
-                {/* Jira */}
-                {isColumnVisible('jira') && (
-                  <td className="py-2.5 pr-4">
-                    {ticket.jira_issue_key ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 whitespace-nowrap">
-                            {ticket.jira_issue_key}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Ticket Jira: {ticket.jira_issue_key}</p>
-                          <p className="text-xs text-slate-400 mt-1">Origine: {ticket.origin || 'Supabase'}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-slate-400 text-xs">-</span>
-                    )}
-                  </td>
-                )}
-
-                {/* Date de création */}
-                {isColumnVisible('created_at') && (
-                  <td className="py-2.5 pr-4">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                          {ticket.created_at
-                            ? new Date(ticket.created_at).toLocaleDateString('fr-FR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                              })
-                            : '-'}
-                        </span>
-                      </TooltipTrigger>
-                      {ticket.created_at && (
-                        <TooltipContent>
-                          <p>
-                            {new Date(ticket.created_at).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </td>
-                )}
-
-                {/* Rapporteur avec avatar */}
-                {isColumnVisible('reporter') && (
-                  <td className="py-2.5 pr-4">
-                    {ticket.created_user?.full_name ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.created_user.full_name)}`}
-                            >
-                              {getInitials(ticket.created_user.full_name)}
-                            </div>
-                            <span className="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
-                              {ticket.created_user.full_name}
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <UserStatsTooltip
-                          profileId={ticket.created_by ?? null}
-                          type="reporter"
-                        />
-                      </Tooltip>
-                    ) : (
-                      <span className="text-xs text-slate-400">-</span>
-                    )}
-                  </td>
-                )}
-
-                {/* Assigné avec avatar */}
-                {isColumnVisible('assigned') && (
-                  <td className="py-2.5 pr-4">
-                    {ticket.assigned_user?.full_name ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white ${getAvatarColor(ticket.assigned_user.full_name)}`}
-                            >
-                              {getInitials(ticket.assigned_user.full_name)}
-                            </div>
-                            <span className="text-xs text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
-                              {ticket.assigned_user.full_name}
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <UserStatsTooltip
-                          profileId={ticket.assigned_to ?? null}
-                          type="assigned"
-                        />
-                      </Tooltip>
-                    ) : (
-                      <span className="text-xs text-slate-400">-</span>
-                    )}
-                  </td>
-                )}
-
-                {/* Actions */}
-                <td className="py-2.5 text-right">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {/* Voir les détails */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={`/gestion/tickets/${ticket.id}`}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
-                          aria-label="Voir les détails"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Voir les détails</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    {/* Éditer - Admin/Manager uniquement */}
-                    {canEdit && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleEdit(ticket.id)}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
-                            aria-label="Éditer le ticket"
-                            type="button"
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Éditer</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-
-                    {/* Générer une analyse - Tous les utilisateurs authentifiés */}
-                    <AnalysisButton
-                      context="ticket"
-                      id={ticket.id}
-                      tooltip="Générer une analyse IA"
-                    />
-
-                    {/* Ajouter un commentaire */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <AddCommentDialog ticketId={ticket.id} ticketTitle={ticket.title} />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Ajouter un commentaire</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </td>
-              </tr>
+            {tickets.map((ticket) => (
+              <TicketRow
+                key={ticket.id}
+                ticket={ticket}
+                isTicketSelected={isTicketSelected}
+                toggleTicketSelection={toggleTicketSelection}
+                handleEdit={handleEdit}
+                canEdit={canEdit}
+                canSelectMultiple={canSelectMultiple}
+                search={search}
+                isColumnVisible={isColumnVisible}
+              />
             ))}
           </tbody>
         </table>
@@ -840,50 +345,69 @@ function TicketsInfiniteScrollComponent({
 }
 
 /**
+ * Fonction de comparaison optimisée pour React.memo
+ * 
+ * Compare en profondeur les props pour éviter les re-renders inutiles.
+ * Vérifie d'abord les props primitives, puis compare les IDs des tickets.
+ * 
+ * OPTIMISÉ : Normalise les valeurs undefined/null pour éviter les comparaisons fausses
+ */
+function arePropsEqual(
+  prevProps: TicketsInfiniteScrollProps,
+  nextProps: TicketsInfiniteScrollProps
+): boolean {
+  // Normaliser les valeurs undefined/null pour comparaison stricte
+  const normalize = (val: string | undefined) => val ?? '';
+  
+  // Comparer les props primitives en premier (rapide)
+  // Normaliser undefined/null pour comparaison stricte
+  if (
+    prevProps.initialHasMore !== nextProps.initialHasMore ||
+    prevProps.initialTotal !== nextProps.initialTotal ||
+    normalize(prevProps.type) !== normalize(nextProps.type) ||
+    normalize(prevProps.status) !== normalize(nextProps.status) ||
+    normalize(prevProps.search) !== normalize(nextProps.search) ||
+    normalize(prevProps.quickFilter) !== normalize(nextProps.quickFilter) ||
+    normalize(prevProps.currentProfileId) !== normalize(nextProps.currentProfileId) ||
+    normalize(prevProps.agentId) !== normalize(nextProps.agentId) ||
+    normalize(prevProps.companyId) !== normalize(nextProps.companyId)
+  ) {
+    return false; // Props différentes = re-render
+  }
+
+  // Comparer initialTickets : d'abord par référence (le plus rapide)
+  if (prevProps.initialTickets === nextProps.initialTickets) {
+    return true; // Même référence = pas de re-render
+  }
+
+  // Ensuite par longueur
+  if (prevProps.initialTickets.length !== nextProps.initialTickets.length) {
+    return false; // Longueur différente = re-render
+  }
+
+  // Si longueur identique mais référence différente, comparer par IDs uniquement
+  // On ignore l'ordre car cela ne nécessite pas un re-render si les IDs sont identiques
+  // (le composant gère l'affichage basé sur son état interne)
+  for (let i = 0; i < prevProps.initialTickets.length; i++) {
+    if (prevProps.initialTickets[i].id !== nextProps.initialTickets[i].id) {
+      return false; // IDs différents = re-render
+    }
+  }
+
+  // Toutes les props sont identiques (mêmes IDs, mêmes valeurs primitives) = pas de re-render
+  return true;
+}
+
+/**
  * Composant exporté avec memoization pour éviter les re-renders inutiles
  * 
  * Ne se re-rend que si les props changent réellement.
- * Utilise une comparaison personnalisée pour éviter les re-renders si les arrays
- * initialTickets ont les mêmes IDs même si la référence change.
+ * Utilise une comparaison personnalisée optimisée pour éviter les re-renders
+ * si les arrays initialTickets ont les mêmes IDs dans le même ordre.
  */
 export const TicketsInfiniteScroll = React.memo(
   TicketsInfiniteScrollComponent,
-  (prevProps, nextProps) => {
-    // Comparer les props primitives
-    if (
-      prevProps.initialHasMore !== nextProps.initialHasMore ||
-      prevProps.initialTotal !== nextProps.initialTotal ||
-      prevProps.type !== nextProps.type ||
-      prevProps.status !== nextProps.status ||
-      prevProps.search !== nextProps.search ||
-      prevProps.quickFilter !== nextProps.quickFilter ||
-      prevProps.currentProfileId !== nextProps.currentProfileId
-    ) {
-      return false; // Props différentes = re-render
-    }
-
-    // Comparer initialTickets par IDs uniquement (évite les re-renders si contenu identique)
-    if (prevProps.initialTickets.length !== nextProps.initialTickets.length) {
-      return false; // Longueur différente = re-render
-    }
-
-    const prevIds = new Set(prevProps.initialTickets.map((t) => t.id));
-    const nextIds = new Set(nextProps.initialTickets.map((t) => t.id));
-
-    // Si les IDs sont identiques, pas de re-render
-    if (prevIds.size !== nextIds.size) {
-      return false;
-    }
-
-    for (const id of prevIds) {
-      if (!nextIds.has(id)) {
-        return false; // IDs différents = re-render
-      }
-    }
-
-    // Props identiques = pas de re-render
-    return true;
-  }
+  arePropsEqual
 );
 
 TicketsInfiniteScroll.displayName = 'TicketsInfiniteScroll';

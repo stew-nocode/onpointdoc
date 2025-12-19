@@ -1,0 +1,1056 @@
+{
+  "date": "2025-11-27T17:36:09.634Z",
+  "total": 150,
+  "clients": [
+    {
+      "id": "da5db638-cf40-4f28-a9b7-c762fa577e99",
+      "full_name": "Abdoulaye PAYE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:01:12.618206+00:00"
+    },
+    {
+      "id": "72ca125a-4eb4-4da1-994d-016ae70b8914",
+      "full_name": "AHOUSSOU Marcelle",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:56:17.070154+00:00"
+    },
+    {
+      "id": "33566ce6-6ac2-48f9-a34e-1a891d10d962",
+      "full_name": "Alassane MEITE",
+      "email": "am@koffi-diabate.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:43:00.882241+00:00"
+    },
+    {
+      "id": "e69a9390-fca1-4db6-868e-da50b87d3db3",
+      "full_name": "Alidja",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:27:26.78993+00:00"
+    },
+    {
+      "id": "92d4a711-3def-45cb-b226-763ee0ba6ad0",
+      "full_name": "Alika BOA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:05:54.332653+00:00"
+    },
+    {
+      "id": "b6a41569-7c56-4e1d-8b3b-326416b345ec",
+      "full_name": "ALL",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:31:23.578896+00:00"
+    },
+    {
+      "id": "3bed24e5-ea93-49c6-9ff7-7e2ab8f37c07",
+      "full_name": "Allo Psaume",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:42:39.337102+00:00"
+    },
+    {
+      "id": "645d512c-35dc-461a-a368-a29faf42d21e",
+      "full_name": "amadou",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:22:39.787167+00:00"
+    },
+    {
+      "id": "24166e2b-a18c-4f4d-863f-322869256701",
+      "full_name": "Amadou SANANKOUA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:19:34.747243+00:00"
+    },
+    {
+      "id": "b6aa6132-2e2c-4388-baa0-6ed7e0e0fc03",
+      "full_name": "Amary TCHOTCHE",
+      "email": "tchotcheamary@egbvinternational.com",
+      "company_id": "0d988aa6-4d7b-4d4d-8656-f56385c7a217",
+      "created_at": "2025-11-18T14:25:06.693733+00:00"
+    },
+    {
+      "id": "428a150f-820c-4e89-86a5-abe028430959",
+      "full_name": "AMOS GNAHORE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:03:14.840859+00:00"
+    },
+    {
+      "id": "bdc2c0a1-3262-4e9b-b9e9-ad70604d66b4",
+      "full_name": "ANGE KOUASSI",
+      "email": "ange.kouassi@s-telsarl.com",
+      "company_id": "6eb69449-9b2a-4075-a785-1480a426e97e",
+      "created_at": "2025-11-18T15:22:19.784493+00:00"
+    },
+    {
+      "id": "9599e9f1-bdfe-4bb7-8b67-bc0faa80b718",
+      "full_name": "ANGUIDOU",
+      "email": null,
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:46.259344+00:00"
+    },
+    {
+      "id": "53bc6e77-daa4-4962-aadc-164c428c5d42",
+      "full_name": "Aristide Kouadio",
+      "email": "akouadio@cilagri.com",
+      "company_id": "4ef51333-6f74-4ece-ae83-a89074ad640e",
+      "created_at": "2025-11-17T19:23:27.720505+00:00"
+    },
+    {
+      "id": "26a853ed-410c-484f-92f4-c90bf42bad8d",
+      "full_name": "Aristide KOUADIO (akouadio@cilagri.com)",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:15:44.029961+00:00"
+    },
+    {
+      "id": "43680f2b-a10e-4347-9e4d-8d5bc8dcc470",
+      "full_name": "ATTOUNGBRE K Gerard",
+      "email": null,
+      "company_id": "4ef51333-6f74-4ece-ae83-a89074ad640e",
+      "created_at": "2025-11-17T19:23:26.690054+00:00"
+    },
+    {
+      "id": "972ef6f7-a166-4699-89ef-86bc44ce575b",
+      "full_name": "ATTOUNGBRE K Gerard (Associete Manager)",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:04:27.084799+00:00"
+    },
+    {
+      "id": "f729db92-2200-4666-a181-8dfb795542ff",
+      "full_name": "Aude KOFFI",
+      "email": "aude.iyen@otomasys.com",
+      "company_id": "76c7be73-3a00-40ee-9510-12d892ae1111",
+      "created_at": "2025-11-18T15:19:38.396488+00:00"
+    },
+    {
+      "id": "d57ff200-f434-4ebf-b141-84651781aa18",
+      "full_name": "Auguste QUENUM",
+      "email": "aq@koffi-diabate.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:43:01.880836+00:00"
+    },
+    {
+      "id": "0f2e201d-b4ba-4f78-88d7-4e5deb069a52",
+      "full_name": "Bacary Ndiaye",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T03:05:52.185582+00:00"
+    },
+    {
+      "id": "91667eeb-6a1a-4d38-855f-cde4272d50fe",
+      "full_name": "Backlog",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:51:39.13491+00:00"
+    },
+    {
+      "id": "9e6ef0b2-1649-45b2-a3ad-9c8c01676ce6",
+      "full_name": "BASSE EVA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:27:37.679849+00:00"
+    },
+    {
+      "id": "2033eec1-67d0-47bc-896c-2ab100fff2c3",
+      "full_name": "Bénédicte",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:07:58.305463+00:00"
+    },
+    {
+      "id": "37fc63d6-9369-48fa-8a0f-970462d07f3f",
+      "full_name": "Bénédicte ZONTODJI",
+      "email": "stock@koritransport.com",
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:43.380632+00:00"
+    },
+    {
+      "id": "e65a53e3-9126-4992-8fcb-02cf099e592b",
+      "full_name": "BENJAMIN KOFFI",
+      "email": "benkoffi64@gmail.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:51:42.224092+00:00"
+    },
+    {
+      "id": "b534f9d2-a126-42f0-8afe-ee5e905e7aad",
+      "full_name": "Bernice",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:22:51.25725+00:00"
+    },
+    {
+      "id": "41cfdc84-dab7-4dbe-bfdc-41a673edcc78",
+      "full_name": "Bernice N'GBRA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:33:16.319553+00:00"
+    },
+    {
+      "id": "7f03c959-c18f-4fd0-93d3-7224e5d6f558",
+      "full_name": "BOUAZO Nathalie",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:49:19.260874+00:00"
+    },
+    {
+      "id": "ea13a898-8df5-43f2-b907-6e1934c3a036",
+      "full_name": "Brahima COULIBALY",
+      "email": "brahima.coulibaly@koritransport.com",
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:42.596339+00:00"
+    },
+    {
+      "id": "b7c5e0db-77fe-4629-bf90-52943dafc3d3",
+      "full_name": "BRAKISH KABORE | Mmee Ehui",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:31:06.967785+00:00"
+    },
+    {
+      "id": "4623f2b2-8e87-4649-84d3-7a9442f689bd",
+      "full_name": "Cabinet SAEFI",
+      "email": null,
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:45.236926+00:00"
+    },
+    {
+      "id": "7c488371-68b9-44b6-8741-95bf39e795d0",
+      "full_name": "CAMARA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:10:57.887577+00:00"
+    },
+    {
+      "id": "983e4c92-6ce4-4dc5-8f03-b5b529d34a35",
+      "full_name": "CEDRIC EMMANUELLA",
+      "email": null,
+      "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+      "created_at": "2025-11-18T16:23:34.694885+00:00"
+    },
+    {
+      "id": "fac83408-e973-4760-b8a2-f36ae6c71871",
+      "full_name": "Charley KOUAME",
+      "email": null,
+      "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+      "created_at": "2025-11-18T16:23:37.751552+00:00"
+    },
+    {
+      "id": "5b40e9aa-017a-4c01-893b-32379b38ae48",
+      "full_name": "CHEICK SANGARE",
+      "email": null,
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:44.119968+00:00"
+    },
+    {
+      "id": "24da0c1b-8ed2-4405-aed4-2bebb8a2fa86",
+      "full_name": "CHRISTELLE N'GBETCHE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:14:19.26349+00:00"
+    },
+    {
+      "id": "58cac742-25a9-4048-890a-088ccb502c6a",
+      "full_name": "CHRISTELLE NGBECHE",
+      "email": "christelle.ngbeche@2aaz.ci",
+      "company_id": "90d9c0cb-c8e6-4d12-bc60-5d58f509bd5f",
+      "created_at": "2025-11-17T19:49:21.621045+00:00"
+    },
+    {
+      "id": "fca726a8-7935-499a-befc-f64dbc558769",
+      "full_name": "Christelle YOUZAN - Raïssa CAMARA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:37:27.541332+00:00"
+    },
+    {
+      "id": "1c4b3e27-200c-414b-855d-acfbb9647c2e",
+      "full_name": "Christian Vieyra",
+      "email": "christian.vieyra@onpointjira.local",
+      "company_id": null,
+      "created_at": "2025-11-19T23:09:01.558109+00:00"
+    },
+    {
+      "id": "101aa329-7e39-4d93-a487-38126b332a40",
+      "full_name": "CISSE SOULEYMANE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:03:52.679484+00:00"
+    },
+    {
+      "id": "b9957e97-4d04-4718-87e3-e61d96dde5b7",
+      "full_name": "CISSOKO Mamadou",
+      "email": null,
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:45.579099+00:00"
+    },
+    {
+      "id": "d2429028-3d13-4d7f-9746-4954938b58b6",
+      "full_name": "Client Allou",
+      "email": "allou@demo.local",
+      "company_id": null,
+      "created_at": "2025-11-16T17:00:04.392856+00:00"
+    },
+    {
+      "id": "f7de0027-ac97-45de-ada6-b18e94305b5b",
+      "full_name": "Clients",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:35:06.994242+00:00"
+    },
+    {
+      "id": "869b2d0c-c977-44c1-b31d-00f6f16e7f72",
+      "full_name": "COFFIE",
+      "email": null,
+      "company_id": "a661747c-228c-4285-b66e-cd6944130b96",
+      "created_at": "2025-11-18T15:27:41.777399+00:00"
+    },
+    {
+      "id": "2737e106-6c21-45a4-9fa3-b4dce471d707",
+      "full_name": "Comptable ARIC",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:14:35.761749+00:00"
+    },
+    {
+      "id": "b953ac39-c50f-4f32-9b09-61972384b765",
+      "full_name": "Constant KINDOHO",
+      "email": "constant.kindoho@objectifconstruction.ci",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:46:25.11804+00:00"
+    },
+    {
+      "id": "92ef01f8-a992-4b58-9a86-7a616d961f9f",
+      "full_name": "CORINE LADJI",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:49:13.604729+00:00"
+    },
+    {
+      "id": "ba516d4e-2e65-4619-bb02-743c5b4a112b",
+      "full_name": "Corinne LADJI",
+      "email": "cl@koffi-diabate.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:42:59.877465+00:00"
+    },
+    {
+      "id": "725a0b49-a8c8-469d-b981-a4318f2e62f1",
+      "full_name": "COULIBALY",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:11:00.425942+00:00"
+    },
+    {
+      "id": "2cdc2c14-1360-4ad3-85d6-ae11a7bf0f63",
+      "full_name": "COULIBALY EVE",
+      "email": "eve.kouadio.ek@gmail.com",
+      "company_id": "9e87f925-7341-4754-a065-5b2e6cf04867",
+      "created_at": "2025-11-18T14:34:30.202767+00:00"
+    },
+    {
+      "id": "4f0be666-31c6-4dc4-a5b4-4d0ede1a7e2f",
+      "full_name": "Miss KOFFI",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:27:12.946301+00:00"
+    },
+    {
+      "id": "de119581-bf52-41d6-a1ae-e5fbf768369d",
+      "full_name": "Miss KONE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:02:31.22006+00:00"
+    },
+    {
+      "id": "0e34135c-35a4-4e35-8cca-9c936d574d73",
+      "full_name": "Mlle BOUAZO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:19:15.841399+00:00"
+    },
+    {
+      "id": "969df98a-10d3-401b-a46f-c3fcb302f648",
+      "full_name": "Mlle DAN",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:26:10.489754+00:00"
+    },
+    {
+      "id": "f4a4bf19-5dc1-42d1-989f-0f66404febe2",
+      "full_name": "Mlle KONE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:25:44.284439+00:00"
+    },
+    {
+      "id": "801735bb-2207-4c3e-b803-7351014f6e1f",
+      "full_name": "Mlle Lyta",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:56:59.773031+00:00"
+    },
+    {
+      "id": "26da1c83-ce95-4266-8aa0-968586b0f66b",
+      "full_name": "Mme AHOUSSOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:56:21.934403+00:00"
+    },
+    {
+      "id": "fad38cff-d7fd-434a-8d3b-97c152e94526",
+      "full_name": "Mme AKA Adou",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:27:07.838648+00:00"
+    },
+    {
+      "id": "97ae11f9-1fca-43fc-8af2-a4fb6ad5c20d",
+      "full_name": "Mme BOUAZO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:21:13.619187+00:00"
+    },
+    {
+      "id": "bd633a7b-2b55-463c-ad30-7ae6b6ca1138",
+      "full_name": "Mme BRISSI",
+      "email": null,
+      "company_id": "983bc79b-44d2-4990-b301-2987335fa2c2",
+      "created_at": "2025-11-17T19:51:14.680852+00:00"
+    },
+    {
+      "id": "7690cf88-a2fe-49e1-bca6-316386b51e30",
+      "full_name": "Mme CAMARA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:29:55.275599+00:00"
+    },
+    {
+      "id": "3350c181-6bab-4db2-ab71-6632407219fb",
+      "full_name": "Mme Cissé",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:56:07.628863+00:00"
+    },
+    {
+      "id": "43626923-3420-416f-a8e1-8c10b54f9cdd",
+      "full_name": "Mme COFFI",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:57:14.782612+00:00"
+    },
+    {
+      "id": "b522dd9b-bedb-4f61-9a23-85e5f5d6279f",
+      "full_name": "Mme COFFIE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:13:32.849022+00:00"
+    },
+    {
+      "id": "fc20237a-635b-42d5-bca9-5ce161ae2d76",
+      "full_name": "Mme DIAKITE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:27:35.229911+00:00"
+    },
+    {
+      "id": "18ee9652-0beb-4f78-9394-014ffd15bcac",
+      "full_name": "Mme DIANE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:05:14.076752+00:00"
+    },
+    {
+      "id": "cdfa4ca1-53db-4440-88bd-8df2087e2b12",
+      "full_name": "Mme DIOP",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:35:52.339472+00:00"
+    },
+    {
+      "id": "5b44bb5a-0e38-4da2-993c-b9669f93a5bc",
+      "full_name": "Mme EBEQUOI",
+      "email": null,
+      "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+      "created_at": "2025-11-18T16:23:38.078601+00:00"
+    },
+    {
+      "id": "eecf1959-9207-4e31-8bd8-d30decec5373",
+      "full_name": "Mme KALOGO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:22:41.414771+00:00"
+    },
+    {
+      "id": "5b1c08b3-6515-4187-b827-edc8e8f71d58",
+      "full_name": "Mme KOSSONOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:19:44.637716+00:00"
+    },
+    {
+      "id": "55715501-404e-4be9-9129-c094edff8500",
+      "full_name": "Mme KOUMAN",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:33:35.850686+00:00"
+    },
+    {
+      "id": "134145f8-1b94-4daf-8fa8-dcbd6d8f6336",
+      "full_name": "Mme LYDIE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:23:39.356122+00:00"
+    },
+    {
+      "id": "c370056c-bc96-42e5-8d19-74e178562f6c",
+      "full_name": "Mme Lyta",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:01:30.227354+00:00"
+    },
+    {
+      "id": "0ff5ddbe-c68a-4ad3-9eeb-a6335839b61d",
+      "full_name": "Mme MICHELLE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:36:54.748548+00:00"
+    },
+    {
+      "id": "920a7609-87bc-4358-81c6-f2b25f5d5fc7",
+      "full_name": "Mme Nabarakissa",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:21:42.825389+00:00"
+    },
+    {
+      "id": "62f337f2-8517-492e-aab9-3ef5547c7e21",
+      "full_name": "Mme NGBLA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:56:47.257706+00:00"
+    },
+    {
+      "id": "fbbaefa0-16ce-4679-9a68-fcde90c8be92",
+      "full_name": "Mme Sanankoua",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:55:38.803216+00:00"
+    },
+    {
+      "id": "d017431e-b475-45dc-8d4d-a67f4c7f7793",
+      "full_name": "Mme SANGARE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:19:46.410399+00:00"
+    },
+    {
+      "id": "b85be7b3-cead-4004-b523-474ccdeac99c",
+      "full_name": "Mme SEU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T03:06:03.230882+00:00"
+    },
+    {
+      "id": "d111591e-1d1f-4b63-b317-c2a5f47e9ca0",
+      "full_name": "Mme SOPPI",
+      "email": null,
+      "company_id": "e05baba1-e410-41d7-a304-a92efd5e38b7",
+      "created_at": "2025-11-18T14:28:56.698374+00:00"
+    },
+    {
+      "id": "e7d2a7e1-2781-4467-a347-54d057c3c241",
+      "full_name": "Mme Traoré",
+      "email": null,
+      "company_id": "c847ffb9-dd4b-4860-a8ae-bbb03726ebee",
+      "created_at": "2025-11-18T14:55:43.048316+00:00"
+    },
+    {
+      "id": "6b1804c0-e06c-40c7-bb17-63875593092a",
+      "full_name": "Mme ZAGBAYOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:04:49.538163+00:00"
+    },
+    {
+      "id": "235a80fb-5fc6-42ad-aff1-43ba5d5f2533",
+      "full_name": "mngbra@onpointafrica.com",
+      "email": "mngbra.onpointafrica.com@onpointjira.local",
+      "company_id": null,
+      "created_at": "2025-11-19T23:08:05.66384+00:00"
+    },
+    {
+      "id": "d78f458e-c2b8-46a3-bbba-ffd83d1b47cd",
+      "full_name": "MODESTE PRODJINOTHO",
+      "email": "modeste.p@objectifconstruction.ci",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:46:21.289214+00:00"
+    },
+    {
+      "id": "1007c6c0-29da-4150-8cdf-45374c76e442",
+      "full_name": "MONSIEUR ADOU",
+      "email": null,
+      "company_id": "0d988aa6-4d7b-4d4d-8656-f56385c7a217",
+      "created_at": "2025-11-18T14:25:07.799401+00:00"
+    },
+    {
+      "id": "0f91cb14-5219-40cc-b378-1cf88be5a2b5",
+      "full_name": "Monsieur AFANAOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:42:12.284643+00:00"
+    },
+    {
+      "id": "4fcfa8cd-63fc-4bb4-b660-d85b4d7ff31b",
+      "full_name": "Monsieur AFANOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:42:15.404468+00:00"
+    },
+    {
+      "id": "a7497bad-f9aa-4baa-9936-46ac3b156035",
+      "full_name": "MONSIEUR AKA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:25:58.765168+00:00"
+    },
+    {
+      "id": "058c2f98-dc6f-4ace-9581-230a416b89ba",
+      "full_name": "Monsieur ANGUIDOU",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:31:28.910204+00:00"
+    },
+    {
+      "id": "fcc2d2d3-4b5f-47c4-a2f8-2add6b419cca",
+      "full_name": "MONSIEUR ARIKO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:26:27.222071+00:00"
+    },
+    {
+      "id": "df2603de-9045-4acd-8dfe-4910074474cc",
+      "full_name": "Monsieur ASSANVO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:39:28.856691+00:00"
+    },
+    {
+      "id": "4b8d263b-bc76-4bc8-870b-1cd8a139a4ac",
+      "full_name": "MONSIEUR ATSE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:26:55.984181+00:00"
+    },
+    {
+      "id": "54e3c67a-0a11-4123-9487-fb74c4af343c",
+      "full_name": "Monsieur BACARY",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:42:09.25478+00:00"
+    },
+    {
+      "id": "898733e0-15bf-4343-9a67-0bcab323ffb1",
+      "full_name": "Monsieur BENJAMIN KOFFI",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:19:40.104601+00:00"
+    },
+    {
+      "id": "f0dd5979-6064-40a4-9caf-2b1aab92fc4f",
+      "full_name": "Monsieur Coulibaly",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:28:36.616835+00:00"
+    },
+    {
+      "id": "c685e404-7326-42d7-8319-6fa4dc7811ab",
+      "full_name": "Monsieur DEEN",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:20:02.036409+00:00"
+    },
+    {
+      "id": "4bf465b4-b236-428d-af23-7d25140a0bf4",
+      "full_name": "Monsieur DELPHIN",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:29:39.66337+00:00"
+    },
+    {
+      "id": "2964e4e2-f9d6-4fe2-98a5-6beb8f092ca1",
+      "full_name": "MONSIEUR DELPHIN ZOUNGRANA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:02:46.736986+00:00"
+    },
+    {
+      "id": "dc8308ef-7ffb-44c3-8b71-04a82d075e9b",
+      "full_name": "Monsieur ECARE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T05:05:26.084782+00:00"
+    },
+    {
+      "id": "f630d9a9-4dad-4c8f-8789-226d8387b1ee",
+      "full_name": "Monsieur ERIC KOFFI",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:24:27.337347+00:00"
+    },
+    {
+      "id": "429584e4-7754-4fb2-ab0b-ca683d4ecc5b",
+      "full_name": "Olivier Kacou",
+      "email": null,
+      "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+      "created_at": "2025-11-18T16:23:34.343578+00:00"
+    },
+    {
+      "id": "0d89019f-d38b-4c91-8d6a-48d8130b26df",
+      "full_name": "Oscar BOKOVO",
+      "email": "oscar.bokovo@objectifconstruction.ci",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:51:41.878778+00:00"
+    },
+    {
+      "id": "df975557-7fe2-4f32-afd7-68e305ff7aff",
+      "full_name": "OUATTARA",
+      "email": null,
+      "company_id": "c0974d62-1202-4c73-aecd-6bb7dd9de8fc",
+      "created_at": "2025-11-18T14:31:29.63915+00:00"
+    },
+    {
+      "id": "dbb7456f-3b7d-4998-ae04-9e72036be87f",
+      "full_name": "OUATTARA GNEKITTA",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:38:24.011573+00:00"
+    },
+    {
+      "id": "6439354a-d192-41f1-b216-3a8f7ec35416",
+      "full_name": "Ouhayou Florence",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T10:01:20.776471+00:00"
+    },
+    {
+      "id": "0bea9626-3d14-435c-beed-0ebe836d148a",
+      "full_name": "Oumar KONE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:37:20.552937+00:00"
+    },
+    {
+      "id": "86c29ce8-039b-4100-ae0c-faa4e539e2b0",
+      "full_name": "Oumarou",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:17:26.137405+00:00"
+    },
+    {
+      "id": "fa866b0e-e945-4e17-b01d-719d7a2cfaa3",
+      "full_name": "OURAGA Edwige",
+      "email": null,
+      "company_id": "ea13fe1d-742e-4de2-b602-590a18f6600a",
+      "created_at": "2025-11-17T19:52:52.14509+00:00"
+    },
+    {
+      "id": "da982426-5947-4910-a443-3d8773db7ed6",
+      "full_name": "OURAGA Edwige, Léa DIABATE, Evelyne Etche",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:32:07.378319+00:00"
+    },
+    {
+      "id": "3418eb52-9bf4-4714-889e-d6bf087ee3a2",
+      "full_name": "Ousseyni Oumarou",
+      "email": "ousseyni.oumarou@ejara.io",
+      "company_id": "e05baba1-e410-41d7-a304-a92efd5e38b7",
+      "created_at": "2025-11-18T14:28:55.964682+00:00"
+    },
+    {
+      "id": "bea75f7b-4f90-407f-bca7-5dc11cd534ca",
+      "full_name": "Ousseyni Oumarou <ousseyni.oumarou@ejara.io>",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:02:26.182451+00:00"
+    },
+    {
+      "id": "c60751ef-2c34-4dc2-ae7f-060b884564ce",
+      "full_name": "Ousseyni Oumarou <ousseyni.oumarou@ejara.io>, Bouazo Jocelyne",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:16:00.987682+00:00"
+    },
+    {
+      "id": "4bbb634e-14a6-4296-88f7-67b568be08da",
+      "full_name": "OUSSOU Martine",
+      "email": "oussoumartine@sie-travaux.ci",
+      "company_id": "338609c4-087d-499d-ae99-1a60bf8fcaaf",
+      "created_at": "2025-11-18T15:27:29.991465+00:00"
+    },
+    {
+      "id": "fd2c3fe9-ff3f-4da4-917a-a4e94eaafc97",
+      "full_name": "Patrice KOUAO",
+      "email": "pk@koffi-diabate.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:43:02.198592+00:00"
+    },
+    {
+      "id": "827fd4ec-38c8-46b3-a5ed-7d56525b1616",
+      "full_name": "PATRICK KOUAO",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:22:43.882015+00:00"
+    },
+    {
+      "id": "c878485e-4345-4503-a05b-b58e6cc03e43",
+      "full_name": "Rachel AKA",
+      "email": null,
+      "company_id": "edaca3ac-6434-4acc-9417-6c2477b914a7",
+      "created_at": "2025-11-18T14:39:04.944373+00:00"
+    },
+    {
+      "id": "4fbf6a67-3df4-431c-87f9-c8d0238a2a26",
+      "full_name": "Raïssa CAMARA",
+      "email": null,
+      "company_id": "edaca3ac-6434-4acc-9417-6c2477b914a7",
+      "created_at": "2025-11-18T14:39:03.855569+00:00"
+    },
+    {
+      "id": "0b526f39-1212-4e98-a87f-abb1bf0f2b3f",
+      "full_name": "Raïssa Camara & Youzan Christelle",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:34:49.737392+00:00"
+    },
+    {
+      "id": "28806fb2-c285-4e50-97d7-63a335a5aa4f",
+      "full_name": "Rodrigue KOUAKOU",
+      "email": "rodriguekouakou@etsmab.com",
+      "company_id": "da8a0825-6243-4b40-8480-ef06a7f0cce9",
+      "created_at": "2025-11-18T14:31:39.271835+00:00"
+    },
+    {
+      "id": "fa2705df-8704-4b96-8cb8-ce2e25e60c88",
+      "full_name": "Roselin Tiecoura",
+      "email": "tiecoura@egbvinternational.com",
+      "company_id": "0d988aa6-4d7b-4d4d-8656-f56385c7a217",
+      "created_at": "2025-11-18T14:25:06.345735+00:00"
+    },
+    {
+      "id": "686f75cd-e7af-4721-90c4-d515ff27541f",
+      "full_name": "SANANKOUA Amadou",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:58:40.645074+00:00"
+    },
+    {
+      "id": "bf7dd4b5-9bc5-4b5e-a710-dce8198f3a11",
+      "full_name": "Sanankoua Mickaelle",
+      "email": "mickaelle.sanankoua@rica-services.com",
+      "company_id": "f70be557-e9c1-4914-9929-de1492429ec4",
+      "created_at": "2025-11-17T19:47:27.729468+00:00"
+    },
+    {
+      "id": "d0056369-53d3-4f11-9676-f327fab36d03",
+      "full_name": "Sanata Coulibaly",
+      "email": "scoulibaly@cilagri.com",
+      "company_id": "4ef51333-6f74-4ece-ae83-a89074ad640e",
+      "created_at": "2025-11-17T19:23:29.19715+00:00"
+    },
+    {
+      "id": "d6eee506-78a0-4bfd-94b4-fb0b50e332ac",
+      "full_name": "Sbidje Stephanie",
+      "email": "sbidje@koffi-diabate.com",
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:51:44.66263+00:00"
+    },
+    {
+      "id": "814a9916-9245-4574-81dd-712e27a512ca",
+      "full_name": "Serge",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:15:01.079212+00:00"
+    },
+    {
+      "id": "1ab476d5-2b4f-4629-8b81-89c8c960c9a3",
+      "full_name": "Serge AMOUZOU",
+      "email": "serge.amouzoun@ecorigine.ci",
+      "company_id": "18b68735-d005-4e80-8b36-a3eacd560676",
+      "created_at": "2025-11-17T19:57:47.65563+00:00"
+    },
+    {
+      "id": "8c3072e3-8b6a-4c16-b820-5d727fd9355c",
+      "full_name": "Serge Amouzoun",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:10:47.435937+00:00"
+    },
+    {
+      "id": "8f07e820-aba5-42f4-b349-41f015213241",
+      "full_name": "SERGE ARIKO",
+      "email": null,
+      "company_id": "c89710bd-023e-45a3-9200-7b4d2fd28d1f",
+      "created_at": "2025-11-17T19:53:58.691017+00:00"
+    },
+    {
+      "id": "1d650639-4d45-4e61-8996-0d7e5bbc4a3e",
+      "full_name": "Serge Tahi",
+      "email": "stahi@cilagricajou.com",
+      "company_id": "4ef51333-6f74-4ece-ae83-a89074ad640e",
+      "created_at": "2025-11-17T19:23:25.725806+00:00"
+    },
+    {
+      "id": "1fc23c8e-d40e-4a2d-89a7-30a6e4925f2d",
+      "full_name": "SERIGNE DIOME",
+      "email": "serigne.diome@rica-services.com",
+      "company_id": "f70be557-e9c1-4914-9929-de1492429ec4",
+      "created_at": "2025-11-17T19:47:30.69406+00:00"
+    },
+    {
+      "id": "e40f99e9-e7da-4351-9248-711d09a67252",
+      "full_name": "SEU ERIC",
+      "email": "eric_seu@yahoo.fr",
+      "company_id": "22a52dc6-8900-409f-a788-4e8b7f90e2dd",
+      "created_at": "2025-11-18T15:01:44.637354+00:00"
+    },
+    {
+      "id": "3f5cc7e8-91e4-40f0-a4d5-552019b838b7",
+      "full_name": "SEY ARTHUR",
+      "email": "avenance@enval-group.com",
+      "company_id": "b7515402-8f9f-4905-953b-ea3982851a36",
+      "created_at": "2025-11-18T14:29:06.783137+00:00"
+    },
+    {
+      "id": "48a21443-60a6-4565-8710-0c202c4d25b6",
+      "full_name": "Siaka TIOTE",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:20:45.830509+00:00"
+    },
+    {
+      "id": "8e31fa38-28d6-4f40-a829-01c446ff9854",
+      "full_name": "SIE",
+      "email": null,
+      "company_id": "a661747c-228c-4285-b66e-cd6944130b96",
+      "created_at": "2025-11-18T15:27:41.436663+00:00"
+    },
+    {
+      "id": "7b043608-4193-4a4e-8eb3-5f2a37aba264",
+      "full_name": "SIE JOEL",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:18:49.782968+00:00"
+    },
+    {
+      "id": "2c1af9b3-8fe5-435a-a247-1fd61a0c05e5",
+      "full_name": "Souleymane CISSE",
+      "email": "souleymane.cisse@ecorigine.ci",
+      "company_id": "18b68735-d005-4e80-8b36-a3eacd560676",
+      "created_at": "2025-11-17T19:57:47.222852+00:00"
+    },
+    {
+      "id": "15dbe4c5-0eb1-4c7f-907a-47c42a8453fa",
+      "full_name": "Souleymane CISSE & Bouazo Nadia",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:57:55.962903+00:00"
+    },
+    {
+      "id": "f75dc232-da10-42ca-bc9e-811a2d8ac128",
+      "full_name": "Souleymane CISSE <souleymane.cisse@ecorigine.ci>",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:57:58.54266+00:00"
+    },
+    {
+      "id": "1a6f31ef-766d-494e-9df8-74432af7299f",
+      "full_name": "SPRINT 3",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:52:51.16832+00:00"
+    },
+    {
+      "id": "b501b865-e490-4e37-8174-c942be07b8a1",
+      "full_name": "Sprint Backlog",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-19T09:43:42.28774+00:00"
+    },
+    {
+      "id": "15d0e828-c649-473f-ac51-338f6c795dfc",
+      "full_name": "Stéphanie Bidjé",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:48:30.409965+00:00"
+    },
+    {
+      "id": "445966b4-0500-4f5c-837d-6a68d542596f",
+      "full_name": "SUPPORT",
+      "email": "support@onpointjira.local",
+      "company_id": null,
+      "created_at": "2025-11-19T23:04:25.631952+00:00"
+    },
+    {
+      "id": "b94ffe91-2d8f-49e0-927f-95dc6cc77f87",
+      "full_name": "SUPPORT DORIS",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:59:51.498447+00:00"
+    },
+    {
+      "id": "07ed7a0a-67e5-4167-8982-49b00cb66e57",
+      "full_name": "SUPPORT JOEL",
+      "email": null,
+      "company_id": "9b477280-7465-4563-b199-e07b99c3e2e9",
+      "created_at": "2025-11-18T16:23:39.748828+00:00"
+    },
+    {
+      "id": "263993a0-e3e0-4bd2-9f50-57ee0eb7dbb2",
+      "full_name": "Support OBC",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T22:55:09.517784+00:00"
+    },
+    {
+      "id": "dfca5bea-79ea-45db-ae01-5f3ae894a15f",
+      "full_name": "SYLVIANE KOBRI",
+      "email": "sylviane.kobri@fc-sa.com",
+      "company_id": "267fe9d2-3733-43ad-b829-d45407d0d048",
+      "created_at": "2025-11-18T14:34:19.220552+00:00"
+    },
+    {
+      "id": "fdee7673-ce5a-4625-afdc-842b28c3b806",
+      "full_name": "TAHI Serge",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:05:26.163157+00:00"
+    },
+    {
+      "id": "2ba1f94e-406f-4b44-8e56-737e16232e9c",
+      "full_name": "Tape Thibault",
+      "email": null,
+      "company_id": null,
+      "created_at": "2025-11-18T23:10:44.89396+00:00"
+    },
+    {
+      "id": "626c0ae3-c95f-4421-acf8-7f655f80cf34",
+      "full_name": "Tapé Thibault Julien",
+      "email": "ttape@rica-services.com",
+      "company_id": "f70be557-e9c1-4914-9929-de1492429ec4",
+      "created_at": "2025-11-17T19:47:29.190907+00:00"
+    },
+    {
+      "id": "33cab8b8-702f-4ea2-86a9-f2d974ec39fa",
+      "full_name": "Team ACHAT",
+      "email": null,
+      "company_id": "08b0c6cc-546e-4b64-a896-43cf585a8bd4",
+      "created_at": "2025-11-18T14:51:42.923433+00:00"
+    }
+  ]
+}

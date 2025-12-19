@@ -32,13 +32,13 @@ export function CommentsSection({
   isLoading = false,
   deletingCommentId = null
 }: CommentsSectionProps) {
-  const handleAdd = async (content: string, files?: File[]): Promise<void> => {
+  const handleAdd = async (content: string, files?: File[], commentType?: 'comment' | 'followup'): Promise<void> => {
     const response = await fetch(`/api/tickets/${ticketId}/comments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({ content, comment_type: commentType || 'comment' })
     });
 
     if (!response.ok) {
