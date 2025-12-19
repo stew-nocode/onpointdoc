@@ -40,7 +40,8 @@ export function getActivityTypeIcon(type: ActivityType): React.ReactNode {
 /**
  * Variant de badge pour le statut d'activité
  */
-export function getActivityStatusBadgeVariant(status: ActivityStatus): 'success' | 'danger' | 'warning' | 'info' | 'secondary' {
+export function getActivityStatusBadgeVariant(status: ActivityStatus | null): 'success' | 'danger' | 'warning' | 'info' | 'default' {
+  if (!status) return 'default';
   switch (status) {
     case 'Termine':
       return 'success';
@@ -51,9 +52,9 @@ export function getActivityStatusBadgeVariant(status: ActivityStatus): 'success'
     case 'Planifie':
       return 'warning';
     case 'Brouillon':
-      return 'secondary';
+      return 'default';
     default:
-      return 'secondary';
+      return 'default';
   }
 }
 

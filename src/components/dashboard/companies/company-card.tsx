@@ -69,7 +69,7 @@ export function CompanyCard({
             {primaryModules.map((label) => (
               <Badge
                 key={label}
-                variant="secondary"
+                variant="default"
                 className="h-5 px-1.5 text-[9px] leading-none max-w-[140px] truncate"
                 title={label}
               >
@@ -77,7 +77,7 @@ export function CompanyCard({
               </Badge>
             ))}
             {moreModules > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[9px] leading-none">
+              <Badge variant="default" className="h-5 px-1.5 text-[9px] leading-none">
                 +{moreModules}
               </Badge>
             )}

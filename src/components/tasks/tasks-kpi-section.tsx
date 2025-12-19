@@ -51,7 +51,7 @@ export function TasksKPISection({ kpis, hasProfile }: TasksKPISectionProps) {
           value={kpis.myTasksTodo}
           description="Statut : À faire"
           icon="circle"
-          variant="secondary"
+          variant="default"
           subtitle={hasProfile ? "Tâches assignées" : "Connexion requise"}
           trend={
             kpis.trends

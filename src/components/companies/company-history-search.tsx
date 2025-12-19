@@ -102,7 +102,7 @@ export function CompanyHistorySearch({
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {hasResults ? (
               <>
-                <Badge variant="secondary" className="mr-1.5">
+                <Badge variant="default" className="mr-1.5">
                   {resultCount}
                 </Badge>
                 résultat{resultCount > 1 ? 's' : ''} trouvé{resultCount > 1 ? 's' : ''}

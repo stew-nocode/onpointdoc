@@ -146,7 +146,7 @@ export function TaskRow({
                 variant={getTaskStatusBadgeVariant(task.status)}
                 className="text-[10px] px-2 py-0.5 whitespace-nowrap"
               >
-                {task.status.replace('_', ' ')}
+                {task.status?.replace('_', ' ') ?? 'Non défini'}
               </Badge>
             </td>
           )}

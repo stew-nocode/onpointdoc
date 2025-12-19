@@ -66,14 +66,16 @@ export async function CompanyDetails({ companyId }: CompanyDetailsProps) {
                 Secteurs
               </label>
               <div className="mt-0.5 flex flex-wrap gap-1.5">
-                {company.sectors.map((sector) => (
-                  <span
-                    key={sector.id}
-                    className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    {sector.name}
-                  </span>
-                ))}
+                {company.sectors
+                  .filter((sector): sector is NonNullable<typeof sector> => sector !== null && sector.name !== null)
+                  .map((sector) => (
+                    <span
+                      key={sector.id}
+                      className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      {sector.name}
+                    </span>
+                  ))}
               </div>
             </div>
           )}

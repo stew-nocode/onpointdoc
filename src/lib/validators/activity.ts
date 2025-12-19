@@ -29,15 +29,15 @@ export const createActivitySchema = z
   .object({
     title: z.string().min(4, 'Le titre doit contenir au moins 4 caractères').max(180, 'Le titre ne peut pas dépasser 180 caractères'),
     activityType: z.enum(activityTypes, {
-      errorMap: () => ({ message: 'Veuillez sélectionner un type d\'activité' })
+      message: 'Veuillez sélectionner un type d\'activité'
     }),
     // Dates optionnelles : l'activité peut être créée sans planification
     plannedStart: z.string().optional(),
     plannedEnd: z.string().optional(),
-    // Participants : tableau d'IDs utilisateurs (optionnel)
-    participantIds: z.array(z.string().uuid()).optional().default([]),
-    // Tickets liés : tableau d'IDs de tickets (optionnel - peut être vide)
-    linkedTicketIds: z.array(z.string().uuid()).optional().default([]),
+    // Participants : tableau d'IDs utilisateurs (optionnel, défaut: [])
+    participantIds: z.array(z.string().uuid()).default([]),
+    // Tickets liés : tableau d'IDs de tickets (optionnel, défaut: [])
+    linkedTicketIds: z.array(z.string().uuid()).default([]),
     // Mode de localisation : présentiel ou en ligne (optionnel)
     locationMode: z.enum(activityLocationModes).optional(),
     // Compte-rendu optionnel

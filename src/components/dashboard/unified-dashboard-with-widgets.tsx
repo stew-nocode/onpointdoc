@@ -197,12 +197,16 @@ function UnifiedDashboardWithWidgetsComponent({
   /**
    * Gère le changement de période via le sélecteur personnalisé
    */
-  const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+  const handleDateRangeChange = useCallback((range: { from?: Date; to?: Date } | undefined) => {
     // Réinitialiser l'année AVANT de définir la période personnalisée
     setSelectedYear(undefined);
     
     // Définir la période personnalisée
-    setDateRange(range);
+    // Convertir en DateRange | undefined (DateRange nécessite from et to)
+    const dateRange: DateRange | undefined = range?.from && range?.to 
+      ? { from: range.from, to: range.to }
+      : undefined;
+    setDateRange(dateRange);
     
     if (range?.from && range?.to) {
       // Utiliser une période personnalisée - transmettre les dates à l'API

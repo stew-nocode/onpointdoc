@@ -52,11 +52,13 @@ export function CompanyInfoCard({ company }: CompanyInfoCardProps) {
               Secteurs
             </label>
             <div className="mt-0.5 flex flex-wrap gap-1.5">
-              {company.sectors.map((sector) => (
-                <Badge key={sector.id} variant="secondary">
-                  {sector.name}
-                </Badge>
-              ))}
+              {company.sectors
+                .filter((sector): sector is NonNullable<typeof sector> => sector !== null && sector.name !== null)
+                .map((sector) => (
+                  <Badge key={sector.id} variant="default">
+                    {sector.name}
+                  </Badge>
+                ))}
             </div>
           </div>
         )}

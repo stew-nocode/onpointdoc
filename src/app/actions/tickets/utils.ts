@@ -46,8 +46,7 @@ export function buildListTicketsActionInput(
   if (type) input.type = type as 'BUG' | 'REQ' | 'ASSISTANCE';
   if (status) input.status = status;
   if (search) input.search = search;
-  // TODO: Fix type compatibility between QuickFilter and ListTicketsActionInput['quick']
-  // if (quickFilter && quickFilter !== 'all') input.quick = quickFilter as Exclude<QuickFilter, 'all'>;
+  if (quickFilter) input.quick = quickFilter;
   if (currentProfileId) input.currentProfileId = currentProfileId;
 
   // Filtres avancés depuis searchParams

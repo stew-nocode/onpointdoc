@@ -53,13 +53,18 @@ export async function getCEODashboardData(
     });
   }
 
+  // Convertir period en Period valide (fallback sur 'month' si c'est une année string)
+  const validPeriod: Period = (['week', 'month', 'quarter', 'year'].includes(period) 
+    ? period 
+    : 'month') as Period;
+
   return {
     mttr,
     flux,
     workload,
     health,
     alerts,
-    period,
+    period: validPeriod,
     periodStart: startDate,
     periodEnd: endDate
   };

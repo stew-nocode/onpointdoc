@@ -31,7 +31,7 @@ async function searchTasks(searchKey: string, limit: number): Promise<LinkableEn
     .limit(limit);
 
   if (error) {
-    throw createError('DATABASE_ERROR', `Erreur lors de la recherche de tâches: ${error.message}`);
+    throw createError.supabaseError(`Erreur lors de la recherche de tâches: ${error.message}`, error);
   }
 
   return (data || []).map((task) => ({
@@ -68,7 +68,7 @@ async function searchActivities(searchKey: string, limit: number): Promise<Linka
     .limit(limit);
 
   if (error) {
-    throw createError('DATABASE_ERROR', `Erreur lors de la recherche d'activités: ${error.message}`);
+    throw createError.supabaseError(`Erreur lors de la recherche d'activités: ${error.message}`, error);
   }
 
   let allResults = data || [];
@@ -130,7 +130,7 @@ async function searchTickets(
     .limit(limit);
 
   if (error) {
-    throw createError('DATABASE_ERROR', `Erreur lors de la recherche de tickets ${ticketType}: ${error.message}`);
+    throw createError.supabaseError(`Erreur lors de la recherche de tickets ${ticketType}: ${error.message}`, error);
   }
 
   let allResults = data || [];
@@ -201,7 +201,7 @@ async function searchFollowups(searchKey: string, limit: number): Promise<Linkab
     .limit(limit);
 
   if (error) {
-    throw createError('DATABASE_ERROR', `Erreur lors de la recherche de relances: ${error.message}`);
+    throw createError.supabaseError(`Erreur lors de la recherche de relances: ${error.message}`, error);
   }
 
   return (data || [])
@@ -257,6 +257,6 @@ export async function searchLinkableEntities(
     case 'activity':
       return searchActivities(trimmedSearchKey, limit);
     default:
-      throw createError('BAD_REQUEST', `Type d'entité non supporté: ${entityType}`);
+      throw createError.validationError(`Type d'entité non supporté: ${entityType}`);
   }
 }

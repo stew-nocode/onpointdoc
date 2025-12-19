@@ -14,7 +14,7 @@ import { useTaskForm } from '@/hooks/forms/use-task-form';
 import {
   TaskTitleSection,
   TaskDescriptionSection,
-  TaskDueDateSection,
+  TaskPlanningSection,
   TaskAssignedSection,
   TaskLinksSection,
   TaskReportSection,
@@ -79,7 +79,7 @@ export const TaskForm = ({
     <form className="space-y-3 w-full" onSubmit={handleSubmit}>
       <TaskTitleSection form={taskForm.form} />
       <TaskDescriptionSection form={taskForm.form} />
-      <TaskDueDateSection form={taskForm.form} />
+      <TaskPlanningSection form={taskForm.form} />
       <TaskAssignedSection form={taskForm.form} profiles={profiles} />
       <TaskLinksSection form={taskForm.form} />
       <TaskReportSection form={taskForm.form} />

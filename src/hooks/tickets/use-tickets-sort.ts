@@ -81,20 +81,14 @@ export function useTicketsSort(): UseTicketsSortReturn {
   const sortColumnParam = searchParams.get('sortColumn') || undefined;
   const sortDirectionParam = searchParams.get('sortDirection') || undefined;
 
-  // Stabiliser les valeurs primitives pour éviter les recréations inutiles
-  const sortColumnValue = useMemo(
-    () => sortColumnParam || DEFAULT_TICKET_SORT.column,
-    [sortColumnParam]
-  );
-  const sortDirectionValue = useMemo(
-    () => sortDirectionParam || DEFAULT_TICKET_SORT.direction,
-    [sortDirectionParam]
-  );
-
   // Créer l'objet sort une seule fois et le stabiliser
   const sort = useMemo(() => {
     return parseTicketSort(sortColumnParam, sortDirectionParam);
   }, [sortColumnParam, sortDirectionParam]);
+
+  // Stabiliser les valeurs primitives pour éviter les recréations inutiles
+  const sortColumnValue = sort.column;
+  const sortDirectionValue = sort.direction;
 
   // Initialiser les states avec les valeurs du tri depuis l'URL
   const [currentSort, setCurrentSort] = useState<TicketSortColumn>(() => sort.column);

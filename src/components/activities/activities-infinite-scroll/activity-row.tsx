@@ -157,7 +157,7 @@ export function ActivityRow({
               variant={getActivityStatusBadgeVariant(activity.status)}
               className="text-[10px] px-2 py-0.5 whitespace-nowrap"
             >
-              {activity.status.replace('_', ' ')}
+              {activity.status?.replace('_', ' ') ?? 'Non défini'}
             </Badge>
           </td>
 

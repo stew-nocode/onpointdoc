@@ -81,7 +81,7 @@ export function TasksInfiniteScroll({
     search,
     quickFilter,
     currentProfileId,
-    sort,
+    // TODO: sort parameter removed - check if it should be added to UseTasksInfiniteLoadProps
     searchParams
   });
 

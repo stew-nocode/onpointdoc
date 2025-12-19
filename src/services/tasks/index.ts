@@ -107,7 +107,8 @@ export const createTask = async (payload: CreateTaskInput): Promise<string> => {
     .insert({
       title: payload.title,
       description: payload.description || null,
-      due_date: payload.dueDate || null,
+      start_date: payload.startDate || null,
+      estimated_duration_hours: payload.estimatedDurationHours || null,
       assigned_to: payload.assignedTo || null,
       status: 'A_faire',
       is_planned: payload.isPlanned ?? false,

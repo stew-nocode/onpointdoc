@@ -18,7 +18,8 @@ import type { TaskStatus } from '@/types/task-with-relations';
 /**
  * Variant de badge pour le statut de tâche
  */
-export function getTaskStatusBadgeVariant(status: TaskStatus): 'success' | 'danger' | 'warning' | 'info' | 'secondary' {
+export function getTaskStatusBadgeVariant(status: TaskStatus | null): 'success' | 'danger' | 'warning' | 'info' | 'default' {
+  if (!status) return 'default';
   switch (status) {
     case 'Termine':
       return 'success';
@@ -29,9 +30,9 @@ export function getTaskStatusBadgeVariant(status: TaskStatus): 'success' | 'dang
     case 'Bloque':
       return 'warning';
     case 'A_faire':
-      return 'secondary';
+      return 'default';
     default:
-      return 'secondary';
+      return 'default';
   }
 }
 
@@ -159,11 +160,11 @@ export function getAvatarColorClass(name: string | null | undefined): string {
  * @param status - Statut de la tâche
  * @returns true si la tâche est en retard, false sinon
  */
-export function isTaskOverdue(dueDate: string | null | undefined, status: TaskStatus): boolean {
+export function isTaskOverdue(dueDate: string | null | undefined, status: TaskStatus | null): boolean {
   if (!dueDate) return false;
   
-  // Si la tâche est terminée ou annulée, elle n'est pas en retard
-  if (status === 'Termine' || status === 'Annule') {
+  // Si le statut est null ou si la tâche est terminée ou annulée, elle n'est pas en retard
+  if (!status || status === 'Termine' || status === 'Annule') {
     return false;
   }
   

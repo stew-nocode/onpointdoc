@@ -60,7 +60,7 @@ export function TicketDetailTabs({
         <TabsTrigger value="timeline">
           Timeline
           {interactions.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="default" className="ml-2">
               {interactions.length}
             </Badge>
           )}
@@ -68,7 +68,7 @@ export function TicketDetailTabs({
         <TabsTrigger value="comments">
           Commentaires
           {comments.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="default" className="ml-2">
               {comments.length}
             </Badge>
           )}

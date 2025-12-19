@@ -36,13 +36,13 @@ export function TaskAssignedSection({ form, profiles }: TaskAssignedSectionProps
   // Formater les options pour le Combobox
   const options = profiles.map((profile) => {
     const displayName = profile.company_name 
-      ? `${profile.full_name} (${profile.company_name})`
-      : profile.full_name;
+      ? `${profile.full_name || 'Sans nom'} (${profile.company_name})`
+      : profile.full_name || 'Sans nom';
     
     return {
       value: profile.id,
       label: displayName,
-      searchable: `${profile.full_name} ${profile.email} ${profile.company_name || ''}`.trim()
+      searchable: `${profile.full_name || ''} ${profile.email || ''} ${profile.company_name || ''}`.trim()
     };
   });
 

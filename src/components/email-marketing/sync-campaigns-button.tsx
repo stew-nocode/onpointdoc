@@ -53,7 +53,7 @@ export function SyncCampaignsButton() {
             errorMessage = 'Vous devez être connecté pour synchroniser les campagnes';
           } else if (error.code === 'FORBIDDEN') {
             errorMessage = 'Vous n\'avez pas les permissions nécessaires. Seuls les administrateurs et la direction peuvent synchroniser les campagnes.';
-          } else if (error.code === 'CONFIGURATION_ERROR' || error.message.includes('BREVO_API_KEY')) {
+          } else if (error.message.includes('BREVO_API_KEY') || error.message.includes('configuration')) {
             errorMessage = 'Configuration Brevo manquante. Veuillez vérifier que BREVO_API_KEY est défini dans les variables d\'environnement.';
           } else if (error.code === 'NETWORK_ERROR' || error.message.includes('network') || error.message.includes('fetch')) {
             errorMessage = 'Erreur de connexion à l\'API Brevo. Vérifiez votre connexion internet et la configuration de l\'API.';

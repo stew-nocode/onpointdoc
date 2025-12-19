@@ -10,29 +10,29 @@ export const taskStatuses = [
 ] as const;
 
 /**
- * Helper pour valider une date d'échéance dans un contexte Zod
+ * Helper pour valider une date de début dans un contexte Zod
  * 
- * @param dueDate - String de date à valider
+ * @param startDate - String de date à valider
  * @param ctx - Contexte Zod pour ajouter des issues
- * @param path - Chemin du champ dans l'objet (défaut: 'dueDate')
+ * @param path - Chemin du champ dans l'objet (défaut: 'startDate')
  * @returns true si la date est valide ou absente, false sinon
  */
-function validateDueDate(
-  dueDate: unknown,
+function validateStartDate(
+  startDate: unknown,
   ctx: z.RefinementCtx,
-  path: ['dueDate'] = ['dueDate']
+  path: ['startDate'] = ['startDate']
 ): boolean {
-  if (!dueDate || typeof dueDate !== 'string' || dueDate.trim().length === 0) {
+  if (!startDate || typeof startDate !== 'string' || startDate.trim().length === 0) {
     return true; // Date optionnelle, absence = valide
   }
 
   try {
-    const parsedDate = new Date(dueDate);
+    const parsedDate = new Date(startDate);
     
     if (isNaN(parsedDate.getTime())) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'La date d\'échéance n\'est pas valide',
+        message: 'La date de début n\'est pas valide',
         path,
       });
       return false;
@@ -42,7 +42,7 @@ function validateDueDate(
   } catch {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'La date d\'échéance n\'est pas valide',
+      message: 'La date de début n\'est pas valide',
       path,
     });
     return false;
@@ -50,10 +50,46 @@ function validateDueDate(
 }
 
 /**
+ * Helper pour valider la cohérence date de début + durée
+ * 
+ * @param data - Données du formulaire
+ * @param ctx - Contexte Zod pour ajouter des issues
+ * @returns true si cohérent, false sinon
+ */
+function validateStartDateAndDuration(
+  data: { startDate?: string; estimatedDurationHours?: number },
+  ctx: z.RefinementCtx
+): boolean {
+  const hasStartDate = !!(data.startDate && typeof data.startDate === 'string' && data.startDate.trim().length > 0);
+  const hasDuration = typeof data.estimatedDurationHours === 'number' && data.estimatedDurationHours > 0;
+
+  // Si l'un est défini, l'autre doit l'être aussi
+  if (hasStartDate && !hasDuration) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La durée estimée est requise si une date de début est définie',
+      path: ['estimatedDurationHours'],
+    });
+    return false;
+  }
+
+  if (hasDuration && !hasStartDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'La date de début est requise si une durée est définie',
+      path: ['startDate'],
+    });
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Schéma pour la création d'une tâche
  * 
  * Différences avec createActivitySchema :
- * - due_date (date unique) au lieu de plannedStart/plannedEnd (période)
+ * - startDate + estimatedDurationHours au lieu de plannedStart/plannedEnd (période)
  * - assigned_to (UUID unique) au lieu de participantIds (array)
  * - is_planned (boolean) au lieu de dates planifiées
  * - description optionnel
@@ -63,8 +99,10 @@ export const createTaskSchema = z
   .object({
     title: z.string().min(4, 'Le titre doit contenir au moins 4 caractères').max(180, 'Le titre ne peut pas dépasser 180 caractères'),
     description: z.string().optional(),
-    // Date d'échéance optionnelle (validation stricte dans superRefine)
-    dueDate: z.string().optional(),
+    // Date de début optionnelle (validation stricte dans superRefine)
+    startDate: z.string().optional(),
+    // Durée estimée en heures (optionnelle, positive)
+    estimatedDurationHours: z.number().positive('La durée doit être positive').optional(),
     // Assigné à un utilisateur (optionnel)
     assignedTo: z.string().uuid().optional(),
     // Tickets liés : tableau d'IDs de tickets (optionnel)
@@ -77,7 +115,8 @@ export const createTaskSchema = z
     isPlanned: z.boolean().optional().default(false)
   })
   .superRefine((data, ctx) => {
-    validateDueDate(data.dueDate, ctx);
+    validateStartDate(data.startDate, ctx);
+    validateStartDateAndDuration(data, ctx);
   });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
@@ -91,7 +130,8 @@ export const updateTaskSchema = z
     id: z.string().uuid({ message: 'ID de tâche invalide' }),
     title: z.string().min(4).max(180).optional(),
     description: z.string().optional(),
-    dueDate: z.string().optional(),
+    startDate: z.string().optional(),
+    estimatedDurationHours: z.number().positive().optional(),
     assignedTo: z.string().uuid().optional(),
     status: z.enum(taskStatuses).optional(),
     linkedTicketIds: z.array(z.string().uuid()).optional(),
@@ -100,7 +140,8 @@ export const updateTaskSchema = z
     isPlanned: z.boolean().optional()
   })
   .superRefine((data, ctx) => {
-    validateDueDate(data.dueDate, ctx);
+    validateStartDate(data.startDate, ctx);
+    validateStartDateAndDuration(data, ctx);
   });
 
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

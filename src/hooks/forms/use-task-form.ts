@@ -43,7 +43,8 @@ export function useTaskForm(options: UseTaskFormOptions): UseTaskFormResult {
   const defaultValues: CreateTaskInput = {
     title: initialValues?.title ?? '',
     description: initialValues?.description ?? undefined,
-    dueDate: initialValues?.dueDate ?? undefined,
+    startDate: initialValues?.startDate ?? undefined,
+    estimatedDurationHours: initialValues?.estimatedDurationHours ?? undefined,
     assignedTo: initialValues?.assignedTo ?? undefined,
     linkedTicketIds: initialValues?.linkedTicketIds ?? [],
     linkedActivityIds: initialValues?.linkedActivityIds ?? [],

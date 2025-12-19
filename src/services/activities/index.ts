@@ -19,7 +19,7 @@ export const createActivity = async (payload: CreateActivityInput): Promise<stri
   // Récupérer le profil de l'utilisateur connecté pour created_by
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    throw createError('UNAUTHORIZED', 'Non authentifié');
+    throw createError.unauthorized('Non authentifié');
   }
   
   const { data: profile } = await supabase
@@ -29,7 +29,7 @@ export const createActivity = async (payload: CreateActivityInput): Promise<stri
     .single();
     
   if (!profile) {
-    throw createError('NOT_FOUND', 'Profil utilisateur introuvable');
+    throw createError.notFound('Profil utilisateur');
   }
 
   // Créer l'activité
@@ -301,7 +301,7 @@ export const updateActivity = async (payload: UpdateActivityInput): Promise<stri
   
   // Vérifier que l'ID est présent
   if (!payload.id) {
-    throw createError('VALIDATION_ERROR', 'L\'ID de l\'activité est requis');
+    throw createError.validationError('L\'ID de l\'activité est requis');
   }
 
   // Construire l'objet de mise à jour avec seulement les champs présents

@@ -40,9 +40,9 @@ export function ActivityParticipantsSection({ form, participants }: ActivityPart
         options={participants.map((participant) => ({
           value: participant.id,
           label: participant.company_name 
-            ? `${participant.full_name} (${participant.company_name})`
-            : participant.full_name,
-          searchable: `${participant.full_name} ${participant.email} ${participant.company_name || ''}`
+            ? `${participant.full_name || 'Sans nom'} (${participant.company_name})`
+            : participant.full_name || 'Sans nom',
+          searchable: `${participant.full_name || ''} ${participant.email || ''} ${participant.company_name || ''}`.trim()
         }))}
         value={selectedParticipantIds}
         onValueChange={(ids) => form.setValue('participantIds', ids)}

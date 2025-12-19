@@ -34,7 +34,7 @@ export function CompanyDetailTabs({
         <TabsTrigger value="history">
           Historique
           {history.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="default" className="ml-2">
               {history.length}
             </Badge>
           )}

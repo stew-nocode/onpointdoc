@@ -93,25 +93,26 @@ export async function POST(request: NextRequest) {
     
     // Mapper l'événement pour la DB
     const dbEvent = mapBrevoEventToDb(event);
-    
+
     console.log(`[WEBHOOK BREVO] ${dbEvent.event_type} pour ${dbEvent.email}`);
 
-    // TODO: Créer la table brevo_email_events dans Supabase
     // Insérer dans Supabase avec le client service (bypass RLS)
-    // const supabase = createSupabaseServiceClient();
-    //
-    // const { error: insertError } = await supabase
-    //   .from('brevo_email_events')
-    //   .insert(dbEvent);
-    //
-    // if (insertError) {
-    //   console.error('[WEBHOOK BREVO] Erreur insertion:', insertError.message);
-    //   // On retourne 200 pour éviter que Brevo retry indéfiniment
-    //   return NextResponse.json(
-    //     { success: false, error: insertError.message },
-    //     { status: 200 }
-    //   );
-    // }
+    const supabase = createSupabaseServiceClient();
+
+    // TODO: Appliquer la migration 20251219120000_create_brevo_email_events.sql
+    // puis régénérer les types avec: supabase gen types typescript --local > src/types/database.types.ts
+    const { error: insertError } = await (supabase as any)
+      .from('brevo_email_events')
+      .insert(dbEvent);
+
+    if (insertError) {
+      console.error('[WEBHOOK BREVO] Erreur insertion:', insertError.message);
+      // On retourne 200 pour éviter que Brevo retry indéfiniment
+      return NextResponse.json(
+        { success: false, error: insertError.message },
+        { status: 200 }
+      );
+    }
 
     console.log(`[WEBHOOK BREVO] ✅ Événement enregistré: ${dbEvent.event_type} pour ${dbEvent.email}`);
 

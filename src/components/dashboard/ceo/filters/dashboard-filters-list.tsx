@@ -2,6 +2,7 @@
 
 import { Separator } from '@/ui/separator';
 import type { DashboardFiltersInput } from '@/types/dashboard-filters';
+import type { Period } from '@/types/dashboard';
 import { PeriodFilter } from './period-filter';
 import { DashboardProductsFilter } from './dashboard-products-filter';
 import { TeamsFilter } from './teams-filter';
@@ -30,10 +31,15 @@ export function DashboardFiltersList({
   onFiltersUpdate,
   products
 }: DashboardFiltersListProps) {
+  // Valider que period est bien de type Period (et non une année string)
+  const periodValue: Period = (['week', 'month', 'quarter', 'year'].includes(filters.period) 
+    ? filters.period 
+    : 'month') as Period;
+
   return (
     <div className="space-y-3 p-3">
       <PeriodFilter
-        value={filters.period}
+        value={periodValue}
         onChange={(period) => onFiltersUpdate({ period })}
       />
       <Separator />
