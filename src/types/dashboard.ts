@@ -175,7 +175,7 @@ export type CEODashboardData = {
   workload: WorkloadData;
   health: ProductHealthData;
   alerts: OperationalAlert[];
-  period: Period;
+  period: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   periodStart: string;
   periodEnd: string;
 };
@@ -191,7 +191,7 @@ export type TeamDashboardData = {
   workload: WorkloadData;
   health: ProductHealthData;
   alerts: OperationalAlert[];
-  period: Period;
+  period: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   periodStart: string;
   periodEnd: string;
 };
@@ -218,7 +218,7 @@ export type AgentDashboardData = {
     completed: number;
   };
   alerts: OperationalAlert[];
-  period: Period;
+  period: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   periodStart: string;
   periodEnd: string;
 };
@@ -254,7 +254,7 @@ export type UnifiedDashboardData = {
   personal?: AgentDashboardData; // Agent uniquement
   alerts: OperationalAlert[]; // Tous les rôles (filtrés selon le rôle)
   config?: DashboardConfig; // Configuration de visibilité (chargée depuis DB)
-  period: Period;
+  period: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   periodStart: string;
   periodEnd: string;
   // === KPIs Statiques (temps réel, non filtrés - Admin/Direction) ===

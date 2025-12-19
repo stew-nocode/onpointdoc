@@ -136,15 +136,16 @@ function formatLabel(key: string, granularity: DataGranularity): string {
 /**
  * Détermine la granularité optimale selon la période
  */
-function getGranularity(period: Period | 'custom', periodStart: string, periodEnd: string): DataGranularity {
+function getGranularity(period: Period | 'custom' | string, periodStart: string, periodEnd: string): DataGranularity {
   if (period === 'week') return 'day';
   if (period === 'month') return 'week';
   if (period === 'quarter' || period === 'year') return 'month';
-  
+
+  // Pour les années spécifiques (ex: "2024") ou périodes custom, calculer selon la durée
   const start = new Date(periodStart);
   const end = new Date(periodEnd);
   const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays <= 7) return 'day';
   if (diffDays <= 31) return 'week';
   return 'month';
@@ -211,7 +212,7 @@ export const getAssistanceTimeEvolutionStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    period: Period | 'custom' = 'month'
+    period: Period | 'custom' | string = 'month'
   ): Promise<AssistanceTimeEvolutionStats | null> => {
     const supabase = await createSupabaseServerClient();
 
