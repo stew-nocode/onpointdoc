@@ -192,11 +192,27 @@ function UnifiedDashboardWithWidgetsComponent({
   const handlePeriodChange = useCallback(
     (newPeriod: Period) => {
       setPeriod(newPeriod);
-      // Si on change de période, on réinitialise l'année si c'était une sélection d'année
-      // (Logique à affiner selon le besoin métier exact)
+      // Si on change de période, on réinitialise l'année et les dates personnalisées
+      setSelectedYear(undefined);
+      setDateRange(undefined);
+
+      // Mettre à jour l'URL avec la nouvelle période
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('period', newPeriod);
+      // Supprimer les dates personnalisées si présentes
+      params.delete('startDate');
+      params.delete('endDate');
+
+      const newUrl = `${pathname}?${params.toString()}`;
+      router.push(newUrl, { scroll: false });
+
+      // IMPORTANT: Forcer le refresh de la page Server Component
+      router.refresh();
+
+      // Charger les données côté client
       loadData(newPeriod);
     },
-    [loadData]
+    [loadData, router, pathname, searchParams]
   );
 
   /**
@@ -258,29 +274,52 @@ function UnifiedDashboardWithWidgetsComponent({
     (year: string | undefined) => {
       // Normaliser : traiter les chaînes vides comme undefined
       const normalizedYear = year === '' || year === undefined ? undefined : year;
-      
+
       // Réinitialiser la période personnalisée AVANT de définir l'année
       setDateRange(undefined);
-      
+
       // Définir l'année
       setSelectedYear(normalizedYear);
-      
+
       if (normalizedYear) {
         // Mettre à jour la période avec l'année sélectionnée
         setPeriod(normalizedYear as Period); // L'année est passée comme période
+
+        // Mettre à jour l'URL avec l'année sélectionnée
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('period', normalizedYear);
+        // Supprimer les dates personnalisées si présentes
+        params.delete('startDate');
+        params.delete('endDate');
+
+        const newUrl = `${pathname}?${params.toString()}`;
+        router.push(newUrl, { scroll: false });
+
+        // IMPORTANT: Forcer le refresh de la page Server Component
+        router.refresh();
+
+        // Charger les données côté client
         loadData(normalizedYear as Period);
-        
+
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année sélectionnée:', normalizedYear);
         }
       } else {
-        // Si on désélectionne l'année, réinitialiser aussi la période
+        // Si on désélectionne l'année, supprimer le paramètre period de l'URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('period');
+        params.delete('startDate');
+        params.delete('endDate');
+        const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        router.push(newUrl, { scroll: false });
+        router.refresh();
+
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année désélectionnée, réinitialisation de la période');
         }
       }
     },
-    [loadData]
+    [loadData, router, pathname, searchParams]
   );
 
   // Références stables pour les callbacks (évite les réabonnements)
