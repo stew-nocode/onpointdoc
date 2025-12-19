@@ -14,6 +14,7 @@ import {
 import { Combobox } from '@/ui/combobox';
 import { useBulkActions } from '@/hooks/tickets/use-bulk-actions';
 import { useProfiles } from '@/hooks';
+import type { Profile } from '@/types/profile';
 
 type BulkReassignDialogProps = {
   open: boolean;
@@ -58,7 +59,7 @@ export function BulkReassignDialog({
   };
 
   // Préparer les options pour le Combobox
-  const userOptions = (profiles || []).map((profile) => ({
+  const userOptions = (profiles || []).map((profile: Profile) => ({
     value: profile.id,
     label: profile.full_name || profile.email || 'Sans nom'
   }));

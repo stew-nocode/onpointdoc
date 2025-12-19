@@ -23,7 +23,7 @@ Les variables suivantes sont déjà dans [.env.local](.env.local) :
 
 ```env
 # ✅ Supabase MCP (configuré)
-SUPABASE_ACCESS_TOKEN="sbp_f6452e13b2390636e2db0db1a4734acd616b2003"
+SUPABASE_ACCESS_TOKEN="sbp_xxxxx"  # Remplacez par votre token Supabase
 
 # ⚠️ GitHub MCP (optionnel)
 GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"  # À ajouter si besoin
