@@ -15,7 +15,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "brevo:add-ip": "node scripts/brevo-open-ip-config.js"
+    "brevo:add-ip": "node scripts/brevo-open-ip-config.js",
+    "precommit": "npm run typecheck && npm run lint",
+    "validate": "npm run typecheck && npm run lint && npm run build",
+    "branch:develop": "git checkout develop && git pull origin develop",
+    "branch:staging": "git checkout staging && git pull origin staging",
+    "branch:main": "git checkout main && git pull origin main"
   },
   "keywords": [
     "nextjs",

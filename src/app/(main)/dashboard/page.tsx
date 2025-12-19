@@ -6,7 +6,8 @@ import { listProducts } from '@/services/products';
 import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
 import { getCurrentUserProfile } from '@/services/users/server';
 import { mapProfileRoleToDashboardRole } from '@/lib/utils/dashboard-config';
-import type { UnifiedDashboardData, Period } from '@/types/dashboard';
+import { getPeriodDates } from '@/services/dashboard/period-utils';
+import type { UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole } from '@/types/dashboard-widgets';
 
 type DashboardPageProps = {
@@ -14,16 +15,15 @@ type DashboardPageProps = {
 };
 
 /**
- * Configuration ISR : revalide les données toutes les 60 secondes
+ * Configuration ISR désactivée pour permettre les filtres dynamiques
  *
- * Permet de réduire drastiquement la charge DB tout en gardant
- * des données fraîches (max 1 minute de délai).
+ * IMPORTANT: Le cache ISR (60s) empêchait les filtres de fonctionner
+ * car la page était servie depuis le cache même quand les URL params changeaient.
  *
- * Gains estimés :
- * - Temps de chargement : 2000ms → 300ms (-85%)
- * - Requêtes DB : 12 → 0.2/minute (-98%)
+ * Solution: Désactiver le cache ISR (revalidate = 0) pour forcer le rendu
+ * à chaque changement de filtre.
  */
-export const revalidate = 60;
+export const revalidate = 0;
 
 /**
  * Page du dashboard unifié
@@ -51,16 +51,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const resolvedSearchParams = await searchParams;
   const params = resolvedSearchParams || {};
   const filters = parseDashboardFiltersFromParams(params);
-  // Valider que period est bien de type Period (et non une année string)
-  const periodValue = filters?.period || 'month';
-  const period: Period = ['week', 'month', 'quarter', 'year'].includes(periodValue as string)
-    ? (periodValue as Period)
-    : 'month';
+  // Accepter à la fois les périodes (week, month, quarter, year) ET les années spécifiques ("2024")
+  const period = filters?.period || 'month';
 
-  const { periodStart, periodEnd } = getPeriodRange(period);
   const customRange = getCustomRangeFromParams(params);
-  const effectivePeriodStart = customRange?.start ?? periodStart;
-  const effectivePeriodEnd = customRange?.end ?? periodEnd;
+  let effectivePeriodStart: string;
+  let effectivePeriodEnd: string;
+
+  if (customRange) {
+    effectivePeriodStart = customRange.start;
+    effectivePeriodEnd = customRange.end;
+  } else {
+    const periodDates = getPeriodDates(period);
+    effectivePeriodStart = periodDates.startDate;
+    effectivePeriodEnd = periodDates.endDate;
+  }
 
   // Charger la configuration des widgets (affectation par rôle + préférences utilisateur)
   // ✅ OPTIMISÉ : Utilise React.cache() pour éviter les appels répétés
@@ -347,20 +352,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       />
     </PageLayoutWithDashboardFilters>
   );
-}
-
-function getPeriodRange(period: Period): { periodStart: string; periodEnd: string } {
-  const now = new Date();
-  const end = now.toISOString();
-
-  const start = new Date(now);
-  if (period === 'week') start.setDate(now.getDate() - 7);
-  if (period === 'month') start.setDate(1);
-  if (period === 'quarter') start.setMonth(Math.floor(now.getMonth() / 3) * 3, 1);
-  if (period === 'year') start.setMonth(0, 1);
-  start.setHours(0, 0, 0, 0);
-
-  return { periodStart: start.toISOString(), periodEnd: end };
 }
 
 function getCustomRangeFromParams(

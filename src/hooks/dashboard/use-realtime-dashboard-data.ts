@@ -5,7 +5,7 @@ import { debounce } from '@/lib/utils/debounce';
 import { getPeriodDates } from '@/services/dashboard/period-utils';
 
 type UseRealtimeDashboardDataProps = {
-  period: Period;
+  period: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   productId?: string; // ✅ Nouveau : filtre par produit
   onDataChange: () => void;
 };
@@ -83,7 +83,7 @@ export function useRealtimeDashboardData({
         },
         (payload) => {
           if (process.env.NODE_ENV === 'development') {
-            const record = (payload.new || payload.old) as Record<string, any> | undefined;
+            const record = (payload.new || payload.old) as any;
             console.log('[Realtime] Ticket changed:', {
               event: payload.eventType,
               ticketId: record?.id,

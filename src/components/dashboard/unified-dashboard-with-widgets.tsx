@@ -20,7 +20,7 @@ type UnifiedDashboardWithWidgetsProps = {
   role: DashboardRole;
   profileId: string;
   initialData: UnifiedDashboardData;
-  initialPeriod: Period;
+  initialPeriod: Period | string; // Period (week, month, quarter, year) OU année spécifique ("2024")
   initialWidgetConfig: UserDashboardConfig;
   staticOnly?: boolean;     // Afficher uniquement les KPIs statiques
   filteredOnly?: boolean;   // Afficher uniquement les widgets filtrés (sans KPIs statiques)
@@ -52,7 +52,7 @@ function UnifiedDashboardWithWidgetsComponent({
   staticOnly = false,
   filteredOnly = false,
 }: UnifiedDashboardWithWidgetsProps) {
-  const [period, setPeriod] = useState<Period>(initialPeriod);
+  const [period, setPeriod] = useState<Period | string>(initialPeriod);
   const [data, setData] = useState<UnifiedDashboardData>(initialData);
   const [widgetConfig, setWidgetConfig] = useState<UserDashboardConfig>(initialWidgetConfig);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
@@ -259,9 +259,9 @@ function UnifiedDashboardWithWidgetsComponent({
   );
 
   // Références stables pour les callbacks (évite les réabonnements)
-  const loadDataRef = useRef<((selectedPeriod: Period) => Promise<void>) | undefined>(undefined);
+  const loadDataRef = useRef<((selectedPeriod: Period | string) => Promise<void>) | undefined>(undefined);
   const loadWidgetConfigRef = useRef<(() => Promise<void>) | undefined>(undefined);
-  const periodRef = useRef<Period>(period);
+  const periodRef = useRef<Period | string>(period);
 
   // Mettre à jour les refs à chaque changement de fonction
   useEffect(() => {
