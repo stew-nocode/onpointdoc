@@ -28,6 +28,7 @@ export type MockPlanningActivity = {
   status: string | null;
   plannedStart: string; // ISO date string
   plannedEnd: string | null; // ISO date string
+  reportContent?: string | null; // Contenu du compte rendu
   participants?: Array<{
     id: string;
     fullName: string;

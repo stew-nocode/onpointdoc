@@ -144,9 +144,9 @@ export function ActivityRow({
           {/* Type avec icône */}
           <td className="py-2.5 pr-4">
             <div className="flex items-center gap-1.5">
-              {getActivityTypeIcon(activity.activity_type)}
+              {activity.activity_type && getActivityTypeIcon(activity.activity_type)}
               <span className="text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                {activity.activity_type}
+                {activity.activity_type || '-'}
               </span>
             </div>
           </td>

@@ -27,7 +27,7 @@ export async function createActivityAction(values: CreateActivityInput): Promise
   revalidatePath('/gestion/activites');
 
   // OPTIMISATION (2025-12-15): Invalider le cache des KPIs
-  revalidateTag('activity-kpis');
+  revalidateTag('activity-kpis', 'max');
 
   return activityId;
 }
@@ -65,7 +65,7 @@ export async function updateActivityReportAction(
   revalidatePath(`/gestion/activites/${activityId}`);
 
   // OPTIMISATION (2025-12-15): Invalider le cache des KPIs
-  revalidateTag('activity-kpis');
+  revalidateTag('activity-kpis', 'max');
 
   return updatedActivityId;
 }

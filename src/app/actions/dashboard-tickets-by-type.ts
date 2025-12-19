@@ -3,7 +3,7 @@
 import { getTicketsByTypeDistribution } from '@/services/dashboard/tickets-by-type-distribution';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createError } from '@/lib/errors/types';
+import { createError, isApplicationError } from '@/lib/errors/types';
 
 /**
  * Schéma de validation pour les paramètres de répartition par type
@@ -56,7 +56,7 @@ export async function getTicketsByTypeDistributionAction(
 
   if (!validationResult.success) {
     throw createError.validationError('Paramètres invalides', {
-      errors: validationResult.error.errors,
+      errors: validationResult.error.issues,
       context: 'getTicketsByTypeDistributionAction',
       receivedParams: params,
     });
@@ -108,14 +108,17 @@ export async function getTicketsByTypeDistributionAction(
   } catch (error) {
     console.error('[TicketsByTypeDistribution Action] Error:', error);
 
-    if (createError.isApplicationError(error)) {
+    if (isApplicationError(error)) {
       throw error;
     }
 
-    throw createError.internalError('Erreur lors de la récupération de la répartition par type', {
-      context: 'getTicketsByTypeDistributionAction',
-      originalError: error instanceof Error ? error.message : String(error),
-    });
+    throw createError.internalError(
+      'Erreur lors de la récupération de la répartition par type',
+      error instanceof Error ? error : undefined,
+      {
+        context: 'getTicketsByTypeDistributionAction',
+      }
+    );
   }
 }
 

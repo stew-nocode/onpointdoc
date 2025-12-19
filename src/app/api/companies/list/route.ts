@@ -53,6 +53,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    return handleApiError(error, 'Erreur lors de la récupération des entreprises');
+    return handleApiError(error);
   }
 }

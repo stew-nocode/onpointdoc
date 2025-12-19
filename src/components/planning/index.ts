@@ -9,5 +9,7 @@ export { PlanningPageClient } from './planning-page-client';
 export { PlanningCalendar } from './planning-calendar';
 export { PlanningList } from './planning-list';
 export { PlanningDayItem } from './planning-day-item';
+export { GanttChart } from './gantt/gantt-chart';
+export { PlanningAvailability } from './availability/planning-availability';
 export type { MockPlanningItem, MockPlanningTask, MockPlanningActivity, PlanningItemType } from './types';
 

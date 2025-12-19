@@ -5,6 +5,7 @@ import { fr } from 'date-fns/locale';
 import { getMockItemsForDate } from './mock-data';
 import { PlanningDayItem } from './planning-day-item';
 import { CardHeader, CardTitle } from '@/ui/card';
+import { TooltipProvider } from '@/ui/tooltip';
 import type { PlanningViewMode } from './planning-calendar';
 
 type PlanningListProps = {
@@ -38,9 +39,10 @@ export function PlanningList({ selectedDate, viewMode = 'starts' }: PlanningList
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   return (
-    <div className="space-y-4">
-      <CardHeader className="px-0 pb-4">
-        <CardTitle className="text-xl text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col h-full">
+      {/* Header fixe - même hauteur que les autres colonnes */}
+      <CardHeader className="px-0 pb-4 flex-shrink-0 border-b border-slate-200 dark:border-slate-800 mb-4">
+        <CardTitle className="text-base text-slate-900 dark:text-slate-100">
           {capitalizedDate}
         </CardTitle>
         <p className="text-sm font-normal text-slate-500 dark:text-slate-400">
@@ -52,21 +54,26 @@ export function PlanningList({ selectedDate, viewMode = 'starts' }: PlanningList
         </p>
       </CardHeader>
 
-      {filteredItems.length === 0 ? (
-        <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
-          <p>
-            {viewMode === 'starts'
-              ? 'Aucune activité débutant pour cette date.'
-              : 'Aucune tâche à échéance pour cette date.'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredItems.map((item) => (
-            <PlanningDayItem key={item.id} item={item} />
-          ))}
-        </div>
-      )}
+      {/* Liste scrollable */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <TooltipProvider delayDuration={300}>
+          {filteredItems.length === 0 ? (
+            <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+              <p>
+                {viewMode === 'starts'
+                  ? 'Aucune activité débutant pour cette date.'
+                  : 'Aucune tâche à échéance pour cette date.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2 pr-2">
+              {filteredItems.map((item) => (
+                <PlanningDayItem key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+        </TooltipProvider>
+      </div>
     </div>
   );
 }

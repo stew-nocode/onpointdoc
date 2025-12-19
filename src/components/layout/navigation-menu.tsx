@@ -12,7 +12,8 @@ import {
   CalendarDays,
   ListChecks,
   Users,
-  Mail
+  Mail,
+  Calendar
 } from 'lucide-react';
 import { TicketsSubmenu } from './tickets-submenu';
 import { MarketingSubmenu } from './marketing-submenu';
@@ -63,7 +64,9 @@ export function NavigationMenu({
                   ? ListChecks
                   : item.segment === 'marketing'
                     ? Mail
-                    : undefined;
+                    : item.segment === 'planning'
+                      ? Calendar
+                      : undefined;
 
         if (isTickets) {
           const activeTickets = pathname.startsWith(item.href);

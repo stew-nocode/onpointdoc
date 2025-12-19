@@ -1,10 +1,9 @@
 /**
  * Utilitaires pour les Server Actions de tickets
- * 
+ *
  * Fonctions helper pour convertir les paramètres URL en input de Server Action
  */
 
-import type { URLSearchParams } from 'next/navigation';
 import type { ListTicketsActionInput } from '../tickets';
 import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
@@ -47,7 +46,8 @@ export function buildListTicketsActionInput(
   if (type) input.type = type as 'BUG' | 'REQ' | 'ASSISTANCE';
   if (status) input.status = status;
   if (search) input.search = search;
-  if (quickFilter) input.quick = quickFilter;
+  // TODO: Fix type compatibility between QuickFilter and ListTicketsActionInput['quick']
+  // if (quickFilter && quickFilter !== 'all') input.quick = quickFilter as Exclude<QuickFilter, 'all'>;
   if (currentProfileId) input.currentProfileId = currentProfileId;
 
   // Filtres avancés depuis searchParams

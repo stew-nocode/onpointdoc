@@ -100,7 +100,7 @@ async function loadInitialActivities(
 export default async function ActivitiesPage({ searchParams }: ActivitiesPageProps) {
   // ✅ Utiliser cache() pour mémoriser la résolution des searchParams
   // Évite de résoudre plusieurs fois les mêmes params dans le même render tree
-  const resolvedSearchParams = await getCachedSearchParams(searchParams);
+  const resolvedSearchParams = searchParams ? await getCachedSearchParams(searchParams) : {};
   
   // Stabiliser et normaliser les searchParams pour une comparaison stable
   const stabilizedParams = await stabilizeSearchParams(resolvedSearchParams);

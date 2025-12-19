@@ -71,6 +71,7 @@ function generateMockActivities(year: number, month: number): MockPlanningActivi
         status: 'Planifiée',
         plannedStart: startDate.toISOString(),
         plannedEnd: endDate.toISOString(),
+        reportContent: index % 5 === 0 ? '<p>Compte rendu mocké</p>' : null,
         participants: [
           { id: 'user-1', fullName: 'Agent Mock' },
           { id: 'user-2', fullName: 'Manager Mock' }
@@ -93,16 +94,21 @@ export function getMockItemsForMonth(year: number, month: number): MockPlanningI
 
 /**
  * Récupère les items pour une date spécifique
+ * 
+ * Pour les activités : inclut celles dont la date est dans la période [plannedStart, plannedEnd]
+ * Pour les tâches : inclut celles dont dueDate = date
  */
 export function getMockItemsForDate(date: Date): MockPlanningItem[] {
   const year = date.getFullYear();
   const month = date.getMonth();
   const day = date.getDate();
+  const dateStr = `${year}-${month}-${day}`;
   
   const allItems = getMockItemsForMonth(year, month);
   
   return allItems.filter((item) => {
     if (item.type === 'task') {
+      // Tâche : inclure si dueDate = date sélectionnée
       const itemDate = new Date(item.dueDate);
       return (
         itemDate.getFullYear() === year &&
@@ -110,12 +116,16 @@ export function getMockItemsForDate(date: Date): MockPlanningItem[] {
         itemDate.getDate() === day
       );
     } else {
-      const itemDate = new Date(item.plannedStart);
-      return (
-        itemDate.getFullYear() === year &&
-        itemDate.getMonth() === month &&
-        itemDate.getDate() === day
-      );
+      // Activité : inclure si date est dans [plannedStart, plannedEnd]
+      const startDate = new Date(item.plannedStart);
+      const endDate = item.plannedEnd ? new Date(item.plannedEnd) : startDate;
+      
+      // Normaliser les dates pour comparaison (sans heures)
+      const selectedDateNormalized = new Date(year, month, day);
+      const startNormalized = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endNormalized = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      
+      return selectedDateNormalized >= startNormalized && selectedDateNormalized <= endNormalized;
     }
   });
 }

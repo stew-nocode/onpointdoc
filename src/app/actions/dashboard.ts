@@ -52,7 +52,7 @@ export async function getSupportEvolutionDataAction(
 
   if (!validationResult.success) {
     throw createError.validationError('Paramètres invalides', {
-      errors: validationResult.error.errors,
+      errors: validationResult.error.issues,
       context: 'getSupportEvolutionDataAction',
       receivedParams: params,
     });

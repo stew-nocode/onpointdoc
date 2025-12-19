@@ -3,7 +3,7 @@
 import { getTicketsByCompanyDistribution } from '@/services/dashboard/tickets-by-company-distribution';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createError } from '@/lib/errors/types';
+import { createError, isApplicationError } from '@/lib/errors/types';
 
 /**
  * Schéma de validation pour les paramètres de répartition par entreprise
@@ -56,7 +56,7 @@ export async function getTicketsByCompanyDistributionAction(
 
   if (!validationResult.success) {
     throw createError.validationError('Paramètres invalides', {
-      errors: validationResult.error.errors,
+      errors: validationResult.error.issues,
       context: 'getTicketsByCompanyDistributionAction',
       receivedParams: params,
     });
@@ -108,14 +108,17 @@ export async function getTicketsByCompanyDistributionAction(
   } catch (error) {
     console.error('[TicketsByCompanyDistribution Action] Error:', error);
 
-    if (createError.isApplicationError(error)) {
+    if (isApplicationError(error)) {
       throw error;
     }
 
-    throw createError.internalError('Erreur lors de la récupération de la répartition par entreprise', {
-      context: 'getTicketsByCompanyDistributionAction',
-      originalError: error instanceof Error ? error.message : String(error),
-    });
+    throw createError.internalError(
+      'Erreur lors de la récupération de la répartition par entreprise',
+      error instanceof Error ? error : undefined,
+      {
+        context: 'getTicketsByCompanyDistributionAction',
+      }
+    );
   }
 }
 

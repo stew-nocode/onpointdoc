@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Calendar } from '@/ui/calendar';
 import { Button } from '@/ui/button';
+import { Switch } from '@/ui/switch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -86,41 +87,45 @@ export function PlanningCalendar({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Switch Mode : Débuts / Échéances */}
-      <div className="flex items-center justify-center gap-2">
-        <Button
-          type="button"
-          variant={viewMode === 'starts' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onViewModeChange?.('starts')}
-          className={cn(
-            'text-xs transition-all',
-            viewMode === 'starts'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white dark:from-blue-700 dark:via-indigo-800 dark:to-purple-900'
-              : 'border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
-          )}
-        >
-          Débuts
-        </Button>
-        <Button
-          type="button"
-          variant={viewMode === 'dueDates' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onViewModeChange?.('dueDates')}
-          className={cn(
-            'text-xs transition-all',
-            viewMode === 'dueDates'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 text-white dark:from-blue-700 dark:via-indigo-800 dark:to-purple-900'
-              : 'border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
-          )}
-        >
-          Échéances
-        </Button>
-      </div>
+    <div className="h-full flex flex-col">
+      {/* Header uniforme - même hauteur que les autres colonnes */}
+      <div className="flex-shrink-0 pb-4 border-b border-slate-200 dark:border-slate-800 mb-4">
+        {/* Switch Mode : Débuts / Échéances */}
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <label
+            htmlFor="planning-view-mode"
+            className={cn(
+              'text-sm font-medium transition-colors cursor-pointer',
+              viewMode === 'starts'
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+          >
+            Débuts
+          </label>
+          <Switch
+            id="planning-view-mode"
+            checked={viewMode === 'dueDates'}
+            onCheckedChange={(checked) => {
+              onViewModeChange?.(checked ? 'dueDates' : 'starts');
+            }}
+            aria-label="Basculer entre Débuts et Échéances"
+          />
+          <label
+            htmlFor="planning-view-mode"
+            className={cn(
+              'text-sm font-medium transition-colors cursor-pointer',
+              viewMode === 'dueDates'
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-500 dark:text-slate-400'
+            )}
+          >
+            Échéances
+          </label>
+        </div>
 
-      {/* En-tête avec navigation */}
-      <div className="flex items-center justify-between">
+        {/* En-tête avec navigation */}
+        <div className="flex items-center justify-between">
         <Button
           variant="outline"
           size="icon"
@@ -132,7 +137,7 @@ export function PlanningCalendar({
         </Button>
 
         <div className="flex flex-col items-center gap-1">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {format(currentMonth, 'MMMM yyyy', { locale: fr })}
           </h2>
           <Button
@@ -154,10 +159,12 @@ export function PlanningCalendar({
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
+        </div>
       </div>
 
-      {/* Calendrier */}
-      <Calendar
+      {/* Calendrier - prend le reste de l'espace */}
+      <div className="flex-1 min-h-0">
+        <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={(date) => {
@@ -172,7 +179,7 @@ export function PlanningCalendar({
         }}
         modifiersClassNames={{
           hasEvents: cn(
-            'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:content-[""] after:shadow-sm',
+            'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:content-[""] after:shadow-sm after:z-10',
             // Points verts pour débuts, rouges pour échéances - couleurs plus vives
             viewMode === 'starts'
               ? 'after:bg-green-500 dark:after:bg-green-400 dark:after:shadow-green-400/50'
@@ -192,16 +199,26 @@ export function PlanningCalendar({
             // Texte avec plus de contraste
             '!text-blue-900 font-bold dark:!text-blue-100'
           ),
-          // Jour sélectionné : badge vert plein
+          // Jour sélectionné : cercle vert (débuts) ou rouge (échéances) fin
           selected: cn(
-            '!bg-status-success !text-white hover:!bg-status-success hover:!text-white',
-            'focus:!bg-status-success focus:!text-white',
-            'dark:!bg-status-success dark:!text-white dark:hover:!bg-status-success/90',
-            // Si le jour sélectionné est aussi aujourd'hui, masquer le cercle bleu
-            '[&.today]:before:hidden'
+            'relative',
+            '!bg-transparent hover:!bg-transparent',
+            // Cercle fin autour selon le mode de vue (before pour z-index < after des points)
+            'before:absolute before:inset-[1px] before:rounded-full before:border-[2px] before:content-[""] before:shadow-sm before:z-[1] before:opacity-60',
+            viewMode === 'starts'
+              ? 'before:border-green-500 dark:before:border-green-400 !text-green-700 dark:!text-green-300 font-bold'
+              : 'before:border-red-500 dark:before:border-red-400 !text-red-700 dark:!text-red-300 font-bold',
+            // Si le jour sélectionné est aussi aujourd'hui, le cercle devient plein opacité
+            '[&.today]:before:border-transparent [&.today]:before:opacity-100 [&.today]:after:block',
+            // Cercle de sélection pour aujourd'hui sélectionné (opacité 100%)
+            viewMode === 'starts'
+              ? '[&.today]:after:border-green-500 dark:[&.today]:after:border-green-400'
+              : '[&.today]:after:border-red-500 dark:[&.today]:after:border-red-400',
+            '[&.today]:after:absolute [&.today]:after:inset-[1px] [&.today]:after:rounded-full [&.today]:after:border-[2px] [&.today]:after:content-[""] [&.today]:after:shadow-sm [&.today]:after:z-[1]'
           )
         }}
-      />
+        />
+      </div>
     </div>
   );
 }

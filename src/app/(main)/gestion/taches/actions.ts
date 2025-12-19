@@ -27,7 +27,7 @@ export async function createTaskAction(values: CreateTaskInput): Promise<string>
   revalidatePath('/gestion/taches');
 
   // OPTIMISATION (2025-12-15): Invalider le cache des KPIs
-  revalidateTag('task-kpis');
+  revalidateTag('task-kpis', 'max');
 
   return taskId;
 }

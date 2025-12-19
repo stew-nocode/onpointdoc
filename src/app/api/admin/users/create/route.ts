@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       if (upErr) {
         return handleApiError(createError.supabaseError('Erreur lors de la création du profil', new Error(upErr.message)));
       }
-      profileId = (prof as { id: string } | null)?.id;
+      profileId = (prof as { id: string } | null)?.id ?? null;
     } else {
       // Si pas d'auth_uid, utiliser insert (création uniquement)
       const { data: prof, error: insErr } = await admin.from('profiles').insert({
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       if (insErr) {
         return handleApiError(createError.supabaseError('Erreur lors de la création du profil', new Error(insErr.message)));
       }
-      profileId = (prof as { id: string } | null)?.id;
+      profileId = (prof as { id: string } | null)?.id ?? null;
     }
     if (!profileId) {
       return handleApiError(createError.internalError('Impossible de récupérer l\'ID du profil créé'));

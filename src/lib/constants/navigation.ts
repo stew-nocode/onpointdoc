@@ -1,7 +1,7 @@
 export type NavItem = {
   href: string;
   label: string;
-  segment: 'tickets' | 'activites' | 'taches' | 'dashboard' | 'marketing';
+  segment: 'tickets' | 'activites' | 'taches' | 'dashboard' | 'marketing' | 'planning';
   roles: Array<'agent' | 'manager' | 'it' | 'marketing' | 'direction' | 'admin'>;
 };
 
@@ -11,6 +11,12 @@ export const mainNav: NavItem[] = [
     label: 'Tableaux de bord',
     segment: 'dashboard',
     roles: ['manager', 'direction', 'admin']
+  },
+  {
+    href: '/planning',
+    label: 'Planning',
+    segment: 'planning',
+    roles: ['agent', 'manager', 'it', 'marketing', 'direction', 'admin']
   },
   {
     href: '/gestion/tickets',

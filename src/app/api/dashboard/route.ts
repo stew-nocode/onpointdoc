@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     const responseData: UnifiedDashboardData = {
       role: dashboardRole,
       alerts,
-      period,
+      period: period as 'week' | 'month' | 'quarter' | 'year',
       periodStart: startDate,
       periodEnd: endDate,
     };
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
         workload: { byTeam: [], byAgent: [], totalActive: 0 },
         health: { byProduct: [], topBugModules: [] },
         alerts: [],
-        period,
+        period: period as 'week' | 'month' | 'quarter' | 'year',
         periodStart: responseData.periodStart,
         periodEnd: responseData.periodEnd,
       };
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
         myTasks: { todo: 0, inProgress: 0, done: 0, blocked: 0 },
         myActivities: { upcoming: 0, completed: 0 },
         alerts: [],
-        period,
+        period: period as 'week' | 'month' | 'quarter' | 'year',
         periodStart: responseData.periodStart,
         periodEnd: responseData.periodEnd,
       };
