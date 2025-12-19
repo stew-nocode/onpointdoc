@@ -79,6 +79,10 @@ function DashboardFiltersSidebarClientInner({
 
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
+
+      // IMPORTANT: Forcer le refresh de la page Server Component
+      // Nécessaire car revalidate = 0 ne suffit pas pour les changements côté client
+      router.refresh();
     },
     [router, pathname, searchParams]
   );
