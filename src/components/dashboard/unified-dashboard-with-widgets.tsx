@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useRef, useEffect, Suspense } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
@@ -52,6 +53,10 @@ function UnifiedDashboardWithWidgetsComponent({
   staticOnly = false,
   filteredOnly = false,
 }: UnifiedDashboardWithWidgetsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [period, setPeriod] = useState<Period | string>(initialPeriod);
   const [data, setData] = useState<UnifiedDashboardData>(initialData);
   const [widgetConfig, setWidgetConfig] = useState<UserDashboardConfig>(initialWidgetConfig);
@@ -200,21 +205,34 @@ function UnifiedDashboardWithWidgetsComponent({
   const handleDateRangeChange = useCallback((range: { from?: Date; to?: Date } | undefined) => {
     // Réinitialiser l'année AVANT de définir la période personnalisée
     setSelectedYear(undefined);
-    
+
     // Définir la période personnalisée
     // Convertir en DateRange | undefined (DateRange nécessite from et to)
-    const dateRange: DateRange | undefined = range?.from && range?.to 
+    const dateRange: DateRange | undefined = range?.from && range?.to
       ? { from: range.from, to: range.to }
       : undefined;
     setDateRange(dateRange);
-    
+
     if (range?.from && range?.to) {
       // Utiliser une période personnalisée - transmettre les dates à l'API
       setPeriod('year'); // Pour la compatibilité avec les widgets
-      
+
+      // Mettre à jour l'URL avec les dates personnalisées
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('startDate', range.from.toISOString());
+      params.set('endDate', range.to.toISOString());
+      params.delete('period'); // Supprimer le paramètre period lors de l'utilisation de dates personnalisées
+
+      const newUrl = `${pathname}?${params.toString()}`;
+      router.push(newUrl, { scroll: false });
+
+      // IMPORTANT: Forcer le refresh de la page Server Component
+      // Nécessaire car revalidate = 0 ne suffit pas pour les changements côté client
+      router.refresh();
+
       // Transmettre les dates personnalisées à loadData
       loadData('year', range.from.toISOString(), range.to.toISOString());
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Nouvelle plage personnalisée sélectionnée:', {
           from: range.from.toISOString(),
@@ -222,12 +240,19 @@ function UnifiedDashboardWithWidgetsComponent({
         });
       }
     } else {
-      // Si on efface la période personnalisée, réinitialiser aussi
+      // Si on efface la période personnalisée, supprimer les paramètres de date personnalisés
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('startDate');
+      params.delete('endDate');
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.push(newUrl, { scroll: false });
+      router.refresh();
+
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Période personnalisée désélectionnée');
       }
     }
-  }, [loadData]);
+  }, [loadData, router, pathname, searchParams]);
 
   const handleYearChange = useCallback(
     (year: string | undefined) => {
