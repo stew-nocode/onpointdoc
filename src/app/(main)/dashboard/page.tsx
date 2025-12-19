@@ -145,7 +145,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   if (dashboardRole === 'direction') {
     // Direction : données stratégiques globales
-    const strategic = await getCEODashboardData(period, filters || undefined);
+    const strategic = await getCEODashboardData(
+      period,
+      filters || undefined,
+      customRange?.start,
+      customRange?.end
+    );
     initialData.strategic = strategic;
     initialData.periodStart = strategic.periodStart;
     initialData.periodEnd = strategic.periodEnd;
@@ -181,7 +186,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     };
   } else if (dashboardRole === 'admin') {
     // Admin : données stratégiques globales (comme direction) pour tester toutes les fonctionnalités
-    const strategic = await getCEODashboardData(period, filters || undefined);
+    const strategic = await getCEODashboardData(
+      period,
+      filters || undefined,
+      customRange?.start,
+      customRange?.end
+    );
     initialData.strategic = strategic;
     initialData.periodStart = strategic.periodStart;
     initialData.periodEnd = strategic.periodEnd;
