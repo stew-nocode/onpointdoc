@@ -46,27 +46,25 @@ export type AssistanceTimeEvolutionStats = {
 };
 
 /**
- * Calcule la durée d'un ticket en minutes
+ * Calcule la durée d'un ticket d'assistance en minutes.
+ * 
+ * IMPORTANT: Pour les tickets d'assistance, on utilise UNIQUEMENT duration_minutes
+ * car le calcul depuis created_at/resolved_at peut donner des durées aberrantes
+ * (ex: ticket créé en janvier et résolu en décembre = ~8000h).
+ * 
+ * Les agents renseignent manuellement duration_minutes lors de la création.
  */
 function calculateTicketDuration(ticket: {
   duration_minutes: number | null;
   created_at: string | null;
   resolved_at: string | null;
 }): number {
-  // Priorité 1 : duration_minutes si disponible
+  // Utiliser uniquement duration_minutes si disponible et valide
   if (ticket.duration_minutes !== null && ticket.duration_minutes > 0) {
-    return ticket.duration_minutes;
+    // Limiter à 8h max (480 minutes) pour éviter les erreurs de saisie
+    return Math.min(ticket.duration_minutes, 480);
   }
-
-  // Priorité 2 : Calcul depuis created_at et resolved_at
-  if (ticket.created_at && ticket.resolved_at) {
-    const created = new Date(ticket.created_at);
-    const resolved = new Date(ticket.resolved_at);
-    const diffMs = resolved.getTime() - created.getTime();
-    const diffMinutes = Math.round(diffMs / (1000 * 60));
-    return Math.max(0, diffMinutes);
-  }
-
+  // Si pas de duration_minutes, retourner 0 (ne pas calculer depuis les dates)
   return 0;
 }
 
@@ -223,25 +221,42 @@ export const getAssistanceTimeEvolutionStats = cache(
       console.log(`[getAssistanceTimeEvolutionStats] Period: ${period}, Granularity: ${granularity}`);
 
       // Récupérer les tickets ASSISTANCE avec durée
-      const { data: tickets, error } = await supabase
-        .from('tickets')
-        .select('created_at, duration_minutes, resolved_at')
-        .eq('ticket_type', 'ASSISTANCE')
-        .eq('product_id', productId)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd)
-        .order('created_at', { ascending: true });
+      // IMPORTANT: Pagination nécessaire car Supabase limite à 1000 résultats par requête
+      const tickets: any[] = [];
+      let offset = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (error) {
-        console.error('[getAssistanceTimeEvolutionStats] Error fetching tickets:', error);
-        return null;
+      while (hasMore) {
+        const { data: page, error } = await supabase
+          .from('tickets')
+          .select('created_at, duration_minutes, resolved_at')
+          .eq('ticket_type', 'ASSISTANCE')
+          .eq('product_id', productId)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .order('created_at', { ascending: true })
+          .range(offset, offset + pageSize - 1);
+
+        if (error) {
+          console.error('[getAssistanceTimeEvolutionStats] Error fetching tickets:', error);
+          return null;
+        }
+
+        if (page && page.length > 0) {
+          tickets.push(...page);
+          offset += pageSize;
+          hasMore = page.length === pageSize;
+        } else {
+          hasMore = false;
+        }
       }
 
       // Générer tous les points de la période (même vides)
       const dataMap = generateAllPoints(periodStart, periodEnd, granularity);
       
       // Remplir avec les données des tickets
-      if (tickets && tickets.length > 0) {
+      if (tickets.length > 0) {
         tickets.forEach((ticket) => {
           const date = new Date(ticket.created_at);
           const key = getGroupKey(date, granularity);
