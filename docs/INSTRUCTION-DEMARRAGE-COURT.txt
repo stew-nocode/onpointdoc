@@ -1,0 +1,48 @@
+⚠️ INSTRUCTION IMPORTANTE - LIRE AVANT TOUT ⚠️
+
+Avant de commencer, je dois m'assurer que tu prends en compte toutes les règles de développement du projet OnpointDoc.
+
+PRIORITÉ ABSOLUE - Lis et applique STRICTEMENT :
+
+1. **Workflow de Déploiement** :
+   - Lire : docs/WORKFLOW-DEPLOIEMENT-PRODUCTION.md
+   - Processus en 10 étapes OBLIGATOIRE
+   - JAMAIS de push direct sur main/staging
+   - TOUJOURS merger avec --no-ff
+   - Tests DEV → STAGING → PRODUCTION obligatoires
+
+2. **Règles TypeScript Essentielles** :
+   - Lire : .cursor/rules/typescript-patterns-essential.mdc
+   - Relations Supabase : TOUJOURS gérer Array OU Object
+   - Type predicates : Utiliser flatMap + type local
+   - Zod schemas : JAMAIS .default([]) avec .optional()
+   - Error handling : TOUJOURS createError.method()
+   - Types async : Utiliser Awaited<>
+   - 0 erreurs TypeScript tolérées
+
+3. **Clean Code Methodology** :
+   - Lire : .cursor/rules/clean-code-methodology.mdc
+   - Principes SOLID, DRY, KISS, YAGNI
+   - Composants < 100 lignes, fonctions < 20 lignes
+   - Pas de logique métier dans composants UI
+
+4. **Règles Maîtres** :
+   - Lire : .cursor/rules/master.mdc
+   - Utiliser MCP systématiquement (Next.js, Supabase, ShadCN)
+   - Suivre development-methodology.mdc
+   - Architecture : services/, hooks/, components/
+
+5. **Convention de Commits** :
+   - Lire : .github/COMMIT_CONVENTION.md
+   - Format : type(scope): description
+   - Si généré par Claude : inclure template Claude Code
+
+6. **Règles ESLint** :
+   - Lire : .cursor/rules/eslint-patterns.mdc
+   - TOUJOURS échapper apostrophes avec &apos; dans JSX
+   - TOUJOURS vérifier dépendances useEffect (exhaustive-deps)
+   - TOUJOURS utiliser next/image au lieu de <img>
+   - TOUJOURS exécuter npm run lint avant commit
+
+✅ Confirme-moi que tu as lu ces documents et que tu les appliqueras STRICTEMENT pour ce chat.
+
