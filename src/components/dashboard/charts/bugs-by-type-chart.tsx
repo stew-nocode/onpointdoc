@@ -198,13 +198,22 @@ function CustomTooltip({ active, payload }: any) {
   const name = item.name;
   const value = item.value;
   const percentage = item.payload.percentage;
+  
+  // Utiliser la couleur depuis le payload (lightColor correspond à la couleur réelle du segment)
+  // Si item.color est une variable CSS (var(--color-...)), utiliser lightColor comme fallback
+  let segmentColor = item.payload.lightColor || '#94A3B8';
+  
+  // Si item.color existe et n'est pas une variable CSS, l'utiliser
+  if (item.color && !item.color.startsWith('var(')) {
+    segmentColor = item.color;
+  }
 
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl max-w-[200px]">
       <div className="flex items-start gap-2">
         <div
           className="mt-1 h-3 w-3 rounded-sm flex-shrink-0"
-          style={{ backgroundColor: item.payload.lightColor }}
+          style={{ backgroundColor: segmentColor }}
         />
         <span className="font-medium text-slate-900 dark:text-slate-100 text-sm leading-tight">
           {name}
@@ -234,11 +243,13 @@ function CustomLegend({ payload }: any) {
       <div className="flex items-center gap-4 min-w-max justify-center">
         {payload.map((entry: any, index: number) => {
           const chartData = entry.payload;
+          // Utiliser lightColor depuis le payload pour correspondre à la couleur réelle du segment
+          const segmentColor = chartData.lightColor || '#94A3B8';
           return (
             <div key={`legend-${index}`} className="flex items-center gap-1.5 flex-shrink-0">
               <div
                 className="h-2.5 w-2.5 rounded-sm"
-                style={{ backgroundColor: chartData.lightColor }}
+                style={{ backgroundColor: segmentColor }}
               />
               <span className="text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
                 {entry.value}

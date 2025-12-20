@@ -101,19 +101,31 @@ export const getBugsByTypeStats = cache(
         .sort((a, b) => b.count - a.count);
 
       // 4. Limiter au Top N et regrouper le reste dans "Autres"
+      // IMPORTANT: Si "Autres" existe déjà dans les données, le fusionner avec le regroupement
       if (sortedData.length > limit) {
         const topN = sortedData.slice(0, limit);
         const others = sortedData.slice(limit);
         
+        // Vérifier si "Autres" existe déjà dans le Top N
+        const existingAutresIndex = topN.findIndex(item => item.bugType === 'Autres');
         const othersCount = others.reduce((sum, item) => sum + item.count, 0);
         const othersPercentage = Math.round((othersCount / totalBugs) * 100);
         
         if (othersCount > 0) {
-          topN.push({
-            bugType: 'Autres',
-            count: othersCount,
-            percentage: othersPercentage,
-          });
+          if (existingAutresIndex >= 0) {
+            // Fusionner avec l'existant "Autres"
+            topN[existingAutresIndex].count += othersCount;
+            topN[existingAutresIndex].percentage = Math.round((topN[existingAutresIndex].count / totalBugs) * 100);
+            // Retrier après fusion pour maintenir l'ordre décroissant
+            topN.sort((a, b) => b.count - a.count);
+          } else {
+            // Créer un nouveau "Autres"
+            topN.push({
+              bugType: 'Autres',
+              count: othersCount,
+              percentage: othersPercentage,
+            });
+          }
         }
         
         sortedData = topN;
