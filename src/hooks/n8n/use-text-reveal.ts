@@ -115,7 +115,7 @@ export function useTextReveal(
     parts: string[],
     currentIndex: number,
     currentText: string
-  ) => void>();
+  ) => void>(() => {});
 
   /**
    * Fonction récursive pour révéler progressivement les parties du texte
