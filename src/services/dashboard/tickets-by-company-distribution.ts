@@ -70,19 +70,36 @@ async function countTicketsByCompany(
   }
 
   // Récupérer les liens entre tickets et entreprises
+  // IMPORTANT: Pagination nécessaire car Supabase limite les requêtes .in() à ~1000 éléments
   const ticketIds = tickets.map((t) => t.id);
+  const links: any[] = [];
+  let linksOffset = 0;
+  const linksPageSize = 1000;
+  let hasMoreLinks = true;
 
-  const { data: links, error: linksError } = await supabase
-    .from('ticket_company_link')
-    .select('ticket_id, company_id')
-    .in('ticket_id', ticketIds);
+  while (hasMoreLinks && ticketIds.length > 0) {
+    const ticketIdsPage = ticketIds.slice(linksOffset, linksOffset + linksPageSize);
+    
+    const { data: page, error: linksError } = await supabase
+      .from('ticket_company_link')
+      .select('ticket_id, company_id')
+      .in('ticket_id', ticketIdsPage);
 
-  if (linksError) {
-    console.error('[TicketsByCompanyDistribution] Error fetching ticket-company links:', linksError);
-    throw handleSupabaseError(linksError, 'countTicketsByCompany');
+    if (linksError) {
+      console.error('[TicketsByCompanyDistribution] Error fetching ticket-company links:', linksError);
+      throw handleSupabaseError(linksError, 'countTicketsByCompany');
+    }
+
+    if (page && page.length > 0) {
+      links.push(...page);
+      linksOffset += linksPageSize;
+      hasMoreLinks = linksOffset < ticketIds.length;
+    } else {
+      hasMoreLinks = false;
+    }
   }
 
-  if (!links || links.length === 0) {
+  if (links.length === 0) {
     return [];
   }
 

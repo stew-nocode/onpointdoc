@@ -34,8 +34,10 @@ export type CompanyAssistanceTimeData = {
 export type AssistanceTimeByCompanyStats = {
   /** Données par entreprise (triées par temps décroissant) */
   data: CompanyAssistanceTimeData[];
-  /** Temps total d'assistance en heures */
+  /** Temps total d'assistance en heures (Top N uniquement) */
   totalHours: number;
+  /** Temps total réel d'assistance en heures (toutes les entreprises) */
+  totalRealHours: number;
   /** Nombre d'entreprises */
   companyCount: number;
   /** Limite appliquée (top N) */
@@ -122,21 +124,39 @@ export const getAssistanceTimeByCompanyStats = cache(
         return {
           data: [],
           totalHours: 0,
+          totalRealHours: 0,
           companyCount: 0,
           limit,
         };
       }
 
       // 2. Récupérer les relations ticket-company via la table de liaison
+      // IMPORTANT: Pagination nécessaire car Supabase limite les requêtes .in() à ~1000 éléments
       const ticketIds = tickets.map(t => t.id);
-      const { data: ticketCompanyLinks, error: linksError } = await supabase
-        .from('ticket_company_link')
-        .select('ticket_id, company_id')
-        .in('ticket_id', ticketIds);
+      const ticketCompanyLinks: any[] = [];
+      let linksOffset = 0;
+      const linksPageSize = 1000;
+      let hasMoreLinks = true;
 
-      if (linksError) {
-        console.error('[getAssistanceTimeByCompanyStats] Error fetching ticket-company links:', linksError);
-        // Continuer avec company_id direct si la table de liaison échoue
+      while (hasMoreLinks && ticketIds.length > 0) {
+        const ticketIdsPage = ticketIds.slice(linksOffset, linksOffset + linksPageSize);
+        
+        const { data: page, error: linksError } = await supabase
+          .from('ticket_company_link')
+          .select('ticket_id, company_id')
+          .in('ticket_id', ticketIdsPage);
+
+        if (linksError) {
+          console.error('[getAssistanceTimeByCompanyStats] Error fetching ticket-company links:', linksError);
+          // Continuer avec company_id direct si la table de liaison échoue
+          hasMoreLinks = false;
+        } else if (page && page.length > 0) {
+          ticketCompanyLinks.push(...page);
+          linksOffset += linksPageSize;
+          hasMoreLinks = linksOffset < ticketIds.length;
+        } else {
+          hasMoreLinks = false;
+        }
       }
 
       // 3. Créer un map ticket -> company_id (priorité: company_id direct, sinon via link)
@@ -165,6 +185,7 @@ export const getAssistanceTimeByCompanyStats = cache(
         return {
           data: [],
           totalHours: 0,
+          totalRealHours: 0,
           companyCount: 0,
           limit,
         };
@@ -218,23 +239,28 @@ export const getAssistanceTimeByCompanyStats = cache(
         company.totalHours = Math.round((company.totalMinutes / 60) * 10) / 10; // Arrondir à 1 décimale
       });
 
-      // 8. Trier par temps décroissant et limiter
-      const sortedData = Array.from(companyDataMap.values())
-        .sort((a, b) => b.totalMinutes - a.totalMinutes)
-        .slice(0, limit);
+      // 8. Trier par temps décroissant
+      const allSortedData = Array.from(companyDataMap.values())
+        .sort((a, b) => b.totalMinutes - a.totalMinutes);
 
-      const totalHours = Math.round(
-        (sortedData.reduce((sum, c) => sum + c.totalMinutes, 0) / 60) * 10
-      ) / 10;
+      // 9. Calculer le total réel de TOUTES les entreprises
+      const totalAllCompaniesMinutes = allSortedData.reduce((sum, c) => sum + c.totalMinutes, 0);
+      const totalAllCompaniesHours = Math.round((totalAllCompaniesMinutes / 60) * 10) / 10;
+
+      // 10. Prendre uniquement le Top N (sans barre "Autre")
+      const topCompanies = allSortedData.slice(0, limit);
+      const top10Minutes = topCompanies.reduce((sum, c) => sum + c.totalMinutes, 0);
+      const top10Hours = Math.round((top10Minutes / 60) * 10) / 10;
 
       console.log(
-        `[getAssistanceTimeByCompanyStats] Found ${sortedData.length} companies, ${totalHours.toFixed(1)}h total (${sortedData.reduce((sum, c) => sum + c.ticketCount, 0)} tickets)`
+        `[getAssistanceTimeByCompanyStats] Found ${topCompanies.length} companies (Top ${limit}), ${top10Hours.toFixed(1)}h/${totalAllCompaniesHours.toFixed(1)}h total (${allSortedData.reduce((sum, c) => sum + c.ticketCount, 0)} tickets)`
       );
 
       return {
-        data: sortedData,
-        totalHours,
-        companyCount: sortedData.length,
+        data: topCompanies,
+        totalHours: top10Hours, // Total du Top 10
+        totalRealHours: totalAllCompaniesHours, // Total réel de toutes les entreprises
+        companyCount: topCompanies.length,
         limit,
       };
     } catch (error) {

@@ -86,7 +86,7 @@ export function AssistanceTimeByCompanyChart({ data, className }: AssistanceTime
             </CardTitle>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0 ml-2">
-            {data.totalHours.toFixed(1)}h total
+            {data.totalHours.toFixed(1)}/{data.totalRealHours.toFixed(1)}h
           </div>
         </div>
         <CardDescription className="text-xs text-slate-500 dark:text-slate-400">

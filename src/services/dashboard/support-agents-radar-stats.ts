@@ -57,13 +57,23 @@ function toHours(minutes: number): number {
   return Math.round((minutes / 60) * 10) / 10;
 }
 
+/**
+ * Calcule la durée d'un ticket d'assistance en minutes.
+ * 
+ * IMPORTANT: Pour les tickets d'assistance, on utilise UNIQUEMENT duration_minutes
+ * car le calcul depuis created_at/resolved_at peut donner des durées aberrantes
+ * (ex: ticket créé en janvier et résolu en décembre = ~8000h).
+ * 
+ * Les agents renseignent manuellement duration_minutes lors de la création.
+ */
 function safeMinutes(ticket: Pick<TicketRow, 'duration_minutes' | 'created_at' | 'resolved_at'>): number {
-  if (ticket.duration_minutes && ticket.duration_minutes > 0) return ticket.duration_minutes;
-  if (!ticket.created_at || !ticket.resolved_at) return 0;
-  const created = new Date(ticket.created_at).getTime();
-  const resolved = new Date(ticket.resolved_at).getTime();
-  const diff = Math.round((resolved - created) / (1000 * 60));
-  return Math.max(0, diff);
+  // Utiliser uniquement duration_minutes si disponible et valide
+  if (ticket.duration_minutes && ticket.duration_minutes > 0) {
+    // Limiter à 8h max (480 minutes) pour éviter les erreurs de saisie
+    return Math.min(ticket.duration_minutes, 480);
+  }
+  // Si pas de duration_minutes, retourner 0 (ne pas calculer depuis les dates)
+  return 0;
 }
 
 function normalize(value: number, max: number): number {
@@ -98,16 +108,33 @@ export const getSupportAgentsRadarStats = cache(
       }
 
       // 2) Tickets créés sur la période par ces agents (produit filtré)
-      const { data: tickets, error: ticketsError } = await supabase
-        .from('tickets')
-        .select('created_by, ticket_type, duration_minutes, created_at, resolved_at')
-        .eq('product_id', productId)
-        .in('created_by', agentIds)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd);
-      if (ticketsError) {
-        console.error('[getSupportAgentsRadarStats] ticketsError:', ticketsError);
-        return null;
+      // IMPORTANT: Pagination nécessaire car Supabase limite à 1000 résultats par requête
+      const tickets: TicketRow[] = [];
+      let offset = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data: page, error: ticketsError } = await supabase
+          .from('tickets')
+          .select('created_by, ticket_type, duration_minutes, created_at, resolved_at')
+          .eq('product_id', productId)
+          .in('created_by', agentIds)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .range(offset, offset + pageSize - 1);
+        if (ticketsError) {
+          console.error('[getSupportAgentsRadarStats] ticketsError:', ticketsError);
+          return null;
+        }
+
+        if (page && page.length > 0) {
+          tickets.push(...page);
+          offset += pageSize;
+          hasMore = page.length === pageSize;
+        } else {
+          hasMore = false;
+        }
       }
 
       const nameById = new Map<string, string>(
@@ -128,7 +155,7 @@ export const getSupportAgentsRadarStats = cache(
         });
       });
 
-      (tickets as TicketRow[] | null | undefined)?.forEach((t) => {
+      tickets.forEach((t) => {
         if (!t.created_by) return;
         const row = statsByAgent.get(t.created_by);
         if (!row) return;

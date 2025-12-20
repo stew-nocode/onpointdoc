@@ -86,15 +86,32 @@ export const getTicketsByCompanyStats = cache(
       }
 
       // 2. Récupérer les relations ticket-company via la table de liaison
+      // IMPORTANT: Pagination nécessaire car Supabase limite les requêtes .in() à ~1000 éléments
       const ticketIds = tickets.map(t => t.id);
-      const { data: ticketCompanyLinks, error: linksError } = await supabase
-        .from('ticket_company_link')
-        .select('ticket_id, company_id')
-        .in('ticket_id', ticketIds);
+      const ticketCompanyLinks: any[] = [];
+      let linksOffset = 0;
+      const linksPageSize = 1000;
+      let hasMoreLinks = true;
 
-      if (linksError) {
-        console.error('[getTicketsByCompanyStats] Error fetching ticket-company links:', linksError);
-        // Continuer avec company_id direct si la table de liaison échoue
+      while (hasMoreLinks && ticketIds.length > 0) {
+        const ticketIdsPage = ticketIds.slice(linksOffset, linksOffset + linksPageSize);
+        
+        const { data: page, error: linksError } = await supabase
+          .from('ticket_company_link')
+          .select('ticket_id, company_id')
+          .in('ticket_id', ticketIdsPage);
+
+        if (linksError) {
+          console.error('[getTicketsByCompanyStats] Error fetching ticket-company links:', linksError);
+          // Continuer avec company_id direct si la table de liaison échoue
+          hasMoreLinks = false;
+        } else if (page && page.length > 0) {
+          ticketCompanyLinks.push(...page);
+          linksOffset += linksPageSize;
+          hasMoreLinks = linksOffset < ticketIds.length;
+        } else {
+          hasMoreLinks = false;
+        }
       }
 
       // 3. Créer un map ticket -> company_id (priorité: company_id direct, sinon via link)
