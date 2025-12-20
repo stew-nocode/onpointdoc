@@ -87,7 +87,10 @@ export function useWebVitals() {
 
   // Ref pour stocker les métriques actuelles (pour comparaison dans updateMetric)
   const metricsRef = useRef(metrics);
-  metricsRef.current = metrics;
+  
+  useEffect(() => {
+    metricsRef.current = metrics;
+  }, [metrics]);
 
   /**
    * Mettre à jour une métrique seulement si la valeur a changé
@@ -237,6 +240,8 @@ export function useWebVitals() {
 
       return () => clearInterval(logInterval);
     }
+     
+    // metrics et updateMetric sont stables et n'ont pas besoin d'être dans les dépendances
   }, []);
 
   return metrics;

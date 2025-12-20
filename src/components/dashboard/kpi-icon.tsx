@@ -27,15 +27,11 @@ const iconStyles = {
 /**
  * Composant d'icône KPI
  * Résout l'icône en fonction du type (string ou composant)
- * Utilise useMemo pour éviter la création de composant pendant le render
  */
 export function KPIIcon({ icon, variant, className }: KPIIconProps) {
-  // Résoudre l'icône avec useMemo pour éviter la création de composant pendant le render
-  const IconComponent: LucideIcon | undefined = useMemo(() => {
-    if (typeof icon === 'string') {
-      return getIconById(icon);
-    }
-    return icon;
+  // Mémoiser la résolution de l'icône pour éviter la création de composant pendant le render
+  const IconComponent = useMemo<LucideIcon | undefined>(() => {
+    return typeof icon === 'string' ? getIconById(icon) : icon;
   }, [icon]);
 
   if (!IconComponent) {

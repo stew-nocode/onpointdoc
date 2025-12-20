@@ -217,7 +217,6 @@ export function usePerformanceMeasure({
         renderMeasureRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measureRender]); // Seulement measureRender - pas de dépendances aux callbacks
 
   return {

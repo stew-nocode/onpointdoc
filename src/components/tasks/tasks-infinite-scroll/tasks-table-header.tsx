@@ -113,7 +113,7 @@ export function TasksTableHeader({
         {/* Date d'échéance */}
         {visibleColumns.has('due_date') && (
           <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
-            Date d'échéance
+            Date d&apos;échéance
           </th>
         )}
 

@@ -175,9 +175,8 @@ export function FiltersSidebarClient({
 
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [router, pathname] // ✅ Retirer searchParams des dépendances pour stabiliser le callback
+    [router, pathname, searchParams]
   );
 
   /**

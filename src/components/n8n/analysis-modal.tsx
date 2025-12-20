@@ -61,6 +61,7 @@ export function AnalysisModal({
   // Synchroniser le contenu édité avec l'analyse quand elle change
   useEffect(() => {
     if (analysis) {
+       
       setEditedContent(analysis);
     }
   }, [analysis]);
@@ -68,8 +69,10 @@ export function AnalysisModal({
   // Réinitialiser le mode édition quand le modal se ferme
   useEffect(() => {
     if (!open) {
+       
       setIsEditing(false);
       if (analysis) {
+         
         setEditedContent(analysis);
       }
     }

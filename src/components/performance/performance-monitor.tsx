@@ -49,11 +49,6 @@ function PerformanceMonitorComponent({ defaultVisible = false }: PerformanceMoni
     logToConsole: false,
   });
 
-  // Cacher le monitor en production
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
-
   /**
    * Calculer les métriques disponibles (memoizé pour éviter les recalculs)
    * 
@@ -79,6 +74,11 @@ function PerformanceMonitorComponent({ defaultVisible = false }: PerformanceMoni
   const handleToggleMinimize = useCallback(() => {
     setIsMinimized((prev) => !prev);
   }, []);
+
+  // Cacher le monitor en production
+  if (process.env.NODE_ENV !== 'development') {
+    return null;
+  }
 
   return (
     <>

@@ -26,7 +26,7 @@ export async function CompanyDetails({ companyId }: CompanyDetailsProps) {
     <div className="grid gap-3 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Détails de l'entreprise</CardTitle>
+          <CardTitle className="text-base">Détails de l&apos;entreprise</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-2">
           <div>

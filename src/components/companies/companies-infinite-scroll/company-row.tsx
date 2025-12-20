@@ -169,7 +169,7 @@ export function CompanyRow({
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Voir l'entreprise</p>
+                  <p>Voir l&apos;entreprise</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -184,7 +184,7 @@ export function CompanyRow({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Éditer l'entreprise</p>
+                    <p>Éditer l&apos;entreprise</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -197,7 +197,7 @@ export function CompanyRow({
         <ContextMenuItem asChild>
           <Link href={`/config/companies/${company.id}`} className="cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
-            Voir l'entreprise
+            Voir l&apos;entreprise
           </Link>
         </ContextMenuItem>
         {canEdit && (
@@ -205,7 +205,7 @@ export function CompanyRow({
             <ContextMenuSeparator />
             <ContextMenuItem onClick={() => handleEdit(company.id)} className="cursor-pointer">
               <Edit className="mr-2 h-4 w-4" />
-              Éditer l'entreprise
+              Éditer l&apos;entreprise
             </ContextMenuItem>
           </>
         )}

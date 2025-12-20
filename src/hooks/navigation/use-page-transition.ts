@@ -86,6 +86,8 @@ export function usePageTransition(
     }
 
     // Démarrer la transition
+    // ✅ Gestion de transition : pattern acceptable pour synchroniser l'état avec les changements de route
+     
     setIsTransitioning(true);
 
     // Mettre à jour la référence du pathname précédent

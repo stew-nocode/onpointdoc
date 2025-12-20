@@ -80,16 +80,19 @@ export function CompanyTicketsByProductModuleChart({
   data, 
   className 
 }: CompanyTicketsByProductModuleChartProps) {
+  // Extraire les données pour éviter les problèmes de dépendances optionnelles
+  const dataArray = data?.data;
+  
   // Mémoiser les données pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.data?.length) return [];
+    if (!dataArray?.length) return [];
     
     // Formater pour l'affichage : "Produit - Module"
-    return data.data.map((item) => ({
+    return dataArray.map((item) => ({
       ...item,
       label: `${item.productName} - ${item.moduleName}`,
     }));
-  }, [data?.data]);
+  }, [dataArray]);
 
   // Empty state
   if (!data || data.data.length === 0) {

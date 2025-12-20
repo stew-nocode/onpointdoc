@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Badge } from '@/ui/badge';
 import { cn } from '@/lib/utils';
@@ -113,10 +114,13 @@ function AvatarSlot({ name, avatarUrl }: { name: string; avatarUrl?: string | nu
     >
       {avatarUrl ? (
         // Placeholder image (fictive) — on branchera les vraies photos plus tard.
-        <img
+        <Image
           src={avatarUrl}
           alt={`Avatar de ${name}`}
+          width={36}
+          height={36}
           className="h-full w-full object-cover"
+          unoptimized
         />
       ) : (
         <div className="h-full w-full flex items-center justify-center text-slate-600 dark:text-slate-300">

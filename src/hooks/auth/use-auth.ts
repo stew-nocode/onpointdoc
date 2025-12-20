@@ -38,9 +38,10 @@ export function useAuth(): AuthState {
 
   // Utiliser une ref pour éviter les re-créations de la fonction
   const refreshAuthRef = useRef<() => Promise<void>>(async () => {});
-  
-  refreshAuthRef.current = async () => {
-    try {
+
+  useEffect(() => {
+    refreshAuthRef.current = async () => {
+      try {
       setState(prev => {
         // Ne mettre à jour que si nécessaire (évite les re-renders inutiles)
         if (prev.isLoading) return prev;
@@ -144,8 +145,9 @@ export function useAuth(): AuthState {
           error: errorObj
         };
       });
-    }
-  };
+      }
+    };
+  });
 
   useEffect(() => {
     // Appeler refreshAuth une seule fois au montage
@@ -162,7 +164,6 @@ export function useAuth(): AuthState {
     return () => {
       isMounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Pas de dépendances - s'exécute une seule fois au montage
 
   return state;

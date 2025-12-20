@@ -160,7 +160,7 @@ export function GanttChart({ year, month }: GanttChartProps = {}) {
             onClick={goToCurrentMonth}
             className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
-            Aujourd'hui
+            Aujourd&apos;hui
           </Button>
         </div>
 
@@ -363,7 +363,7 @@ export function GanttChart({ year, month }: GanttChartProps = {}) {
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-red-500 opacity-60" />
-          <span>Aujourd'hui</span>
+          <span>Aujourd&apos;hui</span>
         </div>
       </div>
     </div>

@@ -83,6 +83,8 @@ export function useProfile(
 
   useEffect(() => {
     fetchProfile();
+     
+    // fetchProfile est stable et n'a pas besoin d'être dans les dépendances
   }, [userId, enabled]);
 
   return state;

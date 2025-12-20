@@ -5,7 +5,7 @@
  * sans effet de frappe caractère par caractère
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 type UseTextRevealOptions = {
   /** Texte complet à révéler */
@@ -98,8 +98,28 @@ export function useTextReveal(
     return currentText + part;
   }, []);
 
+  // Refs pour stocker les valeurs à jour dans la closure
+  const speedRef = useRef(speed);
+  const finishRevealRef = useRef(finishReveal);
+  const addPartToRevealedRef = useRef(addPartToRevealed);
+
+  // Mettre à jour les refs quand les valeurs changent
+  useEffect(() => {
+    speedRef.current = speed;
+    finishRevealRef.current = finishReveal;
+    addPartToRevealedRef.current = addPartToRevealed;
+  }, [speed, finishReveal, addPartToRevealed]);
+
+  // Ref pour stocker la fonction revealNext afin d'éviter les problèmes d'ordre de déclaration
+  const revealNextRef = useRef<(
+    parts: string[],
+    currentIndex: number,
+    currentText: string
+  ) => void>();
+
   /**
    * Fonction récursive pour révéler progressivement les parties du texte
+   * Utilise des refs pour accéder aux valeurs à jour dans les closures
    * 
    * @param parts - Tableau des parties à révéler
    * @param currentIndex - Index de la partie actuelle
@@ -111,23 +131,34 @@ export function useTextReveal(
     currentText: string
   ) => {
     if (currentIndex >= parts.length) {
-      finishReveal();
+      finishRevealRef.current();
       return;
     }
 
     // Ajouter la partie actuelle
-    const newText = addPartToRevealed(currentText, parts[currentIndex]);
+    const newText = addPartToRevealedRef.current(currentText, parts[currentIndex]);
     setRevealedText(newText);
 
     const nextIndex = currentIndex + 1;
 
     // Continuer avec la prochaine partie ou terminer
     if (nextIndex < parts.length) {
-      setTimeout(() => revealNext(parts, nextIndex, newText), speed);
+      setTimeout(() => {
+        // Utiliser la ref pour éviter les problèmes d'ordre de déclaration
+        const revealFn = revealNextRef.current;
+        if (revealFn) {
+          revealFn(parts, nextIndex, newText);
+        }
+      }, speedRef.current);
     } else {
-      finishReveal();
+      finishRevealRef.current();
     }
-  }, [speed, finishReveal, addPartToRevealed]);
+  }, []); // Pas de dépendances car on utilise des refs
+
+  // Stocker la fonction dans la ref
+  useEffect(() => {
+    revealNextRef.current = revealNext;
+  });
 
   // Démarrer la révélation
   const start = useCallback(() => {

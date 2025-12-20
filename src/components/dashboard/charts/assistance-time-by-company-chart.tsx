@@ -52,13 +52,16 @@ const BAR_COLOR = '#14B8A6';
  * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md - Section 3.3
  */
 export function AssistanceTimeByCompanyChart({ data, className }: AssistanceTimeByCompanyChartProps) {
+  // Extraire les données pour éviter les problèmes de dépendances optionnelles
+  const dataArray = data?.data;
+  
   // Mémoiser les données pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.data?.length) return [];
+    if (!dataArray?.length) return [];
     
     // Inverser l'ordre pour que le plus grand soit en haut
-    return [...data.data].reverse();
-  }, [data?.data]);
+    return [...dataArray].reverse();
+  }, [dataArray]);
 
   // Hauteur fixe pour tous les charts
   const chartHeight = 280;
@@ -79,7 +82,7 @@ export function AssistanceTimeByCompanyChart({ data, className }: AssistanceTime
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Clock className="h-4 w-4 text-teal-500 dark:text-teal-400 flex-shrink-0" />
             <CardTitle className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-              Temps d'assistance par entreprise
+              Temps d&apos;assistance par entreprise
             </CardTitle>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 flex-shrink-0 ml-2">
@@ -200,7 +203,7 @@ function AssistanceTimeByCompanyChartEmpty({ className }: { className?: string }
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-slate-400" />
           <CardTitle className="text-sm font-medium text-slate-900 dark:text-slate-100">
-            Temps d'assistance par entreprise
+            Temps d&apos;assistance par entreprise
           </CardTitle>
         </div>
       </CardHeader>
@@ -209,7 +212,7 @@ function AssistanceTimeByCompanyChartEmpty({ className }: { className?: string }
           <div className="text-center">
             <Clock className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-700" />
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Aucun temps d'assistance pour cette période
+              Aucun temps d&apos;assistance pour cette période
             </p>
           </div>
         </div>

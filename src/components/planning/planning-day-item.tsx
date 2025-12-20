@@ -191,7 +191,7 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
                       e.stopPropagation();
                       setIsMenuOpen(!isMenuOpen);
                     }}
-                    aria-label="Options de l'activité"
+                    aria-label="Options de l&apos;activité"
                   >
                     <Settings className="h-3.5 w-3.5" />
                   </Button>
@@ -204,7 +204,7 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Eye className="h-4 w-4" />
-                      Voir l'activité
+                      Voir l&apos;activité
                     </Link>
                     <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
                     <button

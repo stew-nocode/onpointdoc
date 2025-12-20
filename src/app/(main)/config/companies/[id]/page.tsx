@@ -78,7 +78,7 @@ export default async function CompanyDetailPage({
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Formulaire d'édition à implémenter
+              Formulaire d&apos;édition à implémenter
             </p>
           </CardContent>
         </Card>

@@ -58,13 +58,16 @@ export function PeriodYearSelector({ value, onChange }: PeriodYearSelectorProps)
   // Synchroniser avec la valeur externe
   useEffect(() => {
     const isExternalYear = typeof value === 'string' && isYearString(value);
-    if (isExternalYear) {
-      setMode('year');
-      setYearValue(value);
-    } else {
-      setMode('period');
-      setPeriodValue(value as Period);
-    }
+    // ✅ Synchronisation avec prop externe : utiliser requestAnimationFrame pour éviter les cascades
+    requestAnimationFrame(() => {
+      if (isExternalYear) {
+        setMode('year');
+        setYearValue(value);
+      } else {
+        setMode('period');
+        setPeriodValue(value as Period);
+      }
+    });
   }, [value]);
 
   /**

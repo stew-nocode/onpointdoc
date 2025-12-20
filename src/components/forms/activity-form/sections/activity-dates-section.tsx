@@ -124,7 +124,10 @@ export function ActivityDatesSection({ form }: ActivityDatesSectionProps) {
       plannedStart.trim().length > 0 && 
       plannedEnd.trim().length > 0
     );
-    setIsPlanned(hasDates);
+    // Utiliser requestAnimationFrame pour éviter les cascades de renders
+    requestAnimationFrame(() => {
+      setIsPlanned(hasDates);
+    });
   }, [plannedStart, plannedEnd]);
   
   // Initialiser les valeurs temporaires quand le Dialog s'ouvre
@@ -136,10 +139,13 @@ export function ActivityDatesSection({ form }: ActivityDatesSectionProps) {
       const startDateTime = parseIsoToDateTime(start);
       const endDateTime = parseIsoToDateTime(end);
       
-      setTempStartDate(startDateTime.date);
-      setTempStartTime(startDateTime.time);
-      setTempEndDate(endDateTime.date);
-      setTempEndTime(endDateTime.time);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setTempStartDate(startDateTime.date);
+        setTempStartTime(startDateTime.time);
+        setTempEndDate(endDateTime.date);
+        setTempEndTime(endDateTime.time);
+      });
     }
   }, [dialogOpen, form, parseIsoToDateTime]);
   
@@ -246,7 +252,7 @@ export function ActivityDatesSection({ form }: ActivityDatesSectionProps) {
           htmlFor="plan-activity"
           className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
         >
-          Planifier l'activité
+          Planifier l&apos;activité
         </label>
       </div>
       
@@ -290,9 +296,9 @@ export function ActivityDatesSection({ form }: ActivityDatesSectionProps) {
       }}>
         <DialogContent className="max-w-md w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Planifier l'activité</DialogTitle>
+            <DialogTitle>Planifier l&apos;activité</DialogTitle>
             <DialogDescription>
-              Définissez les dates de début et de fin de l'activité
+              Définissez les dates de début et de fin de l&apos;activité
             </DialogDescription>
           </DialogHeader>
 

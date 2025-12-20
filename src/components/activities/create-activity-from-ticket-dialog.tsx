@@ -129,7 +129,7 @@ export const CreateActivityFromTicketDialog = ({
         <DialogHeader>
           <DialogTitle>Créer une activité à partir de ce ticket</DialogTitle>
           <DialogDescription>
-            Remplissez le formulaire pour créer une activité liée au ticket. Le ticket sera automatiquement associé à l'activité.
+            Remplissez le formulaire pour créer une activité liée au ticket. Le ticket sera automatiquement associé à l&apos;activité.
           </DialogDescription>
         </DialogHeader>
         {error && (
@@ -149,6 +149,7 @@ export const CreateActivityFromTicketDialog = ({
     </Dialog>
   );
 };
+
 
 
 

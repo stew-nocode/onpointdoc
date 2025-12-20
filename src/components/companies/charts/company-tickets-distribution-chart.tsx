@@ -73,17 +73,20 @@ export function CompanyTicketsDistributionChart({
   data, 
   className 
 }: CompanyTicketsDistributionChartProps) {
+  // Extraire les items pour éviter les problèmes de dépendances optionnelles
+  const itemsArray = data?.items;
+  
   // Mémoiser les données transformées pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.items?.length) return [];
+    if (!itemsArray?.length) return [];
     
-    return data.items.map((item) => ({
+    return itemsArray.map((item) => ({
       name: item.type,
       value: item.count,
       percentage: item.percentage,
       fill: `var(--color-${item.type})`,
     }));
-  }, [data?.items]);
+  }, [itemsArray]);
 
   // Empty state
   if (!data || data.total === 0) {

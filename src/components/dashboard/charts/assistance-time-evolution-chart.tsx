@@ -95,7 +95,7 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-teal-500 dark:text-teal-400" />
             <CardTitle className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              Évolution du temps d'assistance
+              Évolution du temps d&apos;assistance
             </CardTitle>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
               {description}
@@ -106,7 +106,7 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
           </div>
         </div>
         <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
-          Tendance du temps d'assistance
+          Tendance du temps d&apos;assistance
         </CardDescription>
       </CardHeader>
 
@@ -151,7 +151,7 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
             
             <Tooltip content={<CustomTooltip />} />
 
-            {/* Area unique pour le temps d'assistance */}
+            {/* Area unique pour le temps d&apos;assistance */}
             <Area
               type="monotone"
               dataKey="totalHours"
@@ -232,7 +232,7 @@ function AssistanceTimeEvolutionChartEmpty({ className }: { className?: string }
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-slate-400" />
           <CardTitle className="text-sm font-medium text-slate-900 dark:text-slate-100">
-            Évolution du temps d'assistance
+            Évolution du temps d&apos;assistance
           </CardTitle>
         </div>
       </CardHeader>

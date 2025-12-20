@@ -146,7 +146,7 @@ export function PlanningCalendar({
             onClick={goToCurrentMonth}
             className="text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
-            Aujourd'hui
+            Aujourd&apos;hui
           </Button>
         </div>
 

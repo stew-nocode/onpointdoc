@@ -160,7 +160,10 @@ function TicketsInfiniteScrollComponent({
 
   // Stabiliser clearSelection avec une ref pour éviter les dépendances dans useEffect
   const clearSelectionRef = useRef(clearSelection);
-  clearSelectionRef.current = clearSelection;
+  // Utiliser useEffect pour mettre à jour la ref
+  useEffect(() => {
+    clearSelectionRef.current = clearSelection;
+  });
 
   // ✅ PHASE 5 - ÉTAPE 1 : filterKey est maintenant fourni par useTicketsInfiniteLoad()
   

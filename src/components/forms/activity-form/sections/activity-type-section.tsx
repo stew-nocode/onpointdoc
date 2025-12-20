@@ -38,7 +38,7 @@ export const ActivityTypeSection = memo(function ActivityTypeSection({ form }: A
   return (
     <div className="grid gap-2">
       <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-        Type d'activité <span className="text-status-danger">*</span>
+        Type d&apos;activité <span className="text-status-danger">*</span>
       </label>
       <Combobox
         options={activityTypes.map((type) => ({

@@ -34,7 +34,10 @@ export function WidgetPreferencesDialog({
   // Synchroniser avec la config initiale quand le dialog s'ouvre
   useEffect(() => {
     if (open) {
-      setHiddenWidgets(widgetConfig.hiddenWidgets);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setHiddenWidgets(widgetConfig.hiddenWidgets);
+      });
     }
   }, [open, widgetConfig.hiddenWidgets]);
 

@@ -136,6 +136,8 @@ export function Banner({
   useEffect(() => {
     if (storageKey && typeof window !== 'undefined') {
       const isDismissed = localStorage.getItem(`banner-dismissed-${storageKey}`) === 'true';
+      // ✅ Initialisation d'état depuis localStorage : pattern acceptable pour éviter un render supplémentaire
+       
       setIsVisible(!isDismissed);
     }
   }, [storageKey]);

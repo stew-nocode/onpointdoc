@@ -40,7 +40,7 @@ export function CompanyTimeline({
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="flex-shrink-0 border-b space-y-3">
-        <CardTitle className="text-lg">Historique de l'entreprise</CardTitle>
+        <CardTitle className="text-lg">Historique de l&apos;entreprise</CardTitle>
         {!isEmpty && (
           <CompanyHistorySearch
             history={history}
@@ -59,7 +59,7 @@ export function CompanyTimeline({
             <History className="mb-2 h-8 w-8 opacity-50" />
             <p className="text-sm">Aucun résultat trouvé</p>
             <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-              Essayez avec d'autres mots-clés
+              Essayez avec d&apos;autres mots-clés
             </p>
           </div>
         ) : (

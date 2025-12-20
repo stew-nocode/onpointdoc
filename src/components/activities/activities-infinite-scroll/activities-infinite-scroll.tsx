@@ -102,6 +102,8 @@ export function ActivitiesInfiniteScroll({
    * Une seule fois au montage pour éviter les re-renders.
    */
   useEffect(() => {
+    // ✅ Initialisation d'état au montage : pattern acceptable pour éviter un render supplémentaire
+     
     setIsMounted(true);
     // Charger les colonnes depuis localStorage après le montage
     setVisibleColumns(getVisibleActivityColumns());
@@ -109,7 +111,11 @@ export function ActivitiesInfiniteScroll({
 
   // Stabiliser clearSelection avec une ref pour éviter les dépendances dans useEffect
   const clearSelectionRef = useRef(clearSelection);
-  clearSelectionRef.current = clearSelection;
+  
+  // Mettre à jour la ref dans useEffect pour éviter les erreurs de lint
+  useEffect(() => {
+    clearSelectionRef.current = clearSelection;
+  }, [clearSelection]);
 
   // Réinitialiser la sélection quand les filtres changent
   const prevFilterKeyForSelectionRef = useRef<string | null>(null);

@@ -70,6 +70,7 @@ export function LogoLoader({
   useEffect(() => {
     if (isLoading) {
       // Afficher immédiatement
+       
       setShouldRender(true);
       // Petit délai pour l'animation d'entrée
       requestAnimationFrame(() => {

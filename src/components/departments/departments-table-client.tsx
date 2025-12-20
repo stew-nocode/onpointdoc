@@ -60,7 +60,7 @@ export function DepartmentsTableClient({ rows }: Props) {
       prevSearchRef.current = search;
       prevStatusFilterRef.current = statusFilter;
       // Réinitialiser la page à 1 quand les filtres changent
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCurrentPage(1);
     }
   }, [search, statusFilter]);

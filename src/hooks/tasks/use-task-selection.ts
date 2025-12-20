@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { TaskWithRelations } from '@/types/task-with-relations';
 
 /**
@@ -47,7 +47,11 @@ export function useTaskSelection() {
    * Utilise une ref pour éviter les re-créations de fonction
    */
   const selectedIdsRef = useRef(selectedTaskIds);
-  selectedIdsRef.current = selectedTaskIds;
+  
+  // Mettre à jour la ref dans useEffect pour éviter les erreurs de lint
+  useEffect(() => {
+    selectedIdsRef.current = selectedTaskIds;
+  }, [selectedTaskIds]);
   
   const isTaskSelected = useCallback((taskId: string) => {
     return selectedIdsRef.current.has(taskId);

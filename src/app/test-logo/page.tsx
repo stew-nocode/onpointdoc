@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Logo } from '@/components/layout/logo';
 import { ThemeToggle } from '@/components/navigation/theme-toggle';
 
@@ -42,11 +43,11 @@ export default function TestLogoPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Logo Light Mode:</p>
-              <img src="/images/logos/logo-light.png" alt="Logo Light" className="h-10" />
+              <Image src="/images/logos/logo-light.png" alt="Logo Light" width={140} height={40} className="h-10 w-auto" />
             </div>
             <div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Logo Dark Mode:</p>
-              <img src="/images/logos/logo-dark.png" alt="Logo Dark" className="h-10" />
+              <Image src="/images/logos/logo-dark.png" alt="Logo Dark" width={140} height={40} className="h-10 w-auto" />
             </div>
           </div>
         </div>

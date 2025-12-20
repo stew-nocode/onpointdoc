@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWatch } from 'react-hook-form';
 import type { CreateActivityInput } from '@/lib/validators/activity';
 import type { UseFormReturn } from 'react-hook-form';
@@ -34,12 +34,6 @@ type ActivityReportSectionProps = {
  * @param form - Instance du formulaire React Hook Form
  */
 export function ActivityReportSection({ form }: ActivityReportSectionProps) {
-  // État local pour le Switch (initialisé depuis les valeurs du formulaire)
-  const [hasReport, setHasReport] = useState(() => {
-    const content = form.getValues('reportContent');
-    return !!(content && content.trim().length > 0);
-  });
-
   // État pour contrôler l'ouverture du Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -52,9 +46,9 @@ export function ActivityReportSection({ form }: ActivityReportSectionProps) {
     name: 'reportContent'
   });
 
-  useEffect(() => {
-    const hasContent = !!(reportContent && reportContent.trim().length > 0);
-    setHasReport(hasContent);
+  // Calculer hasReport comme valeur dérivée au lieu d'utiliser useEffect
+  const hasReport = useMemo(() => {
+    return !!(reportContent && reportContent.trim().length > 0);
   }, [reportContent]);
 
   // Initialiser le contenu temporaire quand le Dialog s'ouvre
@@ -69,8 +63,6 @@ export function ActivityReportSection({ form }: ActivityReportSectionProps) {
    * Gère le changement du Switch
    */
   const handleToggle = useCallback((checked: boolean) => {
-    setHasReport(checked);
-
     if (!checked) {
       // Désactiver : nettoyer le compte rendu
       form.setValue('reportContent', '', {
@@ -101,22 +93,14 @@ export function ActivityReportSection({ form }: ActivityReportSectionProps) {
 
   /**
    * Annule la rédaction dans le Dialog
-   * Si aucun compte rendu n'est défini, désactive le toggle
+   * Si aucun compte rendu n'est défini, réinitialise le contenu temporaire
    */
   const handleCancelDialog = useCallback(() => {
     setDialogOpen(false);
 
-    // Vérifier si un compte rendu est déjà défini dans le formulaire
+    // Réinitialiser le contenu temporaire depuis le formulaire
     const existingContent = form.getValues('reportContent');
-
-    // Si aucun compte rendu n'est défini, désactiver le toggle
-    if (!existingContent || existingContent.trim().length === 0) {
-      setHasReport(false);
-      return;
-    }
-
-    // Sinon, réinitialiser le contenu temporaire depuis le formulaire
-    setTempReportContent(existingContent);
+    setTempReportContent(existingContent || '');
   }, [form]);
 
   /**
@@ -184,7 +168,7 @@ export function ActivityReportSection({ form }: ActivityReportSectionProps) {
           <DialogHeader>
             <DialogTitle>Rédiger le compte rendu</DialogTitle>
             <DialogDescription>
-              Utilisez l'éditeur pour rédiger un compte rendu détaillé de l'activité
+              Utilisez l&apos;éditeur pour rédiger un compte rendu détaillé de l&apos;activité
             </DialogDescription>
           </DialogHeader>
 
@@ -200,7 +184,7 @@ export function ActivityReportSection({ form }: ActivityReportSectionProps) {
           {/* Avertissement si contenu très long */}
           {showWarning && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-              ⚠️ Votre compte rendu est assez long ({contentLength} caractères). Assurez-vous qu'il reste concis et pertinent.
+              ⚠️ Votre compte rendu est assez long ({contentLength} caractères). Assurez-vous qu&apos;il reste concis et pertinent.
             </div>
           )}
 

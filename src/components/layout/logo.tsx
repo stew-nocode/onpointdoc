@@ -20,6 +20,7 @@ export function Logo({ className, width = 140, height = 40 }: LogoProps) {
 
   // Éviter l'hydration mismatch
   useEffect(() => {
+     
     setMounted(true);
   }, []);
 

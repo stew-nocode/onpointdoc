@@ -64,12 +64,16 @@ function createSlug(name: string): string {
  * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md - Section 3.3
  */
 export function BugsByTypeAndModuleChart({ data, className }: BugsByTypeAndModuleChartProps) {
+  // Extraire les valeurs pour éviter les problèmes de dépendances optionnelles
+  const modules = data?.modules;
+  const dataArray = data?.data;
+  
   // Générer la config dynamiquement
   const chartConfig = useMemo<ChartConfig>(() => {
-    if (!data?.modules) return {};
+    if (!modules) return {};
     
     const config: ChartConfig = {};
-    data.modules.forEach((module, index) => {
+    modules.forEach((module, index) => {
       const colorIndex = index % MODULE_COLORS.length;
       const slug = createSlug(module.id);
       config[slug] = {
@@ -82,15 +86,15 @@ export function BugsByTypeAndModuleChart({ data, className }: BugsByTypeAndModul
     });
     
     return config;
-  }, [data?.modules]);
+  }, [modules]);
 
   // Mémoiser les données pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.data?.length) return [];
+    if (!dataArray?.length) return [];
     
     // Inverser l'ordre pour que le plus grand soit en haut
-    return [...data.data].reverse();
-  }, [data?.data]);
+    return [...dataArray].reverse();
+  }, [dataArray]);
 
   // Hauteur fixe pour tous les charts
   const chartHeight = 280;

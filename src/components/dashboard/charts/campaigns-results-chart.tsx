@@ -71,13 +71,16 @@ const BAR_COLORS = {
  * @see docs/dashboard/REFONTE-DASHBOARD-SPECIFICATION.md - Section 3.3
  */
 export function CampaignsResultsChart({ data, className }: CampaignsResultsChartProps) {
+  // Extraire les données pour éviter les problèmes de dépendances optionnelles
+  const dataArray = data?.data;
+  
   // Mémoiser les données pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.data?.length) return [];
+    if (!dataArray?.length) return [];
     
     // Inverser l'ordre pour que le plus grand soit en haut
-    return [...data.data].reverse();
-  }, [data?.data]);
+    return [...dataArray].reverse();
+  }, [dataArray]);
 
   // Hauteur fixe pour tous les charts
   const chartHeight = 280;

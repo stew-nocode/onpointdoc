@@ -202,7 +202,10 @@ export function useActivitiesInfiniteLoad({
   // Synchroniser l'erreur du hook avec l'état local
   useEffect(() => {
     if (fetchError) {
-      setError(fetchError);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setError(fetchError);
+      });
     }
   }, [fetchError]);
 
@@ -241,11 +244,14 @@ export function useActivitiesInfiniteLoad({
     
     // Réinitialiser si les filtres ont changé (changement complet)
     if (filterKeyChanged) {
-      setActivities(initialActivities);
-      setHasMore(initialHasMore);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setActivities(initialActivities);
+        setHasMore(initialHasMore);
+        setError(null);
+      });
       activitiesLengthRef.current = initialActivities.length;
       hasMoreRef.current = initialHasMore;
-      setError(null);
       
       // Mettre à jour les refs
       prevFilterKeyRef.current = filterKey;
@@ -257,12 +263,15 @@ export function useActivitiesInfiniteLoad({
     // Si les activités initiales ont changé (IDs différents), réinitialiser
     // Cela peut arriver après une revalidation du Server Component
     if (initialActivitiesIdsChanged) {
+       
       setActivities(initialActivities);
+       
       setHasMore(initialHasMore);
       activitiesLengthRef.current = initialActivities.length;
       hasMoreRef.current = initialHasMore;
+       
       setError(null);
-      
+
       // Mettre à jour les refs
       prevInitialActivitiesIdsRef.current = currentInitialActivitiesIds;
       prevInitialHasMoreRef.current = initialHasMore;

@@ -115,6 +115,8 @@ export function useTicketsSort(): UseTicketsSortReturn {
       prevSortDirectionRef.current = sortDirectionValue;
 
       // Utiliser une fonction de mise à jour pour éviter les re-renders si la valeur est identique
+      // ✅ Synchronisation avec prop externe : pattern acceptable pour synchroniser l'état avec les props
+       
       setCurrentSort((prev) => {
         if (prev !== sortColumnValue) {
           return sortColumnValue;

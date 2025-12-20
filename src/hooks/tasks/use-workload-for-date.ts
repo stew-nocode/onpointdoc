@@ -47,8 +47,11 @@ export function useWorkloadForDate({
   // Récupérer la charge existante quand la date change
   useEffect(() => {
     if (!date) {
-      setExistingWorkload(null);
-      setError(null);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setExistingWorkload(null);
+        setError(null);
+      });
       return;
     }
 

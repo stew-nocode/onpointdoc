@@ -45,16 +45,10 @@ type TaskPlanningSectionProps = {
  */
 export function TaskPlanningSection({ form }: TaskPlanningSectionProps) {
   const { errors } = form.formState;
-  
-  // État local pour le Switch
-  const [hasPlanning, setHasPlanning] = useState(() => {
-    const startDate = form.getValues('startDate');
-    return !!(startDate && typeof startDate === 'string' && startDate.trim().length > 0);
-  });
-  
+
   // État pour contrôler l'ouverture du Dialog
   const [dialogOpen, setDialogOpen] = useState(false);
-  
+
   // États temporaires pour le Dialog
   const [tempStartDate, setTempStartDate] = useState<Date | undefined>(undefined);
   const [tempStartTime, setTempStartTime] = useState<string>('09:00');
@@ -64,6 +58,15 @@ export function TaskPlanningSection({ form }: TaskPlanningSectionProps) {
   const startDate = useWatch({ control: form.control, name: 'startDate' });
   const estimatedDurationHours = useWatch({ control: form.control, name: 'estimatedDurationHours' });
   const assignedTo = useWatch({ control: form.control, name: 'assignedTo' });
+
+  // Calculer hasPlanning comme valeur dérivée au lieu d'utiliser useEffect
+  const hasPlanning = useMemo(() => {
+    return !!(
+      startDate &&
+      typeof startDate === 'string' &&
+      startDate.trim().length > 0
+    );
+  }, [startDate]);
 
   // Calculer la date pour le hook de charge
   const dateForWorkload = useMemo(() => {
@@ -81,16 +84,6 @@ export function TaskPlanningSection({ form }: TaskPlanningSectionProps) {
     newTaskDuration: parseFloat(tempDuration) || 0,
     assignedTo: assignedTo as string | undefined
   });
-
-  // Synchroniser l'état du Switch avec le formulaire
-  useEffect(() => {
-    const hasDate = !!(
-      startDate && 
-      typeof startDate === 'string' &&
-      startDate.trim().length > 0
-    );
-    setHasPlanning(hasDate);
-  }, [startDate]);
 
   // Initialiser les valeurs temporaires quand le Dialog s'ouvre
   useEffect(() => {
@@ -118,8 +111,6 @@ export function TaskPlanningSection({ form }: TaskPlanningSectionProps) {
    * Gère le changement du Switch
    */
   const handleToggle = useCallback((checked: boolean) => {
-    setHasPlanning(checked);
-    
     if (!checked) {
       // Désactiver : nettoyer les valeurs
       form.setValue('startDate', undefined, { shouldValidate: false, shouldDirty: true });
@@ -184,11 +175,7 @@ export function TaskPlanningSection({ form }: TaskPlanningSectionProps) {
    */
   const handleCancelDialog = useCallback(() => {
     setDialogOpen(false);
-    const currentStartDate = form.getValues('startDate');
-    if (!currentStartDate) {
-      setHasPlanning(false);
-    }
-  }, [form]);
+  }, []);
 
   return (
     <div className="grid gap-3">

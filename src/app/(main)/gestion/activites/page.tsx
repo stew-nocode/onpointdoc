@@ -120,8 +120,11 @@ export default async function ActivitiesPage({ searchParams }: ActivitiesPagePro
 
   // Ensuite, charger les activités et KPIs en parallèle
   // OPTIMISATION (2025-12-15): Utilisation de getCachedActivityKPIs pour le cache
+  let initialActivitiesData: ActivitiesPaginatedResult;
+  let kpis: Awaited<ReturnType<typeof getCachedActivityKPIs>>;
+  
   try {
-    const [initialActivitiesData, kpis] = await Promise.all([
+    [initialActivitiesData, kpis] = await Promise.all([
       loadInitialActivities(
         searchParam,
         quickFilter,
@@ -129,59 +132,6 @@ export default async function ActivitiesPage({ searchParams }: ActivitiesPagePro
       ),
       getCachedActivityKPIs(currentProfileId)
     ]);
-
-    return (
-      <PageLayoutWithFilters
-        sidebar={null}
-        header={{
-          icon: 'Calendar',
-          title: 'Gestion des activités',
-          description: 'Créez et gérez vos activités : revues, ateliers, brainstormings, présentations, etc.',
-          actions: (
-            <CreateActivityDialog
-              participants={participants}
-              onSubmit={createActivityAction}
-            />
-          )
-        }}
-        card={{
-          title: 'Liste des activités',
-          titleSuffix:
-            initialActivitiesData.total > 0
-              ? `(${initialActivitiesData.total} au total)`
-              : undefined,
-          search: (
-            <ActivitiesSearchBar 
-              initialSearch={searchParam} 
-              className="flex-1 min-w-[200px]" 
-            />
-          ),
-          quickFilters: (
-            <ActivitiesQuickFilters
-              activeFilter={quickFilter}
-              currentProfileId={currentProfileId}
-            />
-          )
-        }}
-        kpis={
-          currentProfileId ? (
-            <ActivitiesKPISectionLazy
-              kpis={kpis}
-              hasProfile={!!currentProfileId}
-            />
-          ) : null
-        }
-      >
-        <ActivitiesInfiniteScroll
-          initialActivities={initialActivitiesData.activities}
-          initialHasMore={initialActivitiesData.hasMore}
-          initialTotal={initialActivitiesData.total}
-          search={searchParam}
-          quickFilter={quickFilter}
-          currentProfileId={currentProfileId}
-        />
-      </PageLayoutWithFilters>
-    );
   } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des activités:', error);
     
@@ -226,7 +176,60 @@ export default async function ActivitiesPage({ searchParams }: ActivitiesPagePro
             </p>
           </AlertDescription>
         </Alert>
-    </div>
+      </div>
+    );
+  }
+
+  return (
+    <PageLayoutWithFilters
+      sidebar={null}
+      header={{
+        icon: 'Calendar',
+        title: 'Gestion des activités',
+        description: 'Créez et gérez vos activités : revues, ateliers, brainstormings, présentations, etc.',
+        actions: (
+          <CreateActivityDialog
+            participants={participants}
+            onSubmit={createActivityAction}
+          />
+        )
+      }}
+      card={{
+        title: 'Liste des activités',
+        titleSuffix:
+          initialActivitiesData.total > 0
+            ? `(${initialActivitiesData.total} au total)`
+            : undefined,
+        search: (
+          <ActivitiesSearchBar 
+            initialSearch={searchParam} 
+            className="flex-1 min-w-[200px]" 
+          />
+        ),
+        quickFilters: (
+          <ActivitiesQuickFilters
+            activeFilter={quickFilter}
+            currentProfileId={currentProfileId}
+          />
+        )
+      }}
+      kpis={
+        currentProfileId ? (
+          <ActivitiesKPISectionLazy
+            kpis={kpis}
+            hasProfile={!!currentProfileId}
+          />
+        ) : null
+      }
+    >
+      <ActivitiesInfiniteScroll
+        initialActivities={initialActivitiesData.activities}
+        initialHasMore={initialActivitiesData.hasMore}
+        initialTotal={initialActivitiesData.total}
+        search={searchParam}
+        quickFilter={quickFilter}
+        currentProfileId={currentProfileId}
+      />
+    </PageLayoutWithFilters>
   );
-}
 }

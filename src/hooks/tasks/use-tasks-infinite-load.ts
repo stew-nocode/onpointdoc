@@ -196,7 +196,10 @@ export function useTasksInfiniteLoad({
   // Synchroniser l'erreur du hook avec l'état local
   useEffect(() => {
     if (fetchError) {
-      setError(fetchError);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setError(fetchError);
+      });
     }
   }, [fetchError]);
 
@@ -235,11 +238,14 @@ export function useTasksInfiniteLoad({
     
     // Réinitialiser si les filtres ont changé (changement complet)
     if (filterKeyChanged) {
-      setTasks(initialTasks);
-      setHasMore(initialHasMore);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setTasks(initialTasks);
+        setHasMore(initialHasMore);
+        setError(null);
+      });
       tasksLengthRef.current = initialTasks.length;
       hasMoreRef.current = initialHasMore;
-      setError(null);
       
       // Mettre à jour les refs
       prevFilterKeyRef.current = filterKey;

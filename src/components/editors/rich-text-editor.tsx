@@ -33,7 +33,7 @@ const RichTextEditorClient = dynamic(
           default: () => (
             <div className="border border-slate-200 rounded-lg dark:border-slate-700 bg-white dark:bg-slate-950 p-4">
               <p className="text-sm text-status-danger">
-                Erreur de chargement de l'éditeur. Veuillez recharger la page.
+                Erreur de chargement de l&apos;éditeur. Veuillez recharger la page.
               </p>
             </div>
           )
@@ -45,7 +45,7 @@ const RichTextEditorClient = dynamic(
       <div className="border border-slate-200 rounded-lg dark:border-slate-700 bg-white dark:bg-slate-950">
         <div className="flex flex-col items-center justify-center p-4 min-h-[150px] gap-2">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">Chargement de l'éditeur...</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Chargement de l&apos;éditeur...</p>
         </div>
       </div>
     )

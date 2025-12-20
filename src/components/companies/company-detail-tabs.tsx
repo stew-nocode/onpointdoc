@@ -44,7 +44,7 @@ export function CompanyDetailTabs({
       <TabsContent value="details" className="space-y-4 mt-4">
         <Card>
           <CardHeader>
-            <CardTitle>Détails de l'entreprise</CardTitle>
+            <CardTitle>Détails de l&apos;entreprise</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

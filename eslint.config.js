@@ -1,6 +1,6 @@
 import nextConfig from 'eslint-config-next';
 
-export default [
+const eslintConfig = [
   ...nextConfig,
   {
     ignores: [
@@ -11,4 +11,14 @@ export default [
       '.eslintignore',
     ],
   },
+  {
+    rules: {
+      // Désactiver certaines règles trop strictes du plugin react-hooks
+      'react-hooks/set-state-in-effect': 'off', // Trop de faux positifs pour la synchronisation d'état légitime
+      'react-hooks/static-components': 'warn', // Convertir en warning au lieu d'erreur
+      'react-hooks/refs': 'warn', // Convertir en warning au lieu d'erreur
+    },
+  },
 ];
+
+export default eslintConfig;

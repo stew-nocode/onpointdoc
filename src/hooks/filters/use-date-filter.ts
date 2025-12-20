@@ -25,6 +25,8 @@ export function useDateFilter({
   const [endDate, setEndDate] = useState<string>(dateFilter?.range?.end || '');
 
   useEffect(() => {
+    // ✅ Synchronisation avec prop externe : pattern acceptable pour synchroniser l'état avec les props
+     
     setPreset(dateFilter?.preset || null);
     setStartDate(dateFilter?.range?.start || '');
     setEndDate(dateFilter?.range?.end || '');

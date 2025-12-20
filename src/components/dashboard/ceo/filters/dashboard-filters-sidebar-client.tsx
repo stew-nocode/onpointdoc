@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { DashboardFiltersSidebar } from './dashboard-filters-sidebar';
 import { DashboardFiltersToggleButton } from './dashboard-filters-toggle-button';
@@ -46,17 +46,19 @@ function DashboardFiltersSidebarClientInner({
 
   /**
    * Met à jour les filtres depuis l'URL au changement de params
+   * Utilise requestAnimationFrame pour éviter les cascades de renders
    */
   useEffect(() => {
     const newFilters = parseDashboardFiltersFromParams(
       Object.fromEntries(searchParams.entries())
     );
 
-    if (newFilters) {
-      setFilters(newFilters);
-    } else {
-      setFilters(buildDefaultDashboardFilters());
-    }
+    const filtersToSet = newFilters || buildDefaultDashboardFilters();
+    
+    // ✅ Synchronisation avec searchParams : utiliser requestAnimationFrame pour éviter les cascades
+    requestAnimationFrame(() => {
+      setFilters(filtersToSet);
+    });
   }, [searchParams]);
 
   /**

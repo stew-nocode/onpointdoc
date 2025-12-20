@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { ActivityWithRelations } from '@/types/activity-with-relations';
 
 /**
@@ -47,7 +47,11 @@ export function useActivitySelection() {
    * Utilise une ref pour éviter les re-créations de fonction
    */
   const selectedIdsRef = useRef(selectedActivityIds);
-  selectedIdsRef.current = selectedActivityIds;
+  
+  // Mettre à jour la ref dans useEffect pour éviter les erreurs de lint
+  useEffect(() => {
+    selectedIdsRef.current = selectedActivityIds;
+  }, [selectedActivityIds]);
   
   const isActivitySelected = useCallback((activityId: string) => {
     return selectedIdsRef.current.has(activityId);

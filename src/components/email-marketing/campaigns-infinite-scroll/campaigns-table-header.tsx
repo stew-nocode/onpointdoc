@@ -64,7 +64,7 @@ export function CampaignsTableHeader({
 
         {/* Date d'envoi */}
         <th className="pb-2 pr-4 text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400">
-          Date d'envoi
+          Date d&apos;envoi
         </th>
 
         {/* Destinataires */}

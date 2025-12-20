@@ -243,8 +243,11 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     : [];
   
   // Ensuite, charger les tickets et KPIs en parallèle (dépendent de currentProfileId)
+  let initialTicketsData: TicketsPaginatedResult;
+  let kpis: Awaited<ReturnType<typeof getSupportTicketKPIs>>;
+  
   try {
-    const [initialTicketsData, kpis] = await Promise.all([
+    [initialTicketsData, kpis] = await Promise.all([
       loadInitialTickets(
         typeParam,
         statusParam,
@@ -259,96 +262,6 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       ),
       getSupportTicketKPIs(currentProfileId),
     ]);
-    const { products, modules, submodules, features, contacts, companies, departments } = productsData;
-
-    // ✅ Server Action extraite dans actions.ts pour éviter les recompilations
-    // La fonction inline était recréée à chaque recompilation du Server Component
-
-    return (
-      <TicketsPageClientWrapper>
-        <PageLayoutWithFilters
-          sidebar={
-            // ✅ Afficher la sidebar seulement si configuré (masquée pour agents)
-            viewConfig.showAdvancedFilters ? (
-            <FiltersSidebarClientLazy
-              users={contacts}
-              products={products}
-              modules={modules}
-            />
-            ) : null
-          }
-          header={{
-            icon: 'Ticket',
-            title: viewConfig.pageTitle,
-            description: viewConfig.pageDescription,
-            actions: (
-              <CreateTicketDialogLazy
-                products={products}
-                modules={modules}
-                submodules={submodules}
-                features={features}
-                contacts={contacts}
-                companies={companies}
-                departments={departments}
-                onSubmit={createTicketAction}
-              />
-            )
-          }}
-          kpis={
-            // ✅ Afficher les KPIs seulement si configuré
-            viewConfig.showKPIs ? (
-              <TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />
-            ) : null
-          }
-          card={{
-            title: 'Tickets récents',
-            titleSuffix:
-              initialTicketsData.total > 0
-                ? `(${initialTicketsData.total} au total)`
-                : undefined,
-            search: (
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-stretch">
-                <TicketsSearchBar initialSearch={searchParam} className="flex-[1.3] min-w-[200px]" />
-                {/* ✅ Afficher les sélecteurs pour les managers, admins et agents support */}
-                {(viewRole === 'manager' || viewRole === 'admin' || viewRole === 'agent') && (
-                  <>
-                    <AgentSelector 
-                      agents={supportAgents} 
-                      initialAgentId={agentParam}
-                      className="flex-[1.3] min-w-[200px]"
-                    />
-                    <CompanySelector 
-                      companies={companies} 
-                      initialCompanyId={companyParam}
-                      className="flex-[1.3] min-w-[200px]"
-                    />
-                  </>
-                )}
-              </div>
-            ),
-            quickFilters: (
-              <TicketsQuickFilters
-                activeFilter={quickFilter}
-                currentProfileId={currentProfileId}
-                availableFilters={availableQuickFilters} // ✅ Utiliser les filtres adaptés
-              />
-            )
-          }}
-        >
-          <TicketsInfiniteScroll
-            initialTickets={initialTicketsData.tickets}
-            initialHasMore={initialTicketsData.hasMore}
-            initialTotal={initialTicketsData.total}
-            type={typeParam}
-            status={statusParam}
-            search={searchParam}
-            quickFilter={quickFilter}
-            currentProfileId={currentProfileId ?? undefined}
-            viewConfig={viewConfig}
-          />
-        </PageLayoutWithFilters>
-      </TicketsPageClientWrapper>
-    );
   } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des tickets:', error);
     
@@ -367,7 +280,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       } else if (error.code === 'SUPABASE_ERROR') {
         errorMessage = 'Erreur lors de la récupération des données. Veuillez réessayer dans quelques instants.';
       } else if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
-        errorMessage = 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page.';
+        errorMessage = 'Vous n&apos;avez pas les permissions nécessaires pour accéder à cette page.';
       }
       
       // Ajouter les détails techniques en mode développement
@@ -396,5 +309,97 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       </div>
     );
   }
+
+  // ✅ Construire le JSX en dehors du try/catch pour éviter l'erreur react-hooks/error-boundaries
+  const { products, modules, submodules, features, contacts, companies, departments } = productsData;
+
+  // ✅ Server Action extraite dans actions.ts pour éviter les recompilations
+  // La fonction inline était recréée à chaque recompilation du Server Component
+
+  return (
+    <TicketsPageClientWrapper>
+      <PageLayoutWithFilters
+        sidebar={
+          // ✅ Afficher la sidebar seulement si configuré (masquée pour agents)
+          viewConfig.showAdvancedFilters ? (
+          <FiltersSidebarClientLazy
+            users={contacts}
+            products={products}
+            modules={modules}
+          />
+          ) : null
+        }
+        header={{
+          icon: 'Ticket',
+          title: viewConfig.pageTitle,
+          description: viewConfig.pageDescription,
+          actions: (
+            <CreateTicketDialogLazy
+              products={products}
+              modules={modules}
+              submodules={submodules}
+              features={features}
+              contacts={contacts}
+              companies={companies}
+              departments={departments}
+              onSubmit={createTicketAction}
+            />
+          )
+        }}
+        kpis={
+          // ✅ Afficher les KPIs seulement si configuré
+          viewConfig.showKPIs ? (
+            <TicketsKPISectionLazy kpis={kpis} hasProfile={!!currentProfileId} />
+          ) : null
+        }
+        card={{
+          title: 'Tickets récents',
+          titleSuffix:
+            initialTicketsData.total > 0
+              ? `(${initialTicketsData.total} au total)`
+              : undefined,
+          search: (
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-stretch">
+              <TicketsSearchBar initialSearch={searchParam} className="flex-[1.3] min-w-[200px]" />
+              {/* ✅ Afficher les sélecteurs pour les managers, admins et agents support */}
+              {(viewRole === 'manager' || viewRole === 'admin' || viewRole === 'agent') && (
+                <>
+                  <AgentSelector 
+                    agents={supportAgents} 
+                    initialAgentId={agentParam}
+                    className="flex-[1.3] min-w-[200px]"
+                  />
+                  <CompanySelector 
+                    companies={companies} 
+                    initialCompanyId={companyParam}
+                    className="flex-[1.3] min-w-[200px]"
+                  />
+                </>
+              )}
+            </div>
+          ),
+          quickFilters: (
+            <TicketsQuickFilters
+              activeFilter={quickFilter}
+              currentProfileId={currentProfileId}
+              availableFilters={availableQuickFilters} // ✅ Utiliser les filtres adaptés
+            />
+          )
+        }}
+      >
+        <TicketsInfiniteScroll
+          initialTickets={initialTicketsData.tickets}
+          initialHasMore={initialTicketsData.hasMore}
+          initialTotal={initialTicketsData.total}
+          type={typeParam}
+          status={statusParam}
+          search={searchParam}
+          quickFilter={quickFilter}
+          currentProfileId={currentProfileId ?? undefined}
+          viewConfig={viewConfig}
+        />
+      </PageLayoutWithFilters>
+    </TicketsPageClientWrapper>
+  );
 }
 

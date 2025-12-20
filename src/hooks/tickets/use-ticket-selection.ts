@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { TicketWithRelations } from '@/types/ticket-with-relations';
 
 /**
@@ -45,7 +45,11 @@ export function useTicketSelection() {
    * Utilise une ref pour éviter les re-créations de fonction
    */
   const selectedIdsRef = useRef(selectedTicketIds);
-  selectedIdsRef.current = selectedTicketIds;
+  
+  // Mettre à jour la ref dans useEffect pour éviter les erreurs de lint
+  useEffect(() => {
+    selectedIdsRef.current = selectedTicketIds;
+  }, [selectedTicketIds]);
   
   const isTicketSelected = useCallback((ticketId: string) => {
     return selectedIdsRef.current.has(ticketId);

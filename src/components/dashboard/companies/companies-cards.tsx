@@ -24,7 +24,7 @@ export function CompaniesCards({ data, className }: CompaniesCardsProps) {
     const el = rowRef.current;
     if (!el) return;
     el.scrollBy({ left: direction === 'left' ? -480 : 480, behavior: 'smooth' });
-  }, []);
+  }, [rowRef]);
 
   const companies = data?.data ?? [];
 

@@ -65,7 +65,9 @@ export function PageTransitionBar({
 
     if (isTransitioning) {
       // Afficher la barre et démarrer l'animation
+       
       setIsVisible(true);
+       
       setProgress(0);
       previousTransitioningRef.current = true;
 

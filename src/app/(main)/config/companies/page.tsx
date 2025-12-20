@@ -100,54 +100,14 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
   const sortParam = stabilizedParams.sort as string | undefined;
   const sort = sortParam ? parseCompanySort(sortParam) : { column: 'name' as CompanySortColumn, direction: 'asc' as SortDirection };
 
+  let initialCompaniesData: CompaniesPaginatedResult;
+  
   try {
-    const initialCompaniesData = await loadInitialCompanies(
+    initialCompaniesData = await loadInitialCompanies(
       searchParam,
       quickFilter === 'all' ? undefined : quickFilter,
       sort.column,
       sort.direction
-    );
-
-    return (
-      <PageLayoutWithFilters
-        sidebar={null}
-        header={{
-          icon: 'Building',
-          title: 'Entreprises',
-          description: 'Gérez les entreprises et leurs informations.',
-          actions: (
-            <NewCompanyDialogLazy>
-              <Button>Nouvelle entreprise</Button>
-            </NewCompanyDialogLazy>
-          )
-        }}
-        card={{
-          title: 'Liste des entreprises',
-          titleSuffix:
-            initialCompaniesData.total > 0
-              ? `(${initialCompaniesData.total} au total)`
-              : undefined,
-          search: (
-            <CompaniesSearchBar 
-              initialSearch={searchParam} 
-              className="flex-1 min-w-[200px]" 
-            />
-          ),
-          quickFilters: (
-            <CompaniesQuickFilters
-              activeFilter={quickFilter}
-            />
-          )
-        }}
-      >
-        <CompaniesInfiniteScroll
-          initialCompanies={initialCompaniesData.companies}
-          initialHasMore={initialCompaniesData.hasMore}
-          initialTotal={initialCompaniesData.total}
-          search={searchParam}
-          quickFilter={quickFilter === 'all' ? undefined : quickFilter}
-        />
-      </PageLayoutWithFilters>
     );
   } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des entreprises:', error);
@@ -193,4 +153,46 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
       </div>
     );
   }
+
+  return (
+    <PageLayoutWithFilters
+      sidebar={null}
+      header={{
+        icon: 'Building',
+        title: 'Entreprises',
+        description: 'Gérez les entreprises et leurs informations.',
+        actions: (
+          <NewCompanyDialogLazy>
+            <Button>Nouvelle entreprise</Button>
+          </NewCompanyDialogLazy>
+        )
+      }}
+      card={{
+        title: 'Liste des entreprises',
+        titleSuffix:
+          initialCompaniesData.total > 0
+            ? `(${initialCompaniesData.total} au total)`
+            : undefined,
+        search: (
+          <CompaniesSearchBar 
+            initialSearch={searchParam} 
+            className="flex-1 min-w-[200px]" 
+          />
+        ),
+        quickFilters: (
+          <CompaniesQuickFilters
+            activeFilter={quickFilter}
+          />
+        )
+      }}
+    >
+      <CompaniesInfiniteScroll
+        initialCompanies={initialCompaniesData.companies}
+        initialHasMore={initialCompaniesData.hasMore}
+        initialTotal={initialCompaniesData.total}
+        search={searchParam}
+        quickFilter={quickFilter === 'all' ? undefined : quickFilter}
+      />
+    </PageLayoutWithFilters>
+  );
 }

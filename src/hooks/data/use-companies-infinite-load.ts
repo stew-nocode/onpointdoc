@@ -215,7 +215,10 @@ export function useCompaniesInfiniteLoad(
   // Synchroniser l'erreur du hook avec l'état local
   useEffect(() => {
     if (fetchError) {
-      setError(fetchError);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setError(fetchError);
+      });
     }
   }, [fetchError]);
 
@@ -229,11 +232,14 @@ export function useCompaniesInfiniteLoad(
     const initialHasMoreChanged = prevInitialHasMoreRef.current !== initialHasMore;
 
     if (filterKeyChanged) {
-      setCompanies(initialCompanies);
-      setHasMore(initialHasMore);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setCompanies(initialCompanies);
+        setHasMore(initialHasMore);
+        setError(null);
+      });
       companiesLengthRef.current = initialCompanies.length;
       hasMoreRef.current = initialHasMore;
-      setError(null);
 
       prevFilterKeyRef.current = filterKey;
       prevInitialCompaniesIdsRef.current = currentInitialCompaniesIds;
@@ -242,10 +248,13 @@ export function useCompaniesInfiniteLoad(
     }
 
     if (initialCompaniesIdsChanged) {
+       
       setCompanies(initialCompanies);
+       
       setHasMore(initialHasMore);
       companiesLengthRef.current = initialCompanies.length;
       hasMoreRef.current = initialHasMore;
+       
       setError(null);
 
       prevInitialCompaniesIdsRef.current = currentInitialCompaniesIds;

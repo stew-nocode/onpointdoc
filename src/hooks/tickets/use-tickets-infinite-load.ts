@@ -166,7 +166,10 @@ export function useTicketsInfiniteLoad({
   // Synchroniser l'erreur du hook avec l'état local
   useEffect(() => {
     if (fetchError) {
-      setError(fetchError);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setError(fetchError);
+      });
     }
   }, [fetchError]);
 
@@ -216,11 +219,14 @@ export function useTicketsInfiniteLoad({
     
     // Réinitialiser si les filtres ont changé (changement complet)
     if (filterKeyChanged) {
-      setTickets(initialTickets);
-      setHasMore(initialHasMore);
+      // Utiliser requestAnimationFrame pour éviter les cascades de renders
+      requestAnimationFrame(() => {
+        setTickets(initialTickets);
+        setHasMore(initialHasMore);
+        setError(null);
+      });
       ticketsLengthRef.current = initialTickets.length;
       hasMoreRef.current = initialHasMore;
-      setError(null);
       
       // Mettre à jour les refs
       prevFilterKeyRef.current = filterKey;

@@ -43,7 +43,7 @@ export function AgentsSupportCards({ data, className }: AgentsSupportCardsProps)
     if (!el) return;
     const delta = direction === 'left' ? -480 : 480; // ~ 460px card + gap
     el.scrollBy({ left: delta, behavior: 'smooth' });
-  }, []);
+  }, [rowRef]);
 
   return (
     <div className={cn('h-full w-full', className)}>

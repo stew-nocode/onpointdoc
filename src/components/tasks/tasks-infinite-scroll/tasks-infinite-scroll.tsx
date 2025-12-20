@@ -116,7 +116,10 @@ export function TasksInfiniteScroll({
 
   // Stabiliser clearSelection avec une ref pour éviter les dépendances dans useEffect
   const clearSelectionRef = useRef(clearSelection);
-  clearSelectionRef.current = clearSelection;
+  // Utiliser useEffect pour mettre à jour la ref
+  useEffect(() => {
+    clearSelectionRef.current = clearSelection;
+  });
 
   // Réinitialiser la sélection quand les filtres changent
   const prevFilterKeyForSelectionRef = useRef<string | null>(null);

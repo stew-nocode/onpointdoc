@@ -84,11 +84,14 @@ export function BugsByTypeChart({ data, className }: BugsByTypeChartProps) {
   // Générer la config dynamiquement
   const chartConfig = useMemo(() => generateChartConfig(data), [data]);
 
+  // Extraire les données pour éviter les problèmes de dépendances optionnelles
+  const dataArray = data?.data;
+
   // Mémoiser les données transformées pour Recharts
   const chartData = useMemo(() => {
-    if (!data?.data?.length) return [];
+    if (!dataArray?.length) return [];
     
-    return data.data.map((item, index) => {
+    return dataArray.map((item, index) => {
       const colorIndex = index % BUG_TYPE_COLORS.length;
       const slug = createSlug(item.bugType);
       return {
@@ -100,7 +103,7 @@ export function BugsByTypeChart({ data, className }: BugsByTypeChartProps) {
         darkColor: BUG_TYPE_COLORS[colorIndex].dark,
       };
     });
-  }, [data?.data]);
+  }, [dataArray]);
 
   // Empty state
   if (!data || data.totalBugs === 0) {

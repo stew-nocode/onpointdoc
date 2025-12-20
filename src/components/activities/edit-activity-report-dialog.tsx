@@ -118,7 +118,7 @@ export function EditActivityReportDialog({
             {currentReportContent ? 'Modifier le compte rendu' : 'Ajouter un compte rendu'}
           </DialogTitle>
           <DialogDescription>
-            Utilisez l'éditeur pour rédiger un compte rendu détaillé de l'activité
+            Utilisez l&apos;éditeur pour rédiger un compte rendu détaillé de l&apos;activité
           </DialogDescription>
         </DialogHeader>
 
@@ -134,7 +134,7 @@ export function EditActivityReportDialog({
         {/* Avertissement si contenu très long */}
         {showWarning && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-            ⚠️ Votre compte rendu est assez long ({contentLength} caractères). Assurez-vous qu'il reste concis et pertinent.
+            ⚠️ Votre compte rendu est assez long ({contentLength} caractères). Assurez-vous qu&apos;il reste concis et pertinent.
           </div>
         )}
 
@@ -161,6 +161,7 @@ export function EditActivityReportDialog({
     </Dialog>
   );
 }
+
 
 
 

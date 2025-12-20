@@ -131,8 +131,11 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
 
   // Ensuite, charger les tâches et KPIs en parallèle
   // OPTIMISATION (2025-12-15): Utilisation de getCachedTaskKPIs pour le cache
+  let initialTasksData: TasksPaginatedResult;
+  let kpis: Awaited<ReturnType<typeof getCachedTaskKPIs>>;
+  
   try {
-    const [initialTasksData, kpis] = await Promise.all([
+    [initialTasksData, kpis] = await Promise.all([
       loadInitialTasks(
         searchParam,
         quickFilter,
@@ -142,59 +145,6 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       ),
       getCachedTaskKPIs(currentProfileId)
     ]);
-
-    return (
-      <PageLayoutWithFilters
-        sidebar={null}
-        header={{
-          icon: 'CheckSquare',
-          title: 'Gestion des tâches',
-          description: 'Créez et gérez vos tâches internes, liées aux tickets et activités.',
-          actions: (
-            <CreateTaskDialog
-              profiles={profiles}
-              onSubmit={createTaskAction}
-            />
-          )
-        }}
-        card={{
-          title: 'Liste des tâches',
-          titleSuffix:
-            initialTasksData.total > 0
-              ? `(${initialTasksData.total} au total)`
-              : undefined,
-          search: (
-            <TasksSearchBar 
-              initialSearch={searchParam} 
-              className="flex-1 min-w-[200px]" 
-            />
-          ),
-          quickFilters: (
-            <TasksQuickFilters
-              activeFilter={quickFilter}
-              currentProfileId={currentProfileId}
-            />
-          )
-        }}
-        kpis={
-          currentProfileId ? (
-            <TasksKPISectionLazy
-              kpis={kpis}
-              hasProfile={!!currentProfileId}
-            />
-          ) : null
-        }
-      >
-        <TasksInfiniteScroll
-          initialTasks={initialTasksData.tasks}
-          initialHasMore={initialTasksData.hasMore}
-          initialTotal={initialTasksData.total}
-          search={searchParam}
-          quickFilter={quickFilter}
-          currentProfileId={currentProfileId}
-        />
-      </PageLayoutWithFilters>
-    );
   } catch (error: unknown) {
     console.error('Erreur lors du chargement de la page des tâches:', error);
     
@@ -242,4 +192,57 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
       </div>
     );
   }
+
+  return (
+    <PageLayoutWithFilters
+      sidebar={null}
+      header={{
+        icon: 'CheckSquare',
+        title: 'Gestion des tâches',
+        description: 'Créez et gérez vos tâches internes, liées aux tickets et activités.',
+        actions: (
+          <CreateTaskDialog
+            profiles={profiles}
+            onSubmit={createTaskAction}
+          />
+        )
+      }}
+      card={{
+        title: 'Liste des tâches',
+        titleSuffix:
+          initialTasksData.total > 0
+            ? `(${initialTasksData.total} au total)`
+            : undefined,
+        search: (
+          <TasksSearchBar 
+            initialSearch={searchParam} 
+            className="flex-1 min-w-[200px]" 
+          />
+        ),
+        quickFilters: (
+          <TasksQuickFilters
+            activeFilter={quickFilter}
+            currentProfileId={currentProfileId}
+          />
+        )
+      }}
+      kpis={
+        currentProfileId ? (
+          <TasksKPISectionLazy
+            kpis={kpis}
+            hasProfile={!!currentProfileId}
+          />
+        ) : null
+      }
+    >
+      <TasksInfiniteScroll
+        initialTasks={initialTasksData.tasks}
+        initialHasMore={initialTasksData.hasMore}
+        initialTotal={initialTasksData.total}
+        search={searchParam}
+        quickFilter={quickFilter}
+        currentProfileId={currentProfileId}
+      />
+    </PageLayoutWithFilters>
+  );
 }

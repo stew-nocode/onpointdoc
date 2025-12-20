@@ -5,7 +5,7 @@
  * et optimiser les performances.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type UseRenderCountOptions = {
   /** Nom du composant (affiché dans les logs) */
@@ -39,10 +39,10 @@ export function useRenderCount({
   const renderCountRef = useRef(0);
   const mountTimeRef = useRef<number | null>(null);
 
-  // Incrémenter le compteur à chaque render
-  renderCountRef.current += 1;
-
   useEffect(() => {
+    // Incrémenter le compteur après le render
+    renderCountRef.current += 1;
+    
     // Enregistrer le temps de montage
     if (mountTimeRef.current === null) {
       mountTimeRef.current = performance.now();
@@ -74,7 +74,6 @@ export function useRenderCount({
       }
     }
     // Pas de dépendances : s'exécute après chaque render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return renderCountRef.current;
@@ -97,35 +96,40 @@ export function usePropsComparison<T extends Record<string, any>>(
 } {
   const prevPropsRef = useRef<T | null>(null);
   const changedPropsRef = useRef<Partial<T>>({});
+  const [changedPropsState, setChangedPropsState] = useState<Partial<T>>({});
 
-  if (prevPropsRef.current !== null) {
-    changedPropsRef.current = {};
-    const prevProps = prevPropsRef.current;
+  useEffect(() => {
+    if (prevPropsRef.current !== null) {
+      const changed: Partial<T> = {};
+      const prevProps = prevPropsRef.current;
 
-    // Comparer chaque prop
-    Object.keys(props).forEach((key) => {
-      if (prevProps[key] !== props[key]) {
-        changedPropsRef.current[key as keyof T] = props[key];
+      // Comparer chaque prop
+      Object.keys(props).forEach((key) => {
+        if (prevProps[key] !== props[key]) {
+          changed[key as keyof T] = props[key];
 
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            `🔄 [Props Change] ${componentName || 'Component'}.${key}:`,
-            prevProps[key],
-            '→',
-            props[key]
-          );
+          if (process.env.NODE_ENV === 'development') {
+            console.log(
+              `🔄 [Props Change] ${componentName || 'Component'}.${key}:`,
+              prevProps[key],
+              '→',
+              props[key]
+            );
+          }
         }
-      }
-    });
+      });
+
+      changedPropsRef.current = changed;
+       
+      setChangedPropsState(changed);
+    }
 
     prevPropsRef.current = props;
-  } else {
-    prevPropsRef.current = props;
-  }
+  }, [props, componentName]);
 
   return {
-    changedProps: changedPropsRef.current,
-    hasChanges: Object.keys(changedPropsRef.current).length > 0,
+    changedProps: changedPropsState,
+    hasChanges: Object.keys(changedPropsState).length > 0,
   };
 }
 

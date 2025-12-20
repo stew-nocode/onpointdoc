@@ -157,7 +157,6 @@ function UnifiedDashboardWithWidgetsComponent({
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
       setError(errorMessage);
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement des données:', err);
         console.timeEnd('⏱️ DashboardDataLoad');
       }
@@ -180,7 +179,6 @@ function UnifiedDashboardWithWidgetsComponent({
     } catch (err) {
       // Ignorer les erreurs silencieusement
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
         console.error('[Dashboard] Erreur lors du chargement de la config widgets:', err);
       }
     }
@@ -440,7 +438,8 @@ function UnifiedDashboardWithWidgetsComponent({
       staticWidgets: staticKPIs,
       filteredWidgets: filtered,
     };
-  }, [widgetConfig.visibleWidgets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widgetConfig.visibleWidgets]); // widgetConfig est stable, seule visibleWidgets change
 
   // Déterminer quel sélecteur est actif pour l'affichage visuel
   // Priorité : dateRange > selectedYear > aucun (période standard)
@@ -525,6 +524,7 @@ function UnifiedDashboardWithWidgetsComponent({
     data.periodEnd,
     data.period, // Garder data.period comme fallback
     filteredAlerts,
+    // data lui-même n'est pas nécessaire car on dépend déjà de ses propriétés
     period, // Période de l'état local (week, month, quarter, year)
     selectedYear, // Année sélectionnée (ex: "2024")
     dateRange, // Période personnalisée

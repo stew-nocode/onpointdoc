@@ -299,7 +299,7 @@ export function ActivityRow({
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Voir l'activité</p>
+                  <p>Voir l&apos;activité</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -314,7 +314,7 @@ export function ActivityRow({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Éditer l'activité</p>
+                    <p>Éditer l&apos;activité</p>
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -327,7 +327,7 @@ export function ActivityRow({
         <ContextMenuItem asChild>
           <Link href={`/gestion/activites/${activity.id}`} className="cursor-pointer">
             <Eye className="mr-2 h-4 w-4" />
-            Voir l'activité
+            Voir l&apos;activité
           </Link>
         </ContextMenuItem>
         {canEdit && (
@@ -335,7 +335,7 @@ export function ActivityRow({
             <ContextMenuSeparator />
             <ContextMenuItem onClick={() => handleEdit(activity.id)} className="cursor-pointer">
               <Edit className="mr-2 h-4 w-4" />
-              Éditer l'activité
+              Éditer l&apos;activité
             </ContextMenuItem>
             <ContextMenuItem onClick={() => setShowReportDialog(true)} className="cursor-pointer">
               <FileText className="mr-2 h-4 w-4" />

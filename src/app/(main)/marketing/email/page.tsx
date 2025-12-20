@@ -127,18 +127,10 @@ async function CampaignsContent({
   quickFilter?: CampaignQuickFilter;
   sort?: string;
 }) {
+  let result: Awaited<ReturnType<typeof loadInitialCampaigns>>;
+  
   try {
-    const result = await loadInitialCampaigns(search, quickFilter, sort);
-
-    return (
-      <CampaignsInfiniteScroll
-        initialCampaigns={result.campaigns}
-        initialHasMore={result.hasMore}
-        initialTotal={result.total}
-        search={search}
-        quickFilter={quickFilter}
-      />
-    );
+    result = await loadInitialCampaigns(search, quickFilter, sort);
   } catch (error) {
     // Gérer l'erreur en affichant un message à l'utilisateur
     const errorMessage = isApplicationError(error)
@@ -153,6 +145,17 @@ async function CampaignsContent({
       </Alert>
     );
   }
+
+  // ✅ Construire le JSX en dehors du try/catch pour éviter l'erreur react-hooks/error-boundaries
+  return (
+    <CampaignsInfiniteScroll
+      initialCampaigns={result.campaigns}
+      initialHasMore={result.hasMore}
+      initialTotal={result.total}
+      search={search}
+      quickFilter={quickFilter}
+    />
+  );
 }
 
 /**
