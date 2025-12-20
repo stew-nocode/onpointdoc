@@ -38,13 +38,23 @@ type TicketDurationInput = {
   resolved_at: string | null;
 };
 
+/**
+ * Calcule la durée d'un ticket d'assistance en minutes.
+ * 
+ * IMPORTANT: Pour les tickets d'assistance, on utilise UNIQUEMENT duration_minutes
+ * car le calcul depuis created_at/resolved_at peut donner des durées aberrantes
+ * (ex: ticket créé en janvier et résolu en décembre = ~8000h).
+ * 
+ * Les agents renseignent manuellement duration_minutes lors de la création.
+ */
 function calculateTicketDurationMinutes(ticket: TicketDurationInput): number {
-  if (ticket.duration_minutes && ticket.duration_minutes > 0) return ticket.duration_minutes;
-  if (!ticket.created_at || !ticket.resolved_at) return 0;
-  const created = new Date(ticket.created_at).getTime();
-  const resolved = new Date(ticket.resolved_at).getTime();
-  const diff = Math.round((resolved - created) / (1000 * 60));
-  return Math.max(0, diff);
+  // Utiliser uniquement duration_minutes si disponible et valide
+  if (ticket.duration_minutes && ticket.duration_minutes > 0) {
+    // Limiter à 8h max (480 minutes) pour éviter les erreurs de saisie
+    return Math.min(ticket.duration_minutes, 480);
+  }
+  // Si pas de duration_minutes, retourner 0 (ne pas calculer depuis les dates)
+  return 0;
 }
 
 function toHours(minutes: number): number {
@@ -122,81 +132,138 @@ export const getSupportAgentsStats = cache(
         return { data: [], totalAgents: 0, periodStart, periodEnd };
       }
 
-      // 4) Tickets totaux sur la période (créés par l’agent)
-      const { data: totalTickets, error: totalError } = await supabase
-        .from('tickets')
-        .select('created_by')
-        .eq('product_id', productId)
-        .in('created_by', agentIds)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd);
-      if (totalError) {
-        console.error('[getSupportAgentsStats] totalError:', totalError);
-        return null;
+      // 4) Tickets totaux sur la période (créés par l'agent)
+      // IMPORTANT: Pagination nécessaire car Supabase limite à 1000 résultats par requête
+      const totalTickets: Array<{ created_by: string }> = [];
+      let totalTicketsOffset = 0;
+      const totalTicketsPageSize = 1000;
+      let hasMoreTotalTickets = true;
+      while (hasMoreTotalTickets) {
+        const { data: page, error: totalError } = await supabase
+          .from('tickets')
+          .select('created_by', { count: 'exact' })
+          .eq('product_id', productId)
+          .in('created_by', agentIds)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .range(totalTicketsOffset, totalTicketsOffset + totalTicketsPageSize - 1);
+        if (totalError) {
+          console.error('[getSupportAgentsStats] totalError:', totalError);
+          return null;
+        }
+        if (page && page.length > 0) {
+          totalTickets.push(...page);
+          totalTicketsOffset += totalTicketsPageSize;
+          hasMoreTotalTickets = page.length === totalTicketsPageSize;
+        } else {
+          hasMoreTotalTickets = false;
+        }
       }
 
       // 4) Tickets résolus sur la période (on utilise resolved_at pour fiabilité)
-      const { data: resolvedTickets, error: resolvedError } = await supabase
-        .from('tickets')
-        .select('assigned_to')
-        .eq('product_id', productId)
-        .in('assigned_to', agentIds)
-        .not('resolved_at', 'is', null)
-        .gte('resolved_at', periodStart)
-        .lte('resolved_at', periodEnd);
-      if (resolvedError) {
-        console.error('[getSupportAgentsStats] resolvedError:', resolvedError);
-        return null;
+      const resolvedTickets: Array<{ assigned_to: string }> = [];
+      let resolvedTicketsOffset = 0;
+      const resolvedTicketsPageSize = 1000;
+      let hasMoreResolvedTickets = true;
+      while (hasMoreResolvedTickets) {
+        const { data: page, error: resolvedError } = await supabase
+          .from('tickets')
+          .select('assigned_to', { count: 'exact' })
+          .eq('product_id', productId)
+          .in('assigned_to', agentIds)
+          .not('resolved_at', 'is', null)
+          .gte('resolved_at', periodStart)
+          .lte('resolved_at', periodEnd)
+          .range(resolvedTicketsOffset, resolvedTicketsOffset + resolvedTicketsPageSize - 1);
+        if (resolvedError) {
+          console.error('[getSupportAgentsStats] resolvedError:', resolvedError);
+          return null;
+        }
+        if (page && page.length > 0) {
+          resolvedTickets.push(...page);
+          resolvedTicketsOffset += resolvedTicketsPageSize;
+          hasMoreResolvedTickets = page.length === resolvedTicketsPageSize;
+        } else {
+          hasMoreResolvedTickets = false;
+        }
       }
 
-      // 5) Tickets en cours sur la période (créés par l’agent dans la période et non résolus)
-      const { data: openTickets, error: openError } = await supabase
-        .from('tickets')
-        .select('created_by')
-        .eq('product_id', productId)
-        .in('created_by', agentIds)
-        .is('resolved_at', null)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd);
-      if (openError) {
-        console.error('[getSupportAgentsStats] openError:', openError);
-        return null;
+      // 5) Tickets en cours sur la période (créés par l'agent dans la période et non résolus)
+      const openTickets: Array<{ created_by: string }> = [];
+      let openTicketsOffset = 0;
+      const openTicketsPageSize = 1000;
+      let hasMoreOpenTickets = true;
+      while (hasMoreOpenTickets) {
+        const { data: page, error: openError } = await supabase
+          .from('tickets')
+          .select('created_by', { count: 'exact' })
+          .eq('product_id', productId)
+          .in('created_by', agentIds)
+          .is('resolved_at', null)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .range(openTicketsOffset, openTicketsOffset + openTicketsPageSize - 1);
+        if (openError) {
+          console.error('[getSupportAgentsStats] openError:', openError);
+          return null;
+        }
+        if (page && page.length > 0) {
+          openTickets.push(...page);
+          openTicketsOffset += openTicketsPageSize;
+          hasMoreOpenTickets = page.length === openTicketsPageSize;
+        } else {
+          hasMoreOpenTickets = false;
+        }
       }
 
-      // 6) Temps d’assistance (ASSISTANCE) sur la période
-      const { data: assistanceTickets, error: assistanceError } = await supabase
-        .from('tickets')
-        .select('created_by, duration_minutes, created_at, resolved_at')
-        .eq('product_id', productId)
-        .eq('ticket_type', 'ASSISTANCE')
-        .in('created_by', agentIds)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd);
-      if (assistanceError) {
-        console.error('[getSupportAgentsStats] assistanceError:', assistanceError);
-        return null;
+      // 6) Temps d'assistance (ASSISTANCE) sur la période
+      const assistanceTickets: Array<{ created_by: string; duration_minutes: number | null; created_at: string | null; resolved_at: string | null }> = [];
+      let assistanceTicketsOffset = 0;
+      const assistanceTicketsPageSize = 1000;
+      let hasMoreAssistanceTickets = true;
+      while (hasMoreAssistanceTickets) {
+        const { data: page, error: assistanceError } = await supabase
+          .from('tickets')
+          .select('created_by, duration_minutes, created_at, resolved_at', { count: 'exact' })
+          .eq('product_id', productId)
+          .eq('ticket_type', 'ASSISTANCE')
+          .in('created_by', agentIds)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .range(assistanceTicketsOffset, assistanceTicketsOffset + assistanceTicketsPageSize - 1);
+        if (assistanceError) {
+          console.error('[getSupportAgentsStats] assistanceError:', assistanceError);
+          return null;
+        }
+        if (page && page.length > 0) {
+          assistanceTickets.push(...page);
+          assistanceTicketsOffset += assistanceTicketsPageSize;
+          hasMoreAssistanceTickets = page.length === assistanceTicketsPageSize;
+        } else {
+          hasMoreAssistanceTickets = false;
+        }
       }
 
       const resolvedCountByAgent = new Map<string, number>();
-      (resolvedTickets ?? []).forEach((t) => {
+      resolvedTickets.forEach((t) => {
         if (!t.assigned_to) return;
         resolvedCountByAgent.set(t.assigned_to, (resolvedCountByAgent.get(t.assigned_to) ?? 0) + 1);
       });
 
       const totalCountByAgent = new Map<string, number>();
-      (totalTickets ?? []).forEach((t) => {
+      totalTickets.forEach((t) => {
         if (!t.created_by) return;
         totalCountByAgent.set(t.created_by, (totalCountByAgent.get(t.created_by) ?? 0) + 1);
       });
 
       const openCountByAgent = new Map<string, number>();
-      (openTickets ?? []).forEach((t) => {
+      openTickets.forEach((t) => {
         if (!t.created_by) return;
         openCountByAgent.set(t.created_by, (openCountByAgent.get(t.created_by) ?? 0) + 1);
       });
 
       const assistanceMinutesByAgent = new Map<string, number>();
-      (assistanceTickets ?? []).forEach((t) => {
+      assistanceTickets.forEach((t) => {
         if (!t.created_by) return;
         const mins = calculateTicketDurationMinutes(t);
         assistanceMinutesByAgent.set(t.created_by, (assistanceMinutesByAgent.get(t.created_by) ?? 0) + mins);
