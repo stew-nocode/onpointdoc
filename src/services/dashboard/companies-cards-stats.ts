@@ -39,13 +39,23 @@ type TicketRow = {
   module?: { name: string | null } | null;
 };
 
+/**
+ * Calcule la durée d'un ticket d'assistance en minutes.
+ * 
+ * IMPORTANT: Pour les tickets d'assistance, on utilise UNIQUEMENT duration_minutes
+ * car le calcul depuis created_at/resolved_at peut donner des durées aberrantes
+ * (ex: ticket créé en janvier et résolu en décembre = ~8000h).
+ * 
+ * Les agents renseignent manuellement duration_minutes lors de la création.
+ */
 function safeMinutes(ticket: Pick<TicketRow, 'duration_minutes' | 'created_at' | 'resolved_at'>): number {
-  if (ticket.duration_minutes && ticket.duration_minutes > 0) return ticket.duration_minutes;
-  if (!ticket.created_at || !ticket.resolved_at) return 0;
-  const created = new Date(ticket.created_at).getTime();
-  const resolved = new Date(ticket.resolved_at).getTime();
-  const diff = Math.round((resolved - created) / (1000 * 60));
-  return Math.max(0, diff);
+  // Utiliser uniquement duration_minutes si disponible et valide
+  if (ticket.duration_minutes && ticket.duration_minutes > 0) {
+    // Limiter à 8h max (480 minutes) pour éviter les erreurs de saisie
+    return Math.min(ticket.duration_minutes, 480);
+  }
+  // Si pas de duration_minutes, retourner 0 (ne pas calculer depuis les dates)
+  return 0;
 }
 
 function toHours(minutes: number): number {
@@ -62,23 +72,40 @@ export const getCompaniesCardsStats = cache(
     const supabase = await createSupabaseServerClient();
 
     try {
-      const { data: tickets, error } = await supabase
-        .from('tickets')
-        .select(
-          // ✅ Joins explicites (évite les problèmes d'inférence FK)
-          'company_id, ticket_type, module_id, duration_minutes, created_at, resolved_at, company:companies!tickets_company_id_fkey(name), module:modules!tickets_module_id_fkey(name)'
-        )
-        .eq('product_id', productId)
-        .gte('created_at', periodStart)
-        .lte('created_at', periodEnd)
-        .not('company_id', 'is', null);
+      // IMPORTANT: Pagination nécessaire car Supabase limite à 1000 résultats par requête
+      const tickets: any[] = [];
+      let offset = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (error) {
-        console.error('[getCompaniesCardsStats] ticketsError:', error);
-        return null;
+      while (hasMore) {
+        const { data: page, error } = await supabase
+          .from('tickets')
+          .select(
+            // ✅ Joins explicites (évite les problèmes d'inférence FK)
+            'company_id, ticket_type, module_id, duration_minutes, created_at, resolved_at, company:companies!tickets_company_id_fkey(name), module:modules!tickets_module_id_fkey(name)'
+          )
+          .eq('product_id', productId)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
+          .not('company_id', 'is', null)
+          .range(offset, offset + pageSize - 1);
+
+        if (error) {
+          console.error('[getCompaniesCardsStats] ticketsError:', error);
+          return null;
+        }
+
+        if (page && page.length > 0) {
+          tickets.push(...page);
+          offset += pageSize;
+          hasMore = page.length === pageSize;
+        } else {
+          hasMore = false;
+        }
       }
 
-      if (!tickets || tickets.length === 0) {
+      if (tickets.length === 0) {
         return { data: [], limit };
       }
 
