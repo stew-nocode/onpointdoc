@@ -157,6 +157,126 @@ export async function GET(request: NextRequest) {
       responseData.personal = personalData;
     }
 
+    // === CHARTS (filtrés par période) - Direction, Manager, Admin ===
+    // Charger les données des charts pour les rôles qui en ont besoin
+    if (dashboardRole !== 'agent' && responseData.periodStart && responseData.periodEnd) {
+      const OBC_PRODUCT_ID = '91304e02-2ce6-4811-b19d-1cae091a6fde';
+      
+      // Importer les services de stats des charts
+      const { getTicketsDistributionStats } = await import('@/services/dashboard/tickets-distribution-stats');
+      const { getTicketsEvolutionStats } = await import('@/services/dashboard/tickets-evolution-stats');
+      const { getTicketsByCompanyStats } = await import('@/services/dashboard/tickets-by-company-stats');
+      const { getBugsByTypeStats } = await import('@/services/dashboard/bugs-by-type-stats');
+      const { getCampaignsResultsStats } = await import('@/services/dashboard/campaigns-results-stats');
+      const { getTicketsByModuleStats } = await import('@/services/dashboard/tickets-by-module-stats');
+      const { getBugsByTypeAndModuleStats } = await import('@/services/dashboard/bugs-by-type-and-module-stats');
+      const { getAssistanceTimeByCompanyStats } = await import('@/services/dashboard/assistance-time-by-company-stats');
+      const { getAssistanceTimeEvolutionStats } = await import('@/services/dashboard/assistance-time-evolution-stats');
+      const { getSupportAgentsStats } = await import('@/services/dashboard/support-agents-stats');
+      const { getSupportAgentsRadarStats } = await import('@/services/dashboard/support-agents-radar-stats');
+      const { getCompaniesCardsStats } = await import('@/services/dashboard/companies-cards-stats');
+      
+      // Charger les stats charts en parallèle
+      const [
+        distributionStats,
+        evolutionStats,
+        byCompanyStats,
+        bugsByTypeStats,
+        campaignsStats,
+        byModuleStats,
+        bugsByTypeModuleStats,
+        assistanceTimeStats,
+        assistanceTimeEvolutionStats,
+        supportAgentsStats,
+        supportAgentsRadarStats,
+        companiesCardsStats,
+      ] = await Promise.all([
+        getTicketsDistributionStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd
+        ),
+        getTicketsEvolutionStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          period // Passer la période pour adapter la granularité
+        ),
+        getTicketsByCompanyStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          10 // Top 10 entreprises
+        ),
+        getBugsByTypeStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          10 // Top 10 types de BUGs
+        ),
+        getCampaignsResultsStats(
+          responseData.periodStart,
+          responseData.periodEnd,
+          10 // Top 10 campagnes
+        ),
+        getTicketsByModuleStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          10 // Top 10 modules
+        ),
+        getBugsByTypeAndModuleStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          15 // Top 15 types de BUGs (avec modules empilés)
+        ),
+        getAssistanceTimeByCompanyStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          10 // Top 10 entreprises
+        ),
+        getAssistanceTimeEvolutionStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          period // Passer la période pour adapter la granularité
+        ),
+        getSupportAgentsStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd
+        ),
+        getSupportAgentsRadarStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          6
+        ),
+        getCompaniesCardsStats(
+          OBC_PRODUCT_ID,
+          responseData.periodStart,
+          responseData.periodEnd,
+          10
+        ),
+      ]);
+      
+      // Ajouter les stats des charts à la réponse
+      responseData.ticketsDistributionStats = distributionStats ?? undefined;
+      responseData.ticketsEvolutionStats = evolutionStats ?? undefined;
+      responseData.ticketsByCompanyStats = byCompanyStats ?? undefined;
+      responseData.bugsByTypeStats = bugsByTypeStats ?? undefined;
+      responseData.campaignsResultsStats = campaignsStats ?? undefined;
+      responseData.ticketsByModuleStats = byModuleStats ?? undefined;
+      responseData.bugsByTypeAndModuleStats = bugsByTypeModuleStats ?? undefined;
+      responseData.assistanceTimeByCompanyStats = assistanceTimeStats ?? undefined;
+      responseData.assistanceTimeEvolutionStats = assistanceTimeEvolutionStats ?? undefined;
+      responseData.supportAgentsStats = supportAgentsStats ?? undefined;
+      responseData.supportAgentsRadarStats = supportAgentsRadarStats ?? undefined;
+      responseData.companiesCardsStats = companiesCardsStats ?? undefined;
+    }
+
     return NextResponse.json(responseData);
   } catch (error) {
     return handleApiError(error);
