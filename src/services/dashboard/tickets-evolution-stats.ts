@@ -72,13 +72,20 @@ function getGranularity(period: Period | 'custom' | string, periodStart: string,
 
 /**
  * Obtient le lundi de la semaine pour une date donnée
+ * 
+ * ✅ CORRIGÉ : Utilise la convention ISO 8601 comme PostgreSQL DATE_TRUNC('week')
+ * En ISO 8601, le dimanche fait partie de la semaine suivante (pas de la semaine précédente)
+ * 
+ * PostgreSQL DATE_TRUNC('week', '2024-12-01') retourne '2024-12-02' (lundi suivant)
+ * car le 1er décembre 2024 est un dimanche et fait partie de la semaine qui commence le 2 décembre
  */
 function getMonday(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
-  // Si dimanche (0), reculer de 6 jours, sinon reculer de (day - 1)
-  const diff = day === 0 ? 6 : day - 1;
-  d.setDate(d.getDate() - diff);
+  // ISO 8601 : dimanche (0) = semaine suivante, donc avancer de 1 jour pour obtenir le lundi suivant
+  // Lundi (1) = 0 jours, Mardi (2) = -1 jour, ..., Dimanche (0) = +1 jour
+  const diff = day === 0 ? 1 : -(day - 1);
+  d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -278,39 +285,46 @@ export const getTicketsEvolutionStats = cache(
       results.forEach((row) => {
         const key = row.period_key;
         const point = dataMap.get(key);
+        
+        // Convertir les valeurs en nombres (gérer BigInt si nécessaire)
+        const bugValue = typeof row.bug_count === 'bigint' ? Number(row.bug_count) : Number(row.bug_count) || 0;
+        const reqValue = typeof row.req_count === 'bigint' ? Number(row.req_count) : Number(row.req_count) || 0;
+        const assistanceValue = typeof row.assistance_count === 'bigint' ? Number(row.assistance_count) : Number(row.assistance_count) || 0;
+        
         if (point) {
-          point.bug = Number(row.bug_count);
-          point.req = Number(row.req_count);
-          point.assistance = Number(row.assistance_count);
+          point.bug = bugValue;
+          point.req = reqValue;
+          point.assistance = assistanceValue;
         } else {
           // Si la clé n'existe pas dans le map, l'ajouter
           dataMap.set(key, {
-            bug: Number(row.bug_count),
-            req: Number(row.req_count),
-            assistance: Number(row.assistance_count),
+            bug: bugValue,
+            req: reqValue,
+            assistance: assistanceValue,
           });
         }
       });
 
       // Convertir en tableau et formater
+      // ✅ CORRECTION : Utiliser 0 au lieu de null pour que les lignes soient toujours visibles
+      // dans un graphique empilé, même quand elles sont à 0
       const evolutionData: EvolutionDataPoint[] = Array.from(dataMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, counts]) => {
-          return {
+          // Utiliser 0 au lieu de null pour que les lignes soient toujours visibles
+          const point = {
             label: formatLabel(key, granularity),
             date: key,
-            bug: counts.bug,
-            req: counts.req,
-            assistance: counts.assistance,
+            bug: counts.bug ?? 0,
+            req: counts.req ?? 0,
+            assistance: counts.assistance ?? 0,
             total: counts.bug + counts.req + counts.assistance,
           };
+          
+          return point;
         });
 
       const totalTickets = evolutionData.reduce((sum, point) => sum + point.total, 0);
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[getTicketsEvolutionStats] ${granularity}: ${evolutionData.length} points, ${totalTickets} tickets`);
-      }
 
       return {
         data: evolutionData,

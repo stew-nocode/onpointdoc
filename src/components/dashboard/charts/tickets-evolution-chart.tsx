@@ -2,8 +2,9 @@
 
 import { useMemo } from 'react';
 import {
-  AreaChart,
+  ComposedChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -102,6 +103,18 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
     return data.data;
   }, [data?.data]);
 
+  // Déterminer quelles courbes ont des données (au moins 1 valeur > 0)
+  // ✅ MODIFIÉ : Toujours afficher les lignes si elles ont des valeurs > 0 dans au moins une période
+  const activeDataKeys = useMemo(() => {
+    if (!data?.data?.length) return { bug: false, req: false, assistance: false };
+
+    const hasBug = data.data.some(point => point.bug > 0);
+    const hasReq = data.data.some(point => point.req > 0);
+    const hasAssistance = data.data.some(point => point.assistance > 0);
+
+    return { bug: hasBug, req: hasReq, assistance: hasAssistance };
+  }, [data?.data]);
+
   // Obtenir la description selon la granularité
   const granularity = data?.granularity || 'month';
   const description = GRANULARITY_DESCRIPTION[granularity];
@@ -139,7 +152,7 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
 
       <CardContent className="pb-4">
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
-          <AreaChart
+          <ComposedChart
             data={chartData}
             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
           >
@@ -192,44 +205,53 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
             
             <Tooltip content={<CustomTooltip />} />
             
-            <Legend content={<CustomLegend />} />
+            <Legend content={<CustomLegend activeDataKeys={activeDataKeys} />} />
 
-            {/* Area Assistance - en bas (empilé) */}
-            <Area
-              type="monotone"
-              dataKey="assistance"
-              stackId="1"
-              stroke={GRADIENT_COLORS.assistance.start}
-              strokeWidth={2}
-              fill="url(#gradientAssistance)"
-              animationDuration={ANIMATION_DURATION}
-              animationEasing={ANIMATION_EASING}
-            />
-            
-            {/* Area REQ - au milieu */}
-            <Area
-              type="monotone"
-              dataKey="req"
-              stackId="1"
-              stroke={GRADIENT_COLORS.req.start}
-              strokeWidth={2}
-              fill="url(#gradientReq)"
-              animationDuration={ANIMATION_DURATION}
-              animationEasing={ANIMATION_EASING}
-            />
-            
-            {/* Area BUG - en haut */}
-            <Area
-              type="monotone"
-              dataKey="bug"
-              stackId="1"
-              stroke={GRADIENT_COLORS.bug.start}
-              strokeWidth={2}
-              fill="url(#gradientBug)"
-              animationDuration={ANIMATION_DURATION}
-              animationEasing={ANIMATION_EASING}
-            />
-          </AreaChart>
+            {/* Area Assistance - en bas (empilé) - Toujours afficher si données > 0 dans au moins une période */}
+            {activeDataKeys.assistance && (
+              <Area
+                type="monotone"
+                dataKey="assistance"
+                stackId="1"
+                stroke={GRADIENT_COLORS.assistance.start}
+                strokeWidth={2}
+                fill="url(#gradientAssistance)"
+                animationDuration={ANIMATION_DURATION}
+                animationEasing={ANIMATION_EASING}
+                // #region agent log
+                onMouseEnter={(data, index, e) => {
+                  fetch('http://127.0.0.1:7242/ingest/3a96cd95-d593-457f-8629-5f10bb6a1b74',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets-evolution-chart.tsx:223',message:'Area assistance rendered',data:{dataKey:'assistance',activeDataKeys},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                }}
+                // #endregion
+              />
+            )}
+
+            {/* Line REQ - Ligne indépendante au-dessus d'ASSISTANCE - Toujours afficher si données > 0 dans au moins une période */}
+            {activeDataKeys.req && (
+              <Line
+                type="monotone"
+                dataKey="req"
+                stroke={GRADIENT_COLORS.req.start}
+                strokeWidth={2}
+                dot={false}
+                animationDuration={ANIMATION_DURATION}
+                animationEasing={ANIMATION_EASING}
+              />
+            )}
+
+            {/* Line BUG - Ligne indépendante au-dessus de REQ - Toujours afficher si données > 0 dans au moins une période */}
+            {activeDataKeys.bug && (
+              <Line
+                type="monotone"
+                dataKey="bug"
+                stroke={GRADIENT_COLORS.bug.start}
+                strokeWidth={2}
+                dot={false}
+                animationDuration={ANIMATION_DURATION}
+                animationEasing={ANIMATION_EASING}
+              />
+            )}
+          </ComposedChart>
         </ChartContainer>
       </CardContent>
     </Card>
@@ -242,7 +264,7 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
-  // Calculer le total
+  // Calculer le total (inclure les valeurs à 0)
   const total = payload.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
 
   return (
@@ -279,10 +301,10 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 /**
- * Légende personnalisée
+ * Légende personnalisée avec indication des courbes actives/inactives
  */
-function CustomLegend({ payload }: any) {
-  if (!payload?.length) return null;
+function CustomLegend({ payload, activeDataKeys }: any) {
+  if (!payload?.length && !activeDataKeys) return null;
 
   const labelMap: Record<string, string> = {
     assistance: 'Assistance',
@@ -290,16 +312,27 @@ function CustomLegend({ payload }: any) {
     bug: 'BUG',
   };
 
+  // Définir tous les types possibles avec leurs couleurs
+  const allTypes = [
+    { dataKey: 'assistance', color: GRADIENT_COLORS.assistance.start, active: activeDataKeys?.assistance },
+    { dataKey: 'req', color: GRADIENT_COLORS.req.start, active: activeDataKeys?.req },
+    { dataKey: 'bug', color: GRADIENT_COLORS.bug.start, active: activeDataKeys?.bug },
+  ];
+
   return (
     <div className="flex items-center justify-center gap-6 pt-4">
-      {payload.map((entry: any, index: number) => (
+      {allTypes.map((type, index) => (
         <div key={`legend-${index}`} className="flex items-center gap-1.5">
           <div
             className="h-2.5 w-2.5 rounded-sm"
-            style={{ backgroundColor: entry.color }}
+            style={{
+              backgroundColor: type.active ? type.color : 'transparent',
+              border: type.active ? 'none' : `1.5px solid ${type.color}`,
+              opacity: type.active ? 1 : 0.4
+            }}
           />
-          <span className="text-xs text-slate-600 dark:text-slate-400">
-            {labelMap[entry.dataKey] || entry.dataKey}
+          <span className={`text-xs ${type.active ? 'text-slate-600 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600'}`}>
+            {labelMap[type.dataKey] || type.dataKey}
           </span>
         </div>
       ))}
