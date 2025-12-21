@@ -210,7 +210,8 @@ export const getTicketsEvolutionStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    period: Period | 'custom' | string = 'month'
+    period: Period | 'custom' | string = 'month',
+    includeOld: boolean = false
   ): Promise<TicketsEvolutionStats | null> => {
     const supabase = await createSupabaseServerClient();
 
@@ -228,6 +229,7 @@ export const getTicketsEvolutionStats = cache(
         p_period_start: periodStart,
         p_period_end: periodEnd,
         p_granularity: granularity,
+        p_include_old: includeOld, // ✅ Passer le paramètre includeOld
       });
 
       if (error) {
