@@ -18,6 +18,7 @@ import { updateActivityReportAction, updateActivityStatusAction } from '@/app/(m
 import { EditTaskReportDialog } from '@/components/tasks/edit-task-report-dialog';
 import { ChangeTaskStatusDialog } from '@/components/tasks/change-task-status-dialog';
 import { updateTaskReportAction, updateTaskStatusAction } from '@/app/(main)/gestion/taches/actions';
+import { AddCommentDialog } from '@/components/comments';
 import { PlanningItemCard } from './planning-item-card';
 import type { PlanningItem } from './types';
 
@@ -42,37 +43,14 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
   const [showActivityStatusDialog, setShowActivityStatusDialog] = useState(false);
   const [showTaskReportDialog, setShowTaskReportDialog] = useState(false);
   const [showTaskStatusDialog, setShowTaskStatusDialog] = useState(false);
+  const [showTaskCommentDialog, setShowTaskCommentDialog] = useState(false);
+  const [showActivityCommentDialog, setShowActivityCommentDialog] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTaskMenuOpen, setIsTaskMenuOpen] = useState(false);
 
   // Pour les activités : créer une tâche à partir de l'activité
   const handleCreateTaskFromActivity = () => {
     router.push(`/gestion/taches?linkedActivityId=${item.id}`);
-  };
-
-  // Pour les activités : voir les détails (où on peut laisser un commentaire)
-  const handleViewActivity = () => {
-    router.push(`/gestion/activites/${item.id}`);
-  };
-
-  // Pour les tâches : voir les détails
-  const handleViewTask = () => {
-    router.push(`/gestion/taches/${item.id}`);
-  };
-
-  // Pour les tâches : voir les détails pour commenter
-  const handleCommentTask = () => {
-    router.push(`/gestion/taches/${item.id}#comments`);
-  };
-
-  // Pour les tâches : voir les détails pour changer le statut
-  const handleChangeTaskStatus = () => {
-    router.push(`/gestion/taches/${item.id}?edit=true`);
-  };
-
-  // Pour les tâches : voir les détails pour le compte rendu
-  const handleEditTaskReport = () => {
-    router.push(`/gestion/taches/${item.id}?edit=true`);
   };
 
   // Icône de distinction à gauche
@@ -192,7 +170,7 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
           </button>
           <button
             onClick={() => {
-              handleViewActivity();
+              setShowActivityCommentDialog(true);
               setIsMenuOpen(false);
             }}
             className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
@@ -245,7 +223,7 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
           </button>
           <button
             onClick={() => {
-              handleCommentTask();
+              setShowTaskCommentDialog(true);
               setIsTaskMenuOpen(false);
             }}
             className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
@@ -347,6 +325,28 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
           }}
           open={showTaskStatusDialog}
           onOpenChange={setShowTaskStatusDialog}
+        />
+      )}
+
+      {/* Dialog pour ajouter un commentaire (tâches) */}
+      {isTask && (
+        <AddCommentDialog
+          objectType="task"
+          objectId={item.id}
+          objectTitle={item.title}
+          open={showTaskCommentDialog}
+          onOpenChange={setShowTaskCommentDialog}
+        />
+      )}
+
+      {/* Dialog pour ajouter un commentaire (activités) */}
+      {isActivity && (
+        <AddCommentDialog
+          objectType="activity"
+          objectId={item.id}
+          objectTitle={item.title}
+          open={showActivityCommentDialog}
+          onOpenChange={setShowActivityCommentDialog}
         />
       )}
     </>
