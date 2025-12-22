@@ -119,7 +119,8 @@ export function useSupabaseQuery<T = unknown>(
       for (const filter of filters) {
         const method = filter.method as keyof typeof query;
         if (typeof query[method] === 'function') {
-          query = (query[method] as (...args: unknown[]) => typeof query)(...filter.args);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          query = (query[method] as any)(...filter.args);
         }
       }
 

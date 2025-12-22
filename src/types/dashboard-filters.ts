@@ -8,6 +8,7 @@ export type DashboardFiltersInput = {
   products: string[]; // IDs des produits sélectionnés
   teams: string[]; // ['support', 'it', 'marketing']
   types: ('BUG' | 'REQ' | 'ASSISTANCE')[]; // Types de tickets
+  includeOld?: boolean; // Inclure les données anciennes (par défaut: true)
 };
 
 /**
@@ -20,7 +21,8 @@ export function buildDefaultDashboardFilters(): DashboardFiltersInput {
     period: 'month',
     products: [],
     teams: [],
-    types: []
+    types: [],
+    includeOld: true
   };
 }
 

@@ -350,3 +350,77 @@ export const listTasksPaginated = async (
   };
 };
 
+/**
+ * Met à jour une tâche existante
+ *
+ * @param payload - Données de mise à jour de la tâche (incluant l'ID)
+ * @returns L'ID de la tâche mise à jour
+ * @throws ApplicationError si une erreur survient
+ */
+export const updateTask = async (payload: UpdateTaskInput): Promise<string> => {
+  const supabase = await createSupabaseServerClient();
+
+  // Préparer les données à mettre à jour
+  const updateData: Record<string, any> = {};
+
+  if (payload.title !== undefined) updateData.title = payload.title;
+  if (payload.description !== undefined) updateData.description = payload.description;
+  if (payload.startDate !== undefined) updateData.start_date = payload.startDate || null;
+  if (payload.estimatedDurationHours !== undefined) updateData.estimated_duration_hours = payload.estimatedDurationHours || null;
+  if (payload.actualDurationHours !== undefined) updateData.actual_duration_hours = payload.actualDurationHours || null;
+  if (payload.assignedTo !== undefined) updateData.assigned_to = payload.assignedTo || null;
+  if (payload.status !== undefined) updateData.status = payload.status;
+  if (payload.reportContent !== undefined) updateData.report_content = payload.reportContent;
+  if (payload.isPlanned !== undefined) updateData.is_planned = payload.isPlanned;
+
+  // Mettre à jour la tâche
+  const { data: task, error: taskError } = await supabase
+    .from('tasks')
+    .update(updateData)
+    .eq('id', payload.id)
+    .select('id')
+    .single();
+
+  if (taskError) {
+    throw handleSupabaseError(taskError, 'Erreur lors de la mise à jour de la tâche');
+  }
+
+  // Gérer les liens avec les tickets si fournis
+  if (payload.linkedTicketIds !== undefined) {
+    // Supprimer tous les liens existants
+    const { error: deleteError } = await supabase
+      .from('ticket_task_link')
+      .delete()
+      .eq('task_id', payload.id);
+
+    if (deleteError) {
+      throw handleSupabaseError(deleteError, 'Erreur lors de la suppression des liens tickets');
+    }
+
+    // Créer les nouveaux liens
+    if (payload.linkedTicketIds.length > 0) {
+      await createTicketLinks(supabase, payload.id, payload.linkedTicketIds);
+    }
+  }
+
+  // Gérer les liens avec les activités si fournis
+  if (payload.linkedActivityIds !== undefined) {
+    // Supprimer tous les liens existants
+    const { error: deleteError } = await supabase
+      .from('activity_task_link')
+      .delete()
+      .eq('task_id', payload.id);
+
+    if (deleteError) {
+      throw handleSupabaseError(deleteError, 'Erreur lors de la suppression des liens activités');
+    }
+
+    // Créer les nouveaux liens
+    if (payload.linkedActivityIds.length > 0) {
+      await createActivityLinks(supabase, payload.id, payload.linkedActivityIds);
+    }
+  }
+
+  return task.id;
+};
+
