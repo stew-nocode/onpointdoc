@@ -121,7 +121,7 @@ export function useDashboardData({
       suspense: false,
 
       // Comparaison personnalisée pour éviter les re-renders inutiles
-      compare: (a, b) => {
+      compare: (a: UnifiedDashboardData | undefined, b: UnifiedDashboardData | undefined) => {
         // Comparer les propriétés clés pour détecter les vrais changements
         if (!a || !b) return false;
 
@@ -136,14 +136,14 @@ export function useDashboardData({
       },
 
       // Callback en cas d'erreur (log dev uniquement)
-      onError: (err) => {
+      onError: (err: Error) => {
         if (process.env.NODE_ENV === 'development') {
           console.error('[useDashboardData] Error loading data:', err);
         }
       },
 
       // Callback après succès (log dev uniquement)
-      onSuccess: (data) => {
+      onSuccess: (data: UnifiedDashboardData) => {
         if (process.env.NODE_ENV === 'development') {
           console.log('[useDashboardData] Data loaded successfully:', {
             period: data.period,
