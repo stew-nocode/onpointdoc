@@ -87,12 +87,39 @@ Ces warnings ne bloquent pas le déploiement.
 6. `src/hooks/charts/useChartTooltip.tsx` - Ajout displayName
 7. `src/hooks/supabase/use-supabase-query.ts` - Fix types récursifs
 
+## Corrections Supplémentaires (Round 2)
+
+### 11. ✅ Types `any` implicites dans use-dashboard-data.ts (4 erreurs)
+**Fichier**: `src/hooks/dashboard/use-dashboard-data.ts`
+**Solution**: Ajout de types explicites aux paramètres des callbacks SWR
+- `compare: (a: UnifiedDashboardData | undefined, b: UnifiedDashboardData | undefined)`
+- `onError: (err: Error)`
+- `onSuccess: (data: UnifiedDashboardData)`
+
+### 12. ✅ Module `swr` non trouvé (1 erreur)
+**Fichiers**: `package.json`, `package-lock.json`
+**Solution**: Ajout de `swr@2.3.8` aux dépendances (était installé mais marqué extraneous)
+
+## Commits de Déploiement
+
+### Commit 1 - Corrections initiales
+- Hash: `5e1e37a`
+- Message: Merge corrections TypeScript (13 erreurs)
+- Fichiers: 7 modifiés
+
+### Commit 2 - Corrections types SWR
+- Hash: `356eece`
+- Message: Corriger types any implicites et ajouter swr
+- Fichiers: 3 modifiés (use-dashboard-data.ts, package.json, package-lock.json)
+
 ## Prochaines Étapes
 
-1. ✅ Commit des corrections
-2. ✅ Push sur develop
-3. ⏳ Vérifier que GitHub Actions passe
-4. ⏳ Déployer sur staging si nécessaire
+1. ✅ Commit des corrections initiales
+2. ✅ Push sur develop (commit 1)
+3. ✅ Corrections types SWR (commit 2)
+4. ✅ Push corrections SWR sur develop
+5. ⏳ Vérifier que GitHub Actions passe
+6. ⏳ Déployer sur staging si nécessaire
 
 ## Notes Techniques
 
