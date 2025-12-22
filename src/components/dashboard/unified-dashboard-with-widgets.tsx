@@ -244,7 +244,7 @@ function UnifiedDashboardWithWidgetsComponent({
    * Gère le changement de période
    */
   const handlePeriodChange = useCallback(
-    (newPeriod: Period) => {
+    async (newPeriod: Period) => {
       setPeriod(newPeriod);
       // Si on change de période, on réinitialise l'année et les dates personnalisées
       setSelectedYear(undefined);
@@ -260,11 +260,13 @@ function UnifiedDashboardWithWidgetsComponent({
       const newUrl = `${pathname}?${params.toString()}`;
       router.push(newUrl, { scroll: false });
 
-      // IMPORTANT: Forcer le refresh de la page Server Component
-      router.refresh();
+      // ✅ CORRECTION : Charger les données côté client AVANT de refresh le Server Component
+      // Cela évite que le dashboard se vide pendant le chargement
+      await loadData(newPeriod);
 
-      // Charger les données côté client
-      loadData(newPeriod);
+      // Refresh du Server Component après que les données soient chargées
+      // (pour synchroniser les Server Components si nécessaire)
+      router.refresh();
     },
     [loadData, router, pathname]
   );
@@ -272,7 +274,7 @@ function UnifiedDashboardWithWidgetsComponent({
   /**
    * Gère le changement de période via le sélecteur personnalisé
    */
-  const handleDateRangeChange = useCallback((range: { from?: Date; to?: Date } | undefined) => {
+  const handleDateRangeChange = useCallback(async (range: { from?: Date; to?: Date } | undefined) => {
     // Réinitialiser l'année AVANT de définir la période personnalisée
     setSelectedYear(undefined);
 
@@ -296,12 +298,11 @@ function UnifiedDashboardWithWidgetsComponent({
       const newUrl = `${pathname}?${params.toString()}`;
       router.push(newUrl, { scroll: false });
 
-      // IMPORTANT: Forcer le refresh de la page Server Component
-      // Nécessaire car revalidate = 0 ne suffit pas pour les changements côté client
-      router.refresh();
+      // ✅ CORRECTION : Charger les données AVANT de refresh
+      await loadData('year', range.from.toISOString(), range.to.toISOString());
 
-      // Transmettre les dates personnalisées à loadData
-      loadData('year', range.from.toISOString(), range.to.toISOString());
+      // Refresh du Server Component après chargement
+      router.refresh();
 
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Nouvelle plage personnalisée sélectionnée:', {
@@ -325,7 +326,7 @@ function UnifiedDashboardWithWidgetsComponent({
   }, [loadData, router, pathname]);
 
   const handleYearChange = useCallback(
-    (year: string | undefined) => {
+    async (year: string | undefined) => {
       // Normaliser : traiter les chaînes vides comme undefined
       const normalizedYear = year === '' || year === undefined ? undefined : year;
 
@@ -349,11 +350,11 @@ function UnifiedDashboardWithWidgetsComponent({
         const newUrl = `${pathname}?${params.toString()}`;
         router.push(newUrl, { scroll: false });
 
-        // IMPORTANT: Forcer le refresh de la page Server Component
-        router.refresh();
+        // ✅ CORRECTION : Charger les données AVANT de refresh
+        await loadData(normalizedYear as Period);
 
-        // Charger les données côté client
-        loadData(normalizedYear as Period);
+        // Refresh du Server Component après chargement
+        router.refresh();
 
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année sélectionnée:', normalizedYear);
@@ -417,7 +418,7 @@ function UnifiedDashboardWithWidgetsComponent({
    * Gère le changement de includeOld
    */
   const handleIncludeOldChange = useCallback(
-    (newIncludeOld: boolean) => {
+    async (newIncludeOld: boolean) => {
       // ✅ Mettre à jour l'état local immédiatement pour une réactivité instantanée
       setLocalIncludeOld(newIncludeOld);
       const params = new URLSearchParams(window.location.search);
@@ -432,9 +433,24 @@ function UnifiedDashboardWithWidgetsComponent({
 
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
+
+      // ✅ CORRECTION : Recharger les données avec le nouveau paramètre includeOld
+      const urlPeriod = params.get('period');
+      const urlStartDate = params.get('startDate');
+      const urlEndDate = params.get('endDate');
+
+      if (urlStartDate && urlEndDate) {
+        await loadData('year', urlStartDate, urlEndDate, newIncludeOld);
+      } else if (urlPeriod) {
+        await loadData(urlPeriod, undefined, undefined, newIncludeOld);
+      } else {
+        await loadData(period, undefined, undefined, newIncludeOld);
+      }
+
+      // Refresh du Server Component après chargement
       router.refresh();
     },
-    [router, pathname]
+    [router, pathname, loadData, period]
   );
 
   /**
