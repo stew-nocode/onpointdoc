@@ -199,6 +199,10 @@ function UnifiedDashboardWithWidgetsComponent({
           strategicFluxResolved: newData.strategic?.flux?.resolved,
           strategicMTTR: newData.strategic?.mttr?.global,
           strategicData: newData.strategic, // Structure complète pour debug
+          hasTicketsDistribution: !!newData.ticketsDistributionStats,
+          hasTicketsEvolution: !!newData.ticketsEvolutionStats,
+          hasTicketsByCompany: !!newData.ticketsByCompanyStats,
+          hasCampaigns: !!newData.campaignsResultsStats,
         });
       }
 
@@ -634,22 +638,16 @@ function UnifiedDashboardWithWidgetsComponent({
         periodEnd: customPeriodEnd,
       }),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    data.role,
-    data.strategic,
-    data.team,
-    data.personal,
-    data.config,
-    data.periodStart,
-    data.periodEnd,
-    data.period, // Garder data.period comme fallback
+    // ✅ CORRECTION : Utiliser l'objet data complet au lieu de dépendances granulaires
+    // Cela garantit que le memo se met à jour quand loadData() charge de nouvelles données
+    data,
     filteredAlerts,
     period, // Période de l'état local (week, month, quarter, year)
     selectedYear, // Année sélectionnée (ex: "2024")
     dateRange, // Période personnalisée
     activeFilterType,
-  ]); // Dépendances granulaires au lieu de l'objet complet
+  ]);
 
   // Mode "staticOnly" : afficher uniquement les KPIs statiques (pour la section kpis)
   if (staticOnly) {
