@@ -13,3 +13,4 @@ export { BulkActionsBar } from './bulk-actions-bar';
 export { ActivitiesTableHeader } from './activities-infinite-scroll/activities-table-header';
 export { ActivitiesKPISectionLazy } from './activities-kpi-section-lazy';
 export { ActivitiesColumnsConfigDialog } from './activities-columns-config-dialog';
+export { ChangeActivityStatusDialog } from './change-activity-status-dialog';

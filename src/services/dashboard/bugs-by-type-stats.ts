@@ -53,22 +53,31 @@ export const getBugsByTypeStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    limit: number = 10
+    limit: number = 10,
+    includeOld: boolean = false
   ): Promise<BugsByTypeStats | null> => {
     const supabase = await createSupabaseServerClient();
 
     try {
       // 1. Récupérer les BUGs de la période avec leur bug_type
-      const { data: bugs, error: bugsError } = await supabase
+      let query = supabase
         .from('tickets')
         .select('id, bug_type')
         .eq('ticket_type', 'BUG')
         .eq('product_id', productId)
         .gte('created_at', periodStart)
         .lte('created_at', periodEnd);
+      
+      if (!includeOld) {
+        query = query.eq('old', false);
+      }
+      
+      const { data: bugs, error: bugsError } = await query;
 
       if (bugsError) {
-        console.error('[getBugsByTypeStats] Error fetching bugs:', bugsError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getBugsByTypeStats] Error fetching bugs:', bugsError);
+        }
         return null;
       }
 
@@ -142,7 +151,9 @@ export const getBugsByTypeStats = cache(
         limit,
       };
     } catch (error) {
-      console.error('[getBugsByTypeStats] Unexpected error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getBugsByTypeStats] Unexpected error:', error);
+      }
       return null;
     }
   }

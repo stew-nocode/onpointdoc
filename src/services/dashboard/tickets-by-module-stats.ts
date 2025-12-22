@@ -11,6 +11,8 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withQueryTimeout } from '@/lib/utils/supabase-query-timeout';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Type pour les données d'un module
@@ -58,22 +60,38 @@ export const getTicketsByModuleStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    limit: number = 10
+    limit: number = 10,
+    includeOld: boolean = false
   ): Promise<TicketsByModuleStats | null> => {
     const supabase = await createSupabaseServerClient();
 
     try {
       // 1. Récupérer les tickets de la période avec leur module
-      const { data: tickets, error: ticketsError } = await supabase
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      let query = supabase
         .from('tickets')
         .select('id, ticket_type, module_id')
         .eq('product_id', productId)
         .gte('created_at', periodStart)
         .lte('created_at', periodEnd)
         .not('module_id', 'is', null); // Uniquement les tickets avec module
+      
+      if (!includeOld) {
+        query = query.eq('old', false);
+      }
+      
+      const { data: tickets, error: ticketsError } = await withQueryTimeout(query, 10000);
 
       if (ticketsError) {
-        console.error('[getTicketsByModuleStats] Error fetching tickets:', ticketsError);
+        // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+        const appError = createError.supabaseError(
+          'Erreur lors de la récupération des tickets par module',
+          ticketsError instanceof Error ? ticketsError : new Error(String(ticketsError)),
+          { productId, periodStart, periodEnd, limit, includeOld }
+        );
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getTicketsByModuleStats]', appError);
+        }
         return null;
       }
 
@@ -99,13 +117,25 @@ export const getTicketsByModuleStats = cache(
       }
 
       // 3. Récupérer les noms des modules
-      const { data: modules, error: modulesError } = await supabase
-        .from('modules')
-        .select('id, name')
-        .in('id', uniqueModuleIds);
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      const { data: modules, error: modulesError } = await withQueryTimeout(
+        supabase
+          .from('modules')
+          .select('id, name')
+          .in('id', uniqueModuleIds),
+        10000
+      );
 
       if (modulesError) {
-        console.error('[getTicketsByModuleStats] Error fetching modules:', modulesError);
+        // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+        const appError = createError.supabaseError(
+          'Erreur lors de la récupération des modules',
+          modulesError instanceof Error ? modulesError : new Error(String(modulesError)),
+          { productId, periodStart, periodEnd, limit, includeOld }
+        );
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getTicketsByModuleStats]', appError);
+        }
         return null;
       }
 
@@ -169,8 +199,16 @@ export const getTicketsByModuleStats = cache(
         moduleCount: sortedData.length,
         limit,
       };
-    } catch (error) {
-      console.error('[getTicketsByModuleStats] Unexpected error:', error);
+    } catch (e) {
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.internalError(
+        'Erreur inattendue lors de la récupération des tickets par module',
+        e instanceof Error ? e : new Error(String(e)),
+        { productId, periodStart, periodEnd, limit, includeOld }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getTicketsByModuleStats]', appError);
+      }
       return null;
     }
   }

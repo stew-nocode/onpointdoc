@@ -74,7 +74,9 @@ export const getAssistanceHistoryStats = cache(
       const { count: total, error: totalError } = await totalQuery;
 
       if (totalError) {
-        console.error('[getAssistanceHistoryStats] Error counting total:', totalError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getAssistanceHistoryStats] Error counting total:', totalError);
+        }
         return null;
       }
 
@@ -92,7 +94,9 @@ export const getAssistanceHistoryStats = cache(
       const { count: ouvertes, error: ouvertesError } = await ouvertesQuery;
 
       if (ouvertesError) {
-        console.error('[getAssistanceHistoryStats] Error counting ouvertes:', ouvertesError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getAssistanceHistoryStats] Error counting ouvertes:', ouvertesError);
+        }
         return null;
       }
 
@@ -110,7 +114,9 @@ export const getAssistanceHistoryStats = cache(
       const { count: resolues, error: resoluesError } = await resoluesQuery;
 
       if (resoluesError) {
-        console.error('[getAssistanceHistoryStats] Error counting resolues:', resoluesError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getAssistanceHistoryStats] Error counting resolues:', resoluesError);
+        }
         return null;
       }
 
@@ -128,7 +134,9 @@ export const getAssistanceHistoryStats = cache(
       const { count: transferees, error: transfereesError } = await transfereesQuery;
 
       if (transfereesError) {
-        console.error('[getAssistanceHistoryStats] Error counting transferees:', transfereesError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getAssistanceHistoryStats] Error counting transferees:', transfereesError);
+        }
         return null;
       }
 
@@ -160,11 +168,17 @@ export const getAssistanceHistoryStats = cache(
         tauxTransfert,
       };
     } catch (error) {
-      console.error('[getAssistanceHistoryStats] Unexpected error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getAssistanceHistoryStats] Unexpected error:', error);
+      }
       return null;
     }
   }
 );
+
+
+
+
 
 
 

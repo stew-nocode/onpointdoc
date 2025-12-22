@@ -1,8 +1,9 @@
 /**
- * Service de statistiques d'évolution du temps d'assistance
+ * Service de statistiques d'évolution du temps d'interactions
  * 
  * @description
- * Fournit les données pour l'AreaChart d'évolution du temps d'assistance.
+ * Fournit les données pour l'AreaChart d'évolution du temps d'interactions.
+ * Les interactions = BUG + REQ + ASSISTANCE + RELANCES (toutes les communications entrantes).
  * Soumis aux filtres globaux (période).
  * 
  * La granularité s'adapte automatiquement selon la période :
@@ -14,27 +15,40 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withQueryTimeout } from '@/lib/utils/supabase-query-timeout';
+import { withRpcTimeout } from '@/lib/utils/supabase-timeout';
+import { createError } from '@/lib/errors/types';
 import type { Period } from '@/types/dashboard';
 import type { DataGranularity } from '@/services/dashboard/tickets-evolution-stats';
 
 /**
- * Type pour un point de données d'évolution du temps d'assistance
+ * Type pour un point de données d'évolution du temps d'interactions
  */
 export type AssistanceTimeEvolutionDataPoint = {
   /** Label affiché (ex: "Lun 16", "Sem 1", "Nov 2024") */
   label: string;
   /** Date ISO du point */
   date: string;
-  /** Temps d'assistance total en heures */
+  /** Temps d'interactions total en heures */
   totalHours: number;
-  /** Temps d'assistance total en minutes (pour précision) */
+  /** Temps d'interactions total en minutes (pour précision) */
   totalMinutes: number;
-  /** Nombre de tickets assistance */
+  /** Nombre de tickets (interactions) */
   ticketCount: number;
+  /** Temps par type en heures */
+  bugHours: number;
+  reqHours: number;
+  assistanceHours: number;
+  relanceHours: number;
+  /** Temps par type en minutes (pour précision) */
+  bugMinutes: number;
+  reqMinutes: number;
+  assistanceMinutes: number;
+  relanceMinutes: number;
 };
 
 /**
- * Type des statistiques d'évolution du temps d'assistance
+ * Type des statistiques d'évolution du temps d'interactions
  */
 export type AssistanceTimeEvolutionStats = {
   data: AssistanceTimeEvolutionDataPoint[];
@@ -46,9 +60,9 @@ export type AssistanceTimeEvolutionStats = {
 };
 
 /**
- * Calcule la durée d'un ticket d'assistance en minutes.
+ * Calcule la durée d'un ticket (interaction) en minutes.
  * 
- * IMPORTANT: Pour les tickets d'assistance, on utilise UNIQUEMENT duration_minutes
+ * IMPORTANT: On utilise UNIQUEMENT duration_minutes si disponible
  * car le calcul depuis created_at/resolved_at peut donner des durées aberrantes
  * (ex: ticket créé en janvier et résolu en décembre = ~8000h).
  * 
@@ -156,8 +170,22 @@ function generateAllPoints(
   periodStart: string, 
   periodEnd: string, 
   granularity: DataGranularity
-): Map<string, { totalMinutes: number; ticketCount: number }> {
-  const points = new Map<string, { totalMinutes: number; ticketCount: number }>();
+): Map<string, { 
+  totalMinutes: number; 
+  ticketCount: number;
+  bugMinutes: number;
+  reqMinutes: number;
+  assistanceMinutes: number;
+  relanceMinutes: number;
+}> {
+  const points = new Map<string, { 
+    totalMinutes: number; 
+    ticketCount: number;
+    bugMinutes: number;
+    reqMinutes: number;
+    assistanceMinutes: number;
+    relanceMinutes: number;
+  }>();
   const start = new Date(periodStart);
   const end = new Date(periodEnd);
   
@@ -172,7 +200,14 @@ function generateAllPoints(
   while (current <= end) {
     const key = getGroupKey(current, granularity);
     if (!points.has(key)) {
-      points.set(key, { totalMinutes: 0, ticketCount: 0 });
+      points.set(key, { 
+        totalMinutes: 0, 
+        ticketCount: 0,
+        bugMinutes: 0,
+        reqMinutes: 0,
+        assistanceMinutes: 0,
+        relanceMinutes: 0,
+      });
     }
     
     switch (granularity) {
@@ -192,7 +227,9 @@ function generateAllPoints(
 }
 
 /**
- * Récupère les statistiques d'évolution du temps d'assistance
+ * Récupère les statistiques d'évolution du temps d'interactions
+ * 
+ * Les interactions = BUG + REQ + ASSISTANCE + RELANCES (toutes les communications entrantes).
  * 
  * La granularité s'adapte automatiquement :
  * - Semaine → par jour (7 points)
@@ -210,7 +247,8 @@ export const getAssistanceTimeEvolutionStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    period: Period | 'custom' | string = 'month'
+    period: Period | 'custom' | string = 'month',
+    includeOld: boolean = false
   ): Promise<AssistanceTimeEvolutionStats | null> => {
     const supabase = await createSupabaseServerClient();
 
@@ -220,7 +258,8 @@ export const getAssistanceTimeEvolutionStats = cache(
       
       console.log(`[getAssistanceTimeEvolutionStats] Period: ${period}, Granularity: ${granularity}`);
 
-      // Récupérer les tickets ASSISTANCE avec durée
+      // Récupérer TOUS les tickets (BUG, REQ, ASSISTANCE) avec durée
+      // Les interactions = BUG + REQ + ASSISTANCE + RELANCES
       // IMPORTANT: Pagination nécessaire car Supabase limite à 1000 résultats par requête
       const tickets: any[] = [];
       let offset = 0;
@@ -228,18 +267,35 @@ export const getAssistanceTimeEvolutionStats = cache(
       let hasMore = true;
 
       while (hasMore) {
-        const { data: page, error } = await supabase
+        // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+        let query = supabase
           .from('tickets')
-          .select('created_at, duration_minutes, resolved_at')
-          .eq('ticket_type', 'ASSISTANCE')
+          .select('id, created_at, ticket_type, duration_minutes, resolved_at, is_relance')
+          .in('ticket_type', ['BUG', 'REQ', 'ASSISTANCE'])
           .eq('product_id', productId)
           .gte('created_at', periodStart)
           .lte('created_at', periodEnd)
-          .order('created_at', { ascending: true })
-          .range(offset, offset + pageSize - 1);
+          .order('created_at', { ascending: true });
+        
+        if (!includeOld) {
+          query = query.eq('old', false);
+        }
+        
+        const { data: page, error } = await withQueryTimeout(
+          query.range(offset, offset + pageSize - 1),
+          10000
+        );
 
         if (error) {
-          console.error('[getAssistanceTimeEvolutionStats] Error fetching tickets:', error);
+          // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+          const appError = createError.supabaseError(
+            'Erreur lors de la récupération des tickets pour l\'évolution du temps',
+            error instanceof Error ? error : new Error(String(error)),
+            { productId, periodStart, periodEnd, period, includeOld, offset }
+          );
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[getAssistanceTimeEvolutionStats]', appError);
+          }
           return null;
         }
 
@@ -252,10 +308,44 @@ export const getAssistanceTimeEvolutionStats = cache(
         }
       }
 
-      // Générer tous les points de la période (même vides)
+      // 1. Récupérer le nombre de relances (commentaires followup) via fonction RPC PostgreSQL
+      // ✅ OPTIMISATION: Utiliser la fonction RPC PostgreSQL pour éviter HeadersOverflowError et améliorer les performances
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      const ticketFollowupCountMap = new Map<string, number>();
+      try {
+        const { data: rpcData, error: rpcError } = await withRpcTimeout(
+          supabase.rpc('get_followup_comments_count', {
+            p_product_id: productId,
+            p_period_start: periodStart,
+            p_period_end: periodEnd,
+            p_include_old: includeOld,
+          }),
+          10000
+        );
+
+        if (rpcError) {
+          // Log mais continue (dégradation gracieuse - les relances ne sont pas critiques)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[getAssistanceTimeEvolutionStats] Error calling RPC get_followup_comments_count:', rpcError);
+          }
+          // Continuer sans les relances si la RPC échoue
+        } else if (rpcData && (rpcData as Array<{ ticket_id: string; followup_count: number }>).length > 0) {
+          (rpcData as Array<{ ticket_id: string; followup_count: number }>).forEach((row) => {
+            ticketFollowupCountMap.set(row.ticket_id, Number(row.followup_count));
+          });
+        }
+      } catch (e) {
+        // Log mais continue (dégradation gracieuse)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getAssistanceTimeEvolutionStats] Unexpected error calling RPC:', e);
+        }
+        // Continuer sans les relances si la RPC échoue
+      }
+
+      // 4. Générer tous les points de la période (même vides)
       const dataMap = generateAllPoints(periodStart, periodEnd, granularity);
       
-      // Remplir avec les données des tickets
+      // 5. Remplir avec les données des tickets par type
       if (tickets.length > 0) {
         tickets.forEach((ticket) => {
           const date = new Date(ticket.created_at);
@@ -264,23 +354,62 @@ export const getAssistanceTimeEvolutionStats = cache(
           const point = dataMap.get(key);
           if (point) {
             const durationMinutes = calculateTicketDuration(ticket);
+            
+            // Compter par type
+            switch (ticket.ticket_type) {
+              case 'BUG':
+                point.bugMinutes += durationMinutes;
+                break;
+              case 'REQ':
+                point.reqMinutes += durationMinutes;
+                break;
+              case 'ASSISTANCE':
+                // Assistances normales (sans is_relance)
+                if (ticket.is_relance !== true) {
+                  point.assistanceMinutes += durationMinutes;
+                }
+                
+                // Relances = tickets avec is_relance=true (leur durée)
+                if (ticket.is_relance === true) {
+                  point.relanceMinutes += durationMinutes;
+                }
+                
+                // Les commentaires followup n'ont pas de durée propre,
+                // mais on pourrait ajouter une durée moyenne si nécessaire
+                // Pour l'instant, on ne compte que les tickets avec is_relance=true
+                break;
+            }
+            
             point.totalMinutes += durationMinutes;
             point.ticketCount++;
           }
         });
       }
 
-      // Convertir en tableau et formater
+      // 6. Convertir en tableau et formater
       const data: AssistanceTimeEvolutionDataPoint[] = Array.from(dataMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, counts]) => {
-          const totalHours = Math.round((counts.totalMinutes / 60) * 10) / 10; // Arrondir à 1 décimale
+          const totalHours = Math.round((counts.totalMinutes / 60) * 10) / 10;
+          const bugHours = Math.round((counts.bugMinutes / 60) * 10) / 10;
+          const reqHours = Math.round((counts.reqMinutes / 60) * 10) / 10;
+          const assistanceHours = Math.round((counts.assistanceMinutes / 60) * 10) / 10;
+          const relanceHours = Math.round((counts.relanceMinutes / 60) * 10) / 10;
+          
           return {
             label: formatLabel(key, granularity),
             date: key,
             totalHours,
             totalMinutes: counts.totalMinutes,
             ticketCount: counts.ticketCount,
+            bugHours,
+            reqHours,
+            assistanceHours,
+            relanceHours,
+            bugMinutes: counts.bugMinutes,
+            reqMinutes: counts.reqMinutes,
+            assistanceMinutes: counts.assistanceMinutes,
+            relanceMinutes: counts.relanceMinutes,
           };
         });
 
@@ -297,8 +426,16 @@ export const getAssistanceTimeEvolutionStats = cache(
         periodEnd,
         granularity,
       };
-    } catch (error) {
-      console.error('[getAssistanceTimeEvolutionStats] Unexpected error:', error);
+    } catch (e) {
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.internalError(
+        'Erreur inattendue lors de la récupération de l\'évolution du temps d\'interactions',
+        e instanceof Error ? e : new Error(String(e)),
+        { productId, periodStart, periodEnd, period, includeOld }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getAssistanceTimeEvolutionStats]', appError);
+      }
       return null;
     }
   }
