@@ -80,10 +80,12 @@ export function PlanningCalendar({
   };
 
   /**
-   * Retour au mois en cours
+   * Retour au mois en cours et sélectionne la date du jour
    */
   const goToCurrentMonth = () => {
-    setCurrentMonth(new Date());
+    const today = new Date();
+    setCurrentMonth(today);
+    onDateSelect(today);
   };
 
   return (
