@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import * as React from 'react';
 import {
   AreaChart,
   Area,
@@ -12,6 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Clock } from 'lucide-react';
+import { useChartTooltip } from '@/hooks/charts/useChartTooltip';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/card';
 import { ChartContainer, type ChartConfig } from '@/ui/chart';
 import { cn } from '@/lib/utils';
@@ -103,24 +105,139 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
   const granularity = data?.granularity || 'month';
   const description = GRANULARITY_DESCRIPTION[granularity];
 
+  // ✅ OPTIMISATION Phase 3B : Tooltip memoizé avec dépendances externes
+  const tooltipRenderer = useCallback((active: boolean | undefined, payload: any[] | undefined, label: string | undefined) => {
+    if (!active || !payload?.length) return null;
+
+    // Map des labels et couleurs par dataKey
+    const typeMap: Record<string, { label: string; color: string }> = {
+      bugHours: { label: 'BUG', color: GRADIENT_COLORS.bug.start },
+      reqHours: { label: 'REQ', color: GRADIENT_COLORS.req.start },
+      assistanceHours: { label: 'Assistance', color: GRADIENT_COLORS.assistance.start },
+      relanceHours: { label: 'Relance', color: GRADIENT_COLORS.relance.start },
+    };
+
+    // Récupérer le total depuis le payload
+    const data = payload[0]?.payload;
+    const totalHours = data?.totalHours || 0;
+
+    // Filtrer les entrées avec des valeurs > 0, dédupliquer par dataKey
+    const seenDataKeys = new Set<string>();
+    const validEntries = payload
+      .filter((entry: any) => {
+        if (entry.value <= 0 || seenDataKeys.has(entry.dataKey)) {
+          return false;
+        }
+        seenDataKeys.add(entry.dataKey);
+        return true;
+      })
+      .map((entry: any) => {
+        return {
+          dataKey: entry.dataKey,
+          value: entry.value,
+          type: typeMap[entry.dataKey] || { label: entry.dataKey, color: entry.color },
+        };
+      })
+      .sort((a: { dataKey: string }, b: { dataKey: string }) => {
+        const order = ['assistanceHours', 'bugHours', 'reqHours', 'relanceHours'];
+        return order.indexOf(a.dataKey) - order.indexOf(b.dataKey);
+      });
+
+    return (
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
+        <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+          {label}
+        </div>
+        <div className="space-y-1">
+          {validEntries.map((entry: { dataKey: string; value: number; type: { label: string; color: string } }, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: entry.type.color }}
+                />
+                <span className="text-slate-600 dark:text-slate-400">{entry.type.label}</span>
+              </div>
+              <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
+                {entry.value.toFixed(1)}h
+              </span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+              {totalHours.toFixed(1)}h
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }, []);
+
+  const TooltipComponent = useChartTooltip(tooltipRenderer);
+
+  // ✅ OPTIMISATION Phase 3B : Legend memoizée
+  const LegendComponent = useMemo(() => {
+    const labelMap: Record<string, string> = {
+      bugHours: 'BUG',
+      reqHours: 'REQ',
+      assistanceHours: 'Assistance',
+      relanceHours: 'Relance',
+    };
+
+    const colorMap: Record<string, string> = {
+      bugHours: GRADIENT_COLORS.bug.start,
+      reqHours: GRADIENT_COLORS.req.start,
+      assistanceHours: GRADIENT_COLORS.assistance.start,
+      relanceHours: GRADIENT_COLORS.relance.start,
+    };
+
+    const LegendComponentInner = React.memo<{ payload?: any[] }>(({ payload }) => {
+      if (!payload?.length) return null;
+
+      return (
+        <div className="flex items-center justify-center gap-4 pt-2">
+          {payload.map((entry: any, index: number) => {
+            const color = colorMap[entry.dataKey] || entry.color || GRADIENT_COLORS.bug.start;
+            return (
+              <div key={`legend-${index}`} className="flex items-center gap-1.5">
+                <div
+                  className="h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  {labelMap[entry.dataKey] || entry.dataKey}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      );
+    });
+    LegendComponentInner.displayName = 'AssistanceTimeEvolutionLegend';
+
+    return LegendComponentInner;
+  }, []);
+
+  // Vérifier si au moins une valeur > 0 pour chaque type (pour conditionner le rendu)
+  // ✅ CORRECTION ESLint : Déplacer les hooks AVANT l'early return
+  const hasBugData = useMemo(() => {
+    return data?.data?.some((point) => point.bugHours > 0) ?? false;
+  }, [data?.data]);
+  const hasReqData = useMemo(() => {
+    return data?.data?.some((point) => point.reqHours > 0) ?? false;
+  }, [data?.data]);
+  const hasRelanceData = useMemo(() => {
+    return data?.data?.some((point) => point.relanceHours > 0) ?? false;
+  }, [data?.data]);
+  const hasAssistanceData = useMemo(() => {
+    return data?.data?.some((point) => point.assistanceHours > 0) ?? false;
+  }, [data?.data]);
+
   // Empty state
   if (!data || data.data.length === 0) {
     return <AssistanceTimeEvolutionChartEmpty className={className} />;
   }
-
-  // Vérifier si au moins une valeur > 0 pour chaque type (pour conditionner le rendu)
-  const hasBugData = useMemo(() => {
-    return data.data.some((point) => point.bugHours > 0);
-  }, [data.data]);
-  const hasReqData = useMemo(() => {
-    return data.data.some((point) => point.reqHours > 0);
-  }, [data.data]);
-  const hasRelanceData = useMemo(() => {
-    return data.data.some((point) => point.relanceHours > 0);
-  }, [data.data]);
-  const hasAssistanceData = useMemo(() => {
-    return data.data.some((point) => point.assistanceHours > 0);
-  }, [data.data]);
 
   return (
     <Card className={cn(
@@ -202,8 +319,8 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
               tickFormatter={(value) => `${value}h`}
             />
             
-            <Tooltip content={<CustomTooltip />} />
-            <Legend content={<CustomLegend />} />
+            <Tooltip content={<TooltipComponent />} />
+            <Legend content={<LegendComponent />} />
 
             {/* Aires empilées par type - ordre d'empilement de bas en haut : petites valeurs en bas, grandes valeurs en haut */}
             {hasRelanceData && (
@@ -258,122 +375,6 @@ export function AssistanceTimeEvolutionChart({ data, className }: AssistanceTime
         </ChartContainer>
       </CardContent>
     </Card>
-  );
-}
-
-/**
- * Tooltip personnalisé pour l'AreaChart
- */
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-
-  // Map des labels et couleurs par dataKey
-  const typeMap: Record<string, { label: string; color: string }> = {
-    bugHours: { label: 'BUG', color: GRADIENT_COLORS.bug.start },
-    reqHours: { label: 'REQ', color: GRADIENT_COLORS.req.start },
-    assistanceHours: { label: 'Assistance', color: GRADIENT_COLORS.assistance.start },
-    relanceHours: { label: 'Relance', color: GRADIENT_COLORS.relance.start },
-  };
-
-  // Récupérer le total depuis le payload (première entrée contient toutes les données)
-  const data = payload[0]?.payload;
-  const totalHours = data?.totalHours || 0;
-
-  // Filtrer les entrées avec des valeurs > 0, dédupliquer par dataKey, et les trier dans l'ordre d'affichage
-  const seenDataKeys = new Set<string>();
-  const validEntries = payload
-    .filter((entry: any) => {
-      // Filtrer les valeurs > 0 et dédupliquer par dataKey (garder seulement la première occurrence)
-      if (entry.value <= 0 || seenDataKeys.has(entry.dataKey)) {
-        return false;
-      }
-      seenDataKeys.add(entry.dataKey);
-      return true;
-    })
-    .map((entry: any) => {
-      return {
-        dataKey: entry.dataKey,
-        value: entry.value,
-        type: typeMap[entry.dataKey] || { label: entry.dataKey, color: entry.color },
-      };
-    })
-    // Trier dans l'ordre d'affichage VISUEL (de bas en haut dans le graphique empilé) : Relance, REQ, BUG, Assistance
-    // Le tooltip affiche de haut en bas : Assistance (en haut du graphique) en premier, puis BUG, REQ, Relance (en bas)
-    .sort((a: { dataKey: string }, b: { dataKey: string }) => {
-      const order = ['assistanceHours', 'bugHours', 'reqHours', 'relanceHours'];
-      return order.indexOf(a.dataKey) - order.indexOf(b.dataKey);
-    });
-
-  return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
-      <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-        {label}
-      </div>
-      <div className="space-y-1">
-        {validEntries.map((entry: { dataKey: string; value: number; type: { label: string; color: string } }, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div
-                className="h-2.5 w-2.5 rounded-sm"
-                style={{ backgroundColor: entry.type.color }}
-              />
-              <span className="text-slate-600 dark:text-slate-400">{entry.type.label}</span>
-            </div>
-            <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-              {entry.value.toFixed(1)}h
-            </span>
-          </div>
-        ))}
-        <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
-          <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
-          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-            {totalHours.toFixed(1)}h
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Légende personnalisée pour l'AreaChart
- */
-function CustomLegend({ payload }: any) {
-  if (!payload?.length) return null;
-
-  const labelMap: Record<string, string> = {
-    bugHours: 'BUG',
-    reqHours: 'REQ',
-    assistanceHours: 'Assistance',
-    relanceHours: 'Relance',
-  };
-
-  // Map des couleurs par dataKey (doit correspondre exactement aux couleurs des Area)
-  const colorMap: Record<string, string> = {
-    bugHours: GRADIENT_COLORS.bug.start,
-    reqHours: GRADIENT_COLORS.req.start,
-    assistanceHours: GRADIENT_COLORS.assistance.start,
-    relanceHours: GRADIENT_COLORS.relance.start,
-  };
-
-  return (
-    <div className="flex items-center justify-center gap-4 pt-2">
-      {payload.map((entry: any, index: number) => {
-        // Utiliser la couleur depuis colorMap pour garantir la cohérence
-        const color = colorMap[entry.dataKey] || entry.color || GRADIENT_COLORS.bug.start;
-        return (
-          <div key={`legend-${index}`} className="flex items-center gap-1.5">
-            <div
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: color }}
-            />
-            <span className="text-xs text-slate-600 dark:text-slate-400">
-              {labelMap[entry.dataKey] || entry.dataKey}
-            </span>
-          </div>
-        );
-      })}
-    </div>
   );
 }
 

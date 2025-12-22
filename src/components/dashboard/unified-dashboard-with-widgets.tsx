@@ -6,16 +6,15 @@ import type { Period, UnifiedDashboardData } from '@/types/dashboard';
 import type { DashboardRole, UserDashboardConfig } from '@/types/dashboard-widgets';
 import { filterAlertsByRole } from '@/lib/utils/role-filters';
 import { DashboardWidgetGrid } from './widgets';
-import { CustomPeriodSelector } from './ceo/custom-period-selector';
-import { YearSelector } from './ceo/year-selector';
-import { WidgetPreferencesDialog } from './user/widget-preferences-dialog';
 import { DashboardSkeleton } from './dashboard-skeleton';
-import { Loader2 } from 'lucide-react';
+import { DashboardFiltersBar } from './dashboard-filters-bar';
+import { parseDashboardFiltersFromParams } from '@/lib/utils/dashboard-filters-utils';
 import { useRealtimeDashboardData } from '@/hooks/dashboard/use-realtime-dashboard-data';
 import { useRealtimeWidgetConfig } from '@/hooks/dashboard/use-realtime-widget-config';
 import { usePerformanceMeasure, useRenderCount } from '@/hooks/performance';
 import { DateRange } from 'react-day-picker';
 import { getPeriodDates } from '@/services/dashboard/period-utils';
+import { WIDGET_REGISTRY } from './widgets/registry';
 
 type UnifiedDashboardWithWidgetsProps = {
   role: DashboardRole;
@@ -74,6 +73,9 @@ function UnifiedDashboardWithWidgetsComponent({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ OPTIMISATION : Cache en mémoire pour éviter les requêtes dupliquées
+  const dashboardCacheRef = useRef<Map<string, { data: UnifiedDashboardData; timestamp: number }>>(new Map());
+
   // Mesures de performance (dev uniquement)
   const { startMeasure, endMeasure } = usePerformanceMeasure({
     name: 'DashboardRender',
@@ -86,8 +88,10 @@ function UnifiedDashboardWithWidgetsComponent({
   });
 
   /**
-   * Charge les données pour une période donnée
-   * 
+   * Charge les données pour une période donnée (avec SWR intégré)
+   *
+   * ✅ OPTIMISÉ : Utilise un cache local pour éviter les requêtes répétées
+   *
    * @param selectedPeriod - Période standard (week, month, quarter, year) ou année spécifique
    * @param customStartDate - Date de début personnalisée (optionnelle)
    * @param customEndDate - Date de fin personnalisée (optionnelle)
@@ -95,10 +99,10 @@ function UnifiedDashboardWithWidgetsComponent({
   const loadData = useCallback(async (
     selectedPeriod: Period | string,
     customStartDate?: string,
-    customEndDate?: string
+    customEndDate?: string,
+    includeOldOverride?: boolean // ✅ Paramètre optionnel pour override includeOld depuis l'état local
   ) => {
     // Mesure du temps de chargement (dev uniquement)
-    const loadStartTime = performance.now();
     if (process.env.NODE_ENV === 'development') {
       console.time('⏱️ DashboardDataLoad');
     }
@@ -106,10 +110,24 @@ function UnifiedDashboardWithWidgetsComponent({
     setIsLoading(true);
     setError(null);
     try {
-      const url = new URL(window.location.href);
-      const params = new URLSearchParams(url.search);
+      // ✅ Utiliser window.location.search pour avoir les paramètres à jour
+      // searchParams peut ne pas être à jour immédiatement après router.push()
+      const currentUrlParams = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(currentUrlParams.toString());
       params.set('period', selectedPeriod);
-      
+
+      // ✅ Si includeOldOverride est fourni, l'utiliser directement (plus rapide que d'attendre l'URL)
+      if (includeOldOverride !== undefined) {
+        if (includeOldOverride) {
+          params.delete('includeOld'); // true = valeur par défaut, on retire le paramètre
+        } else {
+          params.set('includeOld', 'false');
+        }
+      }
+      // Sinon, on garde la valeur de l'URL (comportement par défaut)
+
       // Ajouter les dates personnalisées si fournies
       if (customStartDate && customEndDate) {
         params.set('startDate', customStartDate);
@@ -121,14 +139,54 @@ function UnifiedDashboardWithWidgetsComponent({
             endDate: customEndDate,
           });
         }
+      } else {
+        // Supprimer les dates personnalisées si on utilise une période standard
+        params.delete('startDate');
+        params.delete('endDate');
       }
 
-      const response = await fetch(`/api/dashboard?${params.toString()}`);
+      const url = `/api/dashboard?${params.toString()}`;
+
+      // ✅ OPTIMISATION : Cache simple en mémoire (évite requêtes dupliquées immédiates)
+      const cacheKey = url;
+      const cachedData = dashboardCacheRef.current.get(cacheKey);
+      const now = Date.now();
+
+      // Si données en cache et fraîches (< 5s), les utiliser
+      if (cachedData && (now - cachedData.timestamp) < 5000) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Dashboard] Using cached data (age: ' + (now - cachedData.timestamp) + 'ms)');
+        }
+        setData(cachedData.data);
+        setIsLoading(false);
+        if (process.env.NODE_ENV === 'development') {
+          console.timeEnd('⏱️ DashboardDataLoad');
+        }
+        return;
+      }
+
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error('Erreur lors du chargement des données');
       }
+
       const newData: UnifiedDashboardData = await response.json();
-      
+
+      // ✅ Mettre en cache pour 5s
+      dashboardCacheRef.current.set(cacheKey, {
+        data: newData,
+        timestamp: now,
+      });
+
+      // Nettoyer le cache (garder max 10 entrées)
+      if (dashboardCacheRef.current.size > 10) {
+        const oldestKey = dashboardCacheRef.current.keys().next().value;
+        if (oldestKey) {
+          dashboardCacheRef.current.delete(oldestKey);
+        }
+      }
+
       // Log pour debug (dev uniquement)
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Data loaded from API:', {
@@ -143,15 +201,12 @@ function UnifiedDashboardWithWidgetsComponent({
           strategicData: newData.strategic, // Structure complète pour debug
         });
       }
-      
+
       setData(newData);
 
       // Logger le temps de chargement (dev uniquement)
       if (process.env.NODE_ENV === 'development') {
-        const loadDuration = performance.now() - loadStartTime;
         console.timeEnd('⏱️ DashboardDataLoad');
-        const rating = loadDuration < 500 ? '✅' : loadDuration < 1000 ? '⚠️' : '❌';
-        console.log(`${rating} DashboardDataLoad: ${Math.round(loadDuration)}ms`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement des données';
@@ -163,7 +218,8 @@ function UnifiedDashboardWithWidgetsComponent({
     } finally {
       setIsLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Ne pas dépendre de searchParams pour éviter les boucles infinies
 
   /**
    * Charge la configuration des widgets depuis l'API
@@ -195,7 +251,7 @@ function UnifiedDashboardWithWidgetsComponent({
       setDateRange(undefined);
 
       // Mettre à jour l'URL avec la nouvelle période
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.set('period', newPeriod);
       // Supprimer les dates personnalisées si présentes
       params.delete('startDate');
@@ -210,7 +266,7 @@ function UnifiedDashboardWithWidgetsComponent({
       // Charger les données côté client
       loadData(newPeriod);
     },
-    [loadData, router, pathname, searchParams]
+    [loadData, router, pathname]
   );
 
   /**
@@ -232,7 +288,7 @@ function UnifiedDashboardWithWidgetsComponent({
       setPeriod('year'); // Pour la compatibilité avec les widgets
 
       // Mettre à jour l'URL avec les dates personnalisées
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.set('startDate', range.from.toISOString());
       params.set('endDate', range.to.toISOString());
       params.delete('period'); // Supprimer le paramètre period lors de l'utilisation de dates personnalisées
@@ -255,7 +311,7 @@ function UnifiedDashboardWithWidgetsComponent({
       }
     } else {
       // Si on efface la période personnalisée, supprimer les paramètres de date personnalisés
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.delete('startDate');
       params.delete('endDate');
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
@@ -266,7 +322,7 @@ function UnifiedDashboardWithWidgetsComponent({
         console.log('[Dashboard] Période personnalisée désélectionnée');
       }
     }
-  }, [loadData, router, pathname, searchParams]);
+  }, [loadData, router, pathname]);
 
   const handleYearChange = useCallback(
     (year: string | undefined) => {
@@ -284,7 +340,7 @@ function UnifiedDashboardWithWidgetsComponent({
         setPeriod(normalizedYear as Period); // L'année est passée comme période
 
         // Mettre à jour l'URL avec l'année sélectionnée
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(window.location.search);
         params.set('period', normalizedYear);
         // Supprimer les dates personnalisées si présentes
         params.delete('startDate');
@@ -304,7 +360,7 @@ function UnifiedDashboardWithWidgetsComponent({
         }
       } else {
         // Si on désélectionne l'année, supprimer le paramètre period de l'URL
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(window.location.search);
         params.delete('period');
         params.delete('startDate');
         params.delete('endDate');
@@ -317,7 +373,7 @@ function UnifiedDashboardWithWidgetsComponent({
         }
       }
     },
-    [loadData, router, pathname, searchParams]
+    [loadData, router, pathname]
   );
 
   // Références stables pour les callbacks (évite les réabonnements)
@@ -338,6 +394,65 @@ function UnifiedDashboardWithWidgetsComponent({
   useEffect(() => {
     periodRef.current = period;
   }, [period]);
+
+  // Récupérer includeOld depuis les paramètres URL
+  const parsedFilters = useMemo(() => {
+    return parseDashboardFiltersFromParams(Object.fromEntries(searchParams.entries()));
+  }, [searchParams]);
+  
+  // État local pour includeOld (mis à jour immédiatement lors du toggle)
+  const [localIncludeOld, setLocalIncludeOld] = useState<boolean>(
+    parsedFilters?.includeOld ?? true
+  );
+  
+  // Synchroniser avec searchParams quand il change (mais pas lors du toggle initial)
+  useEffect(() => {
+    const urlIncludeOld = parsedFilters?.includeOld ?? true;
+    setLocalIncludeOld(urlIncludeOld);
+  }, [parsedFilters?.includeOld]);
+  
+  const includeOld = localIncludeOld; // Utiliser l'état local pour une réactivité immédiate
+
+  /**
+   * Gère le changement de includeOld
+   */
+  const handleIncludeOldChange = useCallback(
+    (newIncludeOld: boolean) => {
+      // ✅ Mettre à jour l'état local immédiatement pour une réactivité instantanée
+      setLocalIncludeOld(newIncludeOld);
+      const params = new URLSearchParams(window.location.search);
+
+      if (newIncludeOld) {
+        // Si on active, retirer le paramètre (valeur par défaut = true)
+        params.delete('includeOld');
+      } else {
+        // Si on désactive, ajouter explicitement false
+        params.set('includeOld', 'false');
+      }
+
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.push(newUrl, { scroll: false });
+      router.refresh();
+    },
+    [router, pathname]
+  );
+
+  /**
+   * Gère le rafraîchissement manuel des données
+   */
+  const handleRefresh = useCallback(() => {
+    const urlPeriod = searchParams.get('period');
+    const urlStartDate = searchParams.get('startDate');
+    const urlEndDate = searchParams.get('endDate');
+    // ✅ Passer localIncludeOld directement pour éviter la latence de l'URL
+    if (urlStartDate && urlEndDate) {
+      loadData('year', urlStartDate, urlEndDate, localIncludeOld);
+    } else if (urlPeriod) {
+      loadData(urlPeriod, undefined, undefined, localIncludeOld);
+    } else {
+      loadData(period, undefined, undefined, localIncludeOld);
+    }
+  }, [loadData, period, localIncludeOld, searchParams]); // ✅ Inclure localIncludeOld pour utiliser la valeur à jour
 
   /**
    * Synchroniser l'état local avec les paramètres URL après router.refresh()
@@ -413,7 +528,7 @@ function UnifiedDashboardWithWidgetsComponent({
   // Filtrer les alertes selon le rôle (mémorisé pour éviter les recalculs)
   const filteredAlerts = useMemo(
     () => filterAlertsByRole(data.alerts, role),
-    [data.alerts, role]
+    [data, role]
   );
 
   // Séparer les widgets statiques (temps réel) des widgets filtrés
@@ -423,10 +538,8 @@ function UnifiedDashboardWithWidgetsComponent({
     const filtered: typeof widgetConfig.visibleWidgets = [];
 
     widgetConfig.visibleWidgets.forEach((widgetId) => {
-      // Importer dynamiquement le registry pour vérifier le layoutType
-      const { WIDGET_REGISTRY } = require('./widgets/registry');
       const widgetDef = WIDGET_REGISTRY[widgetId];
-      
+
       if (widgetDef?.layoutType === 'kpi-static') {
         staticKPIs.push(widgetId);
       } else {
@@ -438,8 +551,7 @@ function UnifiedDashboardWithWidgetsComponent({
       staticWidgets: staticKPIs,
       filteredWidgets: filtered,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widgetConfig.visibleWidgets]); // widgetConfig est stable, seule visibleWidgets change
+  }, [widgetConfig]);
 
   // Déterminer quel sélecteur est actif pour l'affichage visuel
   // Priorité : dateRange > selectedYear > aucun (période standard)
@@ -514,6 +626,7 @@ function UnifiedDashboardWithWidgetsComponent({
         periodEnd: customPeriodEnd,
       }),
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     data.role,
     data.strategic,
@@ -524,7 +637,6 @@ function UnifiedDashboardWithWidgetsComponent({
     data.periodEnd,
     data.period, // Garder data.period comme fallback
     filteredAlerts,
-    // data lui-même n'est pas nécessaire car on dépend déjà de ses propriétés
     period, // Période de l'état local (week, month, quarter, year)
     selectedYear, // Année sélectionnée (ex: "2024")
     dateRange, // Période personnalisée
@@ -552,25 +664,21 @@ function UnifiedDashboardWithWidgetsComponent({
   if (filteredOnly) {
     return (
       <div className="space-y-6">
-        {/* === Filtres de période === */}
-        <div className="flex items-center justify-between">
-          <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
-          <div className="flex items-center gap-3">
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-            <YearSelector 
-              key={`year-selector-${selectedYear || 'none'}`}
-              value={selectedYear} 
-              onValueChange={handleYearChange} 
-              className="w-[120px]"
-              isActive={activeFilterType === 'year'}
-            />
-            <CustomPeriodSelector 
-              key={`custom-period-${dateRange?.from?.toISOString() || 'none'}-${dateRange?.to?.toISOString() || 'none'}`}
-              date={dateRange} 
-              onSelect={handleDateRangeChange}
-              isActive={activeFilterType === 'custom-period'}
-            />
-          </div>
+        {/* === Barre de filtres responsive === */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <DashboardFiltersBar
+            selectedYear={selectedYear}
+            onYearChange={handleYearChange}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            activeFilterType={activeFilterType}
+            includeOld={includeOld}
+            onIncludeOldChange={handleIncludeOldChange}
+            isLoading={isLoading}
+            onRefresh={handleRefresh}
+            widgetConfig={widgetConfig}
+            onWidgetConfigUpdate={loadWidgetConfig}
+          />
         </div>
 
         {error && (
@@ -610,25 +718,21 @@ function UnifiedDashboardWithWidgetsComponent({
         </Suspense>
       )}
 
-      {/* === SECTION 2 : Filtres de période === */}
-      <div className="flex items-center justify-between">
-        <WidgetPreferencesDialog widgetConfig={widgetConfig} onUpdate={loadWidgetConfig} />
-        <div className="flex items-center gap-3">
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-          <YearSelector 
-            key={`year-selector-${selectedYear || 'none'}`}
-            value={selectedYear} 
-            onValueChange={handleYearChange} 
-            className="w-[120px]"
-            isActive={activeFilterType === 'year'}
-          />
-          <CustomPeriodSelector 
-            key={`custom-period-${dateRange?.from?.toISOString() || 'none'}-${dateRange?.to?.toISOString() || 'none'}`}
-            date={dateRange} 
-            onSelect={handleDateRangeChange}
-            isActive={activeFilterType === 'custom-period'}
-          />
-        </div>
+      {/* === SECTION 2 : Barre de filtres responsive === */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <DashboardFiltersBar
+          selectedYear={selectedYear}
+          onYearChange={handleYearChange}
+          dateRange={dateRange}
+          onDateRangeChange={handleDateRangeChange}
+          activeFilterType={activeFilterType}
+          includeOld={includeOld}
+          onIncludeOldChange={handleIncludeOldChange}
+          isLoading={isLoading}
+          onRefresh={handleRefresh}
+          widgetConfig={widgetConfig}
+          onWidgetConfigUpdate={loadWidgetConfig}
+        />
       </div>
 
       {error && (

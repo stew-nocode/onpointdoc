@@ -143,7 +143,7 @@ export function ChangeActivityStatusDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Changer le statut de l'activité</DialogTitle>
+          <DialogTitle>Changer le statut de l&apos;activité</DialogTitle>
           <DialogDescription>
             Sélectionnez le nouveau statut pour cette activité
           </DialogDescription>
@@ -216,3 +216,6 @@ export function ChangeActivityStatusDialog({
     </Dialog>
   );
 }
+
+
+

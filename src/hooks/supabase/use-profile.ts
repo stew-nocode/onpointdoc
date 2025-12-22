@@ -83,8 +83,7 @@ export function useProfile(
 
   useEffect(() => {
     fetchProfile();
-     
-    // fetchProfile est stable et n'a pas besoin d'être dans les dépendances
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, enabled]);
 
   return state;
