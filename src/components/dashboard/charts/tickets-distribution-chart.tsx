@@ -46,6 +46,13 @@ const chartConfig: ChartConfig = {
       dark: '#2DD4BF',  // Teal-400
     },
   },
+  RELANCE: {
+    label: 'RELANCE',
+    theme: {
+      light: '#F97316', // Orange-500
+      dark: '#FB923C',  // Orange-400
+    },
+  },
 } satisfies ChartConfig;
 
 /**
@@ -55,6 +62,7 @@ const TYPE_COLORS: Record<string, { light: string; dark: string }> = {
   BUG: { light: '#F43F5E', dark: '#FB7185' },
   REQ: { light: '#3B82F6', dark: '#60A5FA' },
   ASSISTANCE: { light: '#14B8A6', dark: '#2DD4BF' },
+  RELANCE: { light: '#F97316', dark: '#FB923C' },
 };
 
 /**
@@ -105,7 +113,7 @@ export function TicketsDistributionChart({ data, className }: TicketsDistributio
           </div>
         </div>
         <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
-          Répartition BUG / REQ / Assistance
+          Répartition BUG / REQ / Assistance / Relance
         </CardDescription>
       </CardHeader>
 
