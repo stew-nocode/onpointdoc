@@ -118,6 +118,7 @@ export const updateActivitySchema = z
     plannedStart: z.string().datetime().or(z.string().min(1)).optional(),
     plannedEnd: z.string().datetime().or(z.string().min(1)).optional(),
     status: z.enum(activityStatuses).optional(),
+    actualDurationHours: z.number().positive().optional(),
     participantIds: z.array(z.string().uuid()).optional(),
     linkedTicketIds: z.array(z.string().uuid()).optional(),
     locationMode: z.enum(activityLocationModes).optional(),

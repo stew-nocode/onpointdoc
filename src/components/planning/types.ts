@@ -14,6 +14,8 @@ export type MockPlanningTask = {
   status: 'A_faire' | 'En_cours' | 'Termine' | 'Annule' | 'Bloque';
   priority: 'Basse' | 'Normale' | 'Haute' | 'Urgente' | null;
   dueDate: string; // ISO date string
+  startDate?: string | null; // ISO date string (date de début)
+  estimatedDurationHours?: number | null; // Durée estimée en heures
   assignedTo?: {
     id: string;
     fullName: string;
@@ -29,6 +31,10 @@ export type MockPlanningActivity = {
   plannedStart: string; // ISO date string
   plannedEnd: string | null; // ISO date string
   reportContent?: string | null; // Contenu du compte rendu
+  createdBy?: {
+    id: string;
+    fullName: string;
+  } | null;
   participants?: Array<{
     id: string;
     fullName: string;
@@ -36,4 +42,7 @@ export type MockPlanningActivity = {
 };
 
 export type MockPlanningItem = MockPlanningTask | MockPlanningActivity;
+
+// Alias pour compatibilité avec les composants existants
+export type PlanningItem = MockPlanningItem;
 

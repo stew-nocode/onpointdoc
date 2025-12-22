@@ -132,6 +132,7 @@ export const updateTaskSchema = z
     description: z.string().optional(),
     startDate: z.string().optional(),
     estimatedDurationHours: z.number().positive().optional(),
+    actualDurationHours: z.number().positive().optional(),
     assignedTo: z.string().uuid().optional(),
     status: z.enum(taskStatuses).optional(),
     linkedTicketIds: z.array(z.string().uuid()).optional(),

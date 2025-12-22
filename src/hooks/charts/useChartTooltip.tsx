@@ -32,24 +32,26 @@ export function useChartTooltip<TPayload = any>(
   ) => React.ReactNode
 ) {
   // Memoizer le composant tooltip pour éviter recréation
-  const TooltipComponent = useMemo(
-    () =>
-      React.memo<{
-        active?: boolean;
-        payload?: TPayload[];
-        label?: string;
-      }>(
-        ({ active, payload, label }) => {
-          return <>{renderer(active, payload, label)}</>;
-        },
-        // Comparaison custom pour éviter re-renders inutiles
-        (prev, next) =>
-          prev.active === next.active &&
-          prev.label === next.label &&
-          JSON.stringify(prev.payload) === JSON.stringify(next.payload)
-      ),
-    [renderer]
-  );
+  const TooltipComponent = useMemo(() => {
+    const Component = React.memo<{
+      active?: boolean;
+      payload?: TPayload[];
+      label?: string;
+    }>(
+      ({ active, payload, label }) => {
+        return <>{renderer(active, payload, label)}</>;
+      },
+      // Comparaison custom pour éviter re-renders inutiles
+      (prev, next) =>
+        prev.active === next.active &&
+        prev.label === next.label &&
+        JSON.stringify(prev.payload) === JSON.stringify(next.payload)
+    );
+
+    Component.displayName = 'ChartTooltip';
+
+    return Component;
+  }, [renderer]);
 
   // Retourner l'instance du composant (pas un élément React)
   // Recharts accepte un composant ou un élément
