@@ -250,7 +250,11 @@ function UnifiedDashboardWithWidgetsComponent({
       setSelectedYear(undefined);
       setDateRange(undefined);
 
-      // Mettre à jour l'URL avec la nouvelle période
+      // ✅ CORRECTION : Charger les données AVANT de mettre à jour l'URL
+      // Cela évite que le Server Component se re-rende avec les nouvelles données pendant le chargement
+      await loadData(newPeriod);
+
+      // Mettre à jour l'URL APRÈS le chargement (pour historique et partage de lien)
       const params = new URLSearchParams(window.location.search);
       params.set('period', newPeriod);
       // Supprimer les dates personnalisées si présentes
@@ -258,12 +262,8 @@ function UnifiedDashboardWithWidgetsComponent({
       params.delete('endDate');
 
       const newUrl = `${pathname}?${params.toString()}`;
-      router.push(newUrl, { scroll: false });
-
-      // ✅ CORRECTION : Charger les données côté client uniquement
-      // Pas de router.refresh() car cela force le Server Component à recharger avec initialData
-      // ce qui vide le dashboard pendant le chargement
-      await loadData(newPeriod);
+      // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+      window.history.replaceState(null, '', newUrl);
     },
     [loadData, router, pathname]
   );
@@ -286,17 +286,18 @@ function UnifiedDashboardWithWidgetsComponent({
       // Utiliser une période personnalisée - transmettre les dates à l'API
       setPeriod('year'); // Pour la compatibilité avec les widgets
 
-      // Mettre à jour l'URL avec les dates personnalisées
+      // ✅ CORRECTION : Charger les données AVANT de mettre à jour l'URL
+      await loadData('year', range.from.toISOString(), range.to.toISOString());
+
+      // Mettre à jour l'URL APRÈS le chargement (pour historique et partage de lien)
       const params = new URLSearchParams(window.location.search);
       params.set('startDate', range.from.toISOString());
       params.set('endDate', range.to.toISOString());
       params.delete('period'); // Supprimer le paramètre period lors de l'utilisation de dates personnalisées
 
       const newUrl = `${pathname}?${params.toString()}`;
-      router.push(newUrl, { scroll: false });
-
-      // ✅ CORRECTION : Charger les données côté client uniquement
-      await loadData('year', range.from.toISOString(), range.to.toISOString());
+      // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+      window.history.replaceState(null, '', newUrl);
 
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Nouvelle plage personnalisée sélectionnée:', {
@@ -310,7 +311,8 @@ function UnifiedDashboardWithWidgetsComponent({
       params.delete('startDate');
       params.delete('endDate');
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-      router.push(newUrl, { scroll: false });
+      // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+      window.history.replaceState(null, '', newUrl);
 
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Période personnalisée désélectionnée');
@@ -333,7 +335,10 @@ function UnifiedDashboardWithWidgetsComponent({
         // Mettre à jour la période avec l'année sélectionnée
         setPeriod(normalizedYear as Period); // L'année est passée comme période
 
-        // Mettre à jour l'URL avec l'année sélectionnée
+        // ✅ CORRECTION : Charger les données AVANT de mettre à jour l'URL
+        await loadData(normalizedYear as Period);
+
+        // Mettre à jour l'URL APRÈS le chargement (pour historique et partage de lien)
         const params = new URLSearchParams(window.location.search);
         params.set('period', normalizedYear);
         // Supprimer les dates personnalisées si présentes
@@ -341,10 +346,8 @@ function UnifiedDashboardWithWidgetsComponent({
         params.delete('endDate');
 
         const newUrl = `${pathname}?${params.toString()}`;
-        router.push(newUrl, { scroll: false });
-
-        // ✅ CORRECTION : Charger les données côté client uniquement
-        await loadData(normalizedYear as Period);
+        // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+        window.history.replaceState(null, '', newUrl);
 
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année sélectionnée:', normalizedYear);
@@ -356,7 +359,8 @@ function UnifiedDashboardWithWidgetsComponent({
         params.delete('startDate');
         params.delete('endDate');
         const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-        router.push(newUrl, { scroll: false });
+        // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+        window.history.replaceState(null, '', newUrl);
 
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année désélectionnée, réinitialisation de la période');
@@ -410,20 +414,9 @@ function UnifiedDashboardWithWidgetsComponent({
     async (newIncludeOld: boolean) => {
       // ✅ Mettre à jour l'état local immédiatement pour une réactivité instantanée
       setLocalIncludeOld(newIncludeOld);
+
+      // ✅ CORRECTION : Recharger les données AVANT de mettre à jour l'URL
       const params = new URLSearchParams(window.location.search);
-
-      if (newIncludeOld) {
-        // Si on active, retirer le paramètre (valeur par défaut = true)
-        params.delete('includeOld');
-      } else {
-        // Si on désactive, ajouter explicitement false
-        params.set('includeOld', 'false');
-      }
-
-      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-      router.push(newUrl, { scroll: false });
-
-      // ✅ CORRECTION : Recharger les données avec le nouveau paramètre includeOld
       const urlPeriod = params.get('period');
       const urlStartDate = params.get('startDate');
       const urlEndDate = params.get('endDate');
@@ -435,8 +428,21 @@ function UnifiedDashboardWithWidgetsComponent({
       } else {
         await loadData(period, undefined, undefined, newIncludeOld);
       }
+
+      // Mettre à jour l'URL APRÈS le chargement (pour historique et partage de lien)
+      if (newIncludeOld) {
+        // Si on active, retirer le paramètre (valeur par défaut = true)
+        params.delete('includeOld');
+      } else {
+        // Si on désactive, ajouter explicitement false
+        params.set('includeOld', 'false');
+      }
+
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      // Utiliser window.history.replaceState au lieu de router.push pour éviter le re-render
+      window.history.replaceState(null, '', newUrl);
     },
-    [router, pathname, loadData, period]
+    [pathname, loadData, period]
   );
 
   /**

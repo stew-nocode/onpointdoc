@@ -17,18 +17,18 @@ type DashboardPageProps = {
 /**
  * Configuration ISR intelligente
  *
- * ✅ OPTIMISÉ v2 : Cache ISR 60s + dynamic force-dynamic
+ * ✅ OPTIMISÉ v3 : Cache ISR 60s + chargement client pour les filtres
  *
  * - revalidate = 60 : Page rechargée toutes les 60s (ISR)
- * - dynamic = 'force-dynamic' : Force le rendu dynamique pour les params URL
+ * - dynamic = 'auto' : Rendu statique côté serveur, filtres gérés côté client
  *
  * Gains :
  * - ISR cache les rendus SSR pendant 60s (-40% charge serveur)
- * - dynamic permet aux filtres de fonctionner (params URL respectés)
- * - Meilleur des deux mondes : cache + filtres dynamiques
+ * - Pas de re-render Server Component lors du changement de filtres
+ * - Filtres ultra-réactifs avec chargement client uniquement
  */
 export const revalidate = 60;
-export const dynamic = 'force-dynamic';
+export const dynamic = 'auto';
 
 /**
  * Page du dashboard unifié
