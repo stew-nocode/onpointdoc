@@ -122,28 +122,27 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
   const description = GRANULARITY_DESCRIPTION[granularity];
 
   // ✅ OPTIMISATION Phase 3B : Tooltip memoizé
-  const TooltipComponent = useChartTooltip((active, payload, label) => {
-    if (!active || !payload?.length) return null;
+  // Définir un type local pour les éléments du payload (règle TypeScript essentielle)
+  type PayloadEntry = {
+    value: number;
+    dataKey: string;
+    stroke: string;
+  };
 
-    // Calculer le total (inclure les valeurs à 0)
-    const total = payload.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+  const TooltipComponent = useChartTooltip<PayloadEntry>(
+    (active: boolean | undefined, payload: PayloadEntry[] | undefined, label: string | undefined) => {
+      if (!active || !payload?.length) return null;
 
-    // Définir un type local pour les éléments du payload (règle TypeScript essentielle)
-    type PayloadEntry = {
-      value: number;
-      dataKey: string;
-      stroke: string;
-    };
+      // Calculer le total (inclure les valeurs à 0)
+      const total = payload.reduce((sum: number, item: PayloadEntry) => sum + (item.value || 0), 0);
 
-    return (
-      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
-        <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-          {label}
-        </div>
-        <div className="space-y-1">
-          {payload.map((item, index: number) => {
-            const entry = item as PayloadEntry;
-            return (
+      return (
+        <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
+          <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+            {label}
+          </div>
+          <div className="space-y-1">
+            {payload.map((entry: PayloadEntry, index: number) => (
               <div key={index} className="flex items-center justify-between gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div
@@ -158,18 +157,18 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
                   {entry.value?.toLocaleString('fr-FR') || 0}
                 </span>
               </div>
-            );
-          })}
-          <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
-            <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
-            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-              {total.toLocaleString('fr-FR')}
-            </span>
+            ))}
+            <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
+              <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                {total.toLocaleString('fr-FR')}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  });
+      );
+    }
+  );
 
   // ✅ OPTIMISATION Phase 3B : Legend memoizée avec activeDataKeys
   const LegendComponent = useMemo(() => {
@@ -185,7 +184,7 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
       { dataKey: 'bug', color: GRADIENT_COLORS.bug.start, active: activeDataKeys?.bug },
     ];
 
-    return React.memo<{ payload?: any[] }>(({ payload }) => {
+    const LegendComponentInner = React.memo<{ payload?: any[] }>(({ payload }) => {
       if (!payload?.length && !activeDataKeys) return null;
 
       return (
@@ -208,6 +207,9 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
         </div>
       );
     });
+    LegendComponentInner.displayName = 'TicketsEvolutionLegend';
+
+    return LegendComponentInner;
   }, [activeDataKeys]);
 
   // Empty state
