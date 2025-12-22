@@ -240,8 +240,7 @@ export function useWebVitals() {
 
       return () => clearInterval(logInterval);
     }
-     
-    // metrics et updateMetric sont stables et n'ont pas besoin d'être dans les dépendances
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return metrics;

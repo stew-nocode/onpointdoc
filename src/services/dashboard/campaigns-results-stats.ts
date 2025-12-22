@@ -11,6 +11,8 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withQueryTimeout } from '@/lib/utils/supabase-query-timeout';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Type pour les données d'une campagne
@@ -62,18 +64,30 @@ export const getCampaignsResultsStats = cache(
 
     try {
       // Récupérer les campagnes de la période avec leurs statistiques
-      const { data: campaigns, error } = await supabase
-        .from('brevo_email_campaigns')
-        .select('id, campaign_name, emails_sent, unique_opens, unique_clicks, sent_at, status')
-        .not('sent_at', 'is', null)
-        .gte('sent_at', periodStart)
-        .lte('sent_at', periodEnd)
-        .eq('status', 'sent')
-        .order('emails_sent', { ascending: false })
-        .limit(limit);
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      const { data: campaigns, error } = await withQueryTimeout(
+        supabase
+          .from('brevo_email_campaigns')
+          .select('id, campaign_name, emails_sent, unique_opens, unique_clicks, sent_at, status')
+          .not('sent_at', 'is', null)
+          .gte('sent_at', periodStart)
+          .lte('sent_at', periodEnd)
+          .eq('status', 'sent')
+          .order('emails_sent', { ascending: false })
+          .limit(limit),
+        10000
+      );
 
       if (error) {
-        console.error('[getCampaignsResultsStats] Error fetching campaigns:', error);
+        // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+        const appError = createError.supabaseError(
+          'Erreur lors de la récupération des campagnes emails',
+          error instanceof Error ? error : new Error(String(error)),
+          { periodStart, periodEnd, limit }
+        );
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getCampaignsResultsStats]', appError);
+        }
         return null;
       }
 
@@ -115,8 +129,16 @@ export const getCampaignsResultsStats = cache(
         totalSent,
         limit,
       };
-    } catch (error) {
-      console.error('[getCampaignsResultsStats] Unexpected error:', error);
+    } catch (e) {
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.internalError(
+        'Erreur inattendue lors de la récupération des campagnes emails',
+        e instanceof Error ? e : new Error(String(e)),
+        { periodStart, periodEnd, limit }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getCampaignsResultsStats]', appError);
+      }
       return null;
     }
   }

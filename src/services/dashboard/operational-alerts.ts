@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withQueryTimeout } from '@/lib/utils/supabase-query-timeout';
 import type { OperationalAlert } from '@/types/dashboard';
 import {
   UNASSIGNED_ALERT_DAYS,
@@ -41,12 +42,16 @@ async function getOverdueCriticalTickets(): Promise<OperationalAlert[]> {
   const supabase = await createSupabaseServerClient();
   const now = new Date().toISOString();
 
-  const { data: overdueTickets } = await supabase
-    .from('tickets')
-    .select('id, title, priority, due_date')
-    .or(`resolved_at.is.null,resolved_at.gt.${now}`)
-    .lt('due_date', now)
-    .in('priority', ['HIGH', 'CRITICAL']);
+  // ✅ TIMEOUT : Wrapper avec timeout de 10s pour éviter les blocages prolongés
+  const { data: overdueTickets } = await withQueryTimeout(
+    supabase
+      .from('tickets')
+      .select('id, title, priority, due_date')
+      .or(`resolved_at.is.null,resolved_at.gt.${now}`)
+      .lt('due_date', now)
+      .in('priority', ['HIGH', 'CRITICAL']),
+    10000 // 10 secondes
+  );
 
   if (!overdueTickets) return [];
 
@@ -70,12 +75,16 @@ async function getUnassignedLongTickets(): Promise<OperationalAlert[]> {
   cutoffDate.setDate(cutoffDate.getDate() - UNASSIGNED_ALERT_DAYS);
   const now = new Date().toISOString();
 
-  const { data: unassignedTickets } = await supabase
-    .from('tickets')
-    .select('id, title, created_at')
-    .is('assigned_to', null)
-    .or(`resolved_at.is.null,resolved_at.gt.${now}`)
-    .lt('created_at', cutoffDate.toISOString());
+  // ✅ TIMEOUT : Wrapper avec timeout de 10s pour éviter les blocages prolongés
+  const { data: unassignedTickets } = await withQueryTimeout(
+    supabase
+      .from('tickets')
+      .select('id, title, created_at')
+      .is('assigned_to', null)
+      .or(`resolved_at.is.null,resolved_at.gt.${now}`)
+      .lt('created_at', cutoffDate.toISOString()),
+    10000 // 10 secondes
+  );
 
   if (!unassignedTickets) return [];
 
@@ -99,13 +108,17 @@ async function getUpcomingActivities(): Promise<OperationalAlert[]> {
   const endDate = new Date();
   endDate.setDate(now.getDate() + UPCOMING_ACTIVITY_DAYS);
 
-  const { data: upcomingActivities } = await supabase
-    .from('activities')
-    .select('id, title, scheduled_date')
-    .gte('scheduled_date', now.toISOString())
-    .lte('scheduled_date', endDate.toISOString())
-    .order('scheduled_date', { ascending: true })
-    .limit(MAX_ALERTS_PER_TYPE);
+  // ✅ TIMEOUT : Wrapper avec timeout de 10s pour éviter les blocages prolongés
+  const { data: upcomingActivities } = await withQueryTimeout(
+    supabase
+      .from('activities')
+      .select('id, title, scheduled_date')
+      .gte('scheduled_date', now.toISOString())
+      .lte('scheduled_date', endDate.toISOString())
+      .order('scheduled_date', { ascending: true })
+      .limit(MAX_ALERTS_PER_TYPE),
+    10000 // 10 secondes
+  );
 
   if (!upcomingActivities) return [];
 
@@ -126,11 +139,15 @@ async function getUpcomingActivities(): Promise<OperationalAlert[]> {
 async function getBlockedTasks(): Promise<OperationalAlert[]> {
   const supabase = await createSupabaseServerClient();
 
-  const { data: blockedTasks } = await supabase
-    .from('tasks')
-    .select('id, title, status')
-    .eq('status', 'BLOQUE')
-    .limit(MAX_ALERTS_PER_TYPE);
+  // ✅ TIMEOUT : Wrapper avec timeout de 10s pour éviter les blocages prolongés
+  const { data: blockedTasks } = await withQueryTimeout(
+    supabase
+      .from('tasks')
+      .select('id, title, status')
+      .eq('status', 'BLOQUE')
+      .limit(MAX_ALERTS_PER_TYPE),
+    10000 // 10 secondes
+  );
 
   if (!blockedTasks) return [];
 

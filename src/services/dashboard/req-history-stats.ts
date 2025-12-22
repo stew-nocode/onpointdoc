@@ -69,7 +69,9 @@ export const getReqHistoryStats = cache(
       .eq('product_id', productId);
 
     if (totalError) {
-      console.error('[getReqHistoryStats] Error fetching total count:', totalError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getReqHistoryStats] Error fetching total count:', totalError);
+      }
       return null;
     }
 
@@ -82,7 +84,9 @@ export const getReqHistoryStats = cache(
       .in('status', IN_PROGRESS_STATUSES);
 
     if (enCoursError) {
-      console.error('[getReqHistoryStats] Error fetching en cours count:', enCoursError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getReqHistoryStats] Error fetching en cours count:', enCoursError);
+      }
       return null;
     }
 
@@ -95,7 +99,9 @@ export const getReqHistoryStats = cache(
       .in('status', IMPLEMENTED_STATUSES);
 
     if (implementeesError) {
-      console.error('[getReqHistoryStats] Error fetching implementees count:', implementeesError);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getReqHistoryStats] Error fetching implementees count:', implementeesError);
+      }
       return null;
     }
 

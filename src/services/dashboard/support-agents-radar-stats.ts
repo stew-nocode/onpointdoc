@@ -86,7 +86,8 @@ export const getSupportAgentsRadarStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    limit: number = 6
+    limit: number = 6,
+    includeOld: boolean = false
   ): Promise<SupportAgentsRadarStats | null> => {
     const supabase = await createSupabaseServerClient();
 
@@ -98,7 +99,9 @@ export const getSupportAgentsRadarStats = cache(
         .eq('department', 'Support')
         .eq('role', 'agent');
       if (profilesError) {
-        console.error('[getSupportAgentsRadarStats] profilesError:', profilesError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getSupportAgentsRadarStats] profilesError:', profilesError);
+        }
         return null;
       }
 
@@ -115,16 +118,24 @@ export const getSupportAgentsRadarStats = cache(
       let hasMore = true;
 
       while (hasMore) {
-        const { data: page, error: ticketsError } = await supabase
+        let query = supabase
           .from('tickets')
           .select('created_by, ticket_type, duration_minutes, created_at, resolved_at')
           .eq('product_id', productId)
           .in('created_by', agentIds)
           .gte('created_at', periodStart)
-          .lte('created_at', periodEnd)
+          .lte('created_at', periodEnd);
+        
+        if (!includeOld) {
+          query = query.eq('old', false);
+        }
+        
+        const { data: page, error: ticketsError } = await query
           .range(offset, offset + pageSize - 1);
         if (ticketsError) {
-          console.error('[getSupportAgentsRadarStats] ticketsError:', ticketsError);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[getSupportAgentsRadarStats] ticketsError:', ticketsError);
+          }
           return null;
         }
 
@@ -199,7 +210,9 @@ export const getSupportAgentsRadarStats = cache(
 
       return { dimensions: DIMENSIONS, agents, chartData, limit };
     } catch (e) {
-      console.error('[getSupportAgentsRadarStats] Unexpected error:', e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getSupportAgentsRadarStats] Unexpected error:', e);
+      }
       return null;
     }
   }

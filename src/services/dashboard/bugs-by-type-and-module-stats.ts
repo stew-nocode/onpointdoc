@@ -11,6 +11,8 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withQueryTimeout } from '@/lib/utils/supabase-query-timeout';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Type pour les données d'un type de BUG
@@ -56,22 +58,38 @@ export const getBugsByTypeAndModuleStats = cache(
     productId: string,
     periodStart: string,
     periodEnd: string,
-    limit: number = 15
+    limit: number = 15,
+    includeOld: boolean = false
   ): Promise<BugsByTypeAndModuleStats | null> => {
     const supabase = await createSupabaseServerClient();
 
     try {
       // 1. Récupérer les BUGs de la période avec leur type et module
-      const { data: bugs, error: bugsError } = await supabase
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      let query = supabase
         .from('tickets')
         .select('id, bug_type, module_id')
         .eq('ticket_type', 'BUG')
         .eq('product_id', productId)
         .gte('created_at', periodStart)
         .lte('created_at', periodEnd);
+      
+      if (!includeOld) {
+        query = query.eq('old', false);
+      }
+      
+      const { data: bugs, error: bugsError } = await withQueryTimeout(query, 10000);
 
       if (bugsError) {
-        console.error('[getBugsByTypeAndModuleStats] Error fetching bugs:', bugsError);
+        // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+        const appError = createError.supabaseError(
+          'Erreur lors de la récupération des BUGs par type et module',
+          bugsError instanceof Error ? bugsError : new Error(String(bugsError)),
+          { productId, periodStart, periodEnd, limit, includeOld }
+        );
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getBugsByTypeAndModuleStats]', appError);
+        }
         return null;
       }
 
@@ -92,17 +110,24 @@ export const getBugsByTypeAndModuleStats = cache(
       )];
 
       // 3. Récupérer les noms des modules
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
       const modulesMap = new Map<string, string>();
       if (uniqueModuleIds.length > 0) {
-        const { data: modules, error: modulesError } = await supabase
-          .from('modules')
-          .select('id, name')
-          .in('id', uniqueModuleIds);
+        const { data: modules, error: modulesError } = await withQueryTimeout(
+          supabase
+            .from('modules')
+            .select('id, name')
+            .in('id', uniqueModuleIds),
+          10000
+        );
 
         if (modulesError) {
-          console.error('[getBugsByTypeAndModuleStats] Error fetching modules:', modulesError);
+          // Log mais continue (dégradation gracieuse)
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[getBugsByTypeAndModuleStats] Error fetching modules:', modulesError);
+          }
         } else if (modules) {
-          modules.forEach((m: any) => {
+          (modules as Array<{ id: string; name: string | null }>).forEach((m) => {
             modulesMap.set(m.id, m.name || 'Module inconnu');
           });
         }
@@ -168,8 +193,16 @@ export const getBugsByTypeAndModuleStats = cache(
         totalBugs,
         limit,
       };
-    } catch (error) {
-      console.error('[getBugsByTypeAndModuleStats] Unexpected error:', error);
+    } catch (e) {
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.internalError(
+        'Erreur inattendue lors de la récupération des BUGs par type et module',
+        e instanceof Error ? e : new Error(String(e)),
+        { productId, periodStart, periodEnd, limit, includeOld }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getBugsByTypeAndModuleStats]', appError);
+      }
       return null;
     }
   }

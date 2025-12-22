@@ -69,3 +69,52 @@ export async function updateActivityReportAction(
 
   return updatedActivityId;
 }
+
+/**
+ * Server Action pour changer le statut d'une activité
+ * 
+ * Principe Clean Code :
+ * - SRP : Une seule responsabilité (changer le statut)
+ * - Utilise directement le service (pas d'API route intermédiaire)
+ * - Utilise revalidatePath pour éviter router.refresh() côté client
+ * 
+ * @param activityId - ID de l'activité à mettre à jour
+ * @param status - Nouveau statut de l'activité
+ * @param actualDurationHours - Durée réelle en heures (obligatoire si status = 'Termine')
+ * @returns ID de l'activité mise à jour
+ * @throws Error si la mise à jour échoue
+ */
+export async function updateActivityStatusAction(
+  activityId: string,
+  status: 'Brouillon' | 'Planifie' | 'En_cours' | 'Termine' | 'Annule',
+  actualDurationHours?: number
+): Promise<string> {
+  const updatePayload: UpdateActivityInput = {
+    id: activityId,
+    status
+  };
+
+  // Si le statut est "Terminé", ajouter la durée réelle (obligatoire)
+  if (status === 'Termine') {
+    if (!actualDurationHours || actualDurationHours <= 0) {
+      throw new Error('La durée réelle est obligatoire pour terminer une activité');
+    }
+    updatePayload.actualDurationHours = actualDurationHours;
+  }
+
+  const updatedActivityId = await updateActivity(updatePayload);
+
+  if (!updatedActivityId) {
+    throw new Error('Aucun ID d\'activité retourné après mise à jour');
+  }
+
+  // Revalider la page activités et la page de détail
+  revalidatePath('/gestion/activites');
+  revalidatePath(`/gestion/activites/${activityId}`);
+  revalidatePath('/planning'); // Revalider aussi le planning
+
+  // OPTIMISATION (2025-12-15): Invalider le cache des KPIs
+  revalidateTag('activity-kpis', 'max');
+
+  return updatedActivityId;
+}

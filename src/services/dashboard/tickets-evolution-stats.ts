@@ -14,6 +14,8 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withRpcTimeout } from '@/lib/utils/supabase-timeout';
+import { createError } from '@/lib/errors/types';
 import type { Period } from '@/types/dashboard';
 
 /**
@@ -231,16 +233,28 @@ export const getTicketsEvolutionStats = cache(
       }
 
       // Appeler la fonction PostgreSQL optimisée (agrégation en DB)
-      const { data, error } = await supabase.rpc('get_tickets_evolution_stats', {
-        p_product_id: productId,
-        p_period_start: periodStart,
-        p_period_end: periodEnd,
-        p_granularity: granularity,
-        p_include_old: includeOld, // ✅ Passer le paramètre includeOld
-      });
+      // ✅ TIMEOUT: 10s pour éviter les blocages prolongés
+      const { data, error } = await withRpcTimeout(
+        supabase.rpc('get_tickets_evolution_stats', {
+          p_product_id: productId,
+          p_period_start: periodStart,
+          p_period_end: periodEnd,
+          p_granularity: granularity,
+          p_include_old: includeOld,
+        }),
+        10000
+      );
 
       if (error) {
-        console.error('[getTicketsEvolutionStats] Error calling RPC:', error);
+        // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+        const appError = createError.supabaseError(
+          'Erreur lors de l\'appel RPC get_tickets_evolution_stats',
+          error instanceof Error ? error : new Error(String(error)),
+          { productId, periodStart, periodEnd, period, includeOld, granularity }
+        );
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[getTicketsEvolutionStats]', appError);
+        }
         return null;
       }
 
@@ -333,8 +347,16 @@ export const getTicketsEvolutionStats = cache(
         periodEnd,
         granularity,
       };
-    } catch (error) {
-      console.error('[getTicketsEvolutionStats] Unexpected error:', error);
+    } catch (e) {
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.internalError(
+        'Erreur inattendue lors de la récupération de l\'évolution des tickets',
+        e instanceof Error ? e : new Error(String(e)),
+        { productId, periodStart, periodEnd, period, includeOld }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getTicketsEvolutionStats]', appError);
+      }
       return null;
     }
   }

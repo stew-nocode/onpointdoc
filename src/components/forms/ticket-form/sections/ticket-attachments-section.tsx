@@ -131,6 +131,7 @@ export function TicketAttachmentsSection({
                 <div className="flex min-w-0 items-center gap-2">
                   <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                     {isImage && file.preview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={file.preview}
                         alt={file.name}

@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import * as React from 'react';
 import {
   ComposedChart,
   Area,
@@ -13,6 +14,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { useChartTooltip } from '@/hooks/charts/useChartTooltip';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/card';
 import { ChartContainer, type ChartConfig } from '@/ui/chart';
 import { cn } from '@/lib/utils';
@@ -113,11 +115,100 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
     const hasAssistance = data.data.some(point => point.assistance > 0);
 
     return { bug: hasBug, req: hasReq, assistance: hasAssistance };
-  }, [data?.data]);
+  }, [data]);
 
   // Obtenir la description selon la granularité
   const granularity = data?.granularity || 'month';
   const description = GRANULARITY_DESCRIPTION[granularity];
+
+  // ✅ OPTIMISATION Phase 3B : Tooltip memoizé
+  const TooltipComponent = useChartTooltip((active, payload, label) => {
+    if (!active || !payload?.length) return null;
+
+    // Calculer le total (inclure les valeurs à 0)
+    const total = payload.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+
+    // Définir un type local pour les éléments du payload (règle TypeScript essentielle)
+    type PayloadEntry = {
+      value: number;
+      dataKey: string;
+      stroke: string;
+    };
+
+    return (
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
+        <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
+          {label}
+        </div>
+        <div className="space-y-1">
+          {payload.map((item, index: number) => {
+            const entry = item as PayloadEntry;
+            return (
+              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2.5 w-2.5 rounded-sm"
+                    style={{ backgroundColor: entry.stroke }}
+                  />
+                  <span className="text-slate-600 dark:text-slate-400 capitalize">
+                    {entry.dataKey === 'assistance' ? 'Assistance' : entry.dataKey.toUpperCase()}
+                  </span>
+                </div>
+                <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
+                  {entry.value?.toLocaleString('fr-FR') || 0}
+                </span>
+              </div>
+            );
+          })}
+          <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+              {total.toLocaleString('fr-FR')}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  // ✅ OPTIMISATION Phase 3B : Legend memoizée avec activeDataKeys
+  const LegendComponent = useMemo(() => {
+    const labelMap: Record<string, string> = {
+      assistance: 'Assistance',
+      req: 'REQ',
+      bug: 'BUG',
+    };
+
+    const allTypes = [
+      { dataKey: 'assistance', color: GRADIENT_COLORS.assistance.start, active: activeDataKeys?.assistance },
+      { dataKey: 'req', color: GRADIENT_COLORS.req.start, active: activeDataKeys?.req },
+      { dataKey: 'bug', color: GRADIENT_COLORS.bug.start, active: activeDataKeys?.bug },
+    ];
+
+    return React.memo<{ payload?: any[] }>(({ payload }) => {
+      if (!payload?.length && !activeDataKeys) return null;
+
+      return (
+        <div className="flex items-center justify-center gap-6 pt-4">
+          {allTypes.map((type, index) => (
+            <div key={`legend-${index}`} className="flex items-center gap-1.5">
+              <div
+                className="h-2.5 w-2.5 rounded-sm"
+                style={{
+                  backgroundColor: type.active ? type.color : 'transparent',
+                  border: type.active ? 'none' : `1.5px solid ${type.color}`,
+                  opacity: type.active ? 1 : 0.4
+                }}
+              />
+              <span className={`text-xs ${type.active ? 'text-slate-600 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600'}`}>
+                {labelMap[type.dataKey] || type.dataKey}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+    });
+  }, [activeDataKeys]);
 
   // Empty state
   if (!data || data.data.length === 0) {
@@ -202,10 +293,10 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
               className="text-slate-500 dark:text-slate-400"
               width={40}
             />
-            
-            <Tooltip content={<CustomTooltip />} />
-            
-            <Legend content={<CustomLegend activeDataKeys={activeDataKeys} />} />
+
+            <Tooltip content={<TooltipComponent />} />
+
+            <Legend content={<LegendComponent />} />
 
             {/* Area Assistance - en bas (empilé) - Toujours afficher si données > 0 dans au moins une période */}
             {activeDataKeys.assistance && (
@@ -218,11 +309,6 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
                 fill="url(#gradientAssistance)"
                 animationDuration={ANIMATION_DURATION}
                 animationEasing={ANIMATION_EASING}
-                // #region agent log
-                onMouseEnter={(data, index, e) => {
-                  fetch('http://127.0.0.1:7242/ingest/3a96cd95-d593-457f-8629-5f10bb6a1b74',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets-evolution-chart.tsx:223',message:'Area assistance rendered',data:{dataKey:'assistance',activeDataKeys},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                }}
-                // #endregion
               />
             )}
 
@@ -255,88 +341,6 @@ export function TicketsEvolutionChart({ data, className }: TicketsEvolutionChart
         </ChartContainer>
       </CardContent>
     </Card>
-  );
-}
-
-/**
- * Tooltip personnalisé pour l'AreaChart
- */
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-
-  // Calculer le total (inclure les valeurs à 0)
-  const total = payload.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
-
-  return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 shadow-xl">
-      <div className="font-medium text-slate-900 dark:text-slate-100 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">
-        {label}
-      </div>
-      <div className="space-y-1">
-        {payload.map((item: any, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div
-                className="h-2.5 w-2.5 rounded-sm"
-                style={{ backgroundColor: item.stroke }}
-              />
-              <span className="text-slate-600 dark:text-slate-400 capitalize">
-                {item.dataKey === 'assistance' ? 'Assistance' : item.dataKey.toUpperCase()}
-              </span>
-            </div>
-            <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
-              {item.value?.toLocaleString('fr-FR') || 0}
-            </span>
-          </div>
-        ))}
-        <div className="flex items-center justify-between gap-4 text-sm pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
-          <span className="font-medium text-slate-700 dark:text-slate-300">Total</span>
-          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-            {total.toLocaleString('fr-FR')}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Légende personnalisée avec indication des courbes actives/inactives
- */
-function CustomLegend({ payload, activeDataKeys }: any) {
-  if (!payload?.length && !activeDataKeys) return null;
-
-  const labelMap: Record<string, string> = {
-    assistance: 'Assistance',
-    req: 'REQ',
-    bug: 'BUG',
-  };
-
-  // Définir tous les types possibles avec leurs couleurs
-  const allTypes = [
-    { dataKey: 'assistance', color: GRADIENT_COLORS.assistance.start, active: activeDataKeys?.assistance },
-    { dataKey: 'req', color: GRADIENT_COLORS.req.start, active: activeDataKeys?.req },
-    { dataKey: 'bug', color: GRADIENT_COLORS.bug.start, active: activeDataKeys?.bug },
-  ];
-
-  return (
-    <div className="flex items-center justify-center gap-6 pt-4">
-      {allTypes.map((type, index) => (
-        <div key={`legend-${index}`} className="flex items-center gap-1.5">
-          <div
-            className="h-2.5 w-2.5 rounded-sm"
-            style={{
-              backgroundColor: type.active ? type.color : 'transparent',
-              border: type.active ? 'none' : `1.5px solid ${type.color}`,
-              opacity: type.active ? 1 : 0.4
-            }}
-          />
-          <span className={`text-xs ${type.active ? 'text-slate-600 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600'}`}>
-            {labelMap[type.dataKey] || type.dataKey}
-          </span>
-        </div>
-      ))}
-    </div>
   );
 }
 

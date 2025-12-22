@@ -10,3 +10,5 @@ export { TasksColumnsConfigDialog } from './tasks-columns-config-dialog';
 export { TasksKPISection } from './tasks-kpi-section';
 export { TasksKPISectionLazy } from './tasks-kpi-section-lazy';
 export { CreateTaskDialog } from './create-task-dialog';
+export { EditTaskReportDialog } from './edit-task-report-dialog';
+export { ChangeTaskStatusDialog } from './change-task-status-dialog';

@@ -12,6 +12,8 @@
  */
 import { cache } from 'react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { withRpcTimeout } from '@/lib/utils/supabase-timeout';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Type des statistiques pour un type de ticket
@@ -59,18 +61,32 @@ async function getAllTicketStatsInternal(productId?: string): Promise<AllTicketS
   const supabase = await createSupabaseServerClient();
 
   try {
-    // Appeler la fonction PostgreSQL optimisée
-    const { data, error } = await supabase.rpc('get_all_ticket_stats', {
-      p_product_id: productId || null,
-    });
+    // Appeler la fonction PostgreSQL optimisée avec timeout
+    // ✅ TIMEOUT : Wrapper avec timeout de 10s pour éviter les blocages prolongés
+    const { data, error } = await withRpcTimeout(
+      supabase.rpc('get_all_ticket_stats', {
+        p_product_id: productId || null,
+      }),
+      10000 // 10 secondes
+    );
 
     if (error) {
-      console.error('[getAllTicketStats] Error calling RPC:', error);
+      // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+      const appError = createError.supabaseError(
+        'Erreur lors de la récupération des statistiques de tickets',
+        error instanceof Error ? error : new Error(String(error)),
+        { productId, errorCode: error.code }
+      );
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[getAllTicketStats]', appError);
+      }
       return getEmptyStats();
     }
 
     if (!data || data.length === 0) {
-      console.log('[getAllTicketStats] No data returned');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[getAllTicketStats] No data returned');
+      }
       return getEmptyStats();
     }
 
@@ -97,7 +113,15 @@ async function getAllTicketStatsInternal(productId?: string): Promise<AllTicketS
 
     return result;
   } catch (error) {
-    console.error('[getAllTicketStats] Unexpected error:', error);
+    // ✅ Gestion d'erreur avec createError (dégradation gracieuse)
+    const appError = createError.internalError(
+      'Erreur inattendue lors de la récupération des statistiques de tickets',
+      error instanceof Error ? error : new Error(String(error)),
+      { productId }
+    );
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[getAllTicketStats]', appError);
+    }
     return getEmptyStats();
   }
 }

@@ -3,11 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { ListChecks, CalendarDays, User, Users, Eye, FileText, Plus, MessageSquare, Settings } from 'lucide-react';
+import { ListChecks, CalendarDays, User, Users, Eye, FileText, Plus, MessageSquare, Settings, Edit } from 'lucide-react';
 import { Badge } from '@/ui/badge';
-import { Card } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipTrigger } from '@/ui/tooltip';
 import {
@@ -16,35 +13,40 @@ import {
   PopoverTrigger
 } from '@/ui/popover';
 import { PlanningItemTooltip } from './planning-item-tooltip';
-import { EditActivityReportDialog } from '@/components/activities/edit-activity-report-dialog';
-import { updateActivityReportAction } from '@/app/(main)/gestion/activites/actions';
-import { cn } from '@/lib/utils';
-import type { MockPlanningItem } from './types';
+import { EditActivityReportDialog, ChangeActivityStatusDialog } from '@/components/activities';
+import { updateActivityReportAction, updateActivityStatusAction } from '@/app/(main)/gestion/activites/actions';
+import { EditTaskReportDialog } from '@/components/tasks/edit-task-report-dialog';
+import { ChangeTaskStatusDialog } from '@/components/tasks/change-task-status-dialog';
+import { updateTaskReportAction, updateTaskStatusAction } from '@/app/(main)/gestion/taches/actions';
+import { PlanningItemCard } from './planning-item-card';
+import type { PlanningItem } from './types';
 
 type PlanningDayItemProps = {
-  item: MockPlanningItem;
+  item: PlanningItem;
 };
 
 /**
  * Composant Item individuel dans la liste du jour
  * 
- * Affiche une tâche ou une activité avec :
- * - Badge de type (Tâche/Activité)
- * - Icône distinctive
- * - Informations principales
- * - Statut et priorité (pour tâches)
+ * Affiche une tâche ou une activité avec le layout standardisé :
+ * - Icône distinctive à gauche
+ * - Titre en haut sur une ligne
+ * - Statut et personne en charge en bas
+ * - Menu contextuel (roue) à droite
  */
 export function PlanningDayItem({ item }: PlanningDayItemProps) {
   const isTask = item.type === 'task';
   const isActivity = item.type === 'activity';
   const router = useRouter();
-  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showActivityReportDialog, setShowActivityReportDialog] = useState(false);
+  const [showActivityStatusDialog, setShowActivityStatusDialog] = useState(false);
+  const [showTaskReportDialog, setShowTaskReportDialog] = useState(false);
+  const [showTaskStatusDialog, setShowTaskStatusDialog] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTaskMenuOpen, setIsTaskMenuOpen] = useState(false);
 
   // Pour les activités : créer une tâche à partir de l'activité
   const handleCreateTaskFromActivity = () => {
-    // Rediriger vers la page de gestion des tâches où l'utilisateur pourra créer une tâche
-    // et la lier à cette activité
     router.push(`/gestion/taches?linkedActivityId=${item.id}`);
   };
 
@@ -53,201 +55,250 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
     router.push(`/gestion/activites/${item.id}`);
   };
 
+  // Pour les tâches : voir les détails
+  const handleViewTask = () => {
+    router.push(`/gestion/taches/${item.id}`);
+  };
+
+  // Pour les tâches : voir les détails pour commenter
+  const handleCommentTask = () => {
+    router.push(`/gestion/taches/${item.id}#comments`);
+  };
+
+  // Pour les tâches : voir les détails pour changer le statut
+  const handleChangeTaskStatus = () => {
+    router.push(`/gestion/taches/${item.id}?edit=true`);
+  };
+
+  // Pour les tâches : voir les détails pour le compte rendu
+  const handleEditTaskReport = () => {
+    router.push(`/gestion/taches/${item.id}?edit=true`);
+  };
+
+  // Icône de distinction à gauche
+  const icon = isTask ? (
+    <div className="rounded-lg bg-blue-100 p-1.5 dark:bg-blue-900/30">
+      <ListChecks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+    </div>
+  ) : (
+    <div className="rounded-lg bg-purple-100 p-1.5 dark:bg-purple-900/30">
+      <CalendarDays className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+    </div>
+  );
+
+  // Contenu du bas (statut + personne en charge)
+  const bottomContent = isTask ? (
+    <>
+      {/* Statut */}
+      <Badge
+        variant={
+          item.status === 'Termine'
+            ? 'success'
+            : item.status === 'En_cours'
+              ? 'info'
+              : item.status === 'Bloque'
+                ? 'danger'
+                : 'outline'
+        }
+        className="text-[10px] px-1.5 py-0.5 whitespace-nowrap"
+      >
+        {item.status.replace('_', ' ')}
+      </Badge>
+
+      {/* Personne en charge */}
+      {item.assignedTo && (
+        <div className="flex items-center gap-1 whitespace-nowrap">
+          <User className="h-3 w-3" />
+          <span className="hidden sm:inline">{item.assignedTo.fullName}</span>
+          <span className="sm:hidden">{item.assignedTo.fullName.split(' ')[0]}</span>
+        </div>
+      )}
+    </>
+  ) : (
+    <>
+      {/* Statut */}
+      {item.status && (
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 whitespace-nowrap">
+          {item.status}
+        </Badge>
+      )}
+
+      {/* Créateur de l'activité */}
+      {item.createdBy && (
+        <div className="flex items-center gap-1 whitespace-nowrap">
+          <User className="h-3 w-3" />
+          <span className="hidden sm:inline">{item.createdBy.fullName}</span>
+          <span className="sm:hidden">{item.createdBy.fullName.split(' ')[0]}</span>
+        </div>
+      )}
+
+      {/* Nombre de participants */}
+      {item.participants && item.participants.length > 0 && (
+        <div className="flex items-center gap-1 whitespace-nowrap">
+          <Users className="h-3 w-3" />
+          <span>{item.participants.length}</span>
+        </div>
+      )}
+    </>
+  );
+
+  // Menu contextuel pour les activités - à droite
+  const activityMenu = isActivity ? (
+    <Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMenuOpen(!isMenuOpen);
+          }}
+          aria-label="Options de l&apos;activité"
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="end" onClick={(e) => e.stopPropagation()}>
+        <div className="space-y-1">
+          <Link
+            href={`/gestion/activites/${item.id}`}
+            className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <Eye className="h-4 w-4" />
+            Voir l&apos;activité
+          </Link>
+          <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
+          <button
+            onClick={() => {
+              handleCreateTaskFromActivity();
+              setIsMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <Plus className="h-4 w-4" />
+            Créer une tâche à partir
+          </button>
+          <button
+            onClick={() => {
+              setShowActivityReportDialog(true);
+              setIsMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <FileText className="h-4 w-4" />
+            {item.reportContent ? 'Modifier le compte rendu' : 'Laisser un compte rendu'}
+          </button>
+          <button
+            onClick={() => {
+              handleViewActivity();
+              setIsMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Laisser un commentaire
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  ) : undefined;
+
+  // Menu contextuel pour les tâches - à droite
+  const taskMenu = isTask ? (
+    <Popover open={isTaskMenuOpen} onOpenChange={setIsTaskMenuOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsTaskMenuOpen(!isTaskMenuOpen);
+          }}
+          aria-label="Options de la tâche"
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="end" onClick={(e) => e.stopPropagation()}>
+        <div className="space-y-1">
+          <Link
+            href={`/gestion/taches/${item.id}`}
+            className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            onClick={() => setIsTaskMenuOpen(false)}
+          >
+            <Eye className="h-4 w-4" />
+            Voir les détails
+          </Link>
+          <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
+          <button
+            onClick={() => {
+              setShowTaskReportDialog(true);
+              setIsTaskMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <FileText className="h-4 w-4" />
+            Compte rendu
+          </button>
+          <button
+            onClick={() => {
+              handleCommentTask();
+              setIsTaskMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Commenter
+          </button>
+          <button
+            onClick={() => {
+              setShowTaskStatusDialog(true);
+              setIsTaskMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
+          >
+            <Edit className="h-4 w-4" />
+            Changer de statut
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  ) : undefined;
+
+  // Menu contextuel (activités ou tâches)
+  const menu = isActivity ? activityMenu : taskMenu;
+
+  // Lien vers détail (action) - à droite
+  const actions = (
+    <Link
+      href={isTask ? `/gestion/taches/${item.id}` : `/gestion/activites/${item.id}`}
+      className="text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 shrink-0"
+      aria-label={`Voir les détails de ${item.title}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      →
+    </Link>
+  );
+
   return (
     <>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Card className="p-3 transition-shadow hover:shadow-md border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
-          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-            {/* Icône et Badge - compact */}
-            <div className="flex items-center gap-2 shrink-0">
-          {isTask ? (
-            <div className="rounded-lg bg-blue-100 p-1.5 dark:bg-blue-900/30">
-              <ListChecks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
-          ) : (
-            <div className="rounded-lg bg-purple-100 p-1.5 dark:bg-purple-900/30">
-              <CalendarDays className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
-          )}
-
-              <Badge
-                variant={isTask ? 'info' : 'outline'}
-                className={cn(
-                  'text-xs whitespace-nowrap',
-                  isTask && 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
-                  isActivity && 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
-                )}
-              >
-                {isTask ? 'Tâche' : 'Activité'}
-              </Badge>
-            </div>
-
-            {/* Titre - prend l'espace disponible */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
-                {item.title}
-              </h3>
-            </div>
-
-            {/* Informations étalées horizontalement - responsive */}
-            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-600 dark:text-slate-400">
-              {isTask && (
-                <>
-                  {item.assignedTo && (
-                    <div className="flex items-center gap-1 whitespace-nowrap">
-                      <User className="h-3 w-3" />
-                      <span className="hidden sm:inline">{item.assignedTo.fullName}</span>
-                      <span className="sm:hidden">{item.assignedTo.fullName.split(' ')[0]}</span>
-                    </div>
-                  )}
-
-                  {item.priority && (
-                    <Badge
-                      variant={
-                        item.priority === 'Urgente' || item.priority === 'Haute'
-                          ? 'danger'
-                          : item.priority === 'Normale'
-                            ? 'info'
-                            : 'outline'
-                      }
-                      className="text-xs whitespace-nowrap"
-                    >
-                      {item.priority}
-                    </Badge>
-                  )}
-
-                  <Badge
-                    variant={
-                      item.status === 'Termine'
-                        ? 'success'
-                        : item.status === 'En_cours'
-                          ? 'info'
-                          : item.status === 'Bloque'
-                            ? 'danger'
-                            : 'outline'
-                    }
-                    className="text-xs whitespace-nowrap"
-                  >
-                    {item.status.replace('_', ' ')}
-                  </Badge>
-                </>
-              )}
-
-              {isActivity && (
-                <>
-                  {item.activityType && (
-                    <span className="whitespace-nowrap">
-                      <span className="font-medium">Type:</span> {item.activityType}
-                    </span>
-                  )}
-
-                  {item.plannedEnd && (
-                    <span className="whitespace-nowrap hidden md:inline">
-                      <span className="font-medium">Période:</span>{' '}
-                      {format(new Date(item.plannedStart), 'd MMM', { locale: fr })} →{' '}
-                      {format(new Date(item.plannedEnd), 'd MMM yyyy', { locale: fr })}
-                    </span>
-                  )}
-
-                  {item.participants && item.participants.length > 0 && (
-                    <div className="flex items-center gap-1 whitespace-nowrap">
-                      <Users className="h-3 w-3" />
-                      <span>
-                        {item.participants.length}{' '}
-                        {item.participants.length === 1 ? 'participant' : 'participants'}
-                      </span>
-                    </div>
-                  )}
-
-                  {item.status && (
-                    <Badge variant="outline" className="text-xs whitespace-nowrap">
-                      {item.status}
-                    </Badge>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Lien vers détail */}
-            <Link
-              href={isTask ? `/gestion/taches/${item.id}` : `/gestion/activites/${item.id}`}
-              className="text-slate-400 transition-colors hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 shrink-0"
-              aria-label={`Voir les détails de ${item.title}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              →
-            </Link>
-
-            {/* Menu actions - uniquement pour les activités */}
-            {isActivity && (
-              <Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsMenuOpen(!isMenuOpen);
-                    }}
-                    aria-label="Options de l&apos;activité"
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-56 p-1" align="end" onClick={(e) => e.stopPropagation()}>
-                  <div className="space-y-1">
-                    <Link
-                      href={`/gestion/activites/${item.id}`}
-                      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Voir l&apos;activité
-                    </Link>
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
-                    <button
-                      onClick={() => {
-                        handleCreateTaskFromActivity();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Créer une tâche à partir
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowReportDialog(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
-                    >
-                      <FileText className="h-4 w-4" />
-                      {item.reportContent ? 'Modifier le compte rendu' : 'Laisser un compte rendu'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleViewActivity();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-left"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      Laisser un commentaire
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        </Card>
+          <PlanningItemCard
+            icon={icon}
+            title={item.title}
+            bottomContent={bottomContent}
+            menu={menu}
+            actions={actions}
+          />
         </TooltipTrigger>
         <PlanningItemTooltip item={item} />
       </Tooltip>
 
-      {/* Dialog pour éditer le compte rendu (activités uniquement) */}
+      {/* Dialog pour éditer le compte rendu (activités) */}
       {isActivity && (
         <EditActivityReportDialog
           activityId={item.id}
@@ -255,11 +306,49 @@ export function PlanningDayItem({ item }: PlanningDayItemProps) {
           onSubmit={async (reportContent) => {
             await updateActivityReportAction(item.id, reportContent);
           }}
-          open={showReportDialog}
-          onOpenChange={setShowReportDialog}
+          open={showActivityReportDialog}
+          onOpenChange={setShowActivityReportDialog}
+        />
+      )}
+
+      {/* Dialog pour changer le statut (activités) */}
+      {isActivity && item.status && (
+        <ChangeActivityStatusDialog
+          activityId={item.id}
+          currentStatus={item.status as 'Brouillon' | 'Planifie' | 'En_cours' | 'Termine' | 'Annule'}
+          onSubmit={async (status: 'Brouillon' | 'Planifie' | 'En_cours' | 'Termine' | 'Annule', actualDurationHours?: number) => {
+            await updateActivityStatusAction(item.id, status, actualDurationHours);
+          }}
+          open={showActivityStatusDialog}
+          onOpenChange={setShowActivityStatusDialog}
+        />
+      )}
+
+      {/* Dialog pour éditer le compte rendu (tâches) */}
+      {isTask && (
+        <EditTaskReportDialog
+          taskId={item.id}
+          currentReportContent={null} // TODO: Ajouter reportContent au type PlanningTaskItem si nécessaire
+          onSubmit={async (reportContent) => {
+            await updateTaskReportAction(item.id, reportContent);
+          }}
+          open={showTaskReportDialog}
+          onOpenChange={setShowTaskReportDialog}
+        />
+      )}
+
+      {/* Dialog pour changer le statut (tâches) */}
+      {isTask && (
+        <ChangeTaskStatusDialog
+          taskId={item.id}
+          currentStatus={item.status}
+          onSubmit={async (status, actualDurationHours) => {
+            await updateTaskStatusAction(item.id, status, actualDurationHours);
+          }}
+          open={showTaskStatusDialog}
+          onOpenChange={setShowTaskStatusDialog}
         />
       )}
     </>
   );
 }
-

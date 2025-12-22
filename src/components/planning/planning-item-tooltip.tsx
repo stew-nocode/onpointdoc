@@ -5,10 +5,10 @@ import { fr } from 'date-fns/locale';
 import { User, Users, Calendar, Clock, FileText } from 'lucide-react';
 import { TooltipContent } from '@/ui/tooltip';
 import { Separator } from '@/ui/separator';
-import type { MockPlanningItem } from './types';
+import type { PlanningItem } from './types';
 
 type PlanningItemTooltipProps = {
-  item: MockPlanningItem;
+  item: PlanningItem;
 };
 
 /**
@@ -49,13 +49,15 @@ export function PlanningItemTooltip({ item }: PlanningItemTooltipProps) {
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-              <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-              <span>
-                <span className="font-medium">Échéance :</span>{' '}
-                {format(new Date(item.dueDate), 'EEEE d MMMM yyyy à HH:mm', { locale: fr })}
-              </span>
-            </div>
+            {item.startDate && (
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <Clock className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <span>
+                  <span className="font-medium">Date de début :</span>{' '}
+                  {format(new Date(item.startDate), 'EEEE d MMMM yyyy', { locale: fr })}
+                </span>
+              </div>
+            )}
 
             {item.priority && (
               <div className="flex items-center gap-2">
@@ -108,7 +110,7 @@ export function PlanningItemTooltip({ item }: PlanningItemTooltipProps) {
                 <div className="flex-1">
                   <span className="font-medium">Participants ({item.participants.length}) :</span>
                   <ul className="mt-1 space-y-0.5">
-                    {item.participants.map((participant) => (
+                    {item.participants.map((participant: { id: string; fullName: string }) => (
                       <li key={participant.id} className="text-slate-600 dark:text-slate-400">
                         • {participant.fullName}
                       </li>
@@ -130,4 +132,3 @@ export function PlanningItemTooltip({ item }: PlanningItemTooltipProps) {
     </TooltipContent>
   );
 }
-
