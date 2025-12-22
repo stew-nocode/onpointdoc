@@ -8,7 +8,6 @@
  * - Réutilise les services existants pour les tâches et activités
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { handleSupabaseError } from '@/lib/errors/handlers';
 import { transformActivity } from '@/services/activities/utils/activity-transformer';
@@ -102,7 +101,7 @@ export async function getPlanningItemsForDate(
  * Récupère les tâches pour une date donnée (filtre par start_date)
  */
 async function getTasksForDate(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfDay: Date,
   endOfDay: Date
 ): Promise<PlanningTaskItem[]> {
@@ -175,7 +174,7 @@ async function getTasksForDate(
  * Filtre par planned_start dans la journée
  */
 async function getActivitiesForDate(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfDay: Date,
   endOfDay: Date
 ): Promise<PlanningActivityItem[]> {
@@ -251,7 +250,7 @@ async function getActivitiesForDate(
  * Filtre les tâches dont la date d'échéance calculée est dans la journée
  */
 async function getTasksEndingOnDate(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfDay: Date,
   endOfDay: Date
 ): Promise<PlanningTaskItem[]> {
@@ -337,7 +336,7 @@ async function getTasksEndingOnDate(
  * Filtre par planned_end dans la journée (pour mode "Échéances")
  */
 async function getActivitiesEndingOnDate(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfDay: Date,
   endOfDay: Date
 ): Promise<PlanningActivityItem[]> {
@@ -406,6 +405,7 @@ async function getActivitiesEndingOnDate(
 
   return activities;
 }
+
 
 
 

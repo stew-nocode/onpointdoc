@@ -57,8 +57,8 @@ export function PlanningPageClient() {
               </Card>
             </div>
 
-            {/* Colonne droite : Disponibilité (1/4 fixe) */}
-            <div className="w-full lg:w-1/4 flex-shrink-0 flex h-full">
+            {/* Colonne droite : Disponibilité (largeur fixe +20%) */}
+            <div className="w-full lg:w-[346px] lg:min-w-[346px] flex-shrink-0 flex h-full">
               <PlanningAvailability selectedDate={selectedDate} />
             </div>
           </div>

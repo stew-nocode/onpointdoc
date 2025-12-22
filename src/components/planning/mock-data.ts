@@ -1,10 +1,13 @@
 /**
  * Données mockées pour le Planning
  * 
- * À remplacer par les vraies données Supabase dans la Phase 6
+ * NOTE: Ce fichier n'est plus utilisé car le planning est maintenant connecté
+ * à Supabase. Conservé pour compatibilité avec le Gantt et autres composants.
+ * 
+ * @deprecated Utilisez les services dans src/services/planning/
  */
 
-import type { MockPlanningItem, MockPlanningTask, MockPlanningActivity } from './types';
+import type { PlanningItem, PlanningTaskItem, PlanningActivityItem } from './types';
 
 /**
  * Génère des dates mockées pour le mois en cours
@@ -23,10 +26,11 @@ function getMockDatesForMonth(year: number, month: number): Date[] {
 
 /**
  * Génère des tâches mockées pour le mois en cours
+ * @deprecated Utilisez getPlanningItemsForDate depuis Supabase
  */
-function generateMockTasks(year: number, month: number): MockPlanningTask[] {
+function generateMockTasks(year: number, month: number): PlanningTaskItem[] {
   const dates = getMockDatesForMonth(year, month);
-  const tasks: MockPlanningTask[] = [];
+  const tasks: PlanningTaskItem[] = [];
   
   // Générer 2-3 tâches par semaine
   dates.forEach((date, index) => {
@@ -37,7 +41,7 @@ function generateMockTasks(year: number, month: number): MockPlanningTask[] {
         title: `Tâche mockée ${index + 1}`,
         status: index % 4 === 0 ? 'En_cours' : 'A_faire',
         priority: index % 3 === 0 ? 'Haute' : 'Normale',
-        dueDate: date.toISOString(),
+        startDate: date.toISOString(),
         assignedTo: {
           id: 'user-1',
           fullName: 'Agent Mock'
@@ -51,10 +55,11 @@ function generateMockTasks(year: number, month: number): MockPlanningTask[] {
 
 /**
  * Génère des activités mockées pour le mois en cours
+ * @deprecated Utilisez getPlanningItemsForDate depuis Supabase
  */
-function generateMockActivities(year: number, month: number): MockPlanningActivity[] {
+function generateMockActivities(year: number, month: number): PlanningActivityItem[] {
   const dates = getMockDatesForMonth(year, month);
-  const activities: MockPlanningActivity[] = [];
+  const activities: PlanningActivityItem[] = [];
   
   // Générer 1-2 activités par semaine
   dates.forEach((date, index) => {
@@ -85,8 +90,9 @@ function generateMockActivities(year: number, month: number): MockPlanningActivi
 
 /**
  * Récupère tous les items (tâches + activités) pour un mois donné
+ * @deprecated Utilisez getPlanningItemsForDate depuis Supabase
  */
-export function getMockItemsForMonth(year: number, month: number): MockPlanningItem[] {
+export function getMockItemsForMonth(year: number, month: number): PlanningItem[] {
   const tasks = generateMockTasks(year, month);
   const activities = generateMockActivities(year, month);
   return [...tasks, ...activities];
@@ -94,22 +100,19 @@ export function getMockItemsForMonth(year: number, month: number): MockPlanningI
 
 /**
  * Récupère les items pour une date spécifique
- * 
- * Pour les activités : inclut celles dont la date est dans la période [plannedStart, plannedEnd]
- * Pour les tâches : inclut celles dont dueDate = date
+ * @deprecated Utilisez getPlanningItemsForDate depuis Supabase
  */
-export function getMockItemsForDate(date: Date): MockPlanningItem[] {
+export function getMockItemsForDate(date: Date): PlanningItem[] {
   const year = date.getFullYear();
   const month = date.getMonth();
   const day = date.getDate();
-  const dateStr = `${year}-${month}-${day}`;
   
   const allItems = getMockItemsForMonth(year, month);
   
   return allItems.filter((item) => {
     if (item.type === 'task') {
-      // Tâche : inclure si dueDate = date sélectionnée
-      const itemDate = new Date(item.dueDate);
+      // Tâche : inclure si startDate = date sélectionnée
+      const itemDate = new Date(item.startDate);
       return (
         itemDate.getFullYear() === year &&
         itemDate.getMonth() === month &&
@@ -132,10 +135,7 @@ export function getMockItemsForDate(date: Date): MockPlanningItem[] {
 
 /**
  * Récupère les dates qui ont des événements (pour surbrillance calendrier)
- * 
- * @param year - Année
- * @param month - Mois (0-11)
- * @param viewMode - Mode de vue : 'starts' pour activités, 'dueDates' pour tâches
+ * @deprecated Utilisez getPlanningDatesWithEvents depuis Supabase
  */
 export function getMockDatesWithEvents(
   year: number, 
@@ -147,8 +147,8 @@ export function getMockDatesWithEvents(
   
   allItems.forEach((item) => {
     if (viewMode === 'dueDates' && item.type === 'task') {
-      // Mode "Échéances" : afficher les due_date des tâches
-      const date = new Date(item.dueDate);
+      // Mode "Échéances" : afficher les startDate des tâches
+      const date = new Date(item.startDate);
       datesSet.add(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`);
     } else if (viewMode === 'starts' && item.type === 'activity') {
       // Mode "Débuts" : afficher les planned_start des activités

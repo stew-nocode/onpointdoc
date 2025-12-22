@@ -1,13 +1,15 @@
 /**
  * Données mockées pour la disponibilité
  * 
- * Phase 1 : Mocké avec durées estimées simulées
- * Phase 6 : Remplacer par vraies données Supabase avec estimated_hours
+ * NOTE: Ce fichier n'est plus utilisé car la disponibilité
+ * est maintenant connectée à Supabase via get-availability-for-date.ts
+ * 
+ * Conservé pour compatibilité et référence historique.
  */
 
 import { format, isWithinInterval } from 'date-fns';
 import type { PersonAvailability } from './types';
-import type { MockPlanningItem } from '../types';
+import type { PlanningItem } from '../types';
 import { getMockItemsForDate } from '../mock-data';
 
 /**
@@ -18,9 +20,9 @@ const DEFAULT_CAPACITY = 8; // 8 heures/jour
 /**
  * Génère des durées estimées mockées pour les items
  * 
- * Phase 6 : Remplacer par les vraies durées depuis Supabase
+ * @deprecated Utilisez les vraies données depuis Supabase
  */
-function getMockEstimatedHours(item: MockPlanningItem): number {
+function getMockEstimatedHours(item: PlanningItem): number {
   if (item.type === 'task') {
     // Tâches : 1-4 heures selon la priorité
     const priorityMultiplier = 
@@ -62,8 +64,8 @@ export function calculateAvailabilityForDate(
     peopleMap.set(person.id, {
       id: person.id,
       fullName: person.fullName,
-      department: person.department,
-      role: person.role,
+      department: person.department ?? null,
+      role: person.role ?? null,
       totalHours: 0,
       capacity: DEFAULT_CAPACITY,
       utilizationRate: 0,
@@ -82,9 +84,9 @@ export function calculateAvailabilityForDate(
     if (item.type === 'task' && item.assignedTo) {
       const person = peopleMap.get(item.assignedTo.id);
       if (person) {
-        // Vérifier si la tâche est due ce jour
-        const dueDateStr = format(new Date(item.dueDate), 'yyyy-MM-dd');
-        if (dueDateStr === dateStr) {
+        // Vérifier si la tâche commence ce jour (startDate = date sélectionnée)
+        const startDateStr = format(new Date(item.startDate), 'yyyy-MM-dd');
+        if (startDateStr === dateStr) {
           person.totalHours += estimatedHours;
           person.items.tasks.push({
             id: item.id,
@@ -95,7 +97,7 @@ export function calculateAvailabilityForDate(
       }
     } else if (item.type === 'activity' && item.participants) {
       // Pour les activités, toutes les personnes participantes sont occupées
-      item.participants.forEach((participant) => {
+      item.participants.forEach((participant: { id: string; fullName: string }) => {
         const person = peopleMap.get(participant.id);
         if (person) {
           // Vérifier si la date est dans la période de l'activité

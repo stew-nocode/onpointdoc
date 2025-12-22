@@ -8,7 +8,6 @@
  * - Optimisé pour le calendrier (pas besoin de charger tous les détails)
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { handleSupabaseError } from '@/lib/errors/handlers';
 
@@ -70,7 +69,7 @@ export async function getPlanningDatesWithEvents(
  * Récupère les dates des tâches (start_date) pour un mois
  */
 async function getTaskDatesForMonth(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfMonth: Date,
   endOfMonth: Date
 ): Promise<Date[]> {
@@ -103,7 +102,7 @@ async function getTaskDatesForMonth(
  * Récupère les dates de début des activités (planned_start) pour un mois
  */
 async function getActivityDatesForMonth(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfMonth: Date,
   endOfMonth: Date
 ): Promise<Date[]> {
@@ -138,7 +137,7 @@ async function getActivityDatesForMonth(
  * La date d'échéance est calculée comme : start_date + estimated_duration_hours
  */
 async function getTaskEndDatesForMonth(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfMonth: Date,
   endOfMonth: Date
 ): Promise<Date[]> {
@@ -178,7 +177,7 @@ async function getTaskEndDatesForMonth(
  * Récupère les dates de fin des activités (planned_end) pour un mois
  */
 async function getActivityEndDatesForMonth(
-  supabase: SupabaseClient,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   startOfMonth: Date,
   endOfMonth: Date
 ): Promise<Date[]> {
@@ -206,6 +205,7 @@ async function getActivityEndDatesForMonth(
 
   return dates;
 }
+
 
 
 

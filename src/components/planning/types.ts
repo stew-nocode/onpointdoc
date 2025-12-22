@@ -1,28 +1,23 @@
 /**
- * Types pour les données mockées du Planning
- * 
- * Ces types seront remplacés par les vrais types de tâches/activités
- * lors de la connexion aux données Supabase
+ * Types pour les données du Planning (connecté à Supabase)
  */
 
 export type PlanningItemType = 'task' | 'activity';
 
-export type MockPlanningTask = {
+export type PlanningTaskItem = {
   id: string;
   type: 'task';
   title: string;
   status: 'A_faire' | 'En_cours' | 'Termine' | 'Annule' | 'Bloque';
   priority: 'Basse' | 'Normale' | 'Haute' | 'Urgente' | null;
-  dueDate: string; // ISO date string
-  startDate?: string | null; // ISO date string (date de début)
-  estimatedDurationHours?: number | null; // Durée estimée en heures
+  startDate: string; // ISO date string (date de début)
   assignedTo?: {
     id: string;
     fullName: string;
   } | null;
 };
 
-export type MockPlanningActivity = {
+export type PlanningActivityItem = {
   id: string;
   type: 'activity';
   title: string;
@@ -41,8 +36,5 @@ export type MockPlanningActivity = {
   }>;
 };
 
-export type MockPlanningItem = MockPlanningTask | MockPlanningActivity;
-
-// Alias pour compatibilité avec les composants existants
-export type PlanningItem = MockPlanningItem;
+export type PlanningItem = PlanningTaskItem | PlanningActivityItem;
 
