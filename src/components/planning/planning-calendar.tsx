@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from '@/ui/calendar';
 import { Button } from '@/ui/button';
 import { Switch } from '@/ui/switch';
@@ -8,7 +8,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { getMockDatesWithEvents } from './mock-data';
 
 export type PlanningViewMode = 'starts' | 'dueDates';
 
@@ -36,13 +35,55 @@ export function PlanningCalendar({
   onViewModeChange
 }: PlanningCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [datesWithEvents, setDatesWithEvents] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
 
-  // Récupérer les dates avec événements pour le mois affiché selon le mode
-  const datesWithEvents = getMockDatesWithEvents(
-    currentMonth.getFullYear(),
-    currentMonth.getMonth(),
-    viewMode
-  );
+  // Extraire year/month pour les dépendances (évite expressions complexes)
+  const currentYear = currentMonth.getFullYear();
+  const currentMonthIndex = currentMonth.getMonth();
+
+  // Récupérer les dates avec événements depuis l'API Supabase
+  // Utilise AbortController pour annuler les requêtes obsolètes
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    const fetchDates = async () => {
+      setIsLoadingDates(true);
+      try {
+        const response = await fetch(
+          `/api/planning/dates?year=${currentYear}&month=${currentMonthIndex}&viewMode=${viewMode}`,
+          { signal: abortController.signal }
+        );
+
+        if (!response.ok) {
+          console.error('Erreur lors de la récupération des dates:', response.statusText);
+          setDatesWithEvents([]);
+          return;
+        }
+
+        const data = await response.json();
+        const dates = (data.dates || []).map((dateStr: string) => new Date(dateStr));
+        setDatesWithEvents(dates);
+      } catch (error) {
+        // Ignorer les erreurs d'annulation
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Erreur lors de la récupération des dates:', error);
+        setDatesWithEvents([]);
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoadingDates(false);
+        }
+      }
+    };
+
+    fetchDates();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [currentYear, currentMonthIndex, viewMode]);
 
   // Convertir en Set pour lookup rapide
   const datesWithEventsSet = new Set(
@@ -80,10 +121,12 @@ export function PlanningCalendar({
   };
 
   /**
-   * Retour au mois en cours
+   * Retour au mois en cours et sélectionne la date du jour
    */
   const goToCurrentMonth = () => {
-    setCurrentMonth(new Date());
+    const today = new Date();
+    setCurrentMonth(today);
+    onDateSelect(today);
   };
 
   return (

@@ -5,8 +5,8 @@
 export type PersonAvailability = {
   id: string;
   fullName: string;
-  department?: string;
-  role?: string;
+  department: string | null;
+  role: string | null;
   totalHours: number; // Heures totales occupées le jour sélectionné
   capacity: number; // Capacité en heures (ex: 8h/jour)
   utilizationRate: number; // Pourcentage d'utilisation (0-100)
