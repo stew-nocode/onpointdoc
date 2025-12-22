@@ -54,6 +54,10 @@ export async function GET(request: NextRequest) {
     const customStartDate = searchParams.get('startDate');
     const customEndDate = searchParams.get('endDate');
 
+    // Récupérer le paramètre includeOld (par défaut: true)
+    const includeOldParam = searchParams.get('includeOld');
+    const includeOld = includeOldParam === 'false' ? false : true;
+
     // Utiliser les dates personnalisées si fournies, sinon calculer selon la période
     let startDate: string;
     let endDate: string;
@@ -194,25 +198,29 @@ export async function GET(request: NextRequest) {
         getTicketsDistributionStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
-          responseData.periodEnd
+          responseData.periodEnd,
+          includeOld
         ),
         getTicketsEvolutionStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          period // Passer la période pour adapter la granularité
+          period, // Passer la période pour adapter la granularité
+          includeOld
         ),
         getTicketsByCompanyStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          10 // Top 10 entreprises
+          10, // Top 10 entreprises
+          includeOld
         ),
         getBugsByTypeStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          10 // Top 10 types de BUGs
+          10, // Top 10 types de BUGs
+          includeOld
         ),
         getCampaignsResultsStats(
           responseData.periodStart,
@@ -223,42 +231,49 @@ export async function GET(request: NextRequest) {
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          10 // Top 10 modules
+          10, // Top 10 modules
+          includeOld
         ),
         getBugsByTypeAndModuleStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          15 // Top 15 types de BUGs (avec modules empilés)
+          15, // Top 15 types de BUGs (avec modules empilés)
+          includeOld
         ),
         getAssistanceTimeByCompanyStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          10 // Top 10 entreprises
+          10, // Top 10 entreprises
+          includeOld
         ),
         getAssistanceTimeEvolutionStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          period // Passer la période pour adapter la granularité
+          period, // Passer la période pour adapter la granularité
+          includeOld
         ),
         getSupportAgentsStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
-          responseData.periodEnd
+          responseData.periodEnd,
+          includeOld
         ),
         getSupportAgentsRadarStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          6
+          6,
+          includeOld
         ),
         getCompaniesCardsStats(
           OBC_PRODUCT_ID,
           responseData.periodStart,
           responseData.periodEnd,
-          10
+          10,
+          includeOld
         ),
       ]);
       
