@@ -260,13 +260,10 @@ function UnifiedDashboardWithWidgetsComponent({
       const newUrl = `${pathname}?${params.toString()}`;
       router.push(newUrl, { scroll: false });
 
-      // ✅ CORRECTION : Charger les données côté client AVANT de refresh le Server Component
-      // Cela évite que le dashboard se vide pendant le chargement
+      // ✅ CORRECTION : Charger les données côté client uniquement
+      // Pas de router.refresh() car cela force le Server Component à recharger avec initialData
+      // ce qui vide le dashboard pendant le chargement
       await loadData(newPeriod);
-
-      // Refresh du Server Component après que les données soient chargées
-      // (pour synchroniser les Server Components si nécessaire)
-      router.refresh();
     },
     [loadData, router, pathname]
   );
@@ -298,11 +295,8 @@ function UnifiedDashboardWithWidgetsComponent({
       const newUrl = `${pathname}?${params.toString()}`;
       router.push(newUrl, { scroll: false });
 
-      // ✅ CORRECTION : Charger les données AVANT de refresh
+      // ✅ CORRECTION : Charger les données côté client uniquement
       await loadData('year', range.from.toISOString(), range.to.toISOString());
-
-      // Refresh du Server Component après chargement
-      router.refresh();
 
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Nouvelle plage personnalisée sélectionnée:', {
@@ -317,7 +311,6 @@ function UnifiedDashboardWithWidgetsComponent({
       params.delete('endDate');
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
-      router.refresh();
 
       if (process.env.NODE_ENV === 'development') {
         console.log('[Dashboard] Période personnalisée désélectionnée');
@@ -350,11 +343,8 @@ function UnifiedDashboardWithWidgetsComponent({
         const newUrl = `${pathname}?${params.toString()}`;
         router.push(newUrl, { scroll: false });
 
-        // ✅ CORRECTION : Charger les données AVANT de refresh
+        // ✅ CORRECTION : Charger les données côté client uniquement
         await loadData(normalizedYear as Period);
-
-        // Refresh du Server Component après chargement
-        router.refresh();
 
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année sélectionnée:', normalizedYear);
@@ -367,7 +357,6 @@ function UnifiedDashboardWithWidgetsComponent({
         params.delete('endDate');
         const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
         router.push(newUrl, { scroll: false });
-        router.refresh();
 
         if (process.env.NODE_ENV === 'development') {
           console.log('[Dashboard] Année désélectionnée, réinitialisation de la période');
@@ -446,9 +435,6 @@ function UnifiedDashboardWithWidgetsComponent({
       } else {
         await loadData(period, undefined, undefined, newIncludeOld);
       }
-
-      // Refresh du Server Component après chargement
-      router.refresh();
     },
     [router, pathname, loadData, period]
   );
