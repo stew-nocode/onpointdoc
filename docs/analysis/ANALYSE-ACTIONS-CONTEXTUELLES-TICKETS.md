@@ -481,7 +481,7 @@ export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
 **Architecture** :
 - `.cursor/rules/master.mdc` : Règles globales
 - `.cursor/rules/architecture-frontend-interface-utilisateur.mdc` : Standards UI
-- `.cursor/rules/qualite-de-code-typage-modularite.mdc` : Qualité de code
+- `.cursor/rules/clean-code-methodology.mdc` : Qualité de code (remplace qualite-de-code-typage-modularite.mdc)
 
 **Composants existants** :
 - `src/components/tickets/tickets-infinite-scroll.tsx` : Tableau principal

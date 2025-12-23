@@ -149,9 +149,9 @@ Les choix technologiques, la modularité, la lisibilité, l'automatisation et la
 
 ### Phase 1 : Supprimer les fichiers obsolètes
 
-1. ✅ Supprimer `qualite-de-code-typage-modularite.mdc`
-2. ✅ Supprimer `context-general.mdc`
-3. ✅ Supprimer `contexte-philosophie-du-projet.mdc`
+1. ✅ Supprimer `qualite-de-code-typage-modularite.mdc` ✅ **FAIT** (2025-12-23)
+2. ✅ Supprimer `context-general.mdc` ✅ **FAIT** (2025-12-23)
+3. ✅ Supprimer `contexte-philosophie-du-projet.mdc` ✅ **FAIT** (2025-12-23)
 
 ### Phase 2 : Mettre à jour master.mdc
 
@@ -182,7 +182,7 @@ Les choix technologiques, la modularité, la lisibilité, l'automatisation et la
 - [x] Analyse complète des fichiers
 - [x] Identification des redondances
 - [x] Recommandations documentées
-- [ ] Suppression des fichiers obsolètes (à faire)
+- [x] Suppression des fichiers obsolètes ✅ (fait le 2025-12-23)
 - [ ] Mise à jour de master.mdc (à faire)
 - [ ] Test après modifications (à faire)
 

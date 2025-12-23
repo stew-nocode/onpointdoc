@@ -1,6 +1,6 @@
 # OnpointDoc
 
-Socle Next.js (App Router) + TypeScript + Tailwind + ShadCN UI pour piloter les tickets, activités et tâches décrits dans `context-general.mdc`.
+Socle Next.js (App Router) + TypeScript + Tailwind + ShadCN UI pour piloter les tickets, activités et tâches décrits dans `.cursor/rules/prd.mdc` et `.cursor/rules/tech-stack.mdc`.
 
 ## Découpage
 
