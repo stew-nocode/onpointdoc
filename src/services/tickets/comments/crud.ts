@@ -81,7 +81,15 @@ export async function createComment(
   if (ticket?.jira_issue_key) {
     try {
       const { createJiraComment } = await import('@/services/jira/comments/create');
-      await createJiraComment(ticket.jira_issue_key, content, comment.id);
+      const jiraResponse = await createJiraComment(ticket.jira_issue_key, content, comment.id);
+
+      // ✅ Stocker jira_comment_id pour éviter les doublons lors du webhook retour
+      if (jiraResponse.success && jiraResponse.jiraCommentId) {
+        await supabase
+          .from('ticket_comments')
+          .update({ jira_comment_id: jiraResponse.jiraCommentId })
+          .eq('id', comment.id);
+      }
     } catch (jiraError) {
       // Ne pas faire échouer la création Supabase si JIRA échoue
       // Le commentaire a été créé avec succès dans Supabase

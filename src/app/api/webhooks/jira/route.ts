@@ -4,6 +4,7 @@ import { syncJiraToSupabase, JiraIssueData } from '@/services/jira';
 import type { TicketType } from '@/types/ticket';
 import { handleApiError } from '@/lib/errors/handlers';
 import { createError } from '@/lib/errors/types';
+import { validateWebhook, getJiraWebhookConfig } from '@/lib/webhooks/validation';
 
 /**
  * Route API pour recevoir les webhooks JIRA
@@ -13,10 +14,19 @@ import { createError } from '@/lib/errors/types';
  * 2. Format simplifié (legacy) : { event_type, ticket_id, jira_issue_key, updates }
  * 3. Format complet (Phase 1) : { ticket_id, jira_data: JiraIssueData }
  * 
- * Note: En production, cette route devrait être sécurisée (authentification, validation)
+ * Sécurisé par :
+ * - Token secret (header x-jira-webhook-secret ou query param ?secret=)
+ * - Rate limiting (120 req/min par IP)
+ * - Filtrage IP optionnel (JIRA_ALLOWED_IPS)
  */
 export async function POST(request: NextRequest) {
   try {
+    // ✅ Valider le webhook (token, rate limit, IP)
+    const webhookConfig = getJiraWebhookConfig();
+    if (webhookConfig.secretToken) {
+      validateWebhook(request.headers, new URL(request.url), webhookConfig);
+    }
+
     const body = await request.json();
     
     // Nouveau : Gérer le format webhook JIRA natif

@@ -163,32 +163,54 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
       jiraPayload.fields[supabaseTicketIdCustomField] = input.ticketId;
     }
 
-    // Appel à l'API JIRA
-    const response = await fetch(`${config.url}/rest/api/3/issue`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${config.auth}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(jiraPayload)
-    });
+    // Appel à l'API JIRA avec retry
+    const { withRetrySafe, JIRA_RETRY_CONFIG } = await import('@/lib/utils/retry');
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Erreur lors de la création du ticket JIRA:', errorText);
+    const result = await withRetrySafe(
+      async () => {
+        const response = await fetch(`${config.url}/rest/api/3/issue`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${config.auth}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jiraPayload)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          // Erreurs 4xx ne sont pas retryables (sauf 429)
+          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+            throw new Error(`JIRA_NON_RETRYABLE: ${response.status}: ${errorText}`);
+          }
+          throw new Error(`JIRA ${response.status}: ${errorText}`);
+        }
+
+        return await response.json();
+      },
+      {
+        ...JIRA_RETRY_CONFIG,
+        onRetry: (err, attempt, delay) => {
+          console.warn(
+            `[JIRA] Retry ${attempt} pour création ticket après erreur: ${err.message}. Délai: ${delay}ms`
+          );
+        }
+      }
+    );
+
+    if (!result.success) {
+      console.error('Erreur lors de la création du ticket JIRA après retries:', result.error);
       return {
         success: false,
-        error: `Erreur JIRA ${response.status}: ${errorText}`
+        error: result.error?.message ?? 'Erreur inconnue'
       };
     }
 
-    const jiraData = await response.json();
-
     return {
       success: true,
-      jiraIssueKey: jiraData.key,
-      jiraIssueId: jiraData.id
+      jiraIssueKey: result.data.key,
+      jiraIssueId: result.data.id
     };
 
   } catch (error) {

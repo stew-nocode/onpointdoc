@@ -25,6 +25,29 @@ type JiraComment = {
 };
 
 /**
+ * Vérifie si un commentaire JIRA existe déjà dans Supabase
+ * 
+ * @param supabase - Client Supabase
+ * @param ticketId - UUID du ticket Supabase
+ * @param jiraCommentId - ID du commentaire JIRA
+ * @returns true si le commentaire existe déjà
+ */
+async function commentAlreadyExists(
+  supabase: SupabaseClient,
+  ticketId: string,
+  jiraCommentId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('ticket_comments')
+    .select('id')
+    .eq('ticket_id', ticketId)
+    .eq('jira_comment_id', jiraCommentId)
+    .maybeSingle();
+
+  return data !== null;
+}
+
+/**
  * Crée un commentaire dans Supabase depuis un commentaire JIRA
  * 
  * @param supabase - Client Supabase
@@ -45,7 +68,8 @@ async function createCommentFromJira(
       content: jiraComment.body,
       origin: 'jira',
       user_id: null,
-      comment_type: 'comment' // ✅ Les commentaires JIRA sont toujours des commentaires
+      comment_type: 'comment',
+      jira_comment_id: jiraComment.id // ✅ Stocker l'ID JIRA pour éviter les doublons
     })
     .select('id')
     .single();
@@ -61,23 +85,47 @@ async function createCommentFromJira(
 }
 
 /**
+ * Résultat de la synchronisation d'un commentaire
+ */
+export type SyncCommentResult = {
+  action: 'created' | 'skipped';
+  commentId?: string;
+  reason?: string;
+};
+
+/**
  * Synchronise un commentaire JIRA vers Supabase avec ses pièces jointes
+ * 
+ * Vérifie d'abord si le commentaire existe déjà (via jira_comment_id)
+ * pour éviter les doublons lors de webhooks multiples.
  * 
  * @param ticketId - UUID du ticket Supabase
  * @param jiraComment - Données du commentaire JIRA
- * @param jiraIssueKey - Clé du ticket JIRA
+ * @param jiraIssueKey - Clé du ticket JIRA (pour logging)
  * @param supabaseClient - Client Supabase (Service Role pour webhooks)
- * @throws ApplicationError si la synchronisation échoue
+ * @returns Résultat de la synchronisation (created ou skipped)
  */
 export async function syncJiraCommentToSupabase(
   ticketId: string,
   jiraComment: JiraComment,
   jiraIssueKey: string,
   supabaseClient?: SupabaseClient
-): Promise<void> {
+): Promise<SyncCommentResult> {
   const supabase = supabaseClient || createSupabaseServiceRoleClient();
+
+  // ✅ Vérifier si le commentaire existe déjà pour éviter les doublons
+  const exists = await commentAlreadyExists(supabase, ticketId, jiraComment.id);
+  if (exists) {
+    return { 
+      action: 'skipped', 
+      reason: `Commentaire JIRA ${jiraComment.id} déjà synchronisé pour ticket ${ticketId}` 
+    };
+  }
+
+  // Créer le commentaire avec jira_comment_id
   const commentId = await createCommentFromJira(supabase, ticketId, jiraComment);
 
+  // Télécharger les pièces jointes si présentes
   if (jiraComment.attachments && jiraComment.attachments.length > 0) {
     try {
       await downloadJiraCommentAttachmentsToSupabase(
@@ -86,10 +134,12 @@ export async function syncJiraCommentToSupabase(
         jiraComment.attachments,
         supabase
       );
-    } catch (attachmentError) {
-      // Ne pas faire échouer la synchronisation si le téléchargement des pièces jointes échoue
+    } catch {
+      // Ne pas faire échouer la synchronisation si le téléchargement échoue
       // Le commentaire a été créé avec succès
     }
   }
+
+  return { action: 'created', commentId };
 }
 

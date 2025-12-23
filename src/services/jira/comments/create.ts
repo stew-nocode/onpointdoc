@@ -76,29 +76,44 @@ export async function createJiraComment(
       body: contentADF
     };
 
-    // Appel à l'API JIRA pour créer le commentaire
-    const response = await fetch(
-      `${config.url}/rest/api/3/issue/${jiraIssueKey}/comment`,
+    // Appel à l'API JIRA pour créer le commentaire avec retry
+    const { withRetry, JIRA_RETRY_CONFIG } = await import('@/lib/utils/retry');
+
+    const jiraData = await withRetry(
+      async () => {
+        const response = await fetch(
+          `${config.url}/rest/api/3/issue/${jiraIssueKey}/comment`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${config.auth}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jiraPayload)
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw createError.jiraError(
+            `Erreur lors de la création du commentaire JIRA`,
+            new Error(`JIRA ${response.status}: ${errorText}`)
+          );
+        }
+
+        return await response.json();
+      },
       {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${config.auth}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jiraPayload)
+        ...JIRA_RETRY_CONFIG,
+        maxRetries: 2, // Moins de retries pour les commentaires
+        onRetry: (err, attempt, delay) => {
+          console.warn(
+            `[JIRA] Retry ${attempt} pour commentaire sur ${jiraIssueKey}: ${err.message}. Délai: ${delay}ms`
+          );
+        }
       }
     );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw createError.jiraError(
-        `Erreur lors de la création du commentaire JIRA`,
-        new Error(`JIRA ${response.status}: ${errorText}`)
-      );
-    }
-
-    const jiraData = await response.json();
 
     // Si le commentaire Supabase a des pièces jointes, les uploader vers JIRA
     if (commentId && jiraData.id) {
