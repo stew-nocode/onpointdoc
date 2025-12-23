@@ -11,7 +11,8 @@ import {
   Building,
   Ticket,
   Calendar,
-  CheckSquare
+  CheckSquare,
+  RefreshCw
 } from 'lucide-react';
 
 /**
@@ -30,7 +31,8 @@ const iconMap = {
   Building,
   Ticket,
   Calendar,
-  CheckSquare
+  CheckSquare,
+  RefreshCw
 } as const;
 
 type IconName = keyof typeof iconMap;

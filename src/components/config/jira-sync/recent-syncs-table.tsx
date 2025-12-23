@@ -71,47 +71,47 @@ export function RecentSyncsTable({ syncs }: RecentSyncsTableProps) {
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ticket</TableHead>
-              <TableHead>Clé JIRA</TableHead>
-              <TableHead>Direction</TableHead>
-              <TableHead>Statut JIRA</TableHead>
-              <TableHead>Date</TableHead>
+          <TableHeader className="[&_tr]:border-b [&_tr]:border-slate-200 dark:[&_tr]:border-slate-800">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400 pb-2">Ticket</TableHead>
+              <TableHead className="text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400 pb-2">Clé JIRA</TableHead>
+              <TableHead className="text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400 pb-2">Direction</TableHead>
+              <TableHead className="text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400 pb-2">Statut JIRA</TableHead>
+              <TableHead className="text-[10px] font-medium uppercase tracking-normal text-slate-500 dark:text-slate-400 pb-2">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {syncs.map((sync) => (
-              <TableRow key={sync.ticketId}>
-                <TableCell>
+              <TableRow key={sync.ticketId} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <TableCell className="py-2.5 pr-4">
                   <Link
                     href={`/gestion/tickets/${sync.ticketId}`}
-                    className="flex items-center gap-1 text-primary hover:underline"
+                    className="flex items-center gap-1 text-xs font-medium text-slate-900 dark:text-slate-100 hover:text-brand dark:hover:text-status-info"
                   >
                     {truncateText(sync.ticketTitle ?? 'Sans titre', 30)}
                     <ExternalLink className="h-3 w-3" />
                   </Link>
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-2.5 pr-4">
                   {sync.jiraIssueKey ? (
-                    <Badge variant="outline">{sync.jiraIssueKey}</Badge>
+                    <Badge variant="outline" className="text-[10px] px-2 py-0.5">{sync.jiraIssueKey}</Badge>
                   ) : (
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-xs text-slate-400">-</span>
                   )}
                 </TableCell>
-                <TableCell>
-                  <Badge variant={getOriginVariant(sync.origin)}>
+                <TableCell className="py-2.5 pr-4">
+                  <Badge variant={getOriginVariant(sync.origin)} className="text-[10px] px-2 py-0.5">
                     {getOriginLabel(sync.origin)}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-2.5 pr-4">
                   {sync.jiraStatus ? (
-                    <Badge variant="default">{sync.jiraStatus}</Badge>
+                    <Badge variant="default" className="text-[10px] px-2 py-0.5">{sync.jiraStatus}</Badge>
                   ) : (
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-xs text-slate-400">-</span>
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="py-2.5 pr-4 text-xs text-slate-600 dark:text-slate-300">
                   {formatDate(sync.lastSyncedAt)}
                 </TableCell>
               </TableRow>

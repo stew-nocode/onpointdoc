@@ -10,10 +10,12 @@
 4. [Flux de Synchronisation](#flux-de-synchronisation)
 5. [Services et Fonctions](#services-et-fonctions)
 6. [Webhooks et API](#webhooks-et-api)
-7. [Mapping des Données](#mapping-des-données)
-8. [Gestion des Erreurs](#gestion-des-erreurs)
-9. [Tests et Débogage](#tests-et-débogage)
-10. [Maintenance](#maintenance)
+7. [Sécurisation et Fiabilité](#sécurisation-et-fiabilité)
+8. [Dashboard de Monitoring](#dashboard-de-monitoring)
+9. [Mapping des Données](#mapping-des-données)
+10. [Gestion des Erreurs](#gestion-des-erreurs)
+11. [Tests et Débogage](#tests-et-débogage)
+12. [Maintenance](#maintenance)
 
 ---
 
@@ -423,7 +425,7 @@ Synchronise tous les tickets avec `jira_issue_key` depuis JIRA.
 
 **Endpoint** : `POST /api/webhooks/jira`
 
-**Sécurité** : ⚠️ **À sécuriser en production** (authentification, validation)
+**Sécurité** : ✅ **Sécurisé en production** (token secret, rate limiting, filtrage IP)
 
 **Formats supportés** :
 
@@ -433,14 +435,22 @@ Synchronise tous les tickets avec `jira_issue_key` depuis JIRA.
 
 **Filtrage** : Ignore automatiquement les tickets non-OD (seulement `OD-*`)
 
+**Sécurisation** :
+
+1. **Token secret** : Validation via header `x-jira-webhook-secret` ou query param `?secret=`
+2. **Rate limiting** : 120 requêtes/minute par IP (configurable)
+3. **Filtrage IP** : IPs autorisées via `JIRA_ALLOWED_IPS` (optionnel)
+4. **Validation HMAC** : Support pour webhooks signés (si nécessaire)
+
 **Logique** :
 
 ```typescript
-// 1. Recevoir le webhook
-// 2. Transformer en format JiraIssueData
-// 3. Chercher le ticket par jira_issue_key
-// 4. Si trouvé : synchroniser
-// 5. Si non trouvé : créer depuis JIRA
+// 1. Valider le webhook (token, rate limit, IP)
+// 2. Recevoir le webhook
+// 3. Transformer en format JiraIssueData
+// 4. Chercher le ticket par jira_issue_key
+// 5. Si trouvé : synchroniser
+// 6. Si non trouvé : créer depuis JIRA
 ```
 
 ### Configuration JIRA Webhook
@@ -465,6 +475,10 @@ JIRA_URL=https://votre-entreprise.atlassian.net
 JIRA_USERNAME=votre-email@example.com
 JIRA_TOKEN=votre-api-token
 JIRA_SUPABASE_TICKET_ID_FIELD=customfield_10001  # Optionnel
+
+# Sécurisation webhook (recommandé en production)
+JIRA_WEBHOOK_SECRET=votre-secret-token-securise
+JIRA_ALLOWED_IPS=192.168.1.1,10.0.0.1  # Optionnel, séparé par virgules
 ```
 
 **Supabase** :
@@ -473,6 +487,152 @@ JIRA_SUPABASE_TICKET_ID_FIELD=customfield_10001  # Optionnel
 SUPABASE_URL=https://votre-projet.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=votre-service-role-key
 ```
+
+---
+
+## Sécurisation et Fiabilité
+
+### Validation des Webhooks
+
+**Fichier** : `src/lib/webhooks/validation.ts`
+
+Le système de validation des webhooks implémente :
+
+1. **Token secret** : Authentification via header ou query param
+2. **Rate limiting** : Protection contre les abus (120 req/min par défaut)
+3. **Filtrage IP** : Restriction par IP source (optionnel)
+4. **Validation HMAC** : Support pour webhooks signés
+
+**Configuration** :
+
+```typescript
+import { getJiraWebhookConfig, validateWebhook } from '@/lib/webhooks/validation';
+
+const config = getJiraWebhookConfig();
+validateWebhook(request.headers, new URL(request.url), config);
+```
+
+**Variables d'environnement** :
+- `JIRA_WEBHOOK_SECRET` : Token secret pour authentification
+- `JIRA_ALLOWED_IPS` : Liste d'IPs autorisées (séparées par virgules)
+
+### Système de Retry avec Backoff Exponentiel
+
+**Fichier** : `src/lib/utils/retry.ts`
+
+Pour améliorer la fiabilité des appels API, un système de retry avec backoff exponentiel a été implémenté.
+
+**Fonctionnalités** :
+- Retry automatique avec délai croissant
+- Jitter aléatoire pour éviter les thundering herds
+- Exclusion des erreurs non-retryables (401, 403, 404, etc.)
+- Callback avant chaque retry pour logging
+
+**Usage** :
+
+```typescript
+import { withRetry, JIRA_RETRY_CONFIG } from '@/lib/utils/retry';
+
+// Retry avec configuration par défaut JIRA
+const result = await withRetry(
+  () => createJiraIssue(data),
+  JIRA_RETRY_CONFIG
+);
+
+// Retry avec configuration personnalisée
+const result = await withRetry(
+  () => syncJiraToSupabase(ticketId, jiraData),
+  {
+    maxRetries: 3,
+    initialDelayMs: 1000,
+    backoffFactor: 2,
+    onRetry: (error, attempt, delay) => {
+      console.log(`Retry ${attempt} après ${delay}ms`);
+    }
+  }
+);
+
+// Retry "safe" (ne throw pas d'erreur)
+const result = await withRetrySafe(
+  () => createJiraIssue(data),
+  JIRA_RETRY_CONFIG
+);
+
+if (result.success) {
+  console.log('Succès:', result.data);
+} else {
+  console.error('Échec après', result.attempts, 'tentatives:', result.error);
+}
+```
+
+**Configurations prédéfinies** :
+- `JIRA_RETRY_CONFIG` : Pour les appels JIRA (3 tentatives, délai max 10s)
+- `SUPABASE_RETRY_CONFIG` : Pour les appels Supabase (2 tentatives, délai max 5s)
+
+---
+
+## Dashboard de Monitoring
+
+### Vue d'Ensemble
+
+Un dashboard de monitoring a été ajouté pour suivre l'état de la synchronisation JIRA en temps réel.
+
+**Route** : `/config/jira-sync`
+
+**Accès** : Réservé aux rôles Admin, Manager et Director
+
+### Fonctionnalités
+
+Le dashboard affiche :
+
+1. **Statistiques globales** :
+   - Total des tickets synchronisés
+   - Tickets synchronisés aujourd'hui
+   - Tickets synchronisés cette semaine
+   - Nombre d'erreurs de synchronisation
+   - Dernière synchronisation
+
+2. **Répartition par origine** :
+   - Tickets créés depuis Supabase
+   - Tickets créés depuis JIRA
+
+3. **Répartition par statut JIRA** :
+   - Nombre de tickets par statut JIRA
+
+4. **Erreurs récentes** :
+   - Liste des 10 dernières erreurs de synchronisation
+   - Détails : ticket ID, clé JIRA, message d'erreur, date
+
+5. **Synchronisations récentes** :
+   - Liste des 20 dernières synchronisations réussies
+   - Détails : ticket ID, clé JIRA, date, origine, statut JIRA
+
+6. **Graphique de tendances** :
+   - Évolution du nombre de synchronisations dans le temps
+
+### Services
+
+**Fichier** : `src/services/jira/sync-stats.ts`
+
+**Fonctions principales** :
+
+- `getJiraSyncStats()` : Récupère les statistiques globales
+- `getRecentSyncErrors(limit)` : Récupère les erreurs récentes
+- `getRecentSyncs(limit)` : Récupère les synchronisations récentes
+
+**API Route** : `GET /api/jira/sync-stats`
+
+**Sécurité** : Vérification du rôle utilisateur (Admin/Manager/Director uniquement)
+
+### Composants UI
+
+**Fichiers** :
+- `src/app/(main)/config/jira-sync/page.tsx` : Page principale
+- `src/app/(main)/config/jira-sync/jira-sync-dashboard.tsx` : Composant dashboard
+- `src/components/config/jira-sync/sync-stats-cards.tsx` : Cartes de statistiques
+- `src/components/config/jira-sync/recent-errors-table.tsx` : Table des erreurs
+- `src/components/config/jira-sync/recent-syncs-table.tsx` : Table des synchronisations
+- `src/components/config/jira-sync/sync-trends-chart.tsx` : Graphique de tendances
 
 ---
 
@@ -655,12 +815,23 @@ await syncAllTicketsFromJira(50);
 
 ### Débogage
 
+#### Dashboard de Monitoring
+
+Le dashboard `/config/jira-sync` fournit une vue d'ensemble en temps réel :
+- Statistiques globales de synchronisation
+- Liste des erreurs récentes avec détails
+- Historique des synchronisations réussies
+- Graphiques de tendances
+
+**Accès** : Rôles Admin, Manager, Director uniquement
+
 #### Logs Console
 
 Les services loggent les erreurs et warnings :
 - Mapping manquant
 - Utilisateur non trouvé
 - Erreurs de synchronisation
+- Retries avec backoff exponentiel
 
 #### Vérification dans Supabase
 
@@ -779,16 +950,28 @@ WHERE js.last_synced_at < NOW() - INTERVAL '24 hours'
 - `src/services/jira/mapping.ts` : Mapping statuts/priorités
 - `src/services/jira/comments/sync.ts` : Synchronisation des commentaires
 - `src/services/jira/sync-manual.ts` : Synchronisation manuelle
+- `src/services/jira/sync-stats.ts` : **NOUVEAU** - Statistiques de synchronisation
 - `src/services/tickets/jira-transfer.ts` : Transfert ASSISTANCE → JIRA
 
 ### API Routes
 
-- `src/app/api/webhooks/jira/route.ts` : Route webhook JIRA
+- `src/app/api/webhooks/jira/route.ts` : Route webhook JIRA (sécurisée)
+- `src/app/api/jira/sync-stats/route.ts` : **NOUVEAU** - API statistiques de synchronisation
+
+### Utilitaires
+
+- `src/lib/webhooks/validation.ts` : **NOUVEAU** - Validation et sécurisation des webhooks
+- `src/lib/utils/retry.ts` : **NOUVEAU** - Système de retry avec backoff exponentiel
 
 ### Types
 
 - `src/types/jira-data.ts` : Types pour les données JIRA
 - `src/types/jira-sync.ts` : Types pour la table `jira_sync`
+
+### Composants UI
+
+- `src/app/(main)/config/jira-sync/page.tsx` : **NOUVEAU** - Page dashboard de monitoring
+- `src/components/config/jira-sync/` : **NOUVEAU** - Composants du dashboard
 
 ### Migrations
 
@@ -810,4 +993,37 @@ Cette documentation couvre l'ensemble de la synchronisation JIRA dans OnpointDoc
 - Les statuts ASSISTANCE utilisent un mapping dynamique
 - Le champ `last_update_source` évite les boucles de synchronisation
 - Les erreurs sont enregistrées dans `jira_sync.sync_error` pour diagnostic
+- **Webhooks sécurisés** : Token secret, rate limiting, filtrage IP
+- **Système de retry** : Backoff exponentiel pour améliorer la fiabilité
+- **Dashboard de monitoring** : Suivi en temps réel de la synchronisation
+
+---
+
+## Changelog des Améliorations
+
+### 23/12/2025 - Améliorations Sécurisation et Fiabilité
+
+**Sécurisation des webhooks** :
+- ✅ Validation de token secret (header ou query param)
+- ✅ Rate limiting (120 req/min par IP)
+- ✅ Filtrage IP optionnel
+- ✅ Support validation HMAC pour webhooks signés
+
+**Système de retry** :
+- ✅ Backoff exponentiel avec jitter
+- ✅ Configurations prédéfinies pour JIRA et Supabase
+- ✅ Exclusion des erreurs non-retryables
+- ✅ Callback pour logging des retries
+
+**Dashboard de monitoring** :
+- ✅ Page `/config/jira-sync` avec statistiques en temps réel
+- ✅ Service `sync-stats.ts` pour récupérer les métriques
+- ✅ API route `/api/jira/sync-stats` sécurisée (rôles Admin/Manager/Director)
+- ✅ Composants UI : cartes de stats, tables d'erreurs, graphiques de tendances
+
+**Améliorations webhook** :
+- ✅ Support amélioré du format webhook JIRA natif
+- ✅ Création automatique de tickets depuis JIRA si non trouvés
+- ✅ Meilleure gestion des erreurs avec `handleApiError`
+- ✅ Utilisation du client Service Role pour contourner les RLS
 

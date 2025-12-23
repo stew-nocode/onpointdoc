@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Badge } from '@/ui/badge';
 import { RefreshCw, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import type { JiraSyncStats } from '@/services/jira/sync-stats';
+import type { VariantProps } from 'class-variance-authority';
+import { badgeVariants } from '@/ui/badge';
+
+type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
 
 type SyncStatsCardsProps = {
   stats: JiraSyncStats;
@@ -49,7 +53,7 @@ export function SyncStatsCards({ stats }: SyncStatsCardsProps) {
       value: stats.syncErrors,
       icon: AlertTriangle,
       description: 'Tickets en erreur',
-      variant: stats.syncErrors > 0 ? 'danger' : 'success',
+      variant: (stats.syncErrors > 0 ? 'danger' : 'success') as BadgeVariant,
     },
   ];
 
