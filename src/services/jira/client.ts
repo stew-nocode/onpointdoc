@@ -8,6 +8,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { TicketType } from '@/types/ticket';
 import { textToADF } from '@/lib/utils/adf-parser';
+import { createError } from '@/lib/errors/types';
 
 /**
  * Configuration JIRA depuis les variables d'environnement
@@ -18,7 +19,10 @@ function getJiraConfig() {
   const jiraToken = process.env.JIRA_TOKEN || process.env.JIRA_API_TOKEN;
 
   if (!jiraUrl || !jiraUsername || !jiraToken) {
-    throw new Error('Configuration JIRA manquante. Vérifiez JIRA_URL, JIRA_USERNAME et JIRA_TOKEN.');
+    throw createError.configurationError(
+      'Configuration JIRA manquante. Vérifiez JIRA_URL, JIRA_USERNAME et JIRA_TOKEN.',
+      { missing: !jiraUrl ? 'JIRA_URL' : !jiraUsername ? 'JIRA_USERNAME' : 'JIRA_TOKEN' }
+    );
   }
 
   // Nettoyer les valeurs
@@ -125,16 +129,24 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     // Convertir la description en format ADF (requis par JIRA API v3)
     const descriptionADF = textToADF(descriptionText);
 
-    // Préparer les labels
+    /**
+     * Normalise un label JIRA en remplaçant les espaces par des underscores
+     * JIRA n'accepte pas les espaces dans les labels
+     */
+    const normalizeJiraLabel = (value: string): string => {
+      return value.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_:_-]/g, '');
+    };
+
+    // Préparer les labels (normalisés pour JIRA - pas d'espaces)
     const labels: string[] = [];
     if (input.canal) {
-      labels.push(`canal:${input.canal}`);
+      labels.push(`canal:${normalizeJiraLabel(input.canal)}`);
     }
     if (productName) {
-      labels.push(`product:${productName}`);
+      labels.push(`product:${normalizeJiraLabel(productName)}`);
     }
     if (moduleName) {
-      labels.push(`module:${moduleName}`);
+      labels.push(`module:${normalizeJiraLabel(moduleName)}`);
     }
 
     // Préparer le payload JIRA
@@ -157,10 +169,11 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     };
 
     // Ajouter le custom field pour stocker l'ID Supabase (si configuré)
-    // Note: Remplacer customfield_10001 par le custom field réel dans votre JIRA
-    const supabaseTicketIdCustomField = process.env.JIRA_SUPABASE_TICKET_ID_FIELD || 'customfield_10001';
-    if (supabaseTicketIdCustomField) {
-      jiraPayload.fields[supabaseTicketIdCustomField] = input.ticketId;
+    // Note: Ne pas définir par défaut si la variable d'environnement n'est pas définie
+    // car le custom field peut ne pas exister dans JIRA
+    const supabaseTicketIdCustomField = process.env.JIRA_SUPABASE_TICKET_ID_FIELD;
+    if (supabaseTicketIdCustomField && supabaseTicketIdCustomField.trim() !== '') {
+      jiraPayload.fields[supabaseTicketIdCustomField.trim()] = input.ticketId;
     }
 
     // Appel à l'API JIRA avec retry
@@ -200,10 +213,30 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     );
 
     if (!result.success) {
-      console.error('Erreur lors de la création du ticket JIRA après retries:', result.error);
+      const errorMessage = result.error?.message ?? 'Erreur inconnue';
+      
+      // Extraire le code HTTP et le message JIRA si disponible
+      // Supporte les formats: "JIRA 400:", "JIRA_NON_RETRYABLE: 400:", etc.
+      const httpMatch = errorMessage.match(/(?:JIRA|JIRA_NON_RETRYABLE)[\s:]+(\d+)[\s:]+/);
+      const httpCode = httpMatch ? httpMatch[1] : 'unknown';
+      
+      // Extraire le message d'erreur JIRA (après le code HTTP)
+      // Supporte les formats: "JIRA 400: {...}", "JIRA_NON_RETRYABLE: 400: {...}"
+      const jiraErrorMatch = errorMessage.match(/(?:JIRA|JIRA_NON_RETRYABLE)[\s:]+(?:\d+)[\s:]+(.+)/);
+      const jiraErrorText = jiraErrorMatch ? jiraErrorMatch[1] : errorMessage;
+      
+      console.error('[JIRA] Échec création ticket après retries:', {
+        httpCode,
+        error: jiraErrorText,
+        ticketId: input.ticketId,
+        ticketType: input.ticketType,
+        attempts: result.attempts,
+        fullError: errorMessage
+      });
+      
       return {
         success: false,
-        error: result.error?.message ?? 'Erreur inconnue'
+        error: `JIRA ${httpCode}: ${jiraErrorText.substring(0, 200)}` // Limiter à 200 caractères
       };
     }
 
@@ -289,6 +322,42 @@ export async function updateJiraIssueStatus(
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut JIRA:', error);
     return false;
+  }
+}
+
+/**
+ * Supprime un ticket JIRA
+ * 
+ * @param jiraIssueKey - Clé du ticket JIRA (ex: OD-1234)
+ * @throws ApplicationError si la suppression échoue
+ */
+export async function deleteJiraIssue(jiraIssueKey: string): Promise<void> {
+  const config = getJiraConfig();
+
+  const response = await fetch(`${config.url}/rest/api/3/issue/${jiraIssueKey}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Basic ${config.auth}`,
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    
+    if (response.status >= 400 && response.status < 500) {
+      throw createError.jiraError(
+        `Impossible de supprimer le ticket JIRA ${jiraIssueKey}: ${response.status}`,
+        undefined,
+        { status: response.status, jiraIssueKey, error: errorText.substring(0, 200) }
+      );
+    }
+    
+    throw createError.jiraError(
+      `Erreur lors de la suppression du ticket JIRA ${jiraIssueKey}: ${response.status}`,
+      undefined,
+      { status: response.status, jiraIssueKey, error: errorText.substring(0, 200) }
+    );
   }
 }
 
