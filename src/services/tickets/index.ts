@@ -4,7 +4,7 @@ import type { QuickFilter } from '@/types/ticket-filters';
 import type { TicketsPaginatedResult, TicketWithRelations, SupabaseTicketRaw } from '@/types/ticket-with-relations';
 import { transformRelation } from '@/types/ticket-with-relations';
 import { getInitialStatus } from '@/lib/utils/ticket-status';
-import { createJiraIssue } from '@/services/jira/client';
+import { createJiraIssue, deleteJiraIssue } from '@/services/jira/client';
 import type { TicketSortColumn, SortDirection } from '@/types/ticket-sort';
 import { mapSortColumnToSupabase } from '@/lib/utils/ticket-sort';
 import { DEFAULT_TICKET_SORT } from '@/types/ticket-sort';
@@ -551,18 +551,10 @@ export const listTicketsPaginated = async (
     query = query.or(`title.ilike.${searchPattern},description.ilike.${searchPattern},jira_issue_key.ilike.${searchPattern}`);
   }
 
-  // ✅ Récupérer les modules affectés (uniquement si filtres avancés présents)
+  // ✅ CORRIGÉ : Plus besoin de récupérer les modules pour le filtre "all"
+  // Le filtre "all" retourne maintenant tous les tickets accessibles via RLS
+  // Les modules ne sont nécessaires que pour d'autres filtres spécifiques (si besoin)
   let assignedModuleIds: string[] | undefined;
-  if (currentProfileId && quickFilter === 'all') {
-    const { data: moduleAssignments } = await supabase
-      .from('user_module_assignments')
-      .select('module_id')
-      .eq('user_id', currentProfileId);
-
-    if (moduleAssignments && moduleAssignments.length > 0) {
-      assignedModuleIds = moduleAssignments.map(ma => ma.module_id);
-    }
-  }
 
   // Appliquer les quick filters
   query = applyQuickFilter(query, quickFilter, {
@@ -635,29 +627,10 @@ export function applyQuickFilter(
 
   switch (quickFilter) {
     case 'all':
-      // ✅ MODIFIÉ : Filtre "Tous les tickets"
-      // Pour les agents support : inclure leurs tickets (créés/assignés) + tickets de leurs modules affectés
-      // Pour les autres rôles : tous les tickets accessibles via RLS
-      if (options?.currentProfileId) {
-        const conditions: string[] = [
-          `created_by.eq.${options.currentProfileId}`,
-          `assigned_to.eq.${options.currentProfileId}`
-        ];
-        
-        // Ajouter les tickets des modules affectés si disponibles
-        // Pour chaque module, créer une condition module_id.eq.${moduleId}
-        if (options.assignedModuleIds && options.assignedModuleIds.length > 0) {
-          const moduleConditions = options.assignedModuleIds
-            .map(moduleId => `module_id.eq.${moduleId}`);
-          conditions.push(...moduleConditions);
-        }
-        
-        // Combiner toutes les conditions avec OR
-        // Syntaxe Supabase : .or('condition1,condition2,condition3')
-        return query.or(conditions.join(','));
-      }
-      // Pour les autres rôles (managers, admin, etc.), retourner la query sans modification
-      // Les règles RLS s'appliqueront automatiquement
+      // ✅ CORRIGÉ : Filtre "Tous les tickets"
+      // Retourner tous les tickets accessibles via RLS (Row Level Security)
+      // Les RLS gèrent automatiquement les permissions selon le rôle de l'utilisateur
+      // Pas de filtre supplémentaire nécessaire
       return query;
     case 'mine':
       if (options?.currentProfileId) {
@@ -794,5 +767,75 @@ export async function countTicketsByStatus(type: TicketTypeFilter) {
   }
   
   return result;
+}
+
+/**
+ * Vérifie si un ticket peut être supprimé
+ * 
+ * @param ticket - Ticket à vérifier
+ * @throws ApplicationError si la suppression n'est pas autorisée
+ */
+function validateTicketDeletion(ticket: { origin: string | null; jira_issue_key: string | null }): void {
+  if (ticket.origin === 'jira') {
+    throw createError.forbidden(
+      'Impossible de supprimer ce ticket car il a été créé dans JIRA. JIRA est la source de vérité pour ce ticket.',
+      { ticketOrigin: ticket.origin }
+    );
+  }
+}
+
+/**
+ * Supprime un ticket dans JIRA si nécessaire
+ * 
+ * @param jiraIssueKey - Clé JIRA du ticket
+ * @throws ApplicationError si la suppression JIRA échoue
+ */
+async function deleteTicketInJira(jiraIssueKey: string): Promise<void> {
+  try {
+    await deleteJiraIssue(jiraIssueKey);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'JIRA_ERROR') {
+      throw error;
+    }
+    throw createError.jiraError(
+      'Impossible de supprimer le ticket dans JIRA. Le ticket n\'a pas été supprimé.',
+      error instanceof Error ? error : undefined
+    );
+  }
+}
+
+/**
+ * Supprime un ticket et synchronise avec JIRA si nécessaire
+ * 
+ * @param ticketId - ID du ticket à supprimer
+ * @throws ApplicationError si la suppression échoue
+ */
+export async function deleteTicket(ticketId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data: ticket, error: ticketError } = await supabase
+    .from('tickets')
+    .select('id, jira_issue_key, ticket_type, origin')
+    .eq('id', ticketId)
+    .single();
+
+  if (ticketError || !ticket) {
+    throw createError.notFound('Ticket');
+  }
+
+  validateTicketDeletion(ticket);
+
+  if (ticket.jira_issue_key) {
+    await deleteTicketInJira(ticket.jira_issue_key);
+  }
+
+  const { error: deleteError } = await supabase
+    .from('tickets')
+    .delete()
+    .eq('id', ticketId);
+
+  if (deleteError) {
+    throw createError.supabaseError('Erreur lors de la suppression du ticket', deleteError);
+  }
 }
 
