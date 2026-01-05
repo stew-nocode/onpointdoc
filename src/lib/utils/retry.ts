@@ -193,7 +193,10 @@ export async function withRetrySafe<T>(
       if (attempt >= fullConfig.maxRetries || !isRetryable(error, fullConfig)) {
         const appError = isApplicationError(error)
           ? error
-          : createError.internalError('Erreur après plusieurs tentatives', lastError);
+          : createError.internalError(
+              `Erreur après ${attempts} tentatives. Dernière erreur: ${lastError.message}`,
+              lastError
+            );
 
         return { success: false, error: appError, attempts };
       }

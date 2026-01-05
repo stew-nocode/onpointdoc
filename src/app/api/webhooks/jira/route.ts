@@ -44,6 +44,53 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Gérer l'événement de suppression
+    if (webhookEvent === 'jira:issue_deleted') {
+      const supabase = createSupabaseServiceRoleClient();
+      
+      const { data: ticket, error: ticketError } = await supabase
+        .from('tickets')
+        .select('id, jira_issue_key, ticket_type, status')
+        .eq('jira_issue_key', jiraIssueKey)
+        .single();
+      
+      if (ticketError?.code === 'PGRST116' || !ticket) {
+        return NextResponse.json({
+          success: true,
+          message: 'Ticket non trouvé dans Supabase',
+          action: 'ignored'
+        });
+      }
+      
+      await supabase
+        .from('jira_sync')
+        .upsert({
+          ticket_id: ticket.id,
+          jira_issue_key: jiraIssueKey,
+          origin: 'jira',
+          jira_deleted_at: new Date().toISOString(),
+          sync_error: 'Ticket supprimé dans JIRA',
+          last_synced_at: new Date().toISOString()
+        });
+      
+      await supabase
+        .from('ticket_status_history')
+        .insert({
+          ticket_id: ticket.id,
+          status_from: ticket.status || 'Unknown',
+          status_to: 'Supprimé dans JIRA',
+          source: 'jira',
+          changed_at: new Date().toISOString()
+        });
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Ticket marqué comme supprimé dans JIRA',
+        action: 'deleted',
+        ticket_id: ticket.id
+      });
+    }
+    
     // Si c'est un webhook JIRA natif, transformer les données
     if (webhookEvent && jiraIssue) {
       // Utiliser Service Role pour contourner les RLS (webhook externe)
@@ -111,6 +158,24 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (existingTicket) {
+        // Vérifier si le ticket était marqué comme supprimé
+        const { data: jiraSync } = await supabase
+          .from('jira_sync')
+          .select('jira_deleted_at')
+          .eq('ticket_id', existingTicket.id)
+          .single();
+        
+        // Si le ticket était supprimé et qu'il est recréé/mis à jour, réinitialiser
+        if (jiraSync?.jira_deleted_at) {
+          await supabase
+            .from('jira_sync')
+            .update({
+              jira_deleted_at: null,
+              sync_error: null
+            })
+            .eq('ticket_id', existingTicket.id);
+        }
+        
         // Ticket existe : synchroniser (mise à jour statut, assignation, etc.)
         try {
           // Passer le client Service Role pour contourner les RLS
