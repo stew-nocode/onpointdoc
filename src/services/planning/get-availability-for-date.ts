@@ -16,6 +16,7 @@ import { handleSupabaseError } from '@/lib/errors/handlers';
 
 /**
  * Capacité par défaut en heures par jour
+ * Utilisée si daily_capacity_hours n'est pas défini dans le profil
  */
 const DEFAULT_CAPACITY = 8; // 8 heures/jour
 
@@ -67,7 +68,7 @@ export async function getAvailabilityForDate(
   // === REQUÊTE 1 : Utilisateurs internes ===
   const { data: profiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, full_name, department, role')
+    .select('id, full_name, department, role, daily_capacity_hours')
     .not('auth_uid', 'is', null)
     .neq('role', 'client')
     .eq('is_active', true)
@@ -174,8 +175,9 @@ export async function getAvailabilityForDate(
     const activityHours = userActivities.reduce((sum, a) => sum + a.hours, 0);
     const totalHours = taskHours + activityHours;
     
-    const capacity = DEFAULT_CAPACITY;
-    const utilizationRate = (totalHours / capacity) * 100;
+    // Utiliser daily_capacity_hours du profil, ou DEFAULT_CAPACITY si non défini
+    const capacity = profile.daily_capacity_hours ?? DEFAULT_CAPACITY;
+    const utilizationRate = capacity > 0 ? (totalHours / capacity) * 100 : 0;
 
     // Déterminer le statut
     let status: 'available' | 'busy' | 'overloaded';
