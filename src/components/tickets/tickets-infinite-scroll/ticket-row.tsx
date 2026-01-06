@@ -15,7 +15,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Eye, Edit, MessageSquare, Sparkles, Calendar } from 'lucide-react';
+import { Eye, Edit, MessageSquare, Sparkles, Calendar, Trash2 } from 'lucide-react';
 import { Badge } from '@/ui/badge';
 import { Checkbox } from '@/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
@@ -49,6 +49,7 @@ import { toast } from 'sonner';
 import { CreateActivityFromTicketDialog } from '@/components/activities/create-activity-from-ticket-dialog';
 import { useProfiles } from '@/hooks';
 import { createActivityAction } from '@/app/(main)/gestion/activites/actions';
+import { DeleteTicketDialog } from '../delete-ticket-dialog';
 
 type TicketRowProps = {
   /**
@@ -75,6 +76,11 @@ type TicketRowProps = {
    * Indique si l'utilisateur peut éditer le ticket
    */
   canEdit: boolean;
+
+  /**
+   * Indique si l'utilisateur peut supprimer le ticket (admin uniquement)
+   */
+  canDelete?: boolean;
 
   /**
    * Permissions de sélection multiple
@@ -108,6 +114,7 @@ export function TicketRow({
   toggleTicketSelection,
   handleEdit,
   canEdit,
+  canDelete = false,
   canSelectMultiple = true, // Par défaut, autoriser la sélection
   search,
   isColumnVisible
@@ -121,6 +128,7 @@ export function TicketRow({
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { open: analysisOpen, isLoading: analysisLoading, error: analysisError, analysis, openModal: openAnalysisModal, closeModal: closeAnalysisModal } = useAnalysisGenerator({
     context: 'ticket',
     id: ticket.id
@@ -469,6 +477,25 @@ export function TicketRow({
               <p>Ajouter un commentaire</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Supprimer - Admin uniquement */}
+          {canDelete && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="inline-flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-md text-slate-600 hover:bg-red-50 hover:text-red-600 dark:text-slate-200 dark:hover:bg-red-900/20 dark:hover:text-red-400 touch-manipulation"
+                  aria-label="Supprimer le ticket"
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4 md:h-3.5 md:w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Supprimer le ticket</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </td>
     </tr>
@@ -567,6 +594,15 @@ export function TicketRow({
         onSubmit={createActivityAction}
         open={showActivityDialog}
         onOpenChange={setShowActivityDialog}
+      />
+
+      {/* Dialog de suppression de ticket */}
+      <DeleteTicketDialog
+        ticketId={ticket.id}
+        ticketTitle={ticket.title}
+        jiraIssueKey={ticket.jira_issue_key}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
       />
     </ContextMenu>
   );

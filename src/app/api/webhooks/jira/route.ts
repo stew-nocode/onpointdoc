@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     
+    // ✅ DEBUG : Logger les webhooks reçus
+    console.log('[WEBHOOK JIRA] Webhook reçu:', {
+      webhookEvent: body.webhookEvent,
+      issueKey: body.issue?.key,
+      timestamp: new Date().toISOString()
+    });
+    
     // Nouveau : Gérer le format webhook JIRA natif
     const webhookEvent = body.webhookEvent; // "jira:issue_created" ou "jira:issue_updated"
     const jiraIssue = body.issue;
@@ -178,14 +185,24 @@ export async function POST(request: NextRequest) {
         
         // Ticket existe : synchroniser (mise à jour statut, assignation, etc.)
         try {
+          console.log(`[WEBHOOK JIRA] Synchronisation ticket ${existingTicket.id} (${jiraIssueKey})`, {
+            status: jiraData.status?.name,
+            assignee: jiraData.assignee?.displayName || 'Non assigné',
+            webhookEvent
+          });
+          
           // Passer le client Service Role pour contourner les RLS
           await syncJiraToSupabase(existingTicket.id, jiraData, supabase);
+          
+          console.log(`[WEBHOOK JIRA] ✅ Ticket ${existingTicket.id} synchronisé avec succès`);
+          
           return NextResponse.json({
             success: true,
             message: 'Ticket synchronisé avec succès',
             action: 'updated'
           });
         } catch (syncError: unknown) {
+          console.error(`[WEBHOOK JIRA] ❌ Erreur synchronisation ticket ${existingTicket.id}:`, syncError);
           return handleApiError(createError.jiraError('Erreur lors de la synchronisation du ticket depuis JIRA', syncError instanceof Error ? syncError : undefined));
         }
       } else if (ticketError?.code === 'PGRST116') {

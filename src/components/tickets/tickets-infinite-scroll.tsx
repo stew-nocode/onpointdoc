@@ -93,6 +93,11 @@ function TicketsInfiniteScrollComponent({
   const canSelectMultiple = useMemo(() => {
     return viewConfig?.canSelectMultiple ?? true; // Par défaut, autoriser la sélection
   }, [viewConfig]);
+
+  // ✅ canDelete : Admin uniquement (selon la route API DELETE)
+  const canDelete = useMemo(() => {
+    return authState.role === 'admin';
+  }, [authState.role]);
   
   // searchParams est déjà stabilisé par useStableSearchParams()
   // Pas besoin de duplication supplémentaire
@@ -305,6 +310,7 @@ function TicketsInfiniteScrollComponent({
                 toggleTicketSelection={toggleTicketSelection}
                 handleEdit={handleEdit}
                 canEdit={canEdit}
+                canDelete={canDelete}
                 canSelectMultiple={canSelectMultiple}
                 search={search}
                 isColumnVisible={isColumnVisible}
