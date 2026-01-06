@@ -203,19 +203,42 @@ export async function syncJiraToSupabase(
     ticketUpdate.created_by = createdBy;
   }
 
-  if (assignedTo) {
+  // ✅ CORRIGÉ : Gérer l'assignation et la désassignation
+  // Toujours mettre à jour assigned_to, même si le mapping échoue
+  if (jiraData.assignee === null || jiraData.assignee === undefined) {
+    // Désassignation dans JIRA → mettre à null dans Supabase
+    ticketUpdate.assigned_to = null;
+  } else if (assignedTo) {
+    // Assignation réussie → utiliser le profile_id mappé
     ticketUpdate.assigned_to = assignedTo;
+  } else {
+    // Assignation dans JIRA mais utilisateur non trouvé dans Supabase
+    // Mettre à null et logger un warning
+    console.warn(`[SYNC JIRA→SUPABASE] ⚠️ Utilisateur assigné dans JIRA (${jiraData.assignee.accountId}) non trouvé dans Supabase. assigned_to mis à null.`);
+    ticketUpdate.assigned_to = null;
   }
 
-  if (jiraData.resolution?.name) {
-    ticketUpdate.resolution = jiraData.resolution.name;
+  // ✅ CORRIGÉ : Gérer resolution (peut être null si ticket non résolu)
+  if (jiraData.resolution) {
+    ticketUpdate.resolution = jiraData.resolution.name || null;
+  } else {
+    // Si resolution n'existe pas dans JIRA, mettre à null
+    ticketUpdate.resolution = null;
   }
 
+  // ✅ CORRIGÉ : Gérer fix_version (peut être vide si pas de version)
   if (jiraData.fixVersions && jiraData.fixVersions.length > 0) {
     ticketUpdate.fix_version = jiraData.fixVersions[0].name;
+  } else {
+    // Si pas de fixVersion dans JIRA, mettre à null
+    ticketUpdate.fix_version = null;
   }
 
-  // Phase 2: Ajouter les champs client/contact
+  // Phase 2: Ajouter les champs client/contact et entreprise
+  if (companyId) {
+    ticketUpdate.company_id = companyId;
+  }
+
   if (contactUserId) {
     ticketUpdate.contact_user_id = contactUserId;
   }
@@ -234,14 +257,15 @@ export async function syncJiraToSupabase(
   }
 
   // Phase 4: Ajouter les champs workflow et suivi
+  // ✅ CORRIGÉ : Gérer les valeurs null (champs supprimés dans JIRA)
   if (jiraData.customfield_10083) {
     // Workflow status
     const workflowStatus = typeof jiraData.customfield_10083 === 'string'
       ? jiraData.customfield_10083
       : jiraData.customfield_10083?.value || null;
-    if (workflowStatus) {
-      ticketUpdate.workflow_status = workflowStatus;
-    }
+    ticketUpdate.workflow_status = workflowStatus;
+  } else {
+    ticketUpdate.workflow_status = null;
   }
 
   if (jiraData.customfield_10084) {
@@ -249,9 +273,9 @@ export async function syncJiraToSupabase(
     const testStatus = typeof jiraData.customfield_10084 === 'string'
       ? jiraData.customfield_10084
       : jiraData.customfield_10084?.value || null;
-    if (testStatus) {
-      ticketUpdate.test_status = testStatus;
-    }
+    ticketUpdate.test_status = testStatus;
+  } else {
+    ticketUpdate.test_status = null;
   }
 
   if (jiraData.customfield_10021) {
@@ -259,9 +283,9 @@ export async function syncJiraToSupabase(
     const issueType = typeof jiraData.customfield_10021 === 'string'
       ? jiraData.customfield_10021
       : jiraData.customfield_10021?.value || null;
-    if (issueType) {
-      ticketUpdate.issue_type = issueType;
-    }
+    ticketUpdate.issue_type = issueType;
+  } else {
+    ticketUpdate.issue_type = null;
   }
 
   if (jiraData.customfield_10020) {
@@ -269,11 +293,12 @@ export async function syncJiraToSupabase(
     const sprint = typeof jiraData.customfield_10020 === 'string'
       ? jiraData.customfield_10020
       : jiraData.customfield_10020?.name || jiraData.customfield_10020?.value || null;
-    if (sprint) {
-      ticketUpdate.sprint_id = sprint;
-    }
+    ticketUpdate.sprint_id = sprint;
+  } else {
+    ticketUpdate.sprint_id = null;
   }
 
+  // ✅ CORRIGÉ : Gérer related_ticket_key (peut être supprimé dans JIRA)
   if (jiraData.customfield_10057) {
     // Related ticket key
     ticketUpdate.related_ticket_key = jiraData.customfield_10057;
@@ -282,17 +307,29 @@ export async function syncJiraToSupabase(
     const relatedTicket = await findTicketByJiraKey(jiraData.customfield_10057);
     if (relatedTicket) {
       ticketUpdate.related_ticket_id = relatedTicket.id;
+    } else {
+      ticketUpdate.related_ticket_id = null;
     }
+  } else {
+    // Si le champ est supprimé dans JIRA, mettre à null
+    ticketUpdate.related_ticket_key = null;
+    ticketUpdate.related_ticket_id = null;
   }
 
+  // ✅ CORRIGÉ : Gérer target_date (peut être supprimée dans JIRA)
   if (jiraData.customfield_10111) {
-    // Target date
     ticketUpdate.target_date = jiraData.customfield_10111;
+  } else {
+    // Si la date est supprimée dans JIRA, mettre à null
+    ticketUpdate.target_date = null;
   }
 
+  // ✅ CORRIGÉ : Gérer resolved_at (peut être supprimé dans JIRA)
   if (jiraData.customfield_10115) {
-    // Resolved at
     ticketUpdate.resolved_at = jiraData.customfield_10115;
+  } else {
+    // Si la date est supprimée dans JIRA, mettre à null
+    ticketUpdate.resolved_at = null;
   }
 
   // Phase 5: Mapper les champs spécifiques produits dans custom_fields
@@ -333,14 +370,25 @@ export async function syncJiraToSupabase(
   }
 
   // 6. Mettre à jour le ticket
+  console.log(`[SYNC JIRA→SUPABASE] Mise à jour ticket ${ticketId}:`, {
+    status: ticketUpdate.status,
+    assigned_to: ticketUpdate.assigned_to,
+    company_id: ticketUpdate.company_id,
+    priority: ticketUpdate.priority,
+    fieldsCount: Object.keys(ticketUpdate).length
+  });
+  
   const { error: ticketError } = await supabase
     .from('tickets')
     .update(ticketUpdate)
     .eq('id', ticketId);
 
   if (ticketError) {
+    console.error(`[SYNC JIRA→SUPABASE] ❌ Erreur mise à jour ticket ${ticketId}:`, ticketError);
     throw new Error(`Erreur lors de la mise à jour du ticket: ${ticketError.message}`);
   }
+  
+  console.log(`[SYNC JIRA→SUPABASE] ✅ Ticket ${ticketId} mis à jour avec succès`);
 
   // 7. Mettre à jour jira_sync avec les métadonnées
   const syncMetadata: Record<string, string | string[] | null> = {};
