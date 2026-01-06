@@ -132,10 +132,29 @@ export function transformTicket(
   companiesMap: CompanyMap
 ): TicketWithRelations {
   // Transformer contact_user et company
-  const { contactUser, company } = transformContactUserAndCompany(
+  const { contactUser, company: contactUserCompany } = transformContactUserAndCompany(
     ticket.contact_user,
     companiesMap
   );
+
+  // ✅ Company : priorité à company_id direct du ticket, sinon via contact_user
+  let company: TicketWithRelations['company'] = null;
+  
+  // D'abord essayer company_id direct du ticket
+  if ('company_id' in ticket && ticket.company_id && typeof ticket.company_id === 'string') {
+    const companyData = companiesMap[ticket.company_id];
+    if (companyData) {
+      company = {
+        id: String(companyData.id),
+        name: String(companyData.name),
+      };
+    }
+  }
+  
+  // Sinon, utiliser la company du contact_user
+  if (!company && contactUserCompany) {
+    company = contactUserCompany;
+  }
   
   // Transformer les autres relations
   const createdUser = transformSimpleRelation(ticket.created_user);

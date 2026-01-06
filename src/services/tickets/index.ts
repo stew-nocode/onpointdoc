@@ -138,7 +138,8 @@ export const createTicket = async (payload: CreateTicketInput) => {
         productId: payload.productId ?? undefined,
         moduleId: payload.moduleId ?? undefined,
         customerContext: payload.customerContext,
-        bugType: payload.bug_type ?? undefined
+        bugType: payload.bug_type ?? undefined,
+        companyId: companyId ?? undefined
       });
 
       if (jiraResponse.success && jiraResponse.jiraIssueKey) {
@@ -413,7 +414,14 @@ export const listTicketsPaginated = async (
       return { tickets: [], hasMore: false, total: 0 };
     }
 
-    // ✅ Charger les relations en 1 seule requête avec nested select (fix companies)
+    // ✅ DEBUG : Vérifier si company_id est présent dans les données
+    const ticketsWithCompany = ticketsData.filter((t: any) => t.company_id);
+    console.log(`[DEBUG] Tickets avec company_id: ${ticketsWithCompany.length} sur ${ticketsData.length}`);
+    if (ticketsWithCompany.length > 0) {
+      console.log(`[DEBUG] Exemples de company_id:`, ticketsWithCompany.slice(0, 3).map((t: any) => ({ ticketId: t.id, companyId: t.company_id })));
+    }
+
+    // ✅ Charger les relations en 1 seule requête avec nested select
     const ticketIds = ticketsData.map((t: any) => t.id);
     const { data: relations, error: relError } = await supabase
       .from('tickets')
@@ -434,6 +442,29 @@ export const listTicketsPaginated = async (
     if (relError) {
       console.error('[ERROR] Erreur load relations:', relError);
       throw handleSupabaseError(relError, 'load_ticket_relations');
+    }
+
+    // ✅ Charger les companies séparément depuis company_id (pas de foreign key)
+    const companyIds = [...new Set(ticketsData.map((t: any) => t.company_id).filter(Boolean))];
+    let companiesMap: Map<string, { id: string; name: string }> = new Map();
+    if (companyIds.length > 0) {
+      const { data: companies, error: companiesError } = await supabase
+        .from('companies')
+        .select('id, name')
+        .in('id', companyIds);
+      
+      if (companiesError) {
+        console.error('[ERROR] Erreur chargement companies:', companiesError);
+      }
+      
+      if (!companiesError && companies) {
+        companiesMap = new Map(companies.map((c: any) => [c.id, c]));
+        console.log(`[DEBUG] Companies chargées: ${companies.length} pour ${companyIds.length} company_ids`);
+      } else {
+        console.warn(`[WARN] Aucune company trouvée pour les IDs:`, companyIds);
+      }
+    } else {
+      console.log('[DEBUG] Aucun company_id trouvé dans les tickets');
     }
 
     // ✅ Fusionner les données (RPC + relations)
@@ -473,8 +504,18 @@ export const listTicketsPaginated = async (
         contact_user: transformRelation(relation?.contact_user),
         product: transformRelation(relation?.product),
         module: transformRelation(relation?.module),
-        // ✅ Company chargée via nested select (pas de requête séparée)
+        // ✅ Company : priorité à company_id direct, sinon via contact_user
         company: (() => {
+          // D'abord essayer la company directe du ticket (company_id)
+          if (ticket.company_id) {
+            if (companiesMap.has(ticket.company_id)) {
+              const company = companiesMap.get(ticket.company_id)!;
+              return { id: company.id, name: company.name };
+            } else {
+              console.warn(`[WARN] Company ID ${ticket.company_id} trouvé dans ticket mais pas dans companiesMap pour ticket ${ticket.id}`);
+            }
+          }
+          // Sinon, essayer via contact_user
           const contactUser = Array.isArray(relation?.contact_user)
             ? relation.contact_user[0]
             : relation?.contact_user;
@@ -526,6 +567,7 @@ export const listTicketsPaginated = async (
       assigned_to,
       assigned_user:profiles!tickets_assigned_to_fkey(id, full_name),
       contact_user_id,
+      company_id,
       contact_user:profiles!tickets_contact_user_id_fkey(
         id,
         full_name,
@@ -588,13 +630,28 @@ export const listTicketsPaginated = async (
     throw handleSupabaseError(error, 'listTicketsPaginated');
   }
 
-  // ✅ Plus besoin de requête séparée pour companies (nested select)
-  // Les companies sont chargées directement via contact_user.company
+  // ✅ Charger les companies séparément depuis company_id (méthode legacy)
+  const companyIds = [...new Set((data || []).map((t: any) => t.company_id).filter(Boolean))];
+  let companiesMap: Record<string, { id: string; name: string }> = {};
+  if (companyIds.length > 0) {
+    const { data: companies, error: companiesError } = await supabase
+      .from('companies')
+      .select('id, name')
+      .in('id', companyIds);
+    
+    if (!companiesError && companies) {
+      companiesMap = companies.reduce((acc, c: any) => {
+        acc[c.id] = { id: c.id, name: c.name };
+        return acc;
+      }, {} as Record<string, { id: string; name: string }>);
+      console.log(`[DEBUG LEGACY] Companies chargées: ${companies.length} pour ${companyIds.length} company_ids`);
+    }
+  }
 
   // Transformer les données
   const { transformTicket } = await import('./utils/ticket-transformer');
   const transformedTickets: TicketWithRelations[] = (data || []).map(
-    (ticket: SupabaseTicketRaw) => transformTicket(ticket, {}) // companiesMap vide car nested select
+    (ticket: SupabaseTicketRaw) => transformTicket(ticket, companiesMap)
   );
 
   return {

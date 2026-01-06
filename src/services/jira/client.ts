@@ -52,6 +52,7 @@ export interface CreateJiraIssueInput {
   moduleId?: string | null;
   customerContext?: string | null;
   bugType?: string | null;
+  companyId?: string | null;
 }
 
 /**
@@ -95,6 +96,19 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
         .eq('id', input.moduleId)
         .single();
       moduleName = module?.name || null;
+    }
+
+    // Récupérer les informations de l'entreprise
+    let companyName: string | null = null;
+    let jiraCompanyId: number | null = null;
+    if (input.companyId) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('name, jira_company_id')
+        .eq('id', input.companyId)
+        .single();
+      companyName = company?.name || null;
+      jiraCompanyId = company?.jira_company_id || null;
     }
 
     // Déterminer le type d'issue JIRA
@@ -174,6 +188,22 @@ export async function createJiraIssue(input: CreateJiraIssueInput): Promise<Crea
     const supabaseTicketIdCustomField = process.env.JIRA_SUPABASE_TICKET_ID_FIELD;
     if (supabaseTicketIdCustomField && supabaseTicketIdCustomField.trim() !== '') {
       jiraPayload.fields[supabaseTicketIdCustomField.trim()] = input.ticketId;
+    }
+
+    // Ajouter l'entreprise (customfield_10045) si disponible
+    // Format JIRA : tableau d'objets [{ id: number, value: string }]
+    // JIRA attend un tableau même pour une seule valeur
+    if (companyName && jiraCompanyId) {
+      jiraPayload.fields.customfield_10045 = [{
+        id: jiraCompanyId.toString(),
+        value: companyName
+      }];
+    } else if (companyName) {
+      // Si pas de jira_company_id, essayer avec juste le nom (JIRA peut le mapper)
+      // Note: Cela peut échouer si l'entreprise n'existe pas dans JIRA
+      jiraPayload.fields.customfield_10045 = [{
+        value: companyName
+      }];
     }
 
     // Appel à l'API JIRA avec retry
@@ -344,6 +374,14 @@ export async function deleteJiraIssue(jiraIssueKey: string): Promise<void> {
 
   if (!response.ok) {
     const errorText = await response.text();
+    
+    // ✅ Si le ticket est déjà supprimé dans JIRA (404), considérer comme succès
+    // Le ticket n'existe plus dans JIRA, on peut continuer la suppression dans Supabase
+    if (response.status === 404) {
+      // Log pour information mais ne pas faire échouer la suppression
+      console.log(`[JIRA] Ticket ${jiraIssueKey} déjà supprimé dans JIRA (404), continuation de la suppression dans Supabase`);
+      return; // Retourner sans erreur
+    }
     
     if (response.status >= 400 && response.status < 500) {
       throw createError.jiraError(
